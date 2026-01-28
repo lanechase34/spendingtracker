@@ -1,0 +1,38 @@
+# General Ignores + IDE
+.DS_Store
+settings.xml
+WEB-INF
+
+# Engines + Database + CBFS + Secrets
+.env
+env/
+.engine/**
+.cbfs/**
+build/.db/**
+
+# logs + tests
+logs/**
+backend/tests/results/**
+
+# npm
+frontend/node_modules/*
+frontend/build/**
+frontend/build/
+npm-debug.log
+yarn-error.log
+frontend/examples
+frontend/stats.html
+
+## Ignored Dependencies
+backend/coldbox/**
+backend/coldbox/
+backend/modules/**
+backend/modules/
+backend/testemails/**
+
+frontend/src/mock/**
+frontend/coverage/**
+frontend/coverage/
+
+temp/
+temp/**

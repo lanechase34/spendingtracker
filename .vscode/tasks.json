@@ -1,0 +1,61 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Format CF",
+            "type": "shell",
+            "command": "box run-script format",
+            "group": {
+                "kind": "build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/backend"
+            },
+            "detail": "Format CF code using CF Formatter"
+        },
+        {
+            "label": "Lint ts, tsx",
+            "type": "shell",
+            "command": "npm run-script lint",
+            "group": {
+                "kind": "build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "detail": "Lint *.ts and *.tsx files"
+        },
+        {
+            "label": "Github Actions Test",
+            "type": "shell",
+            "command": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04",
+            "group": {
+                "kind": "test"
+            },
+            "detail": "Tests the ./github/workflows/test.yml locally",
+            "isBackground": true
+        },
+        {
+            "label": "Start Server",
+            "dependsOn": ["Start Backend", "Start Frontend"],
+            "dependsOrder": "parallel",
+            "problemMatcher": []
+        },
+        {
+            "label": "Start Backend",
+            "type": "shell",
+            "command": "box server start",
+            "options": {
+                "cwd": "${workspaceFolder}/backend"
+            }
+        },
+        {
+            "label": "Start Frontend",
+            "type": "shell",
+            "command": "npm start",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            }
+        }
+    ]
+}

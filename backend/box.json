@@ -1,0 +1,77 @@
+{
+    "name":"spendingtracker",
+    "version":"1.0.0",
+    "author":"lanechase34",
+    "installPaths":{
+        "coldbox":"coldbox/",
+        "cbvalidation":"modules/cbvalidation/",
+        "cbmailservices":"modules/cbmailservices/",
+        "cbstorages":"modules/cbstorages/",
+        "cbsecurity":"modules/cbsecurity/",
+        "BCrypt":"modules/BCrypt/",
+        "cfmigrations":"modules/cfmigrations/",
+        "qb":"modules/qb/",
+        "cbauth":"modules/cbauth/",
+        "testbox":"modules/testbox/",
+        "route-visualizer":"modules/route-visualizer/",
+        "lucee-password-util":"modules/lucee-password-util/",
+        "cbdebugger":"modules/cbdebugger/",
+        "mementifier":"modules/mementifier/",
+        "spreadsheet-cfml":"modules/spreadsheet-cfml/",
+        "cbswagger":"modules/cbswagger/",
+        "socketbox":"modules/socketbox/"
+    },
+    "devDependencies":{
+        "testbox":"6.5.0+18",
+        "testbox-cli":"1.6.0+23",
+        "route-visualizer":"2.2.0+2",
+        "commandbox-cfformat":"0.21.0",
+        "cfml-compiler":"1.0.6",
+        "lucee-password-util":"1.0.3",
+        "commandbox-githooks":"1.0.2",
+        "cbdebugger":"4.4.0+6",
+        "cbswagger":"3.1.3+14"
+    },
+    "dependencies":{
+        "coldbox":"8.0.5+33",
+        "cbvalidation":"4.8.0+30",
+        "commandbox-dotenv":"2.4.0",
+        "commandbox-cfconfig":"2.1.1",
+        "cbmailservices":"2.9.0+2",
+        "cbstorages":"3.5.0+5",
+        "cbsecurity":"3.7.0+9",
+        "bcrypt":"3.2.0+1",
+        "cfmigrations":"5.1.0",
+        "commandbox-migrations":"5.3.0",
+        "qb":"13.0.18",
+        "cbauth":"7.0.0",
+        "mementifier":"3.7.0+7",
+        "spreadsheet-cfml":"5.3.0",
+        "socketbox":"2.0.12"
+    },
+    "scripts":{
+        "format":"cfformat run Application.cfc,websocket.cfc,config/,handlers/,interceptors/,models/,tests/,database/ ./.cfformat.json --overwrite",
+        "format:check":"cfformat check Application.cfc,config/,handlers/,interceptors/,models/,tests/,database/, ./.cfformat.json",
+        "format:watch":"cfformat watch path='Application.cfc,config/,handlers/,interceptors/,models/,tests/,database/' settingsPath='.cfformat.json'",
+        "docker:build":"!docker build --no-cache -t pogotracker -f ./Dockerfile ./",
+        "setEnv":"cp env/${1}.dev.env .env",
+        "blankEnv":"cp .env.example .env"
+    },
+    "testbox":{
+        "runner":"http://localhost:${HTTPPORT}/tests/runner.cfm"
+    },
+    "language":"cfml",
+    "githooks":{
+        "preCommit":[
+            "run-script format",
+            "dotenv check --reverse"
+        ],
+        "postCheckout":[
+            "install",
+            "dotenv check"
+        ],
+        "postMerge":[
+            "dotenv check"
+        ]
+    }
+}

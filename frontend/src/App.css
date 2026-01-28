@@ -1,0 +1,29 @@
+body {
+    overflow-y: scroll;
+    background-color: rgb(18, 18, 18);
+}
+
+html {
+    scrollbar-width: thin !important;
+}
+
+.MuiDataGrid-virtualScroller,
+.MuiDataGrid-scrollbar,
+.MuiPopperContent-root,
+.MuiDialogContent-root,
+.MuiAutocomplete-listbox,
+.MuiAutocomplete-popper,
+.MuiAutocomplete-listbox,
+.MuiTableContainer-root {
+    scrollbar-width: thin; /* Firefox */
+}
+
+.MuiDataGrid-virtualScroller::-webkit-scrollbar-thumb,
+.MuiDataGrid-scrollbar::-webkit-thumb {
+    border-radius: 4px;
+}
+
+.centered-col {
+    display: flex;
+    align-items: center;
+}

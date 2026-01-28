@@ -1,0 +1,38 @@
+name: Deploy Backend Lucee
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: github.actor == github.repository_owner
+    runs-on: ubuntu-24.04
+    environment: Production
+    steps:
+      - uses: actions/checkout@v6
+      - name: Update backend code
+        uses: burnett01/rsync-deployments@v8
+        # a - archive preserve permissions, ownership, and symbolic links, v - verbose, z - compress
+        with:
+          switches: -avz --exclude='Dockerfile' --exclude='.dockerignore' --exclude='.env' --exclude='README.md' --exclude='/tests' --exclude='/modules' --exclude='/coldbox' --exclude='/env' --exclude='/database/seeds'
+          path: backend/
+          remote_path: /var/www/wwwroot/spendingtracker_backend/
+          remote_host: ${{ secrets.LIGHTSAIL_IP }}
+          remote_port: 22
+          remote_user: ubuntu
+          remote_key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+
+      - name: Start server
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.LIGHTSAIL_IP }}
+          username: ${{ secrets.LIGHTSAIL_USERNAME }}
+          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          script: |
+            cd /var/www/wwwroot/spendingtracker_backend
+
+            sudo box server stop
+            sudo box update --force
+            sudo box install --production
+            sudo box migrate up
+            sudo box server start

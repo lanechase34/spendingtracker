@@ -1,0 +1,54 @@
+{
+    "workbench.iconTheme": "material-icon-theme",
+    "auto-close-tag.excludedTags": ["string", "boolean", "number", "T", "typeof", "void"],
+    "editor.formatOnSave": true,
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "frontend/node_modules/": true
+    },
+    "prettier.tabWidth": 4,
+    "prettier.singleQuote": true,
+    "prettier.printWidth": 120,
+    "github.copilot.enable": {
+        "*": false
+    },
+    "search.exclude": {
+        "includes/build/": true,
+        "frontend/package-lock.json": true,
+        "backend/modules": true,
+        "backend/testemails/": true,
+        "backend/coldbox/": true
+    },
+    "workbench.tree.enableStickyScroll": false,
+    "editor.stickyScroll.enabled": false,
+    "terminal.integrated.stickyScroll.enabled": false,
+    "eslint.options": {
+        "overrideConfigFile": "./eslint.config.ts"
+    },
+    "jest.runMode": {
+        "type": "on-save",
+        "testFileOnly": true
+    },
+    "prettier.trailingComma": "es5"
+}

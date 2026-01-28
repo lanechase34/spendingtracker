@@ -1,0 +1,48 @@
+{
+    "app":{
+        "cfengine":"lucee@7.0.1+100",
+        "sessionCookieSecure":"true",
+        "sessionCookieHTTPOnly":"true"
+    },
+    "cfconfigfile":".cfconfig.json",
+    "env":{
+        "LUCEE_EXTENSIONS":"671B01B8-B3B3-42B9-AC055A356BED5281;version=${DB_BUNDLEVERSION}",
+        "LUCEE_APPLICATION_LISTENER":"modern",
+        "LUCEE_APPLICATION_MODE":"curr2root",
+        "LUCEE_APPLICATION_PATH_CACHE_TIMEOUT":300,
+        "LUCEE_QUEUE_MAX":10,
+        "LUCEE_PRECISE_MATH":true
+    },
+    "jvm":{
+        "heapSize":"${JAVAHEAP}",
+        "minHeapSize":"${JAVAMINHEAP}",
+        "javaVersion":"openjdk21_jre_x64_${OS}_hotspot_jdk-21.0.9+10"
+    },
+    "name":"SpendingTracker",
+    "openbrowser":"false",
+    "openBrowserUrl":"http://localhost:8082",
+    "trayEnable":"false",
+    "web":{
+        "host":"127.0.0.1",
+        "rewrites":{
+            "enable":"true"
+        },
+        "http":{
+            "enable":"true",
+            "port":"8082"
+        },
+        "rules":[
+            "warm-up-server(urls={'/warmup/${WARMUPKEY}'}, requestStrategy=queue, async=false, timeoutSeconds=60)",
+            "path-prefix-nocase(/lucee/) or path-prefix-nocase(/tests/) -> ip-access-control[default-allow=false, acl={'127.0.0.* allow', '::1 allow'}, failure-status=404]",
+            "path(/WebSocket.cfc) -> done",
+            "regex-nocase('.*(box\\.json|Dockerfile|cfconfig\\.json|server\\.json)') or path-suffix-nocase(.env) or path-suffix-nocase(.md) or path-suffix-nocase(.cfc) or path-prefix-nocase(/.well-known/) -> set-error(404)",
+            "regex-nocase('.*\\.(webp|css|js|ico)$') or regex-nocase('.*\\?v=[a-zA-Z0-9]{10}$') -> set(attribute='%{o,Cache-Control}', value='public, max-age=25552000')"
+        ],
+        "maxRequests":"50",
+        "webroot":"",
+        "useProxyForwardedIP":"true",
+        "websocket":{
+            "enable":"true"
+        }
+    }
+}
