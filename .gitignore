@@ -30,8 +30,8 @@ backend/coldbox/
 backend/modules/**
 backend/modules/
 backend/testemails/**
-backend/tests/results/**
-backend/tests/results/
+backend/tests/results/*
+!/backend/tests/results/.gitkeep
 
 frontend/src/mock/**
 frontend/coverage/**
