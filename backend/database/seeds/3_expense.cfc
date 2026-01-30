@@ -49,7 +49,7 @@ component extends="base" {
         /**
          * Insert mock data for mock users
          */
-        var amount = 10000;
+        var amount = 2500;
         for(var i = 1; i <= amount; i++) {
             data.append({
                 'date'  : {value: dateFormat(dateAdd('d', randRange(-180, 180), now()), 'short'), cfsqltype: 'date'},

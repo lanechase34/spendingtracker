@@ -4,13 +4,10 @@ component extends="base" {
 
     /**
      * Warmup the server on first start
-     *
-     * @rc.warmupKey key from .env used by undertow to authenticate the warmup action
      */
     function warmup(event, rc, prc) {
         if(
             !getSetting('warmedUp')
-            && (rc?.warmupkey ?: '') == getSetting('warmupKey')
             && ['0:0:0:0:0:0:0:1', '127.0.0.1'].contains(securityService.getRequestIP())
             && find('Java', cgi.http_user_agent) > 0
         ) {

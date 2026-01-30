@@ -114,17 +114,18 @@ component extends="tests.resources.baseTest" {
             it('Overdue MONTHLY subscription charges immediately', () => {
                 for(var i = 1; i <= loopCount; i++) {
                     var dayRand   = randRange(-31, -2);
-                    var monthRand = randRange(-2, -12);
+                    var monthRand = randRange(-2, -10);
                     var date      = dateAdd('d', dayRand, dateAdd('m', monthRand, now()));
 
                     // Edge cases
-                    // Last day of 31 day month
-                    if(i == loopCount) {
-                        date = createDate(year(now()) - 1, 3, 31);
-                    }
-                    // Feb 28th
-                    else if(i == loopCount - 1) {
-                        date = createDate(year(now()) - 1, 2, 28);
+                    // Last day of month
+                    if(i == loopCount || i == loopCount - 1) {
+                        var yearMod = month(now()) == 1 ? -1 : 0;
+                        date        = createDate(
+                            year(dateAdd('yyyy', yearMod, now())),
+                            month(dateAdd('m', -1, now())),
+                            daysInMonth(dateAdd('m', -1, now()))
+                        );
                     }
                     // Last day of year
                     else if(i == loopCount - 2) {
@@ -165,20 +166,12 @@ component extends="tests.resources.baseTest" {
             it('Overdue YEARLY subscription charges immediately', () => {
                 for(var i = 1; i <= loopCount; i++) {
                     var dayRand   = randRange(-31, -2);
-                    var monthRand = randRange(-2, -12);
+                    var monthRand = randRange(-2, -10);
                     var date      = dateAdd('d', dayRand, dateAdd('m', monthRand, now()));
 
                     // Edge cases
-                    // Last day of 31 day month
-                    if(i == loopCount) {
-                        date = createDate(year(now()) - 1, 3, 31);
-                    }
-                    // Feb 28th
-                    else if(i == loopCount - 1) {
-                        date = createDate(year(now()) - 1, 2, 28);
-                    }
                     // Last day of year
-                    else if(i == loopCount - 2) {
+                    if(i == loopCount) {
                         date = createDate(year(now()) - 1, 12, 31);
                     }
 

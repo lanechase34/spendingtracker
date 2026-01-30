@@ -28,7 +28,11 @@ component extends="coldbox.system.Interceptor" {
         }
 
         if(environment == 'development' && fileExists(this.queryLogPath)) {
-            fileDelete(this.queryLogPath);
+            try {
+                fileDelete(this.queryLogPath);
+            }
+            catch(any e) {
+            }
         }
     }
 

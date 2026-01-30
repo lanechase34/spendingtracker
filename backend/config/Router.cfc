@@ -10,7 +10,7 @@ component {
         route('/unauthorized').to('echo.unauthorized');
 
         // Warmup
-        route('/warmup/:warmupkey?').to('echo.warmup');
+        route('/warmup').to('echo.warmup');
 
         // API V1
         group({pattern: '/api/v1'}, () => {

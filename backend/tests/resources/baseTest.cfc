@@ -1,6 +1,7 @@
 component extends="coldbox.system.testing.BaseTestCase" {
 
-    property name="cbauth" inject="authenticationService@cbauth";
+    property name="cbauth"     inject="authenticationService@cbauth";
+    property name="uploadPath" inject="coldbox:setting:uploadPath";
 
     function beforeAll() {
         /**
@@ -24,6 +25,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
         }
 
         /**
+         * Mock a temp dir to use
+         */
+        tempDir = '#uploadPath#/#createUUID()#';
+        directoryCreate(tempDir);
+
+        /**
          * Log out any lingering user
          */
         cbauth.logout();
@@ -31,6 +38,33 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
     function afterAll() {
         super.afterAll();
+
+        /**
+         * Delete temp dir
+         */
+        directoryDelete(tempDir, true);
+    }
+
+    /**
+     * Fetch img blob and return absolute path of img
+     */
+    string function fetchAndWriteImg(required string imgUrl, required string extension) {
+        /**
+         * Fetch image blob
+         */
+        cfhttp(
+            url    = imgUrl,
+            result = "imgResult",
+            method = "GET"
+        );
+
+        /**
+         * CF make image object and write to disk
+         */
+        var img  = imageNew(imgResult.filecontent);
+        var path = '#tempDir#/#createUUID()#.#extension#';
+        img.write(path);
+        return path;
     }
 
 }

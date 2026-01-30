@@ -26,13 +26,13 @@
             "detail": "Lint *.ts and *.tsx files"
         },
         {
-            "label": "Github Actions Test",
+            "label": "Github Actions Test Backend",
             "type": "shell",
-            "command": "act -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04",
+            "command": "act -W '.github/workflows/test-backend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04",
             "group": {
                 "kind": "test"
             },
-            "detail": "Tests the ./github/workflows/test.yml locally",
+            "detail": "Runs the ./github/workflows/test-backend.yml locally",
             "isBackground": true
         },
         {

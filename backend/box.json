@@ -58,7 +58,7 @@
         "blankEnv":"cp .env.example .env"
     },
     "testbox":{
-        "runner":"http://localhost:${HTTPPORT}/tests/runner.cfm"
+        "runner":"http://localhost:8082/tests/runner.cfm"
     },
     "language":"cfml",
     "githooks":{

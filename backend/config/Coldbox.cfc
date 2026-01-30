@@ -113,7 +113,6 @@ component {
             useRateLimiter      : true,
             verificationCooldown: 10, // only send a verification code every 10 minutes
             verificationLifespan: 60, // verification codes last 60 minutes
-            warmupKey           : getSystemSetting('WARMUPKEY'),
             warmedUp            : false
         };
 
@@ -261,6 +260,14 @@ component {
         settings.useRateLimiter = getSystemSetting('USERATELIMITER', false);
         settings.logQueries     = getSystemSetting('LOGQUERIES', true);
         settings.logRequests    = getSystemSetting('LOGREQUESTS', true);
+    }
+
+    /**
+     * Test environment
+     */
+    function test() {
+        settings.impersonation  = true;
+        settings.useRateLimiter = false;
     }
 
 }

@@ -16,7 +16,8 @@
     "jvm":{
         "heapSize":"${JAVAHEAP}",
         "minHeapSize":"${JAVAMINHEAP}",
-        "javaVersion":"openjdk21_jre_x64_${OS}_hotspot_jdk-21.0.9+10"
+        "javaVersion":"openjdk21_jre_x64_${OS}_hotspot_jdk-21.0.9+10",
+        "args":"-Duser.timezone=UTC"
     },
     "name":"SpendingTracker",
     "openbrowser":"false",
@@ -32,7 +33,7 @@
             "port":"8082"
         },
         "rules":[
-            "warm-up-server(urls={'/warmup/${WARMUPKEY}'}, requestStrategy=queue, async=false, timeoutSeconds=60)",
+            "warm-up-server(urls={'/warmup'}, requestStrategy=queue, async=false, timeoutSeconds=${WARMUPTIMEOUT})",
             "path-prefix-nocase(/lucee/) or path-prefix-nocase(/tests/) -> ip-access-control[default-allow=false, acl={'127.0.0.* allow', '::1 allow'}, failure-status=404]",
             "path(/WebSocket.cfc) -> done",
             "regex-nocase('.*(box\\.json|Dockerfile|cfconfig\\.json|server\\.json)') or path-suffix-nocase(.env) or path-suffix-nocase(.md) or path-suffix-nocase(.cfc) or path-prefix-nocase(/.well-known/) -> set-error(404)",

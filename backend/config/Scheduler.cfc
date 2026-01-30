@@ -14,8 +14,6 @@ component {
 		 * - setExecutor( executorObject ) : change the executor if needed
 		 */
 
-        setTimezone('UTC');
-
         /**
 		 * --------------------------------------------------------------------------
 		 * Register Scheduled Tasks

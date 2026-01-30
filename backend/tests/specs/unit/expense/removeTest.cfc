@@ -96,7 +96,11 @@ component extends="tests.resources.baseTest" {
                      * Mock an expense with a receipt
                      */
                     var receipt = createUUID();
-                    fileCopy(source = '#uploadPath#/404.webp', destination = '#user.getDir()#/#receipt#.webp');
+                    var path    = fetchAndWriteImg(
+                        'https://upload.wikimedia.org/wikipedia/commons/f/f6/Sample_0.JPEG',
+                        'jpeg'
+                    );
+                    fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
 
                     var id = expenseHelper.mock(
                         userid      = user.getId(),

@@ -111,7 +111,10 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 count = dateDiff('m', data.date, now()) + 1;
             }
 
-            expect(check.len()).toBe(count);
+            expect(check.len()).toBe(
+                count,
+                'Records mismatch. Expected #count# records but only received #check.len()# records in db'
+            );
             check.each((expense) => {
                 expect(expense).toBeStruct();
                 expect(expense).toHaveKey('id');
@@ -125,7 +128,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
             });
         }
         else {
-            expect(check.len()).toBe(0);
+            expect(check.len()).toBe(0, 'Records created when they should not have');
         }
 
         return;

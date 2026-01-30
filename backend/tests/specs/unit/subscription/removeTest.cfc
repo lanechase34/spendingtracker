@@ -100,7 +100,11 @@ component extends="tests.resources.baseTest" {
                      * Mock subscription with receipt
                      */
                     var receipt = createUUID();
-                    fileCopy(source = '#uploadPath#/404.webp', destination = '#user.getDir()#/#receipt#.webp');
+                    var path    = fetchAndWriteImg(
+                        'https://upload.wikimedia.org/wikipedia/commons/f/f6/Sample_0.JPEG',
+                        'jpeg'
+                    );
+                    fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
                     var id = subscriptionHelper.insert(
                         data = subscriptionHelper.mock(
                             date     = dateAdd('d', randRange(-31, -2), dateAdd('m', -1, now())),
@@ -128,7 +132,11 @@ component extends="tests.resources.baseTest" {
                      */
                     var description = createUUID();
                     var receipt     = createUUID();
-                    fileCopy(source = '#uploadPath#/404.webp', destination = '#user.getDir()#/#receipt#.webp');
+                    var path        = fetchAndWriteImg(
+                        'https://upload.wikimedia.org/wikipedia/commons/f/f6/Sample_0.JPEG',
+                        'jpeg'
+                    );
+                    fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
                     var id = subscriptionHelper.insert(
                         data = subscriptionHelper.mock(
                             date        = dateAdd('d', randRange(-31, -2), dateAdd('m', -3, now())),

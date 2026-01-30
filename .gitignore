@@ -9,6 +9,7 @@ env/
 .engine/**
 .cbfs/**
 build/.db/**
+.secrets
 
 # logs + tests
 logs/**
@@ -29,6 +30,8 @@ backend/coldbox/
 backend/modules/**
 backend/modules/
 backend/testemails/**
+backend/tests/results/**
+backend/tests/results/
 
 frontend/src/mock/**
 frontend/coverage/**

@@ -1,7 +1,7 @@
-name: Deploy Backend Lucee
+name: Deploy Backend
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Manual triggering
 
 jobs:
   deploy:
@@ -9,20 +9,31 @@ jobs:
     runs-on: ubuntu-24.04
     environment: Production
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Update backend code
         uses: burnett01/rsync-deployments@v8
         # a - archive preserve permissions, ownership, and symbolic links, v - verbose, z - compress
         with:
-          switches: -avz --exclude='Dockerfile' --exclude='.dockerignore' --exclude='.env' --exclude='README.md' --exclude='/tests' --exclude='/modules' --exclude='/coldbox' --exclude='/env' --exclude='/database/seeds'
+          switches: -avz --rsync-path="sudo rsync"
+            --exclude='Dockerfile'
+            --exclude='.dockerignore'
+            --exclude='.env'
+            --exclude='README.md'
+            --exclude='.cfformat.json'
+            --exclude='/tests'
+            --exclude='/modules'
+            --exclude='/coldbox'
+            --exclude='/env'
+            --exclude='/database/seeds'
           path: backend/
           remote_path: /var/www/wwwroot/spendingtracker_backend/
           remote_host: ${{ secrets.LIGHTSAIL_IP }}
-          remote_port: 22
-          remote_user: ubuntu
+          remote_user: ${{ secrets.LIGHTSAIL_USERNAME }}
           remote_key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
 
-      - name: Start server
+      - name: Restart, update backend db, and depdendencies
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.LIGHTSAIL_IP }}
@@ -30,7 +41,6 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             cd /var/www/wwwroot/spendingtracker_backend
-
             sudo box server stop
             sudo box update --force
             sudo box install --production

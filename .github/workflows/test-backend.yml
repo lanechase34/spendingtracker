@@ -1,0 +1,192 @@
+name: Test Suite
+
+permissions:
+  contents: read
+  checks: write
+  id-token: write
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+      - main
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  tests:
+    name: Run Backend Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: runner
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_spendingtracker
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Setup CommandBox CLI
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        with:
+          version: latest
+
+      - name: Create .env file
+        run: |
+          cat > .env << 'EOL'
+          ENVIRONMENT=test
+          CFCONFIG_ADMINPASSWORD=commandbox
+          LUCEE_ADMIN_ENABLED=false
+          INSPECTTEMPLATE=never
+          IMAGEMAGICK=/usr/bin
+          REQUESTTIMEOUT=600
+          OS=linux
+          JAVAHEAP=2048
+          JAVAMINHEAP=512
+          DB_GRAMMAR=PostgresGrammar@qb
+          DB_SCHEMA=public
+          DB_DATABASE=test_spendingtracker
+          DB_BUNDLENAME=org.postgresql.jdbc
+          DB_BUNDLEVERSION=42.7.7
+          DB_CLASS=org.postgresql.Driver
+          DB_DRIVER=postgresql
+          DB_HOST=localhost
+          DB_PORT=5432
+          DB_USERNAME=runner
+          DB_PASSWORD=postgres
+          EMAIL_SERVER=localhost
+          EMAIL_PORT=587
+          EMAIL_USERNAME=noreply@chaselane.dev
+          EMAIL_PASSWORD=test
+          EMAIL_TLS=false
+          EMAIL_SSL=false
+          EMAIL_SPOOL=false
+          REINITKEY=
+          WARMUPTIMEOUT=0
+          JWT_SECRET=]ob]?m(DHhk{|G@f2JjtaD<Fj5V25!t:adh/r3rvkK[DP}o|BJ{c4.4;4qjH)aw+X9m5jE&P<NZyK-<HTk-vV,
+          ENCRYPTIONKEY=cLNRlWJU/Jc6qNy6Wnvhyaf/uuALDQsCmjIly4+V1BM=
+          EOL
+
+      - name: Install Dependencies
+        run: |
+          box install
+
+      - name: Verify Database Connection
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          until pg_isready -h localhost -p 5432 -U runner; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          psql -h localhost -p 5432 -U runner -d test_spendingtracker -c "SELECT version();"
+        env:
+          PGPASSWORD: postgres
+
+      - name: Run Database Migrations
+        run: |
+          box migrate install --verbose
+          box migrate up --verbose
+        continue-on-error: false
+
+      - name: Seed Database
+        run: |
+          box migrate seed run --verbose
+        continue-on-error: false
+
+      - name: Start CommandBox Server
+        run: |
+          box server start
+        timeout-minutes: 5
+
+      - name: Wait for Server to be Ready
+        run: |
+          echo "Waiting for server to start..."
+          for i in {1..60}; do
+            if curl -sf http://127.0.0.1:8082 > /dev/null 2>&1; then
+              echo "Server is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: Server not ready yet..."
+            sleep 2
+          done
+          echo "Server failed to start"
+          box server log
+          exit 1
+
+      - name: Run TestBox Tests
+        id: run_tests
+        run: |
+          mkdir -p tests/results
+          box testbox run --verbose outputFile="tests/results/test-results" outputFormats="json,antjunit" \
+            || echo "TESTS_FAILED=true" >> $GITHUB_ENV
+        continue-on-error: true
+
+      - name: Display Test Results
+        if: always()
+        run: |
+          if [ -f "tests/results/test-results.json" ]; then
+            echo "=== Test Results Summary ==="
+            cat tests/results/test-results.json | jq -r '
+              "Total Bundles: \(.totalBundles)",
+              "Total Suites: \(.totalSuites)", 
+              "Total Specs: \(.totalSpecs)",
+              "Total Pass: \(.totalPass)",
+              "Total Fail: \(.totalFail)",
+              "Total Error: \(.totalError)",
+              "Total Skipped: \(.totalSkipped)"
+            '
+          else
+            echo "No test results found!"
+            ls -la tests/results/ || echo "Results directory doesn't exist"
+          fi
+
+      - name: Publish Test Reports
+        uses: mikepenz/action-junit-report@v6.0.0
+        if: always()
+        with:
+          report_paths: |
+            tests/results/**/*.xml
+          check_name: "TestBox Report"
+          include_passed: false
+          fail_on_failure: true
+          detailed_summary: true
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            tests/results/
+            tests/results/*.json
+            tests/results/*.xml
+          retention-days: 30
+
+      - name: Stop Server
+        if: always()
+        run: |
+          box server stop
