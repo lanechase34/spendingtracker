@@ -1,5 +1,10 @@
 name: Frontend Test Suite
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -14,7 +19,63 @@ jobs:
   tests:
     name: Run Frontend Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Clean Install Dependencies
+        run: npm ci
+
+      - name: Run Jest Tests with Coverage
+        run: npm test -- --coverage --coverageReporters="json-summary" --coverageReporters="text"
+        continue-on-error: true
+
+      - name: Display Coverage Summary
+        if: always()
+        run: |
+          if [ -f "coverage/coverage-summary.json" ]; then
+            echo "=== Coverage Summary ==="
+            cat coverage/coverage-summary.json | jq -r '
+              .total | 
+              "Lines: \(.lines.pct)%",
+              "Statements: \(.statements.pct)%",
+              "Functions: \(.functions.pct)%",
+              "Branches: \(.branches.pct)%"
+            '
+          else
+            echo "No coverage summary found!"
+          fi
+
+      - name: Jest Coverage Comment
+        uses: MishaKav/jest-coverage-comment@v1.0.23
+        if: github.event_name == 'pull_request'
+        with:
+          coverage-summary-path: frontend/coverage/coverage-summary.json
+          title: Frontend Test Coverage
+          badge-title: Coverage
+          hide-comment: false
+          create-new-comment: false
+          hide-summary: false
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-results
+          path: |
+            frontend/coverage/
+            frontend/coverage/lcov.info
+            frontend/coverage/coverage-summary.json
+          retention-days: 30

@@ -36,6 +36,16 @@
             "isBackground": true
         },
         {
+            "label": "Github Actions Test Frontend",
+            "type": "shell",
+            "command": "act -W '.github/workflows/test-frontend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04",
+            "group": {
+                "kind": "test"
+            },
+            "detail": "Runs the ./github/workflows/test-frontend.yml locally",
+            "isBackground": true
+        },
+        {
             "label": "Start Server",
             "dependsOn": ["Start Backend", "Start Frontend"],
             "dependsOrder": "parallel",
