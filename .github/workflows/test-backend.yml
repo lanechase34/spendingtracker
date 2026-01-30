@@ -141,7 +141,7 @@ jobs:
         id: run_tests
         run: |
           mkdir -p tests/results
-          box testbox run --verbose outputFile="tests/results/test-results" outputFormats="json,antjunit" \
+          box testbox run --verbose outputFile="backend/tests/results/test-results" outputFormats="json,antjunit" \
             || echo "TESTS_FAILED=true" >> $GITHUB_ENV
         continue-on-error: true
 

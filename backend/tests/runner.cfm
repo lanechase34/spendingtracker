@@ -13,11 +13,5 @@
 <cfparam name="url.editor" 				default="vscode">
 <cfparam name="url.bundlesPattern" 		default="*Spec*.cfc|*Test*.cfc|*Spec*.bx|*Test*.bx">
 
-<!--- Code Coverage requires FusionReactor --->
-<cfparam name="url.coverageEnabled"					default="false">
-<cfparam name="url.coveragePathToCapture"			default="#expandPath( '/' )#">
-<cfparam name="url.coverageWhitelist"				default="">
-<cfparam name="url.coverageBlacklist"				default="/testbox,/coldbox,/tests,/modules,Application.cfc,/index.cfm,Application.bx,/index.bxm">
-
 <!--- Include the TestBox HTML Runner --->
 <cfinclude template="/testbox/system/runners/HTMLRunner.cfm" >
