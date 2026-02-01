@@ -19,6 +19,7 @@ jobs:
   tests:
     name: Run Frontend Tests
     runs-on: ubuntu-24.04
+    environment: Test
     timeout-minutes: 15
     defaults:
       run:
