@@ -28,7 +28,7 @@
         {
             "label": "Github Actions Test Backend",
             "type": "shell",
-            "command": "act -W '.github/workflows/test-backend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04",
+            "command": "act -W '.github/workflows/test-backend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 --rm --pull=false",
             "group": {
                 "kind": "test"
             },
@@ -38,7 +38,7 @@
         {
             "label": "Github Actions Test Frontend",
             "type": "shell",
-            "command": "act -W '.github/workflows/test-frontend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04",
+            "command": "act -W '.github/workflows/test-frontend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 --rm --pull=false",
             "group": {
                 "kind": "test"
             },

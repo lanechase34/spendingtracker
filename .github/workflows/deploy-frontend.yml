@@ -1,55 +1,59 @@
 name: Deploy Frontend
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   deploy:
     if: github.actor == github.repository_owner
     runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+
     environment: Production
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Build React app
+      - name: Build
         run: npm run build
 
-      - name: Upload build to release dir
+      - name: Create Version File
         run: |
-          RELEASE=$(date +%Y%m%d_%H%M%S)
-          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+          cat > build/version.json << EOF
+          {
+            "buildDate": "$(date)",
+            "runId": "${{ github.run_id }}"
+          }
+          EOF
 
-          rsync -az ./build/ \
-            ${{ secrets.LIGHTSAIL_USERNAME }}@${{ secrets.LIGHTSAIL_IP }}:/var/www/wwwroot/spendingtracker_frontend/releases/$RELEASE
+      - name: Verify build output
+        run: |
+          if [ ! -d "build" ]; then
+            echo "Build directory not found!"
+            exit 1
+          fi
+          echo "Build successful, files:"
+          ls -la build/
 
-      - name: Deploy to Lightsail
-        uses: appleboy/ssh-action@v0.1.5
+      - name: Update Frontend Code
+        uses: burnett01/rsync-deployments@v8
+        # a - archive preserve permissions, ownership, and symbolic links, v - verbose, z - compress
         with:
-          host: ${{ secrets.LIGHTSAIL_IP }}
-          username: ${{ secrets.LIGHTSAIL_USERNAME }}
-          key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
-          script: |
-            cd /var/www/wwwroot/spendingtracker_frontend
-
-            # link latest release to the 'current' dir
-            ln -sfn releases/${RELEASE} current
-
-            # change ownership to nginx account 
-            chown -R www-data:www-data current
-            find current -type d -exec chmod 755 {} \;
-            find current -type f -exec chmod 644 {} \;
-
-            # Keep last 5 releases
-            cd releases
-            ls -dt */ | tail -n +6 | xargs rm -rf
+          switches: -avz --delete --rsync-path="sudo rsync"
+          path: frontend/build/
+          remote_path: /var/www/wwwroot/spendingtracker_frontend/
+          remote_host: ${{ secrets.LIGHTSAIL_IP }}
+          remote_user: ${{ secrets.LIGHTSAIL_USERNAME }}
+          remote_key: ${{ secrets.LIGHTSAIL_SSH_KEY }}

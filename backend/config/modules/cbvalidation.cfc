@@ -540,6 +540,7 @@ component {
         var generic = {
             'echo.warmup'           : {},
             'echo.healthcheck'      : {},
+            'echo.status'           : {},
             'echo.invalidhttpmethod': {},
             'echo.invalidevent'     : {},
             'echo.onmissingaction'  : {},

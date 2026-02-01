@@ -28,6 +28,7 @@
         "rewrites":{
             "enable":"true"
         },
+        "directoryBrowsing":"false",
         "http":{
             "enable":"true",
             "port":"8082"

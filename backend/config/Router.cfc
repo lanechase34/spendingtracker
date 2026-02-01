@@ -64,6 +64,7 @@ component {
             // Generics
             route('/healthcheck').to('echo.healthCheck');
             route('/unauthorized').to('echo.unauthorized');
+            route('/status').to('echo.status');
             route('{wildcard}').to('echo.healthCheck');
         });
 

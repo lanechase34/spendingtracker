@@ -1,7 +1,7 @@
 name: Deploy Backend
 
 on:
-  workflow_dispatch: # Manual triggering
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   deploy:
@@ -9,31 +9,29 @@ jobs:
     runs-on: ubuntu-24.04
     environment: Production
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Update backend code
+      - name: Update Backend Code
         uses: burnett01/rsync-deployments@v8
         # a - archive preserve permissions, ownership, and symbolic links, v - verbose, z - compress
         with:
-          switches: -avz --rsync-path="sudo rsync"
-            --exclude='Dockerfile'
-            --exclude='.dockerignore'
-            --exclude='.env'
-            --exclude='README.md'
-            --exclude='.cfformat.json'
-            --exclude='/tests'
-            --exclude='/modules'
+          switches: |
+            -avz --delete --rsync-path="sudo rsync"
             --exclude='/coldbox'
-            --exclude='/env'
             --exclude='/database/seeds'
+            --exclude='/env'
+            --exclude='/modules'
+            --exclude='/tests'
+            --exclude='.env'
+            --exclude='.cfformat.json'
           path: backend/
           remote_path: /var/www/wwwroot/spendingtracker_backend/
           remote_host: ${{ secrets.LIGHTSAIL_IP }}
           remote_user: ${{ secrets.LIGHTSAIL_USERNAME }}
           remote_key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
 
-      - name: Restart, update backend db, and depdendencies
+      - name: Restart, update backend db, and dependencies
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.LIGHTSAIL_IP }}

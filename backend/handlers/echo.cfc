@@ -14,7 +14,7 @@ component extends="base" {
             setting requestTimeout=600;
 
             var start = getTickCount();
-            if(application.cbController.getSetting('environment') == 'development') {
+            if(getSetting('environment') == 'development') {
                 /**
                  * Data setup by forcing tasks to run
                  */
@@ -56,6 +56,17 @@ component extends="base" {
         event
             .getResponse()
             .setData('Ok!')
+            .setStatusCode(200);
+    }
+
+    function status(event, rc, prc) {
+        event
+            .getResponse()
+            .setData({
+                environment: getSetting('environment'),
+                version    : getSetting('version'),
+                status     : 'ok'
+            })
             .setStatusCode(200);
     }
 
