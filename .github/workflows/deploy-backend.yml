@@ -16,8 +16,7 @@ jobs:
         uses: burnett01/rsync-deployments@v8
         # a - archive preserve permissions, ownership, and symbolic links, v - verbose, z - compress
         with:
-          switches: |
-            -avz --delete --rsync-path="sudo rsync"
+          switches: -avz --delete --rsync-path="sudo rsync"
             --exclude='/coldbox'
             --exclude='/database/seeds'
             --exclude='/env'
