@@ -91,21 +91,27 @@ trends, financial clarity.
 
 2. Install and run commandbox with `box`
 
-3. Install modules using
+3. Setup Git Hooks by running
+
+    ```
+    githooks install
+    ```
+
+4. Install modules using
 
     ```
     install
     ```
 
-4. Create PostgreSQL database with user
+5. Create PostgreSQL database with user
 
-5. Generate and populate a development `.env` file
+6. Generate and populate a development `.env` file
 
     ```
     run-script blankEnv
     ```
 
-6. Create the database tables and seed with dev data
+7. Create the database tables and seed with dev data
 
     ```
     migrate install
@@ -113,13 +119,13 @@ trends, financial clarity.
     migrate seed run
     ```
 
-7. Start server
+8. Start server
 
     ```
     server start
     ```
 
-8. Backend will be running at
+9. Backend will be running at
     ```
     http://localhost:8082
     ```
