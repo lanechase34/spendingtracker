@@ -19,14 +19,17 @@ component extends="base" {
     /**
      * Login a user and return the JWT and refresh token
      *
-     * @rc.email    Email
-     * @rc.password Password
+     * @rc.email      Email
+     * @rc.password   Password
+     * @rc.rememberMe (boolean) sets refresh token cookie if true
      */
     function login(event, rc, prc) {
         prc.valid = false;
         try {
             var token = jwtService.attempt(username = rc.email, password = rc.password);
-            securityService.setRefreshTokenCookie(token = token.refresh_token);
+            if(rc.rememberMe) {
+                securityService.setRefreshTokenCookie(token = token.refresh_token);
+            }
             prc.valid = true;
         }
         catch(VerificationException e) {

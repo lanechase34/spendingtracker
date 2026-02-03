@@ -318,7 +318,11 @@ component {
 
         // Authentication Handler
         var authHandler = {
-            'auth.login'   : {email: userBase.email, password: userBase.password},
+            'auth.login': {
+                email     : userBase.email,
+                password  : userBase.password,
+                rememberMe: {required: true, type: 'boolean'}
+            },
             'auth.logout'  : {},
             'auth.register': {
                 email: {

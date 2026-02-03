@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { Dispatch, SetStateAction } from 'react';
+import type { DateRangeType } from './DateRange.type';
 
 export interface DateRangeContextType {
     startDate: Dayjs;
@@ -8,7 +8,8 @@ export interface DateRangeContextType {
     formattedEndDate: string;
     shortFormattedStartDate: string;
     shortFormattedEndDate: string;
-    setStartDate: Dispatch<SetStateAction<Dayjs>>;
-    setEndDate: Dispatch<SetStateAction<Dayjs>>;
+    rangeType: DateRangeType;
+    setPresetRange: (type: Exclude<DateRangeType, 'custom'>) => void;
+    setCustomRange: (start: Dayjs, end: Dayjs) => void;
     dateFormat: (date: Dayjs, format?: string) => string;
 }

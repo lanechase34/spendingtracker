@@ -81,7 +81,7 @@ function FeatureCard({ icon, title, description }: FeatureCardProps) {
                     <Typography variant="h6" gutterBottom>
                         {title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" lineHeight={1.6}>
                         {description}
                     </Typography>
                 </CardContent>
@@ -105,10 +105,12 @@ function FeatureShowcase({ title, description, media, reverse = false }: Feature
         <Box sx={showcaseSurfaceSx}>
             <Grid container spacing={4} direction={reverse ? 'row-reverse' : 'row'} alignItems="center">
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <Typography variant="h5" gutterBottom>
+                    <Typography variant="h5" gutterBottom fontWeight={600}>
                         {title}
                     </Typography>
-                    <Typography color="text.secondary">{description}</Typography>
+                    <Typography color="text.secondary" lineHeight={1.8}>
+                        {description}
+                    </Typography>
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Box
@@ -116,7 +118,13 @@ function FeatureShowcase({ title, description, media, reverse = false }: Feature
                         src={media}
                         alt={title}
                         loading="lazy"
-                        sx={{ width: '100%', borderRadius: 3, boxShadow: 4 }}
+                        sx={{
+                            width: '100%',
+                            borderRadius: 3,
+                            boxShadow: 4,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                        }}
                     />
                 </Grid>
             </Grid>
@@ -146,7 +154,7 @@ function TechBullet({ title, text }: TechBulletProps) {
                     {title}
                 </Typography>
 
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" lineHeight={1.6}>
                     {text}
                 </Typography>
             </Paper>
@@ -168,7 +176,12 @@ export default function About() {
                         SpendingTracker
                     </Typography>
 
-                    <Typography variant="h6" color="text.secondary" sx={{ mb: 5, maxWidth: 700, mx: 'auto' }}>
+                    <Typography
+                        variant="h6"
+                        color="text.secondary"
+                        sx={{ mb: 5, maxWidth: 700, mx: 'auto' }}
+                        lineHeight={1.8}
+                    >
                         A full-stack expense and subscription tracking platform designed to surface spending insights,
                         trends, and real-world financial clarity.
                     </Typography>
@@ -307,7 +320,7 @@ export default function About() {
                         />
                         <TechBullet
                             title="Database"
-                            text="PostgresSQL servers as the datasource for performance, JSON data types, and relational database."
+                            text="PostgreSQL servers as the datasource for performance, JSON data types, and relational database."
                         />
                         <TechBullet
                             title="Web Server"

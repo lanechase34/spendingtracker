@@ -14,6 +14,7 @@ import Paper from '@mui/material/Paper';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import useBreakpoint from 'hooks/useBreakpoint';
 import Divider from '@mui/material/Divider';
+import type { DateRangeType } from 'types/DateRange.type';
 
 // Styled wrapper around DayPicker
 const StyledDayPickerWrapper = styled(Box)(({ theme }) => ({
@@ -87,17 +88,15 @@ function createDateRange(startDate: Dayjs, endDate: Dayjs): DateRange {
  */
 export default function DateRangeSelector() {
     const { isMobile } = useBreakpoint();
-    const { startDate, endDate, setStartDate, setEndDate } = useDateRangeContext();
+    const { startDate, endDate, setPresetRange, setCustomRange } = useDateRangeContext();
 
     // Keep track of temp start and end date, only update context when user confirms date range
     const [tempStartDate, setTempStartDate] = useState<Dayjs>(startDate);
     const [tempEndDate, setTempEndDate] = useState<Dayjs>(endDate);
 
-    const applyQuickRange = (from: Dayjs, to: Dayjs) => {
-        setTempStartDate(from);
-        setTempEndDate(to);
-        setStartDate(from);
-        setEndDate(to);
+    // Handler for one of the preset date range buttons
+    const applyPresetRange = (type: Exclude<DateRangeType, 'custom'>) => {
+        setPresetRange(type);
         handleClose();
     };
 
@@ -113,14 +112,17 @@ export default function DateRangeSelector() {
     const open = Boolean(anchorEl);
     const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
+        // Reset temp dates to current context values when opening
+        setTempStartDate(startDate);
+        setTempEndDate(endDate);
     };
+
     const handleClose = () => {
         setAnchorEl(null);
     };
 
     const handleDone = () => {
-        setStartDate(tempStartDate);
-        setEndDate(tempEndDate);
+        setCustomRange(tempStartDate, tempEndDate);
         handleClose();
     };
 
@@ -143,63 +145,24 @@ export default function DateRangeSelector() {
             >
                 <Paper sx={{ p: 2, minWidth: 800 }}>
                     <Box display="flex" flexDirection="row" gap={2}>
-                        {/* Quick ranges */}
+                        {/* Preset Ranges */}
                         <Stack spacing={1}>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() => applyQuickRange(dayjs().startOf('week'), dayjs().endOf('week'))}
-                            >
+                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('this-week')}>
                                 This Week
                             </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() =>
-                                    applyQuickRange(
-                                        dayjs().subtract(7, 'day').startOf('week'),
-                                        dayjs().subtract(7, 'day').endOf('week')
-                                    )
-                                }
-                            >
+                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('last-week')}>
                                 Last Week
                             </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() => applyQuickRange(dayjs().startOf('month'), dayjs().endOf('month'))}
-                            >
+                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('this-month')}>
                                 This Month
                             </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() =>
-                                    applyQuickRange(
-                                        dayjs().subtract(1, 'month').startOf('month'),
-                                        dayjs().subtract(1, 'month').endOf('month')
-                                    )
-                                }
-                            >
+                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('last-month')}>
                                 Last Month
                             </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() => applyQuickRange(dayjs().startOf('year'), dayjs().endOf('year'))}
-                            >
+                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('this-year')}>
                                 This Year
                             </Button>
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={() =>
-                                    applyQuickRange(
-                                        dayjs().subtract(1, 'year').startOf('year'),
-                                        dayjs().subtract(1, 'year').endOf('year')
-                                    )
-                                }
-                            >
+                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('last-year')}>
                                 Last Year
                             </Button>
                         </Stack>

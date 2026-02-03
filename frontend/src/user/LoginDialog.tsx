@@ -10,6 +10,8 @@ import IconButton from '@mui/material/IconButton';
 import { useState, useMemo } from 'react';
 import Divider from '@mui/material/Divider';
 import TextField from '@mui/material/TextField';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 import useFormField from 'hooks/useFormField';
 import Stack from '@mui/material/Stack';
 import type { FormEvent } from 'react';
@@ -29,6 +31,7 @@ export default function LoginDialog() {
 
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string[] | null>(null);
+    const [rememberMe, setRememberMe] = useState<boolean>(false);
 
     const { login: setToken, setPendingToken } = useAuthContext();
     const userAPI = useMemo(() => userService({}), []);
@@ -42,6 +45,7 @@ export default function LoginDialog() {
         // Reset fields when modal finishes closing
         emailField.reset();
         passwordField.reset();
+        setRememberMe(false);
         setError(null);
         setLoading(false);
     };
@@ -79,6 +83,7 @@ export default function LoginDialog() {
         const formData = new FormData();
         formData.append('email', emailField.value);
         formData.append('password', passwordField.value);
+        formData.append('rememberMe', rememberMe.toString());
 
         try {
             const token = await userAPI.login(formData);
@@ -164,6 +169,20 @@ export default function LoginDialog() {
                                 onBlur={passwordField.handleBlur}
                                 error={!!passwordField.error}
                                 helperText={passwordField.error}
+                            />
+
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                        name="rememberMe"
+                                        color="primary"
+                                        sx={{ pl: 0 }}
+                                    />
+                                }
+                                label="Remember me"
+                                sx={{ m: 0, p: 0 }}
                             />
                         </Stack>
                     </Box>
