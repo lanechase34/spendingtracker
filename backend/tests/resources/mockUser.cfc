@@ -56,7 +56,14 @@ component extends="coldbox.system.testing.BaseTestCase" {
     public string function login(required component userObj) {
         expect(cbauth.isLoggedIn()).toBeFalse();
 
-        var event = post(route = '/api/v1/login', params = {email: userObj.getEmail(), password: createUUID()});
+        var event = post(
+            route  = '/api/v1/login',
+            params = {
+                email     : userObj.getEmail(),
+                password  : createUUID(),
+                rememberMe: false
+            }
+        );
 
         var response = event.getResponse();
         expect(response.getStatusCode()).toBe(200);

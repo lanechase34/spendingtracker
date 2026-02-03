@@ -31,7 +31,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 // Inject mocked dependencies
                 handler.$property(propertyName = 'csrfService', mock = mockCSRFService);
                 handler.$property(propertyName = 'jwtService', mock = mockJwtService);
-                handler.$property(propertyName = 'SecurityService', mock = mockSecurityService);
+                handler.$property(propertyName = 'securityService', mock = mockSecurityService);
                 handler.$property(propertyName = 'userService', mock = mockUserService);
                 handler.$property(propertyName = 'verificationCooldown', mock = 5);
 
@@ -86,7 +86,45 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     mockJwtService.$('getSettings', mockSettings);
                     mockSecurityService.$('SetRefreshTokenCookie');
 
-                    var rc  = {email: 'test@example.com', password: 'password123'};
+                    var rc = {
+                        email     : 'test@example.com',
+                        password  : 'password123',
+                        rememberMe: false
+                    };
+                    var prc = {};
+
+                    var result = handler.login(event, rc, prc);
+
+                    expect(prc.valid).toBeTrue();
+                    expect(mockJwtService.$once('attempt')).toBeTrue();
+                    expect(mockSecurityService.$once('SetRefreshTokenCookie')).toBeFalse(); // rememberMe -> false
+                });
+
+                it('Should successfully login with valid credentials and set refresh token with rememberMe true', () => {
+                    var event     = getRequestContext();
+                    var mockToken = {access_token: 'test-access-token', refresh_token: 'test-refresh-token'};
+
+                    var mockSettings = {jwt: {expiration: 60}};
+
+                    prepareMock(event)
+                        .$('getValue')
+                        .$args('email')
+                        .$results('test@example.com');
+
+                    prepareMock(event)
+                        .$('getValue')
+                        .$args('password')
+                        .$results('password123');
+
+                    mockJwtService.$('attempt', mockToken);
+                    mockJwtService.$('getSettings', mockSettings);
+                    mockSecurityService.$('SetRefreshTokenCookie');
+
+                    var rc = {
+                        email     : 'test@example.com',
+                        password  : 'password123',
+                        rememberMe: true
+                    }; // rememberMe -> true
                     var prc = {};
 
                     var result = handler.login(event, rc, prc);
@@ -183,7 +221,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     var mockToken    = {access_token: 'valid-token', refresh_token: 'valid-refresh'};
                     var mockSettings = {jwt: {expiration: 60}};
 
-                    var rc  = {email: 'valid@example.com', password: 'validpass'};
+                    var rc = {
+                        email     : 'valid@example.com',
+                        password  : 'validpass',
+                        rememberMe: false
+                    };
                     var prc = {};
 
                     mockJwtService.$('attempt', mockToken);

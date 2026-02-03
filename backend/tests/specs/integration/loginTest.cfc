@@ -31,7 +31,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
             it('Will receive a 400 with bad parameters', () => {
                 expect(cbauth.isLoggedIn()).toBeFalse();
                 // Login with an invalid email
-                var event = post(route = '/api/v1/login', params = {email: 'notARealUser'});
+                var event = post(route = '/api/v1/login', params = {email: 'notARealUser', rememberMe: false});
 
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(400);
@@ -50,7 +50,11 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                 expect(cbauth.isLoggedIn()).toBeFalse();
                 var event = post(
                     route  = '/api/v1/login',
-                    params = {email: 'notARealUser@gmail.com', password: createUUID()}
+                    params = {
+                        email     : 'notARealUser@gmail.com',
+                        password  : createUUID(),
+                        rememberMe: false
+                    }
                 );
 
                 var response = event.getResponse();
@@ -88,7 +92,14 @@ component extends="tests.resources.baseTest" asyncAll="true" {
             it('Will forbid an unverified user from logging in', () => {
                 var user = mockUser.make(verified = false); // unverified user
                 expect(cbauth.isLoggedIn()).toBeFalse();
-                var event = post(route = '/api/v1/login', params = {email: user.getEmail(), password: createUUID()});
+                var event = post(
+                    route  = '/api/v1/login',
+                    params = {
+                        email     : user.getEmail(),
+                        password  : createUUID(),
+                        rememberMe: false
+                    }
+                );
 
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(403);
