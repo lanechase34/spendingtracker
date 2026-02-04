@@ -572,6 +572,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     mockUserService.$('findByVerificationCode', true);
                     mockUserService.$('markVerified');
                     mockUserService.$('retrieveUserById', mockUser);
+                    mockUserService.$('updateLastLogin');
                     mockJwtService.$('fromUser', mockToken);
                     mockSecurityService.$('SetRefreshTokenCookie');
 

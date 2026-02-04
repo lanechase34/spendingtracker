@@ -66,18 +66,19 @@ component singleton accessors="true" {
             return false;
         }
 
-        // Fire thread to update last login column
+        updateLastLogin(userid = user.getId());
+        return true;
+    }
+
+    /**
+     * Fire a new future (non-blocking) to update the last login column
+     */
+    private void function updateLastLogin(required numeric userid) {
         async.newFuture(() => {
             q.from('users')
-                .where(
-                    'id',
-                    '=',
-                    {value: user.getId(), cfsqltype: 'numeric'}
-                )
+                .where('id', '=', {value: userid, cfsqltype: 'numeric'})
                 .update({lastlogin: {value: now(), cfsqltype: 'timestamp'}});
         });
-
-        return true;
     }
 
     /**
@@ -337,6 +338,7 @@ component singleton accessors="true" {
             .update({'verified': {value: true, cfsqltype: 'boolean'}, 'security_level': {value: 10, cfsqltype: 'numeric'}});
 
         cacheStorage.clearByKeySnippet(keySnippet = 'user_#userid#');
+        updateLastLogin(userid = userid);
         return;
     }
 
