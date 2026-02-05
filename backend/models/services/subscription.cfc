@@ -159,7 +159,7 @@ component singleton accessors="true" {
                 totalAmount += securityService.decryptValue(row.amount, 'numeric');
             });
 
-            total = {count: result.recordCount(), amount: securityService.intToFloat(totalAmount, 2)};
+            total = {count: result.recordCount(), amount: securityService.intToFloat(totalAmount)};
 
             cacheStorage.set(cacheKey, total);
         }

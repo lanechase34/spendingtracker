@@ -51,7 +51,7 @@ component singleton accessors="true" {
                 totalExtra += securityService.decryptValue(row.extra, 'numeric');
             });
 
-            total = {pay: securityService.intToFloat(totalPay, 2), extra: securityService.intToFloat(totalExtra, 2)};
+            total = {pay: securityService.intToFloat(totalPay), extra: securityService.intToFloat(totalExtra)};
 
             cacheStorage.set(cacheKey, total);
         }

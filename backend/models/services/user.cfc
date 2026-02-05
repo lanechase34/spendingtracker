@@ -100,8 +100,10 @@ component singleton accessors="true" {
         }
 
         // Decrypt fields
-        userData.salary          = securityService.decryptValue(userData.salary, 'numeric');
-        userData.monthlytakehome = securityService.decryptValue(userData.monthlytakehome, 'numeric');
+        userData.salary          = securityService.decryptValue(securityService.decryptValue(userData.salary, 'numeric'));
+        userData.monthlytakehome = securityService.decryptValue(
+            securityService.decryptValue(userData.monthlytakehome, 'numeric')
+        );
 
         return userData;
     }
@@ -239,8 +241,10 @@ component singleton accessors="true" {
             result = {
                 role           : this.roleMap[base.security_level],
                 settings       : deserializeJSON(base.settings),
-                salary         : securityService.decryptValue(base.salary, 'numeric'),
-                monthlytakehome: securityService.decryptValue(base.monthlytakehome, 'numeric')
+                salary         : securityService.intToFloat(securityService.decryptValue(base.salary, 'numeric')),
+                monthlytakehome: securityService.intToFloat(
+                    securityService.decryptValue(base.monthlytakehome, 'numeric')
+                )
             };
 
             cacheStorage.set(cacheKey, result);
