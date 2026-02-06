@@ -33,6 +33,7 @@ component {
             // Widget
             route('/widgets/stackedBarChart').withAction({GET: 'stackedBarChart'}).toHandler('widget');
             route('/widgets/donutChart').withAction({GET: 'donutChart'}).toHandler('widget');
+            route('/widgets/lineChart').withAction({GET: 'lineChart'}).toHandler('widget');
 
             // Income
             route('/income/').withAction({GET: 'view', PUT: 'save'}).toHandler('income');

@@ -52,7 +52,7 @@ export const barPlugins = {
         number: (context: TooltipItem<'bar'>): string => {
             const label = context.dataset.label ?? '';
             const value = context.parsed.y!;
-            return `${label}: $${value.toFixed(2)}`;
+            return `${label}: $${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
         },
     },
 
@@ -68,7 +68,7 @@ export const barPlugins = {
         tooltipItems.forEach((tooltipItem: TooltipItem<'bar'>): void => {
             total += tooltipItem.parsed.y!;
         });
-        return `Total: $${total.toFixed(2)}`;
+        return `Total: $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
     },
 
     /**
@@ -248,7 +248,7 @@ export const donutPlugins = {
             const label = context.label ?? '';
             const value = context.parsed;
             const percentage = getPercentage(value, context);
-            return `${label}: $${value.toFixed(2)} (${percentage}%)`;
+            return `${label}: $${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${percentage}%)`;
         },
 
         number: (context: TooltipItem<'doughnut'>): string => {
@@ -324,5 +324,30 @@ export const donutPlugins = {
         });
 
         chart.update();
+    },
+};
+
+export const linePlugins = {
+    /**
+     * Tooltip label formatters
+     */
+    labels: {
+        money: (context: TooltipItem<'line'>): string => {
+            const value = context.parsed.y!;
+            return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+        },
+    },
+
+    /**
+     * Pre-configured tooltip options for line charts
+     */
+    tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: '#666',
+        borderWidth: 1,
+        displayColors: true,
     },
 };

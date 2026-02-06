@@ -42,6 +42,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         }
 
         cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|expense');
+        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
         return result;
     }
 

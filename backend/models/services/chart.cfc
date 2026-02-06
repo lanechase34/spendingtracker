@@ -1,5 +1,6 @@
 component singleton accessors="true" {
 
+    property name="cacheStorage"    inject="cachebox:coldboxStorage";
     property name="securityService" inject="services.security";
 
     /**
@@ -11,33 +12,23 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
+        var cacheKey = 'userid=#userid#|widget.stackedBarChart|startDate=#startDate#|endDate=#endDate#';
+        var result   = cacheStorage.get(cacheKey);
+        if(!isNull(result)) {
+            return result;
+        }
+
         var dataset     = []; // each category has own struct
         var categoryMap = {}; // map category -> which dataset
         var labels      = [];
         var labelMap    = {}; // map label -> dataset.data position
 
         // Get all expense data between start->end date
-        var expenseData = queryExecute(
-            '
-            select
-                c.name as category, 
-                c.color as color,
-                e.date,
-                e.amount
-            from expense e
-            inner join category c on e.categoryid = c.id
-            where e.userid = :userid
-            and e.date >= :start
-            and e.date <= :end
-            ',
-            {
-                userid: {value: userid, cfsqltype: 'integer'},
-                start : {value: startDate, cfsqltype: 'date'},
-                end   : {value: endDate, cfsqltype: 'date'}
-            }
+        var expenseData = getWidgetData(
+            startDate = arguments.startDate,
+            endDate   = arguments.endDate,
+            userid    = arguments.userid
         );
-
-
         var daysDiff   = dateDiff('d', startDate, endDate) + 1;
         var isWeekView = daysDiff == 7;
         var dateFormat = isWeekView ? 'd' : 'w';
@@ -57,8 +48,7 @@ component singleton accessors="true" {
             var endDateWeek   = dateFormat(endDate, dateFormat);
 
             // Account for edge case where startdate might be at start of week and enddate at start of week as well
-            var diff = endDateWeek - startDateWeek > weekDiff ? endDateWeek - startDateWeek : weekDiff;
-
+            var diff                = endDateWeek - startDateWeek > weekDiff ? endDateWeek - startDateWeek : weekDiff;
             var firstDayOfStartWeek = getFirstDayOfWeek(startDateWeek, year(startDate));
 
             for(var i = startDateWeek; i <= startDateWeek + diff; i++) {
@@ -123,7 +113,10 @@ component singleton accessors="true" {
             });
         });
 
-        return {datasets: dataset, labels: labels};
+        result = {datasets: dataset, labels: labels};
+        cacheStorage.set(cacheKey, result);
+
+        return result;
     }
 
     /**
@@ -144,6 +137,44 @@ component singleton accessors="true" {
     }
 
     /**
+     * Returns the base widget query of all expenses for user
+     * between start-end date
+     */
+    private query function getWidgetData(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var cacheKey = 'userid=#userid#|widget.rawData|startDate=#startDate#|endDate=#endDate#';
+        var result   = cacheStorage.get(cacheKey);
+        if(!isNull(result)) {
+            return result;
+        }
+
+        return cacheStorage.getOrSet(cacheKey, () => {
+            return queryExecute(
+                '
+                select
+                    c.name as category, 
+                    c.color as color,
+                    e.date,
+                    e.amount as amount
+                from expense e
+                inner join category c on e.categoryid = c.id
+                where e.userid = :userid
+                and e.date >= :start
+                and e.date <= :end
+                ',
+                {
+                    userid: {value: userid, cfsqltype: 'integer'},
+                    start : {value: startDate, cfsqltype: 'date'},
+                    end   : {value: endDate, cfsqltype: 'date'}
+                }
+            );
+        });
+    }
+
+    /**
      * Get donut chart data for ChartJS
      * Groups data by category and gets total per category
      */
@@ -152,6 +183,12 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
+        var cacheKey = 'userid=#userid#|widget.donutChart|startDate=#startDate#|endDate=#endDate#';
+        var result   = cacheStorage.get(cacheKey);
+        if(!isNull(result)) {
+            return result;
+        }
+
         var dataset = {
             label          : 'Amount',
             data           : [],
@@ -160,23 +197,10 @@ component singleton accessors="true" {
         var labels      = [];
         var categoryMap = {};
 
-        var expenseData = queryExecute(
-            '
-            select
-                c.name as category, 
-                c.color as color,
-                e.amount as amount
-            from expense e
-            inner join category c on e.categoryid = c.id
-            where e.userid = :userid
-            and e.date >= :start
-            and e.date <= :end
-            ',
-            {
-                userid: {value: userid, cfsqltype: 'integer'},
-                start : {value: startDate, cfsqltype: 'date'},
-                end   : {value: endDate, cfsqltype: 'date'}
-            }
+        var expenseData = getWidgetData(
+            startDate = arguments.startDate,
+            endDate   = arguments.endDate,
+            userid    = arguments.userid
         );
 
         // Each category has a data point in data, backgroundColor array
@@ -206,7 +230,62 @@ component singleton accessors="true" {
             return securityService.intToFloat(intCents);
         });
 
-        return {dataset: dataset, labels: labels};
+        result = {dataset: dataset, labels: labels};
+        cacheStorage.set(cacheKey, result);
+
+        return result;
+    }
+
+    /**
+     * Get line chart data for chartJS
+     * Groups data by month, only works for year views
+     */
+    public struct function lineChart(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var cacheKey = 'userid=#userid#|widget.lineChart|startDate=#startDate#|endDate=#endDate#';
+        var result   = cacheStorage.get(cacheKey);
+        if(!isNull(result)) {
+            return result;
+        }
+
+        var dataset = {
+            label: 'Monthly Expense Line Chart',
+            data : [].resize(12) // always 12 months in this view
+        };
+        var labels = [].resize(12);
+
+        for(var i = 1; i <= 12; i++) {
+            labels[i] = monthShortAsString(i);
+        }
+
+        var expenseData = getWidgetData(
+            startDate = arguments.startDate,
+            endDate   = arguments.endDate,
+            userid    = arguments.userid
+        );
+
+        expenseData.each((row) => {
+            // Get month of row
+            var currMonth = month(row.date);
+
+            if(isNull(dataset.data[currMonth])) {
+                dataset.data[currMonth] = 0;
+            }
+
+            dataset.data[currMonth] += securityService.decryptValue(row.amount, 'numeric');
+        });
+
+        dataset.data = dataset.data.map((intCents) => {
+            return securityService.intToFloat(intCents);
+        });
+
+        result = {dataset: dataset, labels: labels};
+        cacheStorage.set(cacheKey, result);
+
+        return result;
     }
 
 }

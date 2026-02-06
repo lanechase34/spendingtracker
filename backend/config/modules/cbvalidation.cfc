@@ -428,7 +428,35 @@ component {
             }
         };
 
-        var widgetHandler = {'widget.stackedbarchart': widgetBase, 'widget.donutchart': widgetBase};
+        var widgetHandler = {
+            'widget.stackedbarchart': widgetBase,
+            'widget.donutchart'     : widgetBase,
+            'widget.linechart'      : {
+                startDate: {
+                    required: true,
+                    type    : 'date',
+                    udf     : (value, target, metadata) => {
+                        if(!isDate(value)) return false;
+                        return month(value) == 1;
+                    },
+                    udfMessage: 'The startDate must be January'
+                },
+                endDate: {
+                    required : true,
+                    type     : 'date',
+                    dateRange: {
+                        datePart: 'd',
+                        maxRange: 364,
+                        minRange: 364
+                    },
+                    udf: (value, target) => {
+                        if(!isDate(value)) return false;
+                        return month(value) == 12;
+                    },
+                    udfMessage: 'The endDate must be December'
+                }
+            }
+        };
 
         // Admin handler
         var adminHandler = {

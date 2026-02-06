@@ -6,6 +6,8 @@ export const queryKeys = {
 
     stackedExpenseChart: (params?: { startDate: string; endDate: string }) => ['stackedExpenseChart', params] as const,
 
+    expenseLineChart: (params?: { startDate: string; endDate: string }) => ['expenseLineChart', params] as const,
+
     income: (params?: { startDate: string; endDate: string }) => ['income', params] as const,
 } as const;
 

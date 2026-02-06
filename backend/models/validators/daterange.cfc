@@ -8,6 +8,7 @@ component accessors="true" singleton {
         this.name     = 'dateRangeCheck';
         this.datePart = 'd';
         this.maxRange = 365; // 1 year
+        this.minRange = 0;
     }
 
     string function getName() {
@@ -63,6 +64,7 @@ component accessors="true" singleton {
         // Verify the startDate and endDate are within the range supplied
         var datePart = arguments.validationData.keyExists('datePart') ? arguments.validationData.datePart : this.datePart;
         var maxRange = arguments.validationData.keyExists('maxRange') ? arguments.validationData.maxRange : this.maxRange;
+        var minRange = arguments.validationData.keyExists('minRange') ? arguments.validationData.minRange : this.minRange;
         var check    = dateDiff(
             datePart,
             arguments.target.getStartDate(),
@@ -71,6 +73,16 @@ component accessors="true" singleton {
 
         if(check > maxRange || check < 0) {
             errorStruct.message = 'The startDate and endDate range is over the maximum allowed. The maximum allowed is #maxRange# #datePart#(s)';
+            validationResult.addError(
+                validationResult
+                    .newError(argumentCollection = errorStruct)
+                    .setErrorMetadata({fileExistsCheck: arguments.validationData})
+            );
+            return false;
+        }
+
+        if(check < minRange) {
+            errorStruct.message = 'The startDate and endDate range is not over the minimum allowed. The minimum allowed is #minRange# #datePart#(s)';
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)

@@ -215,6 +215,7 @@ component singleton accessors="true" {
 
         // Clear user expense cache
         cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|expense');
+        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
         return;
     }
 
@@ -252,6 +253,7 @@ component singleton accessors="true" {
 
             // Clear user expense cache
             cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|expense');
+            cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
         }
 
         return success;

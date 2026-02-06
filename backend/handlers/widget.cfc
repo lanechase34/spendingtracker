@@ -1,6 +1,10 @@
 component extends="base" secured="User,Admin" {
 
-    this.allowedMethods = {stackedBarChart: 'GET', donutChart: 'GET'};
+    this.allowedMethods = {
+        stackedBarChart: 'GET',
+        donutChart     : 'GET',
+        lineChart      : 'GET'
+    };
 
     property name="chartService" inject="services.chart";
 
@@ -31,6 +35,25 @@ component extends="base" secured="User,Admin" {
      */
     function donutChart(event, rc, prc) {
         prc.data = chartService.donutChart(
+            startDate = rc.startDate,
+            endDate   = rc.endDate,
+            userid    = prc.userid
+        );
+
+        event
+            .getResponse()
+            .setData(prc.data)
+            .setStatusCode(200);
+    }
+
+    /**
+     * Line chart widget for yearly view
+     *
+     * @rc.startDate get data in range from start - end
+     * @rc.endDate   end
+     */
+    function lineChart(event, rc, prc) {
+        prc.data = chartService.lineChart(
             startDate = rc.startDate,
             endDate   = rc.endDate,
             userid    = prc.userid
