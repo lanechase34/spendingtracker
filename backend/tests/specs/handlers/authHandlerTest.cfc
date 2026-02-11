@@ -261,6 +261,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     var mockResponse = createStub();
                     mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
 
                     prepareMock(event).$('getResponse', mockResponse);
 
@@ -285,6 +286,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     var mockResponse = createStub();
                     mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
 
                     prepareMock(event).$('getResponse', mockResponse);
 
@@ -308,6 +310,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     var mockResponse = createStub();
                     mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
 
                     prepareMock(event).$('getResponse', mockResponse);
 

@@ -86,7 +86,10 @@ component extends="base" {
         catch(any e) {
         }
 
-        event.getResponse().addMessage('Successfully logged out');
+        event
+            .getResponse()
+            .addMessage('Successfully logged out')
+            .setStatusCode(200);
     }
 
     /**

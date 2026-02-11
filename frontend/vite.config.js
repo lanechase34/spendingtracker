@@ -10,11 +10,16 @@ export default defineConfig({
     base: '/spendingtracker',
     plugins: [react(), tsconfigPaths(), visualizer({ open: true })],
     server: {
+        host: '0.0.0.0',
         port: 3000,
         open: false,
+        watch: {
+            usePolling: true,
+            interval: 1000,
+        },
         proxy: {
             '/spendingtracker/api/v1': {
-                target: 'http://localhost:8082',
+                target: process.env.VITE_API_TARGET || 'http://localhost:8082',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/spendingtracker\/api\/v1/, '/api/v1'),
             },

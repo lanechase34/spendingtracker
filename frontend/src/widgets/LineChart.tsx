@@ -102,12 +102,18 @@ export default function LineChart() {
      * Calculate average value, returns null if dataset empty
      */
     const averageValue = useMemo(() => {
+        // Ensure there is a data array
         if (!chartData?.datasets?.[0]?.data) return null;
         const data = chartData.datasets[0].data as number[];
         if (data.length === 0) return null;
 
-        const sum = data.reduce((acc, val) => acc + val, 0);
-        return sum / data.length;
+        // Only look at non-null data points
+        const validData = data.filter((val): val is number => val !== null);
+        if (validData.length === 0) return null;
+
+        // Calculate the average
+        const sum = validData.reduce((acc, val) => acc + val, 0);
+        return sum / validData.length;
     }, [chartData]);
 
     /**
@@ -121,6 +127,7 @@ export default function LineChart() {
             layout: {
                 padding: {
                     right: 40,
+                    top: 40,
                 },
             },
             scales: {

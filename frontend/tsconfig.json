@@ -9,6 +9,8 @@
         "strict": true,
         "forceConsistentCasingInFileNames": true,
         "noFallthroughCasesInSwitch": true,
+        "noUncheckedSideEffectImports": true,
+        "noUnusedParameters": true,
         "module": "esnext",
         "moduleResolution": "node",
         "resolveJsonModule": true,

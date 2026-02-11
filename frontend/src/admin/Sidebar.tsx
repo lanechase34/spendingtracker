@@ -9,7 +9,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import SpeedIcon from '@mui/icons-material/Speed';
-import SettingsIcon from '@mui/icons-material/Settings';
+// import SettingsIcon from '@mui/icons-material/Settings';
 import type { OverridableComponent } from '@mui/material/OverridableComponent';
 import type { SvgIconTypeMap } from '@mui/material/SvgIcon';
 import { DRAWER_WIDTH } from './Layout';
@@ -52,7 +52,7 @@ export const adminNav: NavSection[] = [
         section: 'System',
         items: [
             { label: 'Task Manager', path: '/admin/tasks', icon: TaskAltIcon },
-            { label: 'Settings', path: '/admin/settings', icon: SettingsIcon },
+            // { label: 'Settings', path: '/admin/settings', icon: SettingsIcon },
             { label: 'Users', path: '/admin/users', icon: PeopleAltIcon },
         ],
     },

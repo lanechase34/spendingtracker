@@ -21,21 +21,21 @@
     },
     "name":"SpendingTracker",
     "openbrowser":"false",
-    "openBrowserUrl":"http://localhost:8082",
+    "openBrowserUrl":"http://${HTTP_HOST}:${HTTP_PORT}",
     "trayEnable":"false",
     "web":{
-        "host":"127.0.0.1",
+        "host":"${HTTP_HOST}",
         "rewrites":{
             "enable":"true"
         },
         "directoryBrowsing":"false",
         "http":{
             "enable":"true",
-            "port":"8082"
+            "port":"${HTTP_PORT}"
         },
         "rules":[
-            "warm-up-server(urls={'/warmup'}, requestStrategy=queue, async=false, timeoutSeconds=${WARMUPTIMEOUT})",
-            "path-prefix-nocase(/lucee/) or path-prefix-nocase(/tests/) -> ip-access-control[default-allow=false, acl={'127.0.0.* allow', '::1 allow'}, failure-status=404]",
+            "warm-up-server(urls={'/warmup'}, requestStrategy=queue, async=false, timeoutSeconds=300)",
+            "path-prefix-nocase(/lucee/) -> ip-access-control[default-allow=false, acl={'127.0.0.* allow', '::1 allow'}, failure-status=404]",
             "path(/WebSocket.cfc) -> done",
             "regex-nocase('.*(box\\.json|Dockerfile|cfconfig\\.json|server\\.json)') or path-suffix-nocase(.env) or path-suffix-nocase(.md) or path-suffix-nocase(.cfc) or path-prefix-nocase(/.well-known/) -> set-error(404)",
             "regex-nocase('.*\\.(webp|css|js|ico)$') or regex-nocase('.*\\?v=[a-zA-Z0-9]{10}$') -> set(attribute='%{o,Cache-Control}', value='public, max-age=25552000')"

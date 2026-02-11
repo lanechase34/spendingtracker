@@ -116,3 +116,91 @@ The following users are created and available to use for dev
 | test6@gmail.com | User           |
 | test7@gmail.com | Unverified     |
 | test8@gmail.com | Unverified     |
+
+## Dev Setup (No Docker)
+
+### Prerequisites
+
+- Node.js and npm
+- CommandBox CLI
+- PostgreSQL
+
+### Frontend
+
+1. All commands assume /frontend
+
+    ```
+    cd /frontend
+    ```
+
+2. Install latest version of Node and verify installation
+
+    ```
+    node -v
+    ```
+
+3. Install dependencies
+
+    ```
+    npm install
+    ```
+
+4. Start the Vite dev server
+
+    ```
+    npm start
+    ```
+
+5. Frontend will be running at
+    ```
+    http://localhost:3000
+    ```
+
+### Backend
+
+1. All commands assume /backend
+
+    ```
+    cd /backend
+    ```
+
+2. Install and run commandbox with `box`
+
+3. Setup Git Hooks by running
+
+    ```
+    githooks install
+    ```
+
+4. Install modules using
+
+    ```
+    install
+    ```
+
+5. Create PostgreSQL database with user
+
+6. Generate and populate a development `.env` file
+
+    ```
+    run-script blankEnv
+    ```
+
+7. Create the database tables and seed with dev data
+
+    ```
+    migrate install
+    migrate up
+    migrate seed run
+    ```
+
+8. Start server
+
+    ```
+    server start
+    ```
+
+9. Backend will be running at
+    ```
+    http://localhost:8082
+    ```

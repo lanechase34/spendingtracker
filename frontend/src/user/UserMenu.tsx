@@ -12,6 +12,7 @@ import useAuthContext from 'hooks/useAuthContext';
 import { userService } from 'schema/user';
 import useAuthFetch from 'hooks/useAuthFetch';
 import { useNavigate } from 'react-router-dom';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function UserMenu() {
     const { logout: deleteToken } = useAuthContext();
@@ -29,6 +30,11 @@ export default function UserMenu() {
      * Settings modal
      */
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+
+    /**
+     * Logout
+     */
+    const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
 
     const handleClickMenu = (event: MouseEvent<HTMLElement>) => {
         setMenuAnchorEl(event.currentTarget);
@@ -48,23 +54,26 @@ export default function UserMenu() {
 
     // Call logout endpoint and delete JWT from browser
     const handleLogout = async () => {
+        setIsLoggingOut(true);
         try {
             await userAPI.logout();
         } catch (err: unknown) {
             console.error('Error logging out', err);
         }
+        // Always delete token
         deleteToken();
         void navigate('/');
+        setIsLoggingOut(false);
     };
 
     return (
         <>
-            <Button variant="outlined" onClick={handleClickMenu} aria-expanded={menuOpen}>
+            <Button variant="outlined" onClick={handleClickMenu} aria-expanded={menuOpen} disabled={isLoggingOut}>
                 <AccountCircleIcon sx={{ mx: 1 }} fontSize="small" />
             </Button>
             {menuOpen && (
                 <Menu anchorEl={menuAnchorEl} id="account-menu" open={menuOpen} onClose={handleCloseMenu}>
-                    <MenuItem onClick={handleOpenSettings}>
+                    <MenuItem onClick={handleOpenSettings} disabled={isLoggingOut}>
                         <ListItemIcon>
                             <SettingsIcon fontSize="small" />
                         </ListItemIcon>
@@ -74,11 +83,12 @@ export default function UserMenu() {
                         onClick={() => {
                             void handleLogout();
                         }}
+                        disabled={isLoggingOut}
                     >
                         <ListItemIcon>
-                            <LogoutIcon fontSize="small" />
+                            {isLoggingOut ? <CircularProgress size={16} /> : <LogoutIcon fontSize="small" />}
                         </ListItemIcon>
-                        Logout
+                        {isLoggingOut ? 'Logging out...' : 'Logout'}
                     </MenuItem>
                 </Menu>
             )}

@@ -66,18 +66,19 @@ component singleton accessors="true" {
          * Calculated the filtered total expense sum and the number of records
          */
         var filtered        = base.select(['expense.id', 'expense.amount']).get();
-        var filteredSum     = 0;
         var filteredRecords = filtered.len();
-
-        filtered.each((record) => {
-            filteredSum += securityService.decryptValue(record.amount, 'numeric');
-        });
-        filteredSum = securityService.intToFloat(filteredSum);
 
         /**
          * Perform total info query and data query in parallel
          */
-        var offset         = (page - 1) * records;
+        var offset           = (page - 1) * records;
+        var asyncFilteredSum = async.newFuture(() => {
+            var curr = 0;
+            filtered.each((record) => {
+                curr += securityService.decryptValue(record.amount, 'numeric');
+            });
+            return securityService.intToFloat(curr);
+        });
         var asyncTotalInfo = async.newFuture(() => {
             return getTotalInfo(
                 startDate = startDate,
@@ -120,10 +121,12 @@ component singleton accessors="true" {
 
         var results = async
             .newFuture()
-            .all(asyncTotalInfo, asyncData)
+            .all(asyncFilteredSum, asyncTotalInfo, asyncData)
             .get();
-        var totalInfo = results[1];
-        var data      = results[2];
+
+        var filteredSum = results[1];
+        var totalInfo   = results[2];
+        var data        = results[3];
 
         // If sorting by amount, sort the decrypted data
         if(orderCol == 'expense.amount' && orderDir.len()) {

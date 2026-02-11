@@ -43,90 +43,86 @@ trends, financial clarity.
 - Deployment: `docs/deployment.md`
 - Development workflows: `docs/development.md`
 
-## Dev Setup
+## Dev Docker Setup
+
+See `docs/development.md` on how to run without using Docker.
+
+Follow these steps to run the Backend, Frontend, and PostgreSQL database locally in Docker.
+
+The database container will automatically be seeded with dev data.
 
 ### Prerequisites
 
-- Node.js and npm
-- CommandBox CLI
-- PostgreSQL
+- Docker Desktop
 
-### Frontend
+### Setup
 
-1. All commands assume /frontend
+1.  Using `docker/env.docker.example` as a template, populate .env in the webroot
 
-    ```
-    cd /frontend
-    ```
-
-2. Install latest version of Node and verify installation
+2.  Navigate to Docker dir
 
     ```
-    node -v
+    cd docker
     ```
 
-3. Install dependencies
+3.  Start all services
+
+    **Note:** On first run, this will build the frontend image automatically. Subsequent runs will use the cached image.
+    For the first run, build the images needed
 
     ```
-    npm install
+    docker compose up -d
     ```
 
-4. Start the Vite dev server
+4.  Verify app is running (this may be a few minutes on first start)
+    - **Frontend**: http://localhost:3000
+    - **Backend Health Check**: http://localhost:8082/healthcheck
 
+5.  Stop containers by running
     ```
-    npm start
-    ```
-
-5. Frontend will be running at
-    ```
-    http://localhost:3000
+    docker compose down
     ```
 
-### Backend
+### Commands
 
-1. All commands assume /backend
-
-    ```
-    cd /backend
-    ```
-
-2. Install and run commandbox with `box`
-
-3. Setup Git Hooks by running
+- Build fresh images
 
     ```
-    githooks install
+    docker compose up --build
     ```
 
-4. Install modules using
+- Stop containers and clear all data
 
     ```
-    install
+    docker compose down -v
     ```
 
-5. Create PostgreSQL database with user
-
-6. Generate and populate a development `.env` file
+- Restart the containers
 
     ```
-    run-script blankEnv
+    docker compose restart
     ```
 
-7. Create the database tables and seed with dev data
+- View logs from all services
 
     ```
-    migrate install
-    migrate up
-    migrate seed run
+    docker compose logs -f
     ```
 
-8. Start server
+- View logs from specific service
 
     ```
-    server start
+    docker compose logs -f pogotracker_app
+    docker compose logs -f pogotracker_db
     ```
 
-9. Backend will be running at
-    ```
-    http://localhost:8082
-    ```
+### Connecting to database
+
+| Setting      | Value                |
+| ------------ | -------------------- |
+| **Host**     | `localhost`          |
+| **Port**     | `5432`               |
+| **Database** | `spendingtracker_db` |
+| **Username** | `docker_user`        |
+| **Password** | `docker1234`         |
+| **Schema**   | `public`             |
