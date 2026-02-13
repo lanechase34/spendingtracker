@@ -57,7 +57,14 @@
             "command": "box server start",
             "options": {
                 "cwd": "${workspaceFolder}/backend"
-            }
+            },
+            "presentation": {
+                "panel": "dedicated",
+                "reveal": "always",
+                "focus": false
+            },
+            "isBackground": true,
+            "problemMatcher": []
         },
         {
             "label": "Start Frontend",
@@ -65,7 +72,14 @@
             "command": "npm start",
             "options": {
                 "cwd": "${workspaceFolder}/frontend"
-            }
+            },
+            "presentation": {
+                "panel": "dedicated",
+                "reveal": "always",
+                "focus": false
+            },
+            "isBackground": true,
+            "problemMatcher": []
         }
     ]
 }

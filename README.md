@@ -68,7 +68,6 @@ The database container will automatically be seeded with dev data.
 3.  Start all services
 
     **Note:** On first run, this will build the frontend image automatically. Subsequent runs will use the cached image.
-    For the first run, build the images needed
 
     ```
     docker compose up -d

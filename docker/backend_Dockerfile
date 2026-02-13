@@ -55,4 +55,6 @@ RUN ldconfig /usr/local/lib
 RUN magick -version && \
     magick -list format | grep -i heic
 
+ENV HEALTHCHECK_URI="http://localhost:8082/healthcheck"
+
 WORKDIR ${APP_DIR}
