@@ -11,7 +11,7 @@ component extends="base" {
             && ['0:0:0:0:0:0:0:1', '127.0.0.1'].contains(securityService.getRequestIP())
             && find('Java', cgi.http_user_agent) > 0
         ) {
-            setting requestTimeout=600;
+            setting requestTimeout=300;
 
             var start      = getTickCount();
             application.ws = new WebSocket();

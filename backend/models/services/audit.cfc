@@ -2,6 +2,7 @@ component singleton accessors="true" {
 
     property name="async"        inject="asyncManager@coldbox";
     property name="cacheStorage" inject="cachebox:coldboxStorage";
+    property name="maxThreads"   inject="coldbox:setting:maxThreads";
     property name="q"            inject="provider:QueryBuilder@qb";
 
     /**
@@ -133,7 +134,7 @@ component singleton accessors="true" {
                         value.created = dateTimeFormat(value.created, 'yyyy-mm-dd HH:mm:ss');
                     },
                     true,
-                    20
+                    maxThreads
                 );
         });
 

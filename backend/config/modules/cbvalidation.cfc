@@ -134,7 +134,23 @@ component {
                     size    : '3..500'
                 }
             },
-            'expense.bulksave': {} // stub, validation handled in validator
+            'expense.bulksave': {}, // stub, validation handled in validator
+            'expense.export'  : {
+                startDate: {required: true, type: 'date'},
+                endDate  : {
+                    required : true,
+                    type     : 'date',
+                    dateRange: {}
+                }
+            },
+            'expense.exportReceipts': {
+                startDate: {required: true, type: 'date'},
+                endDate  : {
+                    required : true,
+                    type     : 'date',
+                    dateRange: {}
+                }
+            }
         };
 
         // Bulk Save Endpoint (array of expense save)

@@ -3,6 +3,7 @@ component singleton accessors="true" {
     property name="async"              inject="asyncManager@coldbox";
     property name="cacheStorage"       inject="cachebox:coldboxStorage";
     property name="q"                  inject="provider:QueryBuilder@qb";
+    property name="maxThreads"         inject="coldbox:setting:maxThreads";
     property name="securityService"    inject="services.security";
     property name="spreadsheetService" inject="Spreadsheet@spreadsheet-cfml";
     property name="validationManager"  inject="ValidationManager@cbvalidation";
@@ -25,9 +26,9 @@ component singleton accessors="true" {
         required numeric userid,
         required numeric page,
         required numeric records,
-        required string search   = '',
-        required string orderCol = '',
-        required string orderDir = ''
+        string search   = '',
+        string orderCol = '',
+        string orderDir = ''
     ) {
         /**
          * Base Query
@@ -115,7 +116,7 @@ component singleton accessors="true" {
                         value.amount = securityService.intToFloat(securityService.decryptValue(value.amount, 'numeric'));
                     },
                     true,
-                    50
+                    maxThreads
                 );
         });
 
@@ -376,6 +377,126 @@ component singleton accessors="true" {
         });
 
         return result;
+    }
+
+    /**
+     * Export data to csv between the startdate, enddate range
+     * for the supplied user
+     *
+     * Returns the csv as string
+     */
+    public string function csvExport(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var totalInfo = getTotalInfo(
+            startDate = startDate,
+            endDate   = endDate,
+            userid    = userid
+        );
+
+        var records = paginate(
+            startDate = startDate,
+            endDate   = endDate,
+            userid    = userid,
+            page      = 1,
+            records   = totalInfo.count
+        ).results.expenses;
+
+        records.each(
+            (expense) => {
+                expense.delete('id');
+                expense.delete('receipt')
+            },
+            true,
+            maxThreads
+        );
+
+        return spreadsheetService
+            .writeCsv()
+            .fromData(records)
+            .withStructKeysAsHeader()
+            .execute();
+    }
+
+    /**
+     * Returns all expenses that have a receipt with the receipt's filename
+     */
+    private array function getWithReceipt(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        return q
+            .from('expense')
+            .where('expense.userid', '=', userid)
+            .andWhereBetween(
+                'expense.date',
+                {value: startDate, cfsqltype: 'date'},
+                {value: endDate, cfsqltype: 'date'}
+            )
+            .andWhereNotNull('expense.receipt')
+            .select([
+                'expense.id',
+                'expense.receipt',
+                'expense.date',
+                'expense.description'
+            ])
+            .get();
+    }
+
+    /**
+     * Export receipt images between the startdate, enddate range
+     * for the supplied user in a zip file
+     */
+    public string function receiptExport(
+        required date startDate,
+        required date endDate,
+        required numeric userid,
+        required string userDir
+    ) {
+        // Get all expenses with receipt in date range
+        var expensesWithReceipt = getWithReceipt(
+            startDate = startDate,
+            endDate   = endDate,
+            userid    = userid
+        );
+
+        // No receipts
+        if(!expensesWithReceipt.len()) {
+            throw(message = 'No Receipts found within date range.', type = 'NoReceiptsFound');
+        }
+
+        // Over 100 receipts, too large
+        if(expensesWithReceipt.len() > 100) {
+            throw(
+                message = 'Too many receipts within date range. Maximum of 100 allowed per export.',
+                type    = 'TooManyReceipts'
+            );
+        }
+
+        var filePath = getTempDirectory() & 'receipts_#userid#_#dateFormat(startDate, 'yyyy-mm-dd')#_to_#dateFormat(endDate, 'yyyy-mm-dd')#.zip';
+
+        // Attempt to create zip file
+        try {
+            cfzip(
+                action    = "zip",
+                file      = filePath,
+                overwrite = true
+            ) {
+                expensesWithReceipt.each((expense) => {
+                    var receiptPath = '#userdir#/#expense.receipt#.webp';
+                    var fileName    = '#dateFormat(expense.date, 'yyyy-mm-dd')#_#expense.description#.webp';
+                    cfzipparam(source = receiptPath, entryPath = fileName);
+                });
+            }
+        }
+        catch(any e) {
+            throw(message = 'Error aggregating receipts. Please try again later.', type = 'ZipError')
+        }
+
+        return filePath;
     }
 
 }

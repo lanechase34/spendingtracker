@@ -224,7 +224,7 @@ component extends="base" secured="User,Admin" {
                     );
                 },
                 true,
-                50
+                getSetting('maxThreads')
             );
 
             event
@@ -232,6 +232,73 @@ component extends="base" secured="User,Admin" {
                 .setData(errors)
                 .setMessages([errors.count() ? 'Error saving expenses' : 'Successfully saved expenses'])
                 .setStatusCode(errors.count() ? 400 : 200);
+        }
+    }
+
+    /**
+     * Export all expense data within the date range to a csv file
+     *
+     * @rc.startDate get expenses in range from start - end
+     * @rc.endDate   end   
+     */
+    function export(event, rc, prc) {
+        prc.csvString = expenseService.csvExport(
+            startDate = rc.startDate,
+            endDate   = rc.endDate,
+            userid    = prc.userid
+        );
+
+        prc.fileName = 'expenses_#dateFormat(rc.startDate, 'yyyy-mm-dd')#_to_#dateFormat(rc.endDate, 'yyyy-mm-dd')#.csv';
+
+        event
+            .renderData(
+                type        = 'text',
+                data        = prc.csvString,
+                contentType = 'text/csv',
+                encoding    = 'utf-8',
+                statusCode  = 200,
+                statusText  = 'OK'
+            )
+            .setHTTPHeader(name = 'Content-Disposition', value = 'attachment; filename="#prc.fileName#"');
+    }
+
+    /**
+     * Export all receipts attached to expenses in date range to a zip file
+     *
+     * @rc.startDate get expenses in range from start - end
+     * @rc.endDate   end   
+     */
+    function exportReceipts(event, rc, prc) {
+        try {
+            prc.filePath = expenseService.receiptExport(
+                startDate = rc.startDate,
+                endDate   = rc.endDate,
+                userid    = prc.userid,
+                userdir   = prc.userDir
+            );
+
+            event.sendFile(
+                file        = prc.filePath,
+                name        = 'receipts_#dateFormat(rc.startDate, 'yyyy-mm-dd')#_to_#dateFormat(rc.endDate, 'yyyy-mm-dd')#.zip',
+                disposition = 'attachment',
+                mimeType    = 'application/zip',
+                deleteFile  = true
+            );
+        }
+        catch(NoReceiptsFound e) {
+            event
+                .getResponse()
+                .setErrorMessage(e.message)
+                .setStatusCode(404);
+        }
+        catch(TooManyReceipts e) {
+            event
+                .getResponse()
+                .setErrorMessage(e.message)
+                .setStatusCode(400);
+        }
+        catch(ZipError e) {
+            rethrow; // rethrow error to log bug
         }
     }
 

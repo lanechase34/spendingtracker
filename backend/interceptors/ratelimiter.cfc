@@ -8,7 +8,7 @@ component {
     /**
      * Rate limit requests on a per route basis on server side
      */
-    function preEvent(event, data, buffer, rc, prc) {
+    function preProcess(event, data, buffer, rc, prc) {
         if(!useRateLimiter) {
             return;
         }

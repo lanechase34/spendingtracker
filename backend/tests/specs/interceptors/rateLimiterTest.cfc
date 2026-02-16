@@ -51,7 +51,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 interceptor.$property(propertyName = 'useRateLimiter', mock = false);
                 expect(interceptor.$getProperty('useRateLimiter')).toBeFalse();
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,
@@ -68,7 +68,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 interceptor.$property(propertyName = 'settings', mock = {});
                 expect(interceptor.$getProperty('useRateLimiter')).toBeTrue();
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,
@@ -90,7 +90,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 mockSecurityService.$('getRequestIP', '192.168.1.1');
                 mockRateLimitService.$('buildKey', '');
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,
@@ -115,7 +115,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 mockRateLimitService.$('buildKey', '192.168.1.1');
                 mockRateLimitService.$('hit', true);
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,
@@ -143,7 +143,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 mockRateLimitService.$('buildKey', '192.168.1.1');
                 mockRateLimitService.$('hit', false);
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,
@@ -181,7 +181,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                     .$results('test@example.com');
                 mockRateLimitService.$('hit', true);
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,
@@ -207,7 +207,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 mockRateLimitService.$('buildKey', '192.168.1.1');
                 mockRateLimitService.$('hit', true);
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,
@@ -230,7 +230,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 mockRateLimitService.$('buildKey', '192.168.1.1');
                 mockRateLimitService.$('hit', true);
 
-                interceptor.preEvent(
+                interceptor.preProcess(
                     event  = mockRequestContext,
                     data   = mockData,
                     buffer = mockBuffer,

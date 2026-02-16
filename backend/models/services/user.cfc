@@ -11,6 +11,7 @@ component singleton accessors="true" {
     property name="securityService" inject="services.security";
 
     property name="impersonation"        inject="coldbox:setting:impersonation";
+    property name="maxThreads"           inject="coldbox:setting:maxThreads";
     property name="uploadPath"           inject="coldbox:setting:uploadPath";
     property name="verificationLifespan" inject="coldbox:setting:verificationLifespan";
 
@@ -475,7 +476,7 @@ component singleton accessors="true" {
                         value.verified       = value.verified == 1;
                     },
                     true,
-                    50
+                    maxThreads
                 );
         });
 

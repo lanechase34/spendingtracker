@@ -93,7 +93,7 @@ component
                 return variables.permissions.findNoCase(item);
             },
             true,
-            5
+            2
         );
     }
 

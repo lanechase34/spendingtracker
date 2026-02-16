@@ -1,6 +1,7 @@
 component singleton accessors="true" {
 
     property name="cacheStorage"    inject="cachebox:coldboxStorage";
+    property name="maxThreads"      inject="coldbox:setting:maxThreads";
     property name="q"               inject="provider:QueryBuilder@qb";
     property name="securityService" inject="services.security";
 
@@ -106,7 +107,7 @@ component singleton accessors="true" {
                 );
             },
             true,
-            50
+            maxThreads
         );
 
         return;

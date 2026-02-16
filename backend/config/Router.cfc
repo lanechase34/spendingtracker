@@ -16,10 +16,12 @@ component {
         group({pattern: '/api/v1'}, () => {
             // Expense
             route('/expenses/import').withAction({POST: 'import'}).toHandler('expense');
+            route('/expenses/export').withAction({POST: 'export'}).toHandler('expense');
             route('/expenses/bulk').withAction({POST: 'bulkSave'}).toHandler('expense');
             route('/expenses/:id-numeric/receipt').withAction({GET: 'receipt'}).toHandler('expense');
             route('/expenses/:id-numeric').withAction({DELETE: 'remove'}).toHandler('expense');
             route('/expenses/').withAction({GET: 'view', POST: 'save'}).toHandler('expense');
+            route('/receipts/export').withAction({POST: 'exportReceipts'}).toHandler('expense');
 
             // Subscription
             route('/subscriptions/:id-numeric')

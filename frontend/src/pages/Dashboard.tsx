@@ -8,6 +8,7 @@ import IncomeViewer from 'widgets/IncomeViewer';
 import BulkImport from 'expense/BulkImport';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import LineChart from 'widgets/LineChart';
+import Export from 'widgets/Export';
 import { useMemo } from 'react';
 
 const BASE_WIDGETS = [
@@ -17,6 +18,7 @@ const BASE_WIDGETS = [
     { key: 'incomeViewer', Component: IncomeViewer },
     { key: 'donutChart', Component: DonutChart },
     { key: 'bulkImport', Component: BulkImport },
+    { key: 'exportData', Component: Export },
 ];
 
 /**

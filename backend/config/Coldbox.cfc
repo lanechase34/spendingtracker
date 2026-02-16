@@ -89,7 +89,7 @@ component {
             jwt_secret    : getSystemSetting('JWT_SECRET'),
             logQueries    : false,
             logRequests   : true,
-            maxThreads    : 50,
+            maxThreads    : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
             rateLimits    : {
                 /**
                  * limit - num of request allowed per window
@@ -103,7 +103,9 @@ component {
                 },
                 'auth.register'              : {limit: 3, window: 1800, key: 'ip'},
                 'auth.verify'                : {limit: 5, window: 600, key: 'email'},
-                'auth.resendverificationcode': {limit: 3, window: 600, key: 'email'}
+                'auth.resendverificationcode': {limit: 3, window: 600, key: 'email'},
+                'expense.export'             : {limit: 1, window: 60, key: 'email'},
+                'expense.exportreceipts'     : {limit: 1, window: 600, key: 'email'}
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
             refreshTokenTTL     : 2592000, // 30 days in seconds

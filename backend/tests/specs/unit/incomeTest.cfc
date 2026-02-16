@@ -40,6 +40,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 // Inject mocked dependencies
                 incomeService.$property(propertyName = 'cacheStorage', mock = mockCacheStorage);
                 incomeService.$property(propertyName = 'q', mock = mockQueryBuilder);
+                incomeService.$property(propertyName = 'maxThreads', mock = 1);
             });
 
             describe('getTotal()', () => {
