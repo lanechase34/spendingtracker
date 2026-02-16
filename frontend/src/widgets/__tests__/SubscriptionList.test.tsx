@@ -186,7 +186,7 @@ describe('Subscription List Component', () => {
         });
 
         it('Toggles paused subscription to active', async () => {
-            mockToggle.mockImplementation(() => new Promise((res) => setTimeout(res, 400)));
+            mockToggle.mockImplementation(() => new Promise((res) => setTimeout(res, 500)));
 
             const user = userEvent.setup();
             const subscriptionContextValue = createSubscriptionContext({

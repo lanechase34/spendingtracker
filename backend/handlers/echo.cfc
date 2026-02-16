@@ -13,7 +13,8 @@ component extends="base" {
         ) {
             setting requestTimeout=600;
 
-            var start = getTickCount();
+            var start      = getTickCount();
+            application.ws = new WebSocket();
             if(getSetting('environment') == 'development') {
                 /**
                  * Data setup by forcing tasks to run

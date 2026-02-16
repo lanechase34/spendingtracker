@@ -31,14 +31,10 @@ component {
                 getInstance('services.subscription').charge();
             })
             .onFailure((task, exception) => {
-                task.overviewStruct.detail = 'Task Error (Callback)';
-                task.overviewStruct.stack  = exception;
-                getInstance('services.bug').log(argumentCollection = task.overviewStruct);
+                callbackOnFailure(task, exception);
             })
             .onSuccess((task, results) => {
-                task.overviewStruct.detail = 'Task Success (Callback)';
-                task.overviewStruct.delta  = getTickCount() - task.overviewStruct.startTick;
-                getInstance('services.audit').audit(argumentCollection = task.overviewStruct);
+                callbackOnSuccess(task);
             })
             .everyDayAt('05:00');
 
@@ -50,14 +46,10 @@ component {
                 getInstance('services.income').payMonthly();
             })
             .onFailure((task, exception) => {
-                task.overviewStruct.detail = 'Task Error (Callback)';
-                task.overviewStruct.stack  = exception;
-                getInstance('services.bug').log(argumentCollection = task.overviewStruct);
+                callbackOnFailure(task, exception);
             })
             .onSuccess((task, results) => {
-                task.overviewStruct.detail = 'Task Success (Callback)';
-                task.overviewStruct.delta  = getTickCount() - task.overviewStruct.startTick;
-                getInstance('services.audit').audit(argumentCollection = task.overviewStruct);
+                callbackOnSuccess(task);
             })
             .everyDayAt('07:00');
 
@@ -66,7 +58,7 @@ component {
                 task.overviewStruct.urlpath = 'metricsSubscription';
             })
             .call(() => {
-                var ws           = new WebSocket();
+                var ws           = application.ws;
                 var adminService = getInstance('services.admin');
 
                 /**
@@ -87,11 +79,21 @@ component {
                 adminService.resetActiveRequests();
             })
             .onFailure((task, exception) => {
-                task.overviewStruct.detail = 'Task Error (Callback)';
-                task.overviewStruct.stack  = exception;
-                getInstance('services.bug').log(argumentCollection = task.overviewStruct);
+                callbackOnFailure(task, exception);
             })
             .every(5, 'seconds');
+    }
+
+    function callbackOnFailure(required struct task, struct exception = {}) {
+        task.overviewStruct.detail = 'Task Error (Callback)';
+        task.overviewStruct.stack  = exception;
+        getInstance('services.bug').log(argumentCollection = task.overviewStruct);
+    }
+
+    function callbackOnSuccess(required struct task) {
+        task.overviewStruct.detail = 'Task Success (Callback)';
+        task.overviewStruct.delta  = getTickCount() - task.overviewStruct.startTick;
+        getInstance('services.audit').audit(argumentCollection = task.overviewStruct);
     }
 
     /**
