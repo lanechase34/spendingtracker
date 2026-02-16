@@ -23,6 +23,8 @@ npm-debug.log
 yarn-error.log
 frontend/examples
 frontend/stats.html
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
 ## Ignored Dependencies
 backend/coldbox/**

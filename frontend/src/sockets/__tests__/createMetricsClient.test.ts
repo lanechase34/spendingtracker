@@ -90,7 +90,7 @@ describe('createMetricsClient', () => {
         // Mock subscribe and capture the callback
         type SubscribeCallback = (message: IMessage) => void;
         let subscribeCallback: SubscribeCallback | undefined;
-        const subscribeMock = jest.fn((destination: string, callback: SubscribeCallback) => {
+        const subscribeMock = jest.fn((_destination: string, callback: SubscribeCallback) => {
             subscribeCallback = callback;
             return { id: 'test-subscription', unsubscribe: jest.fn() };
         });
@@ -133,7 +133,7 @@ describe('createMetricsClient', () => {
         // Mock subscribe and capture the callback
         type SubscribeCallback = (message: IMessage) => void;
         let subscribeCallback: SubscribeCallback | undefined;
-        const subscribeMock = jest.fn((destination: string, callback: SubscribeCallback) => {
+        const subscribeMock = jest.fn((_destination: string, callback: SubscribeCallback) => {
             subscribeCallback = callback;
             return { id: 'test-subscription', unsubscribe: jest.fn() };
         });

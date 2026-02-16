@@ -130,7 +130,7 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
             </TableCell>
             <TableCell>
                 <CategorySelect
-                    handleCategorySelectChange={(event, option: SelectOptionType | null) =>
+                    handleCategorySelectChange={(_event, option: SelectOptionType | null) =>
                         updateCategory(option?.value ?? null)
                     }
                     error={Boolean(categoryError)}

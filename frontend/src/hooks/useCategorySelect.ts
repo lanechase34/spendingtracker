@@ -26,7 +26,7 @@ export default function useCategorySelect({ initialValue, validator }: CategoryS
     const [error, setError] = useState<string | null>(null);
 
     const handleChange = useCallback(
-        (event: SyntheticEvent<Element, Event>, option: SelectOptionType | null) => {
+        (_event: SyntheticEvent<Element, Event>, option: SelectOptionType | null) => {
             const selectedValue = option?.value ?? null;
             setValue(selectedValue);
             setError(validator(selectedValue));

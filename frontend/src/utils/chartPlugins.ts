@@ -310,7 +310,7 @@ export const donutPlugins = {
     /**
      * Removes the alpha channel from background colors
      */
-    handleLeave: (_evt: ChartEvent, item: LegendItem, legend: LegendElement<'doughnut'>): void => {
+    handleLeave: (_evt: ChartEvent, _item: LegendItem, legend: LegendElement<'doughnut'>): void => {
         const chart = legend.chart;
         const dataset = chart.data.datasets?.[0];
         const bgColors = dataset && Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor : null;
