@@ -58,6 +58,10 @@ component {
                 task.overviewStruct.urlpath = 'metricsSubscription';
             })
             .call(() => {
+                if(!getSetting('warmedUp')) {
+                    return;
+                }
+
                 var ws           = application.ws;
                 var adminService = getInstance('services.admin');
 
