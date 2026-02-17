@@ -1,15 +1,16 @@
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
-import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
-import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import useDateRangeContext from 'hooks/useDateRangeContext';
-import LoadingCard from 'components/LoadingCard';
+import Typography from '@mui/material/Typography';
 import ErrorCard from 'components/ErrorCard';
-import EditIncome from './EditIncome';
+import LoadingCard from 'components/LoadingCard';
+import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
+import useDateRangeContext from 'hooks/useDateRangeContext';
 import useExpenseContext from 'hooks/useExpenseContext';
 import { useFetchIncome } from 'hooks/useIncomeQuery';
+
+import EditIncome from './EditIncome';
 
 /**
  * Income Viewer Widget

@@ -1,6 +1,6 @@
-import { renderHook, act } from '@testing-library/react';
-import type { SyntheticEvent } from 'react';
+import { act,renderHook } from '@testing-library/react';
 import useCategorySelect from 'hooks/useCategorySelect';
+import type { SyntheticEvent } from 'react';
 import type { SelectOptionType } from 'types/SelectOption.type';
 
 describe('useCategorySelect', () => {

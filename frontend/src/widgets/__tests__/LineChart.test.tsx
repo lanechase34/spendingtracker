@@ -1,9 +1,8 @@
-import { screen, waitFor } from '@testing-library/react';
-import { render } from '@test-utils';
-import '@testing-library/jest-dom';
-import LineChart from 'widgets/LineChart';
-import type { ChartData } from 'chart.js';
 import { QueryClient } from '@tanstack/react-query';
+import { render } from '@test-utils';
+import { screen, waitFor } from '@testing-library/react';
+import type { ChartData } from 'chart.js';
+import LineChart from 'widgets/LineChart';
 
 // Mock hooks and child components
 jest.mock('hooks/useDateRangeContext', () => ({

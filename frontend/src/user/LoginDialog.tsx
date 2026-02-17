@@ -1,27 +1,27 @@
-import useAuthContext from 'hooks/useAuthContext';
+import CloseIcon from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import Box from '@mui/material/Box';
-import CloseIcon from '@mui/icons-material/Close';
-import IconButton from '@mui/material/IconButton';
-import { useState, useMemo } from 'react';
 import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import useFormField from 'hooks/useFormField';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import ErrorAlert from 'components/ErrorAlert';
+import useAuthContext from 'hooks/useAuthContext';
+import useAuthDialogContext from 'hooks/useAuthDialogContext';
+import useFormField from 'hooks/useFormField';
 import type { FormEvent } from 'react';
+import { useMemo,useState } from 'react';
 import { userService } from 'schema/user';
+import { APIError } from 'utils/apiError';
+import { parseApiValidationError } from 'utils/parseApiValidationError';
 import { validateEmail } from 'validators/validateEmail';
 import { validatePassword } from 'validators/validatePassword';
-import { APIError } from 'utils/apiError';
-import useAuthDialogContext from 'hooks/useAuthDialogContext';
-import { parseApiValidationError } from 'utils/parseApiValidationError';
-import ErrorAlert from 'components/ErrorAlert';
 
 /**
  * Login form inside dialog

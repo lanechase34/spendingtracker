@@ -1,15 +1,15 @@
-import { useState, useEffect, useEffectEvent } from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Divider from '@mui/material/Divider';
-import useMetricContext from 'hooks/useMetricContext';
 import Skeleton from '@mui/material/Skeleton';
-import { Doughnut } from 'react-chartjs-2';
+import { useTheme } from '@mui/material/styles';
 import type { ChartData, ChartOptions } from 'chart.js';
-import { pointerHover, donutPlugins } from 'utils/chartPlugins';
+import { ArcElement, Chart as ChartJS, Legend,Tooltip } from 'chart.js';
+import useMetricContext from 'hooks/useMetricContext';
+import { useEffect, useEffectEvent,useState } from 'react';
+import { Doughnut } from 'react-chartjs-2';
+import { donutPlugins,pointerHover } from 'utils/chartPlugins';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 

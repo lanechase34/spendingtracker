@@ -9,7 +9,8 @@ module.exports = {
         '\\.(css|less|sass|scss)$': 'identity-obj-proxy', // Handle CSS modules
         '^@test-utils$': '<rootDir>/src/test-utils.tsx',
     },
-    setupFilesAfterEnv: [],
+    setupFiles: ['./src/setupTests.ts'],
+    setupFilesAfterEnv: ['@testing-library/jest-dom'],
     // Coverage configuration
     collectCoverageFrom: [
         'src/**/*.{ts,tsx}',
@@ -20,6 +21,7 @@ module.exports = {
         '!src/index.tsx',
         '!src/App.tsx',
         '!src/test-utils.tsx',
+        '!src/setupTests.ts',
     ],
     verbose: true,
     maxWorkers: process.env.CI ? 2 : '50%', // max workers for CI

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { SubscriptionSchema } from './Subscription.type';
 
 export const SubscriptionListSchema = z.object({

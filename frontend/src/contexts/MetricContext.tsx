@@ -1,9 +1,9 @@
-import { createContext, useMemo, useState, useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
 import { Client } from '@stomp/stompjs';
 import useAuthContext from 'hooks/useAuthContext';
-import type { Metric } from 'types/MetricResponse.type';
+import type { ReactNode } from 'react';
+import { createContext, useEffect, useMemo, useRef,useState } from 'react';
 import { createMetricsClient } from 'sockets/createMetricsClient';
+import type { Metric } from 'types/MetricResponse.type';
 
 export interface MetricContextType {
     metrics: Metric | null;

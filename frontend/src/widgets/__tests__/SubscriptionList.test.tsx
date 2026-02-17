@@ -1,9 +1,6 @@
-import { screen, waitFor, within, fireEvent } from '@testing-library/react';
-import { render, createSubscriptionContext } from '@test-utils';
+import { createSubscriptionContext, render } from '@test-utils';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event';
-import '@testing-library/jest-dom';
-import { TextEncoder, TextDecoder } from 'util';
-Object.assign(global, { TextDecoder, TextEncoder });
 import SubscriptionList from 'widgets/SubscriptionList';
 
 describe('Subscription List Component', () => {
@@ -257,7 +254,7 @@ describe('Subscription List Component', () => {
         it('Disables all action buttons during toggle', async () => {
             const user = userEvent.setup();
 
-            mockToggle.mockImplementation(() => new Promise((res) => setTimeout(res, 400)));
+            mockToggle.mockImplementation(() => new Promise((res) => setTimeout(res, 500)));
 
             const subscriptionContextValue = createSubscriptionContext({
                 subscriptions: [...mockSubscriptions],

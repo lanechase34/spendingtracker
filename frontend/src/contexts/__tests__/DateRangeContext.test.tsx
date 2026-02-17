@@ -1,10 +1,11 @@
-import { useContext, useState } from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { act,render, screen } from '@testing-library/react';
 import { DateRangeContext, DateRangeContextProvider } from 'contexts/DateRangeContext';
-import dayjs from 'dayjs';
-import type { Dispatch, SetStateAction } from 'react';
-import type { DateRangeType } from 'types/DateRange.type';
 import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import useLocalStorage from 'hooks/useLocalStorage';
+import type { Dispatch, SetStateAction } from 'react';
+import { useContext, useState } from 'react';
+import type { DateRangeType } from 'types/DateRange.type';
 
 // Mock useLocalStorage
 jest.mock('hooks/useLocalStorage', () => ({
@@ -15,7 +16,6 @@ jest.mock('hooks/useLocalStorage', () => ({
     ]),
 }));
 
-import useLocalStorage from 'hooks/useLocalStorage';
 const mockUseLocalStorage = useLocalStorage as jest.Mock;
 
 describe('DateRangeContext', () => {

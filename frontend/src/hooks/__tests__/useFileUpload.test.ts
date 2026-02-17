@@ -1,6 +1,6 @@
-import { renderHook, act } from '@testing-library/react';
-import type { ChangeEvent } from 'react';
+import { act,renderHook } from '@testing-library/react';
 import useFileUpload from 'hooks/useFileUpload';
+import type { ChangeEvent } from 'react';
 
 describe('useFileUpload', () => {
     const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];

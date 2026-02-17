@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { WIDGET_KEYS } from 'utils/queryKeys';
 import { useCallback } from 'react';
+import { WIDGET_KEYS } from 'utils/queryKeys';
 
 /**
  * Hook to invalidate all the widget queries forcing a refresh of each one

@@ -1,8 +1,8 @@
-import { z } from 'zod';
 import useAuthFetch from 'hooks/useAuthFetch';
-import { validateAPIResponse } from 'validators/validateAPIResponse';
 import type { APIResponseType } from 'types/APIResponse.type';
 import { safeJson } from 'utils/safeJson';
+import { validateAPIResponse } from 'validators/validateAPIResponse';
+import { z } from 'zod';
 
 /**
  * API Return Format

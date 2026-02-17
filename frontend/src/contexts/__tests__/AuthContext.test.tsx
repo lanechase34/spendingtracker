@@ -1,8 +1,8 @@
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act,renderHook, waitFor } from '@testing-library/react';
 import { AuthContextProvider } from 'contexts/AuthContext';
 import useAuthContext from 'hooks/useAuthContext';
 import type { ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock useLocalStorage hook
 const mockSetWasAuthenticated: jest.Mock = jest.fn();

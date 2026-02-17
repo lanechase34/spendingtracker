@@ -1,5 +1,5 @@
-import { waitFor, act } from '@testing-library/react';
 import { renderHook } from '@test-utils';
+import { act,waitFor } from '@testing-library/react';
 import useFetchImage from 'hooks/useFetchImage';
 
 describe('useFetchImage', () => {

@@ -1,4 +1,5 @@
 import type { ExpenseDataRow } from 'types/Expense.type';
+
 import { validateMoney } from './validateMoney';
 
 export type FieldName = keyof ExpenseDataRow;

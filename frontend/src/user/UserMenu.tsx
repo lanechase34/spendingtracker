@@ -1,24 +1,30 @@
-import SettingsIcon from '@mui/icons-material/Settings';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SettingsIcon from '@mui/icons-material/Settings';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import ListItemIcon from '@mui/material/ListItemIcon';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { useState, useMemo } from 'react';
-import Button from '@mui/material/Button';
-import type { MouseEvent } from 'react';
-import UserSettings from './UserSettings';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import useAuthContext from 'hooks/useAuthContext';
-import { userService } from 'schema/user';
 import useAuthFetch from 'hooks/useAuthFetch';
+import type { MouseEvent } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CircularProgress from '@mui/material/CircularProgress';
+import { userService } from 'schema/user';
+
+import UserSettings from './UserSettings';
 
 export default function UserMenu() {
     const { logout: deleteToken } = useAuthContext();
     const authFetch = useAuthFetch();
     const userAPI = useMemo(() => userService({ authFetch: authFetch }), [authFetch]);
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     /**
      * Menu dropdown
@@ -73,6 +79,14 @@ export default function UserMenu() {
             </Button>
             {menuOpen && (
                 <Menu anchorEl={menuAnchorEl} id="account-menu" open={menuOpen} onClose={handleCloseMenu}>
+                    {isSmallScreen && (
+                        <MenuItem onClick={() => void navigate('/')}>
+                            <ListItemIcon>
+                                <HomeIcon fontSize="small" />
+                            </ListItemIcon>
+                            Home
+                        </MenuItem>
+                    )}
                     <MenuItem onClick={handleOpenSettings} disabled={isLoggingOut}>
                         <ListItemIcon>
                             <SettingsIcon fontSize="small" />

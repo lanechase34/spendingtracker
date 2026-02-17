@@ -1,10 +1,11 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient } from '@tanstack/react-query';
 import { render } from '@test-utils';
-import '@testing-library/jest-dom';
-import EditIncome from 'widgets/EditIncome';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { QueryClient } from '@tanstack/react-query';
+import useFormField from 'hooks/useFormField';
+import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
+import EditIncome from 'widgets/EditIncome';
 
 /**
  * Mock hooks and child components
@@ -12,9 +13,6 @@ import { QueryClient } from '@tanstack/react-query';
 jest.mock('hooks/useIncomeQuery');
 jest.mock('hooks/useFormField');
 jest.mock('components/EndAdornmentLoading', () => () => <div data-testid="loading-spinner" />);
-
-import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
-import useFormField from 'hooks/useFormField';
 
 const mockUseFetchIncome = useFetchIncome as jest.Mock;
 const mockUseUpdateIncome = useUpdateIncome as jest.Mock;

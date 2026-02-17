@@ -1,7 +1,7 @@
+import useAuthContext from 'hooks/useAuthContext';
+import useUserContext from 'hooks/useUserContext';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useUserContext from 'hooks/useUserContext';
-import useAuthContext from 'hooks/useAuthContext';
 
 /**
  * Redirect when the user context finishes loading AND the user exists

@@ -1,5 +1,5 @@
-import InputAdornment from '@mui/material/InputAdornment';
 import CircularProgress from '@mui/material/CircularProgress';
+import InputAdornment from '@mui/material/InputAdornment';
 
 /**
  * Adds loading circle to end adornment (for input)

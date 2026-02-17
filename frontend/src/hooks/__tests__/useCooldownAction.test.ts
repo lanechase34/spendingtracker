@@ -1,6 +1,7 @@
-import { renderHook, waitFor, act } from '@testing-library/react';
-import useCooldownAction from '../useCooldownAction';
+import { act,renderHook, waitFor } from '@testing-library/react';
 import { useState } from 'react';
+
+import useCooldownAction from '../useCooldownAction';
 
 // Mock the useLocalStorage hook
 jest.mock('hooks/useLocalStorage', () => ({

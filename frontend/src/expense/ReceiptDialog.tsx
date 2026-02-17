@@ -1,17 +1,15 @@
-import { useEffect } from 'react';
+import CloseIcon from '@mui/icons-material/Close';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import Box from '@mui/material/Box';
-import CloseIcon from '@mui/icons-material/Close';
-import IconButton from '@mui/material/IconButton';
-import CircularProgress from '@mui/material/CircularProgress';
-
-import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
-
+import IconButton from '@mui/material/IconButton';
 import useFetchImage from 'hooks/useFetchImage';
+import { useEffect } from 'react';
 
 interface ReceiptDialogProps {
     open: boolean;

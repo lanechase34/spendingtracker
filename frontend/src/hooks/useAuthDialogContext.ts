@@ -1,5 +1,5 @@
-import { useContext } from 'react';
 import { AuthDialogContext } from 'contexts/AuthDialogContext';
+import { useContext } from 'react';
 
 /**
  * Wrapper for the Auth context.

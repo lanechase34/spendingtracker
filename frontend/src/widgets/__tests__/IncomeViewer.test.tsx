@@ -1,9 +1,11 @@
-import { screen } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import IncomeViewer from 'widgets/IncomeViewer';
-import { render, createExpenseContext } from '@test-utils';
 import { QueryClient } from '@tanstack/react-query';
+import { createExpenseContext, render } from '@test-utils';
+import { screen } from '@testing-library/react';
 import dayjs from 'dayjs';
+import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
+import useDateRangeContext from 'hooks/useDateRangeContext';
+import { useFetchIncome } from 'hooks/useIncomeQuery';
+import IncomeViewer from 'widgets/IncomeViewer';
 
 /**
  * Mock hooks and child components
@@ -16,10 +18,6 @@ jest.mock('components/ErrorCard', () => () => <div data-testid="error-card" />);
 jest.mock('widgets/EditIncome', () => ({ date }: { date: dayjs.Dayjs }) => (
     <div data-testid="edit-income" data-date={date.format('YYYY-MM-DD')} />
 ));
-
-import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
-import useDateRangeContext from 'hooks/useDateRangeContext';
-import { useFetchIncome } from 'hooks/useIncomeQuery';
 
 const mockUseFetchIncome = useFetchIncome as jest.Mock;
 const mockUseFormatCurrency = useCurrencyFormatter as jest.Mock;

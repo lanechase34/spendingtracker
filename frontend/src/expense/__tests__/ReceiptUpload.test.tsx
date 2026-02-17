@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import type { ChangeEvent } from 'react';
-import '@testing-library/jest-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ReceiptUpload from 'expense/ReceiptUpload';
+import type { ChangeEvent } from 'react';
+import { useState } from 'react';
 
 // Wrap the receipt upload to utilize state for the selected receipt
 function Wrapper() {

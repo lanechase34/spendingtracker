@@ -1,5 +1,5 @@
-import { useContext } from 'react';
 import { ToastContext } from 'contexts/ToastContext';
+import { useContext } from 'react';
 
 /**
  * Wrapper for the toast context.

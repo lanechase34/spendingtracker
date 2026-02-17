@@ -1,7 +1,7 @@
+import type { UserRoles } from 'types/Roles.type';
+import { ROLES } from 'types/Roles.type';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
-import { ROLES } from 'types/Roles.type';
-import type { UserRoles } from 'types/Roles.type';
 
 export interface User {
     salary: number | null;

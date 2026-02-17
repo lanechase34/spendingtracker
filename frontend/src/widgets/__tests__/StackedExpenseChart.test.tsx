@@ -1,9 +1,8 @@
-import { screen, waitFor } from '@testing-library/react';
-import { render } from '@test-utils';
-import '@testing-library/jest-dom';
-import StackedExpenseChart from 'widgets/StackedExpenseChart';
-import type { Bar } from 'react-chartjs-2';
 import { QueryClient } from '@tanstack/react-query';
+import { render } from '@test-utils';
+import { screen, waitFor } from '@testing-library/react';
+import type { Bar } from 'react-chartjs-2';
+import StackedExpenseChart from 'widgets/StackedExpenseChart';
 
 // Mock hooks and child components
 jest.mock('hooks/useDateRangeContext', () => ({

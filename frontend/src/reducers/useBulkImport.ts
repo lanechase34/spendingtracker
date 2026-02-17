@@ -1,7 +1,7 @@
 import { useReducer } from 'react';
+import type { ErroredExpense } from 'types/BulkImport.type';
 import type { ExpenseDataRow } from 'types/Expense.type';
 import type { ErrorField } from 'validators/validateExpenseRow';
-import type { ErroredExpense } from 'types/BulkImport.type';
 
 export interface BulkImportState {
     loading: boolean; // loading CSV data

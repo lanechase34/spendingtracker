@@ -1,4 +1,4 @@
-import type { Chart, Plugin, LegendElement, LegendItem, ChartEvent, ActiveElement, TooltipItem } from 'chart.js';
+import type { ActiveElement, Chart, ChartEvent, LegendElement, LegendItem, Plugin, TooltipItem } from 'chart.js';
 
 /**
  * Utility functions

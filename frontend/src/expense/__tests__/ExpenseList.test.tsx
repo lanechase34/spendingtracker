@@ -1,9 +1,9 @@
-import { screen, fireEvent } from '@testing-library/react';
-import { render, createExpenseContext } from '@test-utils';
-import '@testing-library/jest-dom';
-import { TextEncoder, TextDecoder } from 'util';
-Object.assign(global, { TextDecoder, TextEncoder });
+import { createExpenseContext, render } from '@test-utils';
+import { fireEvent, screen } from '@testing-library/react';
 import ExpenseList from 'expense/ExpenseList';
+import { TextDecoder, TextEncoder } from 'util';
+
+Object.assign(global, { TextDecoder, TextEncoder });
 
 /**
  * Mock hooks and child components

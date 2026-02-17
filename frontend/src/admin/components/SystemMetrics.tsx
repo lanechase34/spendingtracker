@@ -1,12 +1,12 @@
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import DetailRow from 'components/DetailRow';
-import Stack from '@mui/material/Stack';
-import Paper from '@mui/material/Paper';
 import CardHeader from '@mui/material/CardHeader';
 import Divider from '@mui/material/Divider';
-import useMetricContext from 'hooks/useMetricContext';
+import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
+import Stack from '@mui/material/Stack';
+import DetailRow from 'components/DetailRow';
+import useMetricContext from 'hooks/useMetricContext';
 
 export default function SystemMetrics() {
     const { metrics } = useMetricContext();

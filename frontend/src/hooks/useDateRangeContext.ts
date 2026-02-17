@@ -1,5 +1,5 @@
-import { useContext } from 'react';
 import { DateRangeContext } from 'contexts/DateRangeContext';
+import { useContext } from 'react';
 
 /**
  * Wrapper for the date range context.

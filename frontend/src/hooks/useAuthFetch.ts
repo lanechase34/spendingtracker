@@ -1,8 +1,9 @@
 import { useCallback } from 'react';
-import useAuthContext from './useAuthContext';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
+
+import useAuthContext from './useAuthContext';
 
 interface AuthFetchParams {
     url: string;

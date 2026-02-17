@@ -1,6 +1,6 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
-import type { ChangeEvent, FocusEvent } from 'react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import useFormField from 'hooks/useFormField';
+import type { ChangeEvent, FocusEvent } from 'react';
 
 describe('useFormField', () => {
     let mockValidator: jest.Mock;

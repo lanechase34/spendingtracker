@@ -1,5 +1,5 @@
-import { useContext } from 'react';
 import { UserContext } from 'contexts/UserContext';
+import { useContext } from 'react';
 
 /**
  * Wrapper for the user context.

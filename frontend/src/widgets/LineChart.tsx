@@ -1,29 +1,29 @@
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import useDateRangeContext from 'hooks/useDateRangeContext';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import type { ChartData, ChartDataset, ChartOptions } from 'chart.js';
-import LoadingCard from 'components/LoadingCard';
-import ErrorCard from 'components/ErrorCard';
-import EmptyCard from 'components/EmptyCard';
-import useAuthFetch from 'hooks/useAuthFetch';
-import { queryKeys } from 'utils/queryKeys';
 import CardHeader from '@mui/material/CardHeader';
 import { useTheme } from '@mui/material/styles';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { useQuery } from '@tanstack/react-query';
+import type { ChartData, ChartDataset, ChartOptions } from 'chart.js';
+import {
+    CategoryScale,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip,
+} from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+import EmptyCard from 'components/EmptyCard';
+import ErrorCard from 'components/ErrorCard';
+import LoadingCard from 'components/LoadingCard';
+import useAuthFetch from 'hooks/useAuthFetch';
+import useDateRangeContext from 'hooks/useDateRangeContext';
+import { useMemo } from 'react';
+import { Line } from 'react-chartjs-2';
+import { queryKeys } from 'utils/queryKeys';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, annotationPlugin);
 

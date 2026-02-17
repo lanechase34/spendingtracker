@@ -1,5 +1,5 @@
-import { useContext } from 'react';
 import { SubscriptionContext } from 'contexts/SubscriptionContext';
+import { useContext } from 'react';
 
 /**
  * Wrapper for the Subscription context.

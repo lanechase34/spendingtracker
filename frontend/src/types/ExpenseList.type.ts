@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { ExpenseSchema } from './Expense.type';
 
 export const ExpenseListSchema = z.object({

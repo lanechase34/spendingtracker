@@ -1,8 +1,8 @@
-import { gridPageCountSelector, useGridApiContext, useGridSelector } from '@mui/x-data-grid';
 import Pagination from '@mui/material/Pagination';
-import type { ChangeEvent } from 'react';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { gridPageCountSelector, useGridApiContext, useGridSelector } from '@mui/x-data-grid';
+import type { ChangeEvent } from 'react';
 
 interface CustomPaginationProps {
     page: number;

@@ -1,20 +1,20 @@
-import { useState, Fragment, useCallback, useRef, useMemo, useEffect } from 'react';
-import type { SyntheticEvent } from 'react';
-import FormControl from '@mui/material/FormControl';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
-import type { AutocompleteInputChangeReason } from '@mui/material/Autocomplete';
-import CircularProgress from '@mui/material/CircularProgress';
-import { debounce } from '@mui/material/utils';
-import Popper from '@mui/material/Popper';
-import type { PopperProps } from '@mui/material/Popper';
 import type { FilterOptionsState } from '@mui/material';
-import type { SelectOptionType } from 'types/SelectOption.type';
-import { z } from 'zod';
-import type { APIResponseType } from 'types/APIResponse.type';
+import type { AutocompleteInputChangeReason } from '@mui/material/Autocomplete';
+import Autocomplete from '@mui/material/Autocomplete';
+import CircularProgress from '@mui/material/CircularProgress';
+import FormControl from '@mui/material/FormControl';
+import type { PopperProps } from '@mui/material/Popper';
+import Popper from '@mui/material/Popper';
+import TextField from '@mui/material/TextField';
+import { debounce } from '@mui/material/utils';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useToastContext from 'hooks/useToastContext';
+import type { SyntheticEvent } from 'react';
+import { Fragment, useCallback, useEffect,useMemo, useRef, useState } from 'react';
+import type { APIResponseType } from 'types/APIResponse.type';
+import type { SelectOptionType } from 'types/SelectOption.type';
 import { getCachedCategories, setCachedCategories } from 'utils/categoryCache';
+import { z } from 'zod';
 
 function DownwardPopper(props: PopperProps) {
     return <Popper {...props} placement="bottom-start" modifiers={[{ name: 'flip', enabled: false }]} />;

@@ -1,6 +1,6 @@
-import { GridFooterContainer, GridPagination } from '@mui/x-data-grid';
-import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import { GridFooterContainer, GridPagination } from '@mui/x-data-grid';
 import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
 
 interface TotalFooterProps {

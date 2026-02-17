@@ -1,4 +1,5 @@
-import type { GridSortModel, GridFilterModel, GridPaginationModel } from '@mui/x-data-grid';
+import type { GridFilterModel, GridPaginationModel,GridSortModel } from '@mui/x-data-grid';
+
 export interface UsePaginatedFetchReturn<T> {
     data: T | null;
     loading: boolean;

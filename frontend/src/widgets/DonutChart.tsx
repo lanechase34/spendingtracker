@@ -1,18 +1,18 @@
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import useDateRangeContext from 'hooks/useDateRangeContext';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
-import { Doughnut } from 'react-chartjs-2';
-import type { ChartData, ChartDataset, ChartOptions, LegendItem } from 'chart.js';
-import LoadingCard from 'components/LoadingCard';
-import ErrorCard from 'components/ErrorCard';
-import EmptyCard from 'components/EmptyCard';
-import useAuthFetch from 'hooks/useAuthFetch';
-import { queryKeys } from 'utils/queryKeys';
-import { pointerHover, donutPlugins } from 'utils/chartPlugins';
 import CardHeader from '@mui/material/CardHeader';
+import { useQuery } from '@tanstack/react-query';
+import type { ChartData, ChartDataset, ChartOptions, LegendItem } from 'chart.js';
+import { ArcElement, Chart as ChartJS, Legend,Tooltip } from 'chart.js';
+import EmptyCard from 'components/EmptyCard';
+import ErrorCard from 'components/ErrorCard';
+import LoadingCard from 'components/LoadingCard';
+import useAuthFetch from 'hooks/useAuthFetch';
+import useDateRangeContext from 'hooks/useDateRangeContext';
+import { useMemo } from 'react';
+import { Doughnut } from 'react-chartjs-2';
+import { donutPlugins,pointerHover } from 'utils/chartPlugins';
+import { queryKeys } from 'utils/queryKeys';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 

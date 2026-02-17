@@ -7,7 +7,12 @@
         "serve": "vite preview",
         "test": "jest",
         "testcoverage": "jest --coverage",
-        "lint": "eslint ."
+        "lint": "eslint .",
+        "lint:fix": "eslint --fix .",
+        "prepare": "husky"
+    },
+    "lint-staged": {
+        "*.{ts,tsx}": "eslint --fix"
     },
     "dependencies": {
         "@emotion/react": "11.14.0",
@@ -54,10 +59,13 @@
         "eslint-plugin-jsx-a11y": "^6.10.2",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.0.1",
+        "eslint-plugin-simple-import-sort": "^12.1.1",
+        "husky": "^9.1.7",
         "identity-obj-proxy": "^3.0.0",
         "jest": "^30.2.0",
         "jest-environment-jsdom": "^30.2.0",
         "jiti": "^2.6.1",
+        "lint-staged": "^16.2.7",
         "npm-check-updates": "19.3.2",
         "rollup-plugin-visualizer": "^6.0.5",
         "serve": "^14.2.5",

@@ -1,6 +1,6 @@
-import { renderHook, act } from '@testing-library/react';
-import type { ChangeEvent } from 'react';
+import { act,renderHook } from '@testing-library/react';
 import useSubscriptionInterval from 'hooks/useSubscriptionInterval';
+import type { ChangeEvent } from 'react';
 
 describe('useSubscriptionInterval', () => {
     let mockValidator: jest.Mock;

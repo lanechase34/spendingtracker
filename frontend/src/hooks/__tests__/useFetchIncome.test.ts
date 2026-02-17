@@ -1,6 +1,6 @@
-import { waitFor, act } from '@testing-library/react';
-import { renderHook } from '@test-utils';
 import type { MockAbortController } from '@test-utils';
+import { renderHook } from '@test-utils';
+import { act,waitFor } from '@testing-library/react';
 import useFetchIncome from 'hooks/useFetchIncome';
 
 /**

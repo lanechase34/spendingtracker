@@ -1,8 +1,8 @@
-import { z } from 'zod';
 import useAuthFetch from 'hooks/useAuthFetch';
-import { validateAPIResponse } from 'validators/validateAPIResponse';
 import type { Subscription } from 'types/Subscription.type';
 import { safeJson } from 'utils/safeJson';
+import { validateAPIResponse } from 'validators/validateAPIResponse';
+import { z } from 'zod';
 
 const NoDataAPIResponseSchema = validateAPIResponse(z.null().optional());
 const ToggleSubscriptionAPISchema = validateAPIResponse(

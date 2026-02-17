@@ -46,6 +46,10 @@
     "eslint.options": {
         "overrideConfigFile": "./eslint.config.ts"
     },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": ["typescript", "typescriptreact"],
     "jest.runMode": {
         "type": "on-save",
         "testFileOnly": true

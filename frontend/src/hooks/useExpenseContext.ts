@@ -1,5 +1,5 @@
-import { useContext } from 'react';
 import { ExpenseContext } from 'contexts/ExpenseContext';
+import { useContext } from 'react';
 
 /**
  * Wrapper for the expense context.

@@ -1,9 +1,9 @@
-import type { ChangeEvent } from 'react';
-import { VisuallyHiddenInput } from 'components/VisuallyHiddenInput';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import Button from '@mui/material/Button';
 import FormControl from '@mui/material/FormControl';
 import Typography from '@mui/material/Typography';
+import { VisuallyHiddenInput } from 'components/VisuallyHiddenInput';
+import type { ChangeEvent } from 'react';
 
 interface ReceiptUploadProps {
     selectedReceipt: File | null;

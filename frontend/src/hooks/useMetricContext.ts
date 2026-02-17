@@ -1,5 +1,5 @@
-import { useContext } from 'react';
 import { MetricContext } from 'contexts/MetricContext';
+import { useContext } from 'react';
 
 /**
  * Wrapper for the Metric context.

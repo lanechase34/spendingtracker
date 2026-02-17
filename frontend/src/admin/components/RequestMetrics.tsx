@@ -1,27 +1,27 @@
-import { useState, useEffect, useMemo, useEffectEvent } from 'react';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-} from 'chart.js';
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import { Line } from 'react-chartjs-2';
-import Box from '@mui/material/Box';
-import DetailRow from 'components/DetailRow';
-import Stack from '@mui/material/Stack';
-import Paper from '@mui/material/Paper';
-import type { ChartOptions } from 'chart.js';
-import { useTheme } from '@mui/material/styles';
 import CardHeader from '@mui/material/CardHeader';
 import Divider from '@mui/material/Divider';
-import useMetricContext from 'hooks/useMetricContext';
+import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
+import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
+import type { ChartOptions } from 'chart.js';
+import {
+    CategoryScale,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip,
+} from 'chart.js';
+import DetailRow from 'components/DetailRow';
+import useMetricContext from 'hooks/useMetricContext';
+import { useEffect, useEffectEvent,useMemo, useState } from 'react';
+import { Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 

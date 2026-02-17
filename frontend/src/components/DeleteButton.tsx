@@ -1,6 +1,6 @@
-import type { MouseEvent } from 'react';
-import Button from '@mui/material/Button';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Button from '@mui/material/Button';
+import type { MouseEvent } from 'react';
 
 interface DeleteButtonProps {
     rowId: string | number;
