@@ -12,7 +12,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from 'admin/Layout';
 import type { ChartData, ChartOptions } from 'chart.js';
-import { ArcElement, Chart as ChartJS, Legend,Tooltip } from 'chart.js';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import CustomPagination from 'components/CustomPagination';
 import ErrorCard from 'components/ErrorCard';
 import SearchToolbar from 'components/SearchToolbar';
@@ -23,7 +23,7 @@ import { useMemo } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import type { CacheData, CacheKey } from 'types/CacheResponse.type';
 import { CacheResponseSchema } from 'types/CacheResponse.type';
-import { donutPlugins,pointerHover } from 'utils/chartPlugins';
+import { donutPlugins, pointerHover } from 'utils/chartPlugins';
 import { safeJson } from 'utils/safeJson';
 import { formatMinutesToTime } from 'utils/timeFormatter';
 
@@ -48,7 +48,10 @@ const options: ChartOptions<'doughnut'> = {
                 color: '#dee2e6',
             },
         },
-        tooltip: { ...donutPlugins.tooltip, callbacks: { label: donutPlugins.labels.number } },
+        tooltip: {
+            ...donutPlugins.tooltip,
+            callbacks: { label: donutPlugins.labels.number },
+        },
     },
     cutout: `50%`,
     onHover: pointerHover,
@@ -232,7 +235,14 @@ export default function CachePage() {
                         {/* Summary Cards */}
                         <Grid size={{ xs: 12, lg: 8 }} container spacing={2} alignItems="stretch">
                             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
-                                <Card sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <Card
+                                    sx={{
+                                        height: '100%',
+                                        width: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
                                     <CardContent>
                                         <Typography color="text.secondary" gutterBottom variant="overline">
                                             Hit Rate
@@ -248,7 +258,14 @@ export default function CachePage() {
                             </Grid>
 
                             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
-                                <Card sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <Card
+                                    sx={{
+                                        height: '100%',
+                                        width: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
                                     <CardContent>
                                         <Typography color="text.secondary" gutterBottom variant="overline">
                                             Utilization
@@ -267,7 +284,14 @@ export default function CachePage() {
                             </Grid>
 
                             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
-                                <Card sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <Card
+                                    sx={{
+                                        height: '100%',
+                                        width: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
                                     <CardContent>
                                         <Typography color="text.secondary" gutterBottom variant="overline">
                                             Evictions
@@ -281,7 +305,14 @@ export default function CachePage() {
                             </Grid>
 
                             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
-                                <Card sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
+                                <Card
+                                    sx={{
+                                        height: '100%',
+                                        width: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                    }}
+                                >
                                     <CardContent>
                                         <Typography color="text.secondary" gutterBottom variant="overline">
                                             GC Count

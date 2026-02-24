@@ -1,6 +1,6 @@
 import type { MockAbortController } from '@test-utils';
 import { renderHook } from '@test-utils';
-import { act,waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import usePaginatedFetch from 'hooks/usePaginatedFetch';
 import { z } from 'zod';
 
@@ -303,9 +303,15 @@ describe('usePaginatedFetch', () => {
         expect(mockFetch).toHaveBeenCalledTimes(2);
 
         act(() => {
-            result.current.handleFilterModelChange({ items: [], quickFilterValues: ['name', 'A'] });
+            result.current.handleFilterModelChange({
+                items: [],
+                quickFilterValues: ['name', 'A'],
+            });
         });
-        expect(result.current.filterModel).toEqual({ items: [], quickFilterValues: ['name', 'A'] });
+        expect(result.current.filterModel).toEqual({
+            items: [],
+            quickFilterValues: ['name', 'A'],
+        });
         expect(mockFetch).toHaveBeenCalledTimes(3);
 
         // When filter is changed, the page should be set to 0
@@ -337,7 +343,10 @@ describe('usePaginatedFetch', () => {
         });
 
         act(() => {
-            result.current.handleFilterModelChange({ items: [], quickFilterValues: ['name', 'A'] });
+            result.current.handleFilterModelChange({
+                items: [],
+                quickFilterValues: ['name', 'A'],
+            });
         });
 
         // Expect all calls to instantiate their own AbortController

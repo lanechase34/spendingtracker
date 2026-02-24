@@ -3,7 +3,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Typography } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
-import { QuickFilter, QuickFilterClear,QuickFilterControl, Toolbar } from '@mui/x-data-grid';
+import { QuickFilter, QuickFilterClear, QuickFilterControl, Toolbar } from '@mui/x-data-grid';
 
 interface SearchToolbarProps {
     title?: string;

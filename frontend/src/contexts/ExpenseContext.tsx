@@ -5,7 +5,7 @@ import { useInvalidateWidgets } from 'hooks/useInvalidateWidgets';
 import usePaginatedFetch from 'hooks/usePaginatedFetch';
 import useToastContext from 'hooks/useToastContext';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useEffect,useMemo } from 'react';
+import { createContext, useCallback, useEffect, useMemo } from 'react';
 import type { APIResponseType } from 'types/APIResponse.type';
 import type { Expense } from 'types/Expense.type';
 import type { ExpenseList } from 'types/ExpenseList.type';
@@ -104,7 +104,10 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
 
                 // If we deleted the last item on the last page that isn't the first page
                 if (currentPageItemCount === 1 && paginationModel.page > 0) {
-                    setPaginationModel({ ...paginationModel, page: paginationModel.page - 1 });
+                    setPaginationModel({
+                        ...paginationModel,
+                        page: paginationModel.page - 1,
+                    });
                 } else {
                     await refetch();
                 }

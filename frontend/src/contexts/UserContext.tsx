@@ -1,9 +1,9 @@
 import useAuthContext from 'hooks/useAuthContext';
 import useAuthFetch from 'hooks/useAuthFetch';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useEffect, useEffectEvent, useMemo,useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import type { UserRoles } from 'types/Roles.type';
-import type { User,UserContextType } from 'types/UserContext.type';
+import type { User, UserContextType } from 'types/UserContext.type';
 import { UserResponseSchema } from 'types/UserContext.type';
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);

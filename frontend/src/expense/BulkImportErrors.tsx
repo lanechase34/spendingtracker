@@ -39,7 +39,15 @@ export default function BulkImportErrors({ errors, onClose }: BulkImportErrorPro
             }}
             onClose={onClose}
         >
-            <AlertTitle sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1, margin: 0 }}>
+            <AlertTitle
+                sx={{
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    margin: 0,
+                }}
+            >
                 {errorCount} {errorCount === 1 ? 'Row' : 'Rows'} failed to import
             </AlertTitle>
 

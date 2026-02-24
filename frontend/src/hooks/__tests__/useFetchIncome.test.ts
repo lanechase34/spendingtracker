@@ -1,6 +1,6 @@
 import type { MockAbortController } from '@test-utils';
 import { renderHook } from '@test-utils';
-import { act,waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import useFetchIncome from 'hooks/useFetchIncome';
 
 /**
@@ -39,7 +39,9 @@ describe('useFetchIncome', () => {
         );
 
         const { result } = renderHook(() =>
-            useFetchIncome({ additionalParams: { startDate: '2025-01', endDate: '2025-02' } })
+            useFetchIncome({
+                additionalParams: { startDate: '2025-01', endDate: '2025-02' },
+            })
         );
 
         // Should start loading
@@ -61,7 +63,9 @@ describe('useFetchIncome', () => {
         });
 
         const { result } = renderHook(() =>
-            useFetchIncome({ additionalParams: { startDate: '2025-01', endDate: '2025-02' } })
+            useFetchIncome({
+                additionalParams: { startDate: '2025-01', endDate: '2025-02' },
+            })
         );
 
         // Wait for the fetch to complete
@@ -81,7 +85,9 @@ describe('useFetchIncome', () => {
         });
 
         const { result } = renderHook(() =>
-            useFetchIncome({ additionalParams: { startDate: '2025-01', endDate: '2025-02' } })
+            useFetchIncome({
+                additionalParams: { startDate: '2025-01', endDate: '2025-02' },
+            })
         );
 
         // Wait for the fetch to complete
@@ -109,7 +115,9 @@ describe('useFetchIncome', () => {
         });
 
         const { result } = renderHook(() =>
-            useFetchIncome({ additionalParams: { startDate: '2025-01', endDate: '2025-02' } })
+            useFetchIncome({
+                additionalParams: { startDate: '2025-01', endDate: '2025-02' },
+            })
         );
 
         // Wait for the fetch to complete
@@ -152,7 +160,9 @@ describe('useFetchIncome', () => {
         (global as unknown as { AbortController: typeof AbortController }).AbortController = abortControllerMock;
 
         const { result } = renderHook(() =>
-            useFetchIncome({ additionalParams: { startDate: '2025-01', endDate: '2025-02' } })
+            useFetchIncome({
+                additionalParams: { startDate: '2025-01', endDate: '2025-02' },
+            })
         );
 
         // Trigger multiple refetches

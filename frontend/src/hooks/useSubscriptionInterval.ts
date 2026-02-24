@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react';
-import { useCallback, useEffect, useRef,useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface SubscriptionInterval {
     initialInterval: string | null;
@@ -50,5 +50,13 @@ export default function useSubscriptionInterval({ initialInterval, validator }: 
         setError(null);
     }, [initialInterval]);
 
-    return { isSubscription, interval, error, handleSubscriptionChange, handleIntervalChange, validateField, reset };
+    return {
+        isSubscription,
+        interval,
+        error,
+        handleSubscriptionChange,
+        handleIntervalChange,
+        validateField,
+        reset,
+    };
 }

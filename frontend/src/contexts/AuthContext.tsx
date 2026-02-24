@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import useLocalStorage from 'hooks/useLocalStorage';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useEffect, useRef,useState } from 'react';
+import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import type { AuthContextType } from 'types/AuthContext.type';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';

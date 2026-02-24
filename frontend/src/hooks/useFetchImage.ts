@@ -1,5 +1,5 @@
 import useAuthFetch from 'hooks/useAuthFetch';
-import { useCallback, useEffect, useRef,useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface FetchImage {
     url: string;

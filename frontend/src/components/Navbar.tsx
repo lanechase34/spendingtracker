@@ -122,7 +122,14 @@ export default function Navbar() {
 
                     <Box sx={{ flexGrow: 1 }}>
                         <Typography
-                            sx={{ display: { xs: 'none', md: 'block', textDecoration: 'none', width: 'fit-content' } }}
+                            sx={{
+                                display: {
+                                    xs: 'none',
+                                    md: 'block',
+                                    textDecoration: 'none',
+                                    width: 'fit-content',
+                                },
+                            }}
                             variant="h6"
                             color="inherit"
                             component={Link}

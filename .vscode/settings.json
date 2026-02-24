@@ -54,5 +54,6 @@
         "type": "on-save",
         "testFileOnly": true
     },
-    "prettier.trailingComma": "es5"
+    "prettier.trailingComma": "es5",
+    "files.eol": "\n"
 }

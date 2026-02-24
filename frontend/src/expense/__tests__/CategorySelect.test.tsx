@@ -259,7 +259,10 @@ describe('CategorySelect', () => {
         render(<CategorySelect handleCategorySelectChange={mockHandleChange} debounceDelay={1000} />);
 
         const input = screen.getByRole('combobox');
-        const user = userEvent.setup({ delay: 0, advanceTimers: jest.advanceTimersByTime });
+        const user = userEvent.setup({
+            delay: 0,
+            advanceTimers: jest.advanceTimersByTime,
+        });
 
         // Simulate user typing "NewCategory" with small pauses between keystrokes
         // User starts typing "N"
@@ -301,7 +304,11 @@ describe('CategorySelect', () => {
         // Mock abort controller
         const abortSpy = jest.fn();
         const abortControllerSetup = {
-            signal: { aborted: false, addEventListener: jest.fn(), removeEventListener: jest.fn() },
+            signal: {
+                aborted: false,
+                addEventListener: jest.fn(),
+                removeEventListener: jest.fn(),
+            },
             abort: abortSpy,
         };
         const abortControllerMock = jest.fn().mockImplementation(() => abortControllerSetup);

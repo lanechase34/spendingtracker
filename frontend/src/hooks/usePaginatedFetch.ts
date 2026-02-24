@@ -1,7 +1,7 @@
-import type { GridFilterModel, GridPaginationModel,GridSortModel } from '@mui/x-data-grid';
+import type { GridFilterModel, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useAuthReady from 'hooks/useAuthReady';
-import { useCallback, useEffect, useMemo, useRef,useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { UsePaginatedFetchReturn } from 'types/UsePaginatedFetchReturn.type';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';

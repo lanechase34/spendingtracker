@@ -320,10 +320,30 @@ describe('IncomeViewer Component', () => {
 
         it('Calculates net correctly with various scenarios', () => {
             const testCases = [
-                { income: { pay: 5000, extra: 1000 }, expenses: 2000, expectedNet: 4000, isPositive: true },
-                { income: { pay: 3000, extra: 0 }, expenses: 3000, expectedNet: 0, isPositive: true },
-                { income: { pay: 1000, extra: 500 }, expenses: 2000, expectedNet: 500, isPositive: false },
-                { income: { pay: 10000, extra: 2000 }, expenses: 5000, expectedNet: 7000, isPositive: true },
+                {
+                    income: { pay: 5000, extra: 1000 },
+                    expenses: 2000,
+                    expectedNet: 4000,
+                    isPositive: true,
+                },
+                {
+                    income: { pay: 3000, extra: 0 },
+                    expenses: 3000,
+                    expectedNet: 0,
+                    isPositive: true,
+                },
+                {
+                    income: { pay: 1000, extra: 500 },
+                    expenses: 2000,
+                    expectedNet: 500,
+                    isPositive: false,
+                },
+                {
+                    income: { pay: 10000, extra: 2000 },
+                    expenses: 5000,
+                    expectedNet: 7000,
+                    isPositive: true,
+                },
             ];
 
             testCases.forEach(({ income, expenses, expectedNet, isPositive }) => {
@@ -339,7 +359,10 @@ describe('IncomeViewer Component', () => {
                     totalSum: expenses,
                 });
 
-                const { unmount } = render(<IncomeViewer />, { expenseContextValue, queryClient });
+                const { unmount } = render(<IncomeViewer />, {
+                    expenseContextValue,
+                    queryClient,
+                });
 
                 // Verify absolute value is formatted
                 expect(mockFormatCurrency).toHaveBeenCalledWith(expectedNet);

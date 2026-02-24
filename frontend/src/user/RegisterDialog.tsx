@@ -20,7 +20,7 @@ import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
 import type { FormEvent } from 'react';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';

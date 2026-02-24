@@ -3,7 +3,7 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import { useQuery } from '@tanstack/react-query';
 import type { ChartData, ChartDataset, ChartOptions, LegendItem } from 'chart.js';
-import { BarElement, CategoryScale, Chart as ChartJS, Legend,LinearScale, Title, Tooltip } from 'chart.js';
+import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js';
 import EmptyCard from 'components/EmptyCard';
 import ErrorCard from 'components/ErrorCard';
 import LoadingCard from 'components/LoadingCard';
@@ -11,7 +11,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { barPlugins,pointerHover } from 'utils/chartPlugins';
+import { barPlugins, pointerHover } from 'utils/chartPlugins';
 import { queryKeys } from 'utils/queryKeys';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);

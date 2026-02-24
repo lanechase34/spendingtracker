@@ -75,7 +75,9 @@ describe('Expense List Component Test', () => {
         expect(await screen.findByTestId('confirm-dialog')).toBeInTheDocument();
 
         // Confirm the deletion
-        const confirmButton = await screen.findByRole('button', { name: /confirm/i });
+        const confirmButton = await screen.findByRole('button', {
+            name: /confirm/i,
+        });
         fireEvent.click(confirmButton);
 
         // Wait for async operation

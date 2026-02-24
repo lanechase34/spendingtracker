@@ -25,7 +25,7 @@ import dayjs from 'dayjs';
 import useFormField from 'hooks/useFormField';
 import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
 import type { FormEvent } from 'react';
-import { useEffect,useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { validateMoney } from 'validators/validateMoney';
 
 interface EditIncomeProps {

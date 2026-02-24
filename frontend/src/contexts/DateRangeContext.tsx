@@ -2,7 +2,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useLocalStorage, { dayjsTransform } from 'hooks/useLocalStorage';
 import type { ReactNode } from 'react';
-import { createContext, useCallback,useMemo } from 'react';
+import { createContext, useCallback, useMemo } from 'react';
 import type { DateRangeType } from 'types/DateRange.type';
 import type { DateRangeContextType } from 'types/DateRangeContext.type';
 
@@ -11,7 +11,10 @@ export const DateRangeContext = createContext<DateRangeContextType | undefined>(
 /**
  * Helper to compute the date range based on the range type
  */
-function computeDatesForRangeType(rangeType: DateRangeType): { start: Dayjs; end: Dayjs } {
+function computeDatesForRangeType(rangeType: DateRangeType): {
+    start: Dayjs;
+    end: Dayjs;
+} {
     const now = dayjs();
 
     switch (rangeType) {

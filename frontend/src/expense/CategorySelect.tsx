@@ -10,7 +10,7 @@ import { debounce } from '@mui/material/utils';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useToastContext from 'hooks/useToastContext';
 import type { SyntheticEvent } from 'react';
-import { Fragment, useCallback, useEffect,useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { APIResponseType } from 'types/APIResponse.type';
 import type { SelectOptionType } from 'types/SelectOption.type';
 import { getCachedCategories, setCachedCategories } from 'utils/categoryCache';

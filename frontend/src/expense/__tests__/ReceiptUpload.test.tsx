@@ -43,7 +43,9 @@ describe('ReceiptUpload', () => {
     });
 
     it('Displays selected file name if provided', () => {
-        const file = new File(['dummy content'], 'receipt.pdf', { type: 'application/pdf' });
+        const file = new File(['dummy content'], 'receipt.pdf', {
+            type: 'application/pdf',
+        });
 
         render(
             <ReceiptUpload
@@ -99,7 +101,9 @@ describe('ReceiptUpload', () => {
 
         const hiddenInput = screen.getByTestId('uploadReceipt');
 
-        const file = new File(['dummy content'], 'receipt.pdf', { type: 'application/pdf' });
+        const file = new File(['dummy content'], 'receipt.pdf', {
+            type: 'application/pdf',
+        });
 
         // Use userEvent.upload for file inputs
         await userEvent.upload(hiddenInput, file);
@@ -118,7 +122,9 @@ describe('ReceiptUpload', () => {
         render(<Wrapper />);
 
         const hiddenInput = screen.getByTestId('uploadReceipt');
-        const file = new File(['dummy content'], 'receipt.pdf', { type: 'application/pdf' });
+        const file = new File(['dummy content'], 'receipt.pdf', {
+            type: 'application/pdf',
+        });
 
         await userEvent.upload(hiddenInput, file);
 

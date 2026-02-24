@@ -21,7 +21,7 @@ import dayjs from 'dayjs';
 import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
 import useSubscriptionContext from 'hooks/useSubscriptionContext';
 import type { MouseEvent } from 'react';
-import { useCallback,useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Subscription } from 'types/Subscription.type';
 
 type SubscriptionAction =

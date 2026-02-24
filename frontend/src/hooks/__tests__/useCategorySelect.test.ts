@@ -1,4 +1,4 @@
-import { act,renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import useCategorySelect from 'hooks/useCategorySelect';
 import type { SyntheticEvent } from 'react';
 import type { SelectOptionType } from 'types/SelectOption.type';
@@ -64,7 +64,10 @@ describe('useCategorySelect', () => {
         const { result } = renderHook(() => useCategorySelect({ initialValue: 'initial', validator: mockValidator }));
 
         act(() => {
-            result.current.handleChange({} as SyntheticEvent<Element, Event>, { label: 'New', value: 'new' });
+            result.current.handleChange({} as SyntheticEvent<Element, Event>, {
+                label: 'New',
+                value: 'new',
+            });
         });
 
         expect(result.current.value).toBe('new');

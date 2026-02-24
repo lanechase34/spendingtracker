@@ -1,4 +1,4 @@
-import { act,renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 
 import useCooldownAction from '../useCooldownAction';

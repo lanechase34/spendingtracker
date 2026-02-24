@@ -31,10 +31,10 @@ import { useInvalidateWidgets } from 'hooks/useInvalidateWidgets';
 import useSubscriptionContext from 'hooks/useSubscriptionContext';
 import useSubscriptionInterval from 'hooks/useSubscriptionInterval';
 import type { FormEvent } from 'react';
-import { useMemo,useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { APIResponseType } from 'types/APIResponse.type';
 import { clearCategoryCache } from 'utils/categoryCache';
-import { maxFileSize, validExtensions,validMimeTypes } from 'utils/receiptDefaults';
+import { maxFileSize, validExtensions, validMimeTypes } from 'utils/receiptDefaults';
 import { validateMoney } from 'validators/validateMoney';
 
 import CategorySelect from './CategorySelect';

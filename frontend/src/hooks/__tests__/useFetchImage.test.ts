@@ -1,5 +1,5 @@
 import { renderHook } from '@test-utils';
-import { act,waitFor } from '@testing-library/react';
+import { act, waitFor } from '@testing-library/react';
 import useFetchImage from 'hooks/useFetchImage';
 
 describe('useFetchImage', () => {
@@ -55,7 +55,9 @@ describe('useFetchImage', () => {
             expect.objectContaining({
                 method: 'GET',
                 signal: expect.any(AbortSignal) as AbortSignal,
-                headers: expect.objectContaining({ Accept: 'application/json' }) as unknown as RequestInit,
+                headers: expect.objectContaining({
+                    Accept: 'application/json',
+                }) as unknown as RequestInit,
             })
         );
     });

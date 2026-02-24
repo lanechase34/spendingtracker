@@ -1,4 +1,4 @@
-import { act,renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import useSubscriptionInterval from 'hooks/useSubscriptionInterval';
 import type { ChangeEvent } from 'react';
 
@@ -17,7 +17,10 @@ describe('useSubscriptionInterval', () => {
 
     it('Initializes correctly when initialInterval is null', () => {
         const { result } = renderHook(() =>
-            useSubscriptionInterval({ initialInterval: null, validator: mockValidator })
+            useSubscriptionInterval({
+                initialInterval: null,
+                validator: mockValidator,
+            })
         );
 
         expect(result.current.isSubscription).toBe(false);
@@ -27,7 +30,10 @@ describe('useSubscriptionInterval', () => {
 
     it('Initializes correctly when initialInterval has a value', () => {
         const { result } = renderHook(() =>
-            useSubscriptionInterval({ initialInterval: 'monthly', validator: mockValidator })
+            useSubscriptionInterval({
+                initialInterval: 'monthly',
+                validator: mockValidator,
+            })
         );
 
         expect(result.current.isSubscription).toBe(true);
@@ -37,7 +43,10 @@ describe('useSubscriptionInterval', () => {
 
     it('Handles subscription toggle correctly', () => {
         const { result } = renderHook(() =>
-            useSubscriptionInterval({ initialInterval: 'weekly', validator: mockValidator })
+            useSubscriptionInterval({
+                initialInterval: 'weekly',
+                validator: mockValidator,
+            })
         );
 
         act(() => {
@@ -52,7 +61,10 @@ describe('useSubscriptionInterval', () => {
 
     it('Updates interval and runs validation', () => {
         const { result } = renderHook(() =>
-            useSubscriptionInterval({ initialInterval: null, validator: mockValidator })
+            useSubscriptionInterval({
+                initialInterval: null,
+                validator: mockValidator,
+            })
         );
 
         act(() => {
@@ -70,7 +82,10 @@ describe('useSubscriptionInterval', () => {
 
     it('Should validate field manually with validateField', () => {
         const { result } = renderHook(() =>
-            useSubscriptionInterval({ initialInterval: null, validator: mockValidator })
+            useSubscriptionInterval({
+                initialInterval: null,
+                validator: mockValidator,
+            })
         );
 
         act(() => {
@@ -89,7 +104,10 @@ describe('useSubscriptionInterval', () => {
 
     it('Resets to initial values', () => {
         const { result } = renderHook(() =>
-            useSubscriptionInterval({ initialInterval: 'weekly', validator: mockValidator })
+            useSubscriptionInterval({
+                initialInterval: 'weekly',
+                validator: mockValidator,
+            })
         );
 
         // modify state

@@ -1,8 +1,8 @@
 import CssBaseline from '@mui/material/CssBaseline';
-import { createTheme,ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, renderHook,RenderHookOptions, RenderOptions } from '@testing-library/react';
-import type { ReactElement,ReactNode } from 'react';
+import { render, renderHook, RenderHookOptions, RenderOptions } from '@testing-library/react';
+import type { ReactElement, ReactNode } from 'react';
 
 import { AuthContext, AuthContextProvider } from './contexts/AuthContext';
 import { DateRangeContextProvider } from './contexts/DateRangeContext';

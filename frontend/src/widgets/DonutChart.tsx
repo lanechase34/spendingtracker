@@ -3,7 +3,7 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import { useQuery } from '@tanstack/react-query';
 import type { ChartData, ChartDataset, ChartOptions, LegendItem } from 'chart.js';
-import { ArcElement, Chart as ChartJS, Legend,Tooltip } from 'chart.js';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import EmptyCard from 'components/EmptyCard';
 import ErrorCard from 'components/ErrorCard';
 import LoadingCard from 'components/LoadingCard';
@@ -11,7 +11,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Doughnut } from 'react-chartjs-2';
-import { donutPlugins,pointerHover } from 'utils/chartPlugins';
+import { donutPlugins, pointerHover } from 'utils/chartPlugins';
 import { queryKeys } from 'utils/queryKeys';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -47,7 +47,10 @@ const options: ChartOptions<'doughnut'> = {
             onHover: donutPlugins.handleHover,
             onLeave: donutPlugins.handleLeave,
         },
-        tooltip: { ...donutPlugins.tooltip, callbacks: { label: donutPlugins.labels.money } },
+        tooltip: {
+            ...donutPlugins.tooltip,
+            callbacks: { label: donutPlugins.labels.money },
+        },
     },
     cutout: `60%`,
     onHover: pointerHover,

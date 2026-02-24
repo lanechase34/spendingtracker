@@ -15,7 +15,7 @@ import dayjs from 'dayjs';
 import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
 import useExpenseContext from 'hooks/useExpenseContext';
 import type { MouseEvent } from 'react';
-import { useCallback,useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Expense } from 'types/Expense.type';
 
 import ReceiptDialog from './ReceiptDialog';
@@ -45,11 +45,17 @@ export default function ExpenseList() {
     /**
      * Receipt Dialog
      */
-    const [selectedReceipt, setSelectedReceipt] = useState<{ title: string; url: string } | null>(null);
+    const [selectedReceipt, setSelectedReceipt] = useState<{
+        title: string;
+        url: string;
+    } | null>(null);
     const [receiptDialogOpen, setReceiptDialogOpen] = useState<boolean>(false);
 
     const handleReceiptDialogOpen = (row: Expense) => {
-        setSelectedReceipt({ title: row.description, url: `/spendingtracker/api/v1/expenses/${row.id}/receipt` });
+        setSelectedReceipt({
+            title: row.description,
+            url: `/spendingtracker/api/v1/expenses/${row.id}/receipt`,
+        });
         setReceiptDialogOpen(true);
     };
 

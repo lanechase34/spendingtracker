@@ -1,4 +1,4 @@
-import { act,renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import useFileUpload from 'hooks/useFileUpload';
 import type { ChangeEvent } from 'react';
 

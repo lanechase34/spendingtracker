@@ -130,7 +130,10 @@ describe('DonutChart Component', () => {
             json: () => ({
                 data: {
                     labels: ['A', 'B', 'C'],
-                    dataset: { data: [10, 20, 30], backgroundColor: ['#ff0000', '#00ff00', '#0000ff'] },
+                    dataset: {
+                        data: [10, 20, 30],
+                        backgroundColor: ['#ff0000', '#00ff00', '#0000ff'],
+                    },
                 },
             }),
         });

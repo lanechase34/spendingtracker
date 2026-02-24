@@ -5,7 +5,7 @@ import useDateRangeContext from 'hooks/useDateRangeContext';
 import usePaginatedFetch from 'hooks/usePaginatedFetch';
 import useToastContext from 'hooks/useToastContext';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useEffect,useMemo, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { subscriptionService } from 'schema/subscription';
 import type { Subscription } from 'types/Subscription.type';
 import type { SubscriptionList } from 'types/SubscriptionList.type';
@@ -133,7 +133,10 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
 
                 // If we deleted the last item on the last page that isn't the first page
                 if (currentPageItemCount === 1 && paginationModel.page > 0) {
-                    setPaginationModel({ ...paginationModel, page: paginationModel.page - 1 });
+                    setPaginationModel({
+                        ...paginationModel,
+                        page: paginationModel.page - 1,
+                    });
                 } else {
                     await refetch(abortController.signal);
                 }

@@ -16,7 +16,7 @@ import useFormField from 'hooks/useFormField';
 import useLocalStorage from 'hooks/useLocalStorage';
 import usePendingFetch from 'hooks/usePendingFetch';
 import type { FormEvent } from 'react';
-import { useEffect,useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';

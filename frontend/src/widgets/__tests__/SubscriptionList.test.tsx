@@ -354,7 +354,9 @@ describe('Subscription List Component', () => {
 
         it('Prevents multiple delete confirmations (race condition)', async () => {
             // Ignore the no pointer for the button option
-            const user = userEvent.setup({ pointerEventsCheck: PointerEventsCheckLevel.Never });
+            const user = userEvent.setup({
+                pointerEventsCheck: PointerEventsCheckLevel.Never,
+            });
 
             mockDelete.mockImplementation(() => new Promise((res) => setTimeout(res, 200)));
             const subscriptionContextValue = createSubscriptionContext({

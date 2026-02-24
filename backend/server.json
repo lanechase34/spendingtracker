@@ -22,6 +22,11 @@
     "name":"SpendingTracker",
     "openbrowser":"false",
     "openBrowserUrl":"http://${HTTP_HOST}:${HTTP_PORT}",
+    "runwar":{
+        "UndertowOptions":{
+            "MAX_ENTITY_SIZE":52428800
+        }
+    },
     "trayEnable":"false",
     "web":{
         "host":"${HTTP_HOST}",

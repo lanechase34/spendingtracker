@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useMemo,useState } from 'react';
+import { createContext, useCallback, useMemo, useState } from 'react';
 import type { AuthDialogContextType } from 'types/AuthDialogContext.type';
 
 export const AuthDialogContext = createContext<AuthDialogContextType | undefined>(undefined);

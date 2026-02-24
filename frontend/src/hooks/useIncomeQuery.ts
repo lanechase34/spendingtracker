@@ -21,7 +21,10 @@ export function useFetchIncome({ startDate, endDate, enabled = true }: UseIncome
     return useQuery({
         queryKey: queryKeys.income({ startDate, endDate }),
         queryFn: async ({ signal }) => {
-            const queryString = new URLSearchParams({ startDate, endDate }).toString();
+            const queryString = new URLSearchParams({
+                startDate,
+                endDate,
+            }).toString();
             return await service.fetchIncome(queryString, signal);
         },
         enabled,

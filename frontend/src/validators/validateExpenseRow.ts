@@ -21,7 +21,10 @@ export const validateExpenseRow = (row: ExpenseDataRow): ErrorField[] => {
     const errors: ErrorField[] = [];
 
     if (!row.description || row.description.trim().length < 3) {
-        errors.push({ field: 'description', error: 'Description must be at least 3 characters' });
+        errors.push({
+            field: 'description',
+            error: 'Description must be at least 3 characters',
+        });
     }
 
     const amountValidate = validateMoney(`${row?.amount ?? null}`);

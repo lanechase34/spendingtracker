@@ -12,7 +12,10 @@ interface UseFileUploadReturn {
     error: string | null;
     handleChange: (event: ChangeEvent<HTMLInputElement>) => void;
     reset: () => void;
-    validateFile: (file: File | null) => { file: File | null; error: string | null }; // call validator manually
+    validateFile: (file: File | null) => {
+        file: File | null;
+        error: string | null;
+    }; // call validator manually
 }
 
 export default function useFileUpload({ validMimeTypes, maxFileSize }: FileUpload): UseFileUploadReturn {

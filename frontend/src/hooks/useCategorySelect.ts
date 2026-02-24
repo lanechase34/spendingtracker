@@ -1,5 +1,5 @@
 import type { SyntheticEvent } from 'react';
-import { useCallback,useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { SelectOptionType } from 'types/SelectOption.type';
 
 interface CategorySelect {

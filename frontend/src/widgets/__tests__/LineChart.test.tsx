@@ -388,7 +388,9 @@ describe('LineChart Component', () => {
             json: () => ({
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    dataset: { data: [100, 150, 200, 175, 225, 250, 300, 275, 325, 350, 400, 450] },
+                    dataset: {
+                        data: [100, 150, 200, 175, 225, 250, 300, 275, 325, 350, 400, 450],
+                    },
                 },
             }),
         });

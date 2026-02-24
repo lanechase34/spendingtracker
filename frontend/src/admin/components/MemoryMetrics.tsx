@@ -5,11 +5,11 @@ import Divider from '@mui/material/Divider';
 import Skeleton from '@mui/material/Skeleton';
 import { useTheme } from '@mui/material/styles';
 import type { ChartData, ChartOptions } from 'chart.js';
-import { ArcElement, Chart as ChartJS, Legend,Tooltip } from 'chart.js';
+import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import useMetricContext from 'hooks/useMetricContext';
-import { useEffect, useEffectEvent,useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { Doughnut } from 'react-chartjs-2';
-import { donutPlugins,pointerHover } from 'utils/chartPlugins';
+import { donutPlugins, pointerHover } from 'utils/chartPlugins';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -31,7 +31,10 @@ const options: ChartOptions<'doughnut'> = {
                 color: '#dee2e6',
             },
         },
-        tooltip: { ...donutPlugins.tooltip, callbacks: { label: donutPlugins.labels.memory } },
+        tooltip: {
+            ...donutPlugins.tooltip,
+            callbacks: { label: donutPlugins.labels.memory },
+        },
     },
     cutout: `50%`,
     onHover: pointerHover,
@@ -94,7 +97,15 @@ export default function MemoryMetrics() {
 
             <Divider />
 
-            <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, m: 1 }}>
+            <CardContent
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: 300,
+                    m: 1,
+                }}
+            >
                 <Doughnut data={chartData} options={options} />
             </CardContent>
         </Card>

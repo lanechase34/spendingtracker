@@ -1,5 +1,5 @@
 import useLocalStorage from 'hooks/useLocalStorage';
-import { useCallback,useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface UseCooldownActionOptions {
     cooldownMs: number;

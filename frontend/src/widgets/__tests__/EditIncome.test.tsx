@@ -216,7 +216,9 @@ describe('<EditIncome />', () => {
 
             // Change date
             const newDate = baseDate.add(1, 'month');
-            fireEvent.change(dateInput, { target: { value: newDate.format('YYYY-MM') } });
+            fireEvent.change(dateInput, {
+                target: { value: newDate.format('YYYY-MM') },
+            });
 
             // Close dialog
             const closeBtn = await screen.findByLabelText(/close/i);
@@ -291,7 +293,9 @@ describe('<EditIncome />', () => {
         });
 
         it('Updates form fields when date changes and new data loads', async () => {
-            const { rerender } = render(<EditIncome date={baseDate} />, { queryClient });
+            const { rerender } = render(<EditIncome date={baseDate} />, {
+                queryClient,
+            });
 
             fireEvent.click(screen.getByLabelText(/edit/i));
 
@@ -305,7 +309,9 @@ describe('<EditIncome />', () => {
             // Change date
             const dateInput = screen.getByLabelText(/date/i);
             const newDate = baseDate.add(1, 'month');
-            fireEvent.change(dateInput, { target: { value: newDate.format('YYYY-MM') } });
+            fireEvent.change(dateInput, {
+                target: { value: newDate.format('YYYY-MM') },
+            });
 
             // Mock new data for new month
             mockUseFetchIncome.mockReturnValue({
@@ -617,7 +623,9 @@ describe('<EditIncome />', () => {
             const dateInput = await screen.findByLabelText(/date/i);
             const newDate = baseDate.add(1, 'month');
 
-            fireEvent.change(dateInput, { target: { value: newDate.format('YYYY-MM') } });
+            fireEvent.change(dateInput, {
+                target: { value: newDate.format('YYYY-MM') },
+            });
 
             await waitFor(() => {
                 expect(mockUseFetchIncome).toHaveBeenCalledWith({
@@ -636,7 +644,9 @@ describe('<EditIncome />', () => {
             const dateInput = await screen.findByLabelText(/date/i);
             const newDate = baseDate.add(2, 'months');
 
-            fireEvent.change(dateInput as HTMLInputElement, { target: { value: newDate.format('YYYY-MM') } });
+            fireEvent.change(dateInput as HTMLInputElement, {
+                target: { value: newDate.format('YYYY-MM') },
+            });
 
             const updateBtn = screen.getByRole('button', { name: /update/i });
             fireEvent.click(updateBtn);

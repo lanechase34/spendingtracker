@@ -1,4 +1,4 @@
-import { act,render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { DateRangeContext, DateRangeContextProvider } from 'contexts/DateRangeContext';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';

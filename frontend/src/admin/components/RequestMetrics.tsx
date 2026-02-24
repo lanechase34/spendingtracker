@@ -20,7 +20,7 @@ import {
 } from 'chart.js';
 import DetailRow from 'components/DetailRow';
 import useMetricContext from 'hooks/useMetricContext';
-import { useEffect, useEffectEvent,useMemo, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);

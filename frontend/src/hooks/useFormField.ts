@@ -1,6 +1,6 @@
 import { debounce } from '@mui/material/utils';
-import type { ChangeEvent, Dispatch, FocusEvent,SetStateAction } from 'react';
-import { useCallback, useEffect,useMemo, useRef, useState } from 'react';
+import type { ChangeEvent, Dispatch, FocusEvent, SetStateAction } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface FormField {
     initialValue: string;
@@ -98,7 +98,15 @@ export default function useFormField({ initialValue, validator, debounceDelay = 
 
     // Memoize the return object so it maintains referential stability
     return useMemo(
-        () => ({ value, error, handleChange, handleBlur, validateField, reset, setValue }),
+        () => ({
+            value,
+            error,
+            handleChange,
+            handleBlur,
+            validateField,
+            reset,
+            setValue,
+        }),
         [value, error, handleChange, handleBlur, validateField, reset]
     );
 }

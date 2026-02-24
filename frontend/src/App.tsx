@@ -6,7 +6,7 @@ import '@fontsource/roboto/700.css';
 
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
-import { createTheme,ThemeProvider } from '@mui/material/styles';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AuditLogPage from 'admin/pages/AuditLogPage';
 import BugLogPage from 'admin/pages/BugLogPage';
@@ -31,7 +31,7 @@ import Dashboard from 'pages/Dashboard';
 import NotFound from 'pages/NotFound';
 import Unauthorized from 'pages/Unauthorized';
 import type { ReactNode } from 'react';
-import { BrowserRouter as Router, Outlet,Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Outlet, Route, Routes } from 'react-router-dom';
 import { ROLES } from 'types/Roles.type';
 
 const darkTheme = createTheme({
