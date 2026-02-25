@@ -103,6 +103,21 @@ component {
                         objectStore                   : 'ConcurrentStore',
                         resetTimeoutOnAccess          : false
                     }
+                },
+                rateStorage: {
+                    provider  : 'coldbox.system.cache.providers.CacheBoxColdBoxProvider',
+                    properties: {
+                        objectDefaultTimeout          : 30,
+                        objectDefaultLastAccessTimeout: 30,
+                        useLastAccessTimeouts         : false,
+                        freeMemoryPercentageThreshold : 0,
+                        reapFrequency                 : 1,
+                        evictionPolicy                : 'LRU',
+                        evictCount                    : 2,
+                        maxObjects                    : 300,
+                        objectStore                   : 'ConcurrentStore',
+                        resetTimeoutOnAccess          : false
+                    }
                 }
             }
         };

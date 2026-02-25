@@ -1,13 +1,13 @@
 component singleton {
 
-    property name="cacheStorage" inject="cachebox:coldboxStorage";
+    property name="cacheStorage" inject="cachebox:rateStorage";
 
     /**
      * Cache to keep track number of hits per unique key
      *
      * @key    cache key
      * @limit  limit of requests allowed in 'window'
-     * @window window of time defined in seconds
+     * @window window of time defined in minutes
      */
     public boolean function hit(
         required string key,
@@ -17,7 +17,7 @@ component singleton {
         var data = cacheStorage.get(key);
 
         if(isNull(data)) {
-            data = {count: 1, expiresAt: now().add(datePart = 's', number = window)};
+            data = {count: 1, expiresAt: now().add(datePart = 'n', number = window)};
             cacheStorage.set(key, data, window);
             return true;
         }
@@ -27,8 +27,10 @@ component singleton {
         }
 
         data.count++;
-        cacheStorage.set(key, data, dateDiff('s', now(), data.expiresAt));
 
+        // Update cache with the number of remaining minutes
+        var remainingMinutes = dateDiff('n', now(), data.expiresAt);
+        cacheStorage.set(key, data, remainingMinutes);
         return true;
     }
 

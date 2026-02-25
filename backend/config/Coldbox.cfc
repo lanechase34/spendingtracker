@@ -93,19 +93,15 @@ component {
             rateLimits    : {
                 /**
                  * limit - num of request allowed per window
-                 * window - time in seconds
+                 * window - time in minutes
                  * key - valid options, ip, email, ip+email
                  */
-                'auth.login': {
-                    limit : 10,
-                    window: 300,
-                    key   : 'ip+email'
-                },
-                'auth.register'              : {limit: 3, window: 1800, key: 'ip'},
-                'auth.verify'                : {limit: 5, window: 600, key: 'email'},
-                'auth.resendverificationcode': {limit: 3, window: 600, key: 'email'},
-                'expense.export'             : {limit: 1, window: 60, key: 'email'},
-                'expense.exportreceipts'     : {limit: 1, window: 600, key: 'email'}
+                'auth.login'                 : {limit: 10, window: 5, key: 'ip+email'},
+                'auth.register'              : {limit: 3, window: 30, key: 'ip'},
+                'auth.verify'                : {limit: 5, window: 10, key: 'email'},
+                'auth.resendverificationcode': {limit: 3, window: 10, key: 'email'},
+                'expense.export'             : {limit: 1, window: 1, key: 'email'},
+                'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'}
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
             refreshTokenTTL     : 2592000, // 30 days in seconds
