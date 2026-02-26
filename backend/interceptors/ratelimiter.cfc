@@ -1,4 +1,4 @@
-component {
+component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate limits on a per request basis" {
 
     property name="securityService"  inject="services.security";
     property name="rateLimitService" inject="services.ratelimit";

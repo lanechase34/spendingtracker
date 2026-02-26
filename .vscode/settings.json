@@ -18,10 +18,16 @@
         "editor.defaultFormatter": "redhat.vscode-yaml"
     },
     "[typescriptreact]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": "explicit"
+        }
     },
     "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.eslint": "explicit"
+        }
     },
     "files.exclude": {
         "**/.git": true,
@@ -45,9 +51,6 @@
     "terminal.integrated.stickyScroll.enabled": false,
     "eslint.options": {
         "overrideConfigFile": "./eslint.config.ts"
-    },
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit"
     },
     "eslint.validate": ["typescript", "typescriptreact"],
     "jest.runMode": {

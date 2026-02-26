@@ -1,12 +1,18 @@
-component acecssors="true" singleton {
+component acecssors="true" singleton hint="Validator for checking a record exists in the database" {
 
     property name="name";
     property name="q" inject="provider:QueryBuilder@qb";
 
+    /**
+     * Init validator
+     */
     function init() {
         this.name = 'recordExists';
     }
 
+    /**
+     * Getter for validator's name
+     */
     string function getName() {
         return this.name;
     }
@@ -29,8 +35,7 @@ component acecssors="true" singleton {
         required any target,
         required string field,
         any targetValue,
-        any validationData,
-        struct rules
+        any validationData
     ) {
         var errorStruct = {
             message       : '',

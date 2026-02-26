@@ -1,10 +1,13 @@
-component extends="coldbox.system.Interceptor" {
+component extends="coldbox.system.Interceptor" hint="Interceptor for handling exceptions and validation exceptions" {
 
     property name="async"      inject="asyncManager@coldbox";
     property name="bugService" inject="services.bug";
     property name="excludedEvents" type="struct" default="{}";
     property name="excludedTypes"  type="struct" default="{}";
 
+    /**
+     * Configuration
+     */
     function configure() {
         this.excludedEvents = {'cbsecurity:jwt.refreshtoken': true, 'auth.logout': true};
         this.excludedTypes  = {'tokenmismatchexception': true};

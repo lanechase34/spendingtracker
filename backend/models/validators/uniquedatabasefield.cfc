@@ -1,12 +1,18 @@
-component accessors="true" singleton {
+component accessors="true" singleton hint="Validator for checking if a field is unique in database" {
 
     property name="q" inject="provider:QueryBuilder@qb";
     property name="name";
 
+    /**
+     * Init validator
+     */
     function init() {
         this.name = 'uniqueDatabaseField';
     }
 
+    /**
+     * Getter for validator's name
+     */
     string function getName() {
         return this.name;
     }
@@ -25,8 +31,7 @@ component accessors="true" singleton {
         required any target,
         required string field,
         any targetValue,
-        any validationData,
-        struct rules
+        any validationData
     ) {
         var errorStruct = {
             message       : '',

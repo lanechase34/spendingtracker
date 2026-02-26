@@ -1,4 +1,9 @@
-component accessors="true" extends="coldbox.system.web.context.Response" transientCache="false" {
+component
+    accessors     ="true"
+    extends       ="coldbox.system.web.context.Response"
+    transientCache="false"
+    hint          ="Custom API Response Obj"
+{
 
     property name="hasData"       type="boolean";
     property name="hasPagination" type="boolean";
@@ -28,12 +33,20 @@ component accessors="true" extends="coldbox.system.web.context.Response" transie
         return this;
     }
 
+    /**
+     * Sets the data for the response obj
+     * Sets the has data flag to true
+     */
     ApiResponseObj function setData(required any data) {
         super.setData(arguments.data);
         setHasData(true);
         return this;
     }
 
+    /**
+     * Sets the data and pagination for the response obj
+     * Sets the has data and has pagination flags to true
+     */
     ApiResponseObj function setDataWithPagination(
         data,
         resultsKey    = 'results',

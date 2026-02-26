@@ -1,9 +1,12 @@
-component accessors="true" singleton {
+component accessors="true" singleton hint="Validator for checking a date is inside range" {
 
     property name="name";
     property name="datePart";
     property name="maxRange";
 
+    /**
+     * Init validator
+     */
     function init() {
         this.name     = 'dateRangeCheck';
         this.datePart = 'd';
@@ -11,6 +14,9 @@ component accessors="true" singleton {
         this.minRange = 0;
     }
 
+    /**
+     * Getter for validator's name
+     */
     string function getName() {
         return this.name;
     }
@@ -33,8 +39,7 @@ component accessors="true" singleton {
         required any target,
         required string field,
         any targetValue,
-        any validationData,
-        struct rules
+        any validationData
     ) {
         var errorStruct = {
             message       : '',

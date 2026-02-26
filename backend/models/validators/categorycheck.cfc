@@ -1,12 +1,18 @@
-component accessors="true" singleton {
+component accessors="true" singleton hint="Validator for checking a category exists or name is unique" {
 
     property name="name";
     property name="q" inject="provider:QueryBuilder@qb";
 
+    /**
+     * Init validator
+     */
     function init() {
         this.name = 'categoryCheck';
     }
 
+    /**
+     * Getter for validator's name
+     */
     string function getName() {
         return this.name;
     }
@@ -27,8 +33,7 @@ component accessors="true" singleton {
         required any target,
         required string field,
         any targetValue,
-        any validationData,
-        struct rules
+        any validationData
     ) {
         var errorStruct = {
             message       : '',

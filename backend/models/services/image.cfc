@@ -1,16 +1,16 @@
-component singleton accessors="true" {
+component singleton accessors="true" hint="Service layer for interacting with imagemagick" {
 
     property name="imageMagick" inject="coldbox:setting:imageMagick";
 
     /**
      * Verify image magick is running
+     * @CFLintIgnore AVOID_USING_CFEXECUTE_TAG
      */
     public boolean function verifyImageMagick() {
         try {
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "identify --version",
-                variable  = "result",
                 timeout   = 30
             );
         }
@@ -24,13 +24,13 @@ component singleton accessors="true" {
      * Uses imagick identify to check if path is a valid image
      *
      * @path full path to image
+     * @CFLintIgnore AVOID_USING_CFEXECUTE_TAG
      */
     public boolean function validIdentify(required string path) {
         try {
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "identify ""#path#""",
-                variable  = "result",
                 timeout   = 30
             );
         }
@@ -44,13 +44,13 @@ component singleton accessors="true" {
      * Uses imagick mogrify to convert the upload to webp and decrease quality
      *
      * @path full path to image
+     * @CFLintIgnore AVOID_USING_CFEXECUTE_TAG
      */
     public boolean function convertToWebp(required string path, numeric quality = 50) {
         try {
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "mogrify -format webp -thumbnail 750x750 -strip -quality #quality# ""#path#""",
-                variable  = "result",
                 timeout   = 30
             );
         }

@@ -1,4 +1,4 @@
-component singleton accessors="true" {
+component singleton accessors="true" hint="Service layer for sending email" {
 
     property name="contactEmail"         inject="coldbox:setting:contactEmail";
     property name="fromEmail"            inject="coldbox:setting:fromEmail";

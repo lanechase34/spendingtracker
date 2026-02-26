@@ -1,11 +1,17 @@
-component accessors="true" singleton {
+component accessors="true" singleton hint="Validator for checking a file exists on system" {
 
     property name="name";
 
+    /**
+     * Init validator
+     */
     function init() {
         this.name = 'fileExistsCheck';
     }
 
+    /**
+     * Getter for validator's name
+     */
     string function getName() {
         return this.name;
     }
@@ -25,8 +31,7 @@ component accessors="true" singleton {
         required any target,
         required string field,
         any targetValue,
-        any validationData,
-        struct rules
+        any validationData
     ) {
         var errorStruct = {
             message       : '',

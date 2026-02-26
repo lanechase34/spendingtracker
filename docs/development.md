@@ -47,6 +47,24 @@ This document covers developer workflows including dependency updates, formattin
 
 ### Frontend
 
+1. Format all ts, tsx files using Prettier by running
+
+    ```
+    npm run format
+    ```
+
+### Backend
+
+1. Format all `*.cfc` files by running this in box
+
+    ```
+    run-script format
+    ```
+
+## Code Linting
+
+### Frontend
+
 1. Make sure vscode can resolve `eslint.config.ts`
 2. Check for lint errors by running
 
@@ -56,10 +74,9 @@ This document covers developer workflows including dependency updates, formattin
 
 ### Backend
 
-1. Format all `*.cfc` files by running this in box
-
+1. Lint cfc using CFLint by running in box
     ```
-    run-script format
+    run-script lint
     ```
 
 ## Testing

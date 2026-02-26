@@ -1,4 +1,4 @@
-component extends="coldbox.system.Interceptor" {
+component extends="coldbox.system.Interceptor" hint="Interceptor to populate jwt, setup api response obj, prc scope" {
 
     property name="securityService" inject="services.security";
 

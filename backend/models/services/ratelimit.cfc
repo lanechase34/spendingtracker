@@ -1,4 +1,4 @@
-component singleton {
+component singleton hint="Service layer for rate limiting specific actions" {
 
     property name="cacheStorage" inject="cachebox:rateStorage";
 

@@ -1,4 +1,4 @@
-component extends="base" {
+component extends="base" hint="Not Resource Specific Endpoints" {
 
     property name="securityService" inject="services.security";
 

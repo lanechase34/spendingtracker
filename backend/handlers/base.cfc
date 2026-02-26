@@ -1,4 +1,4 @@
-component extends="coldbox.system.RestHandler" {
+component extends="coldbox.system.RestHandler" hint="Base handler. All handlers should extend this." {
 
     property name="imageService" inject="services.image";
 

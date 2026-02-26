@@ -1,4 +1,4 @@
-# [SpendingTracker](https://chaselane.dev/spendingtracker)
+# SpendingTracker
 
 A full-stack expense and subscription tracking platform designed to surface spending insights,
 trends, financial clarity.

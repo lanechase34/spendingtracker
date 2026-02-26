@@ -1,4 +1,4 @@
-component extends="coldbox.system.Interceptor" {
+component extends="coldbox.system.Interceptor" hint="Interceptor for auditing each request at the end" {
 
     property name="async"           inject="asyncManager@coldbox";
     property name="auditService"    inject="services.audit";

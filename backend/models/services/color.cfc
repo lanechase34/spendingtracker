@@ -1,4 +1,4 @@
-component {
+component singleton accessors="true" hint="Service layer for generating colors using HSV algorithm" {
 
     /**
      * Create random color using HSV (hue, saturation, value) algorithm
@@ -34,12 +34,14 @@ component {
         var q;
         var t;
 
-        h = h % 360;
-        i = floor(h / 60);
-        f = h / 60 - i;
-        p = v * (1 - s);
-        q = v * (1 - f * s);
-        t = v * (1 - (1 - f) * s);
+        var hm;
+
+        hm = h % 360;
+        i  = floor(hm / 60);
+        f  = hm / 60 - i;
+        p  = v * (1 - s);
+        q  = v * (1 - f * s);
+        t  = v * (1 - (1 - f) * s);
 
         switch(i) {
             case 0:

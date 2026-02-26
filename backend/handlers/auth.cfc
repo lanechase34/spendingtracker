@@ -125,7 +125,7 @@ component extends="base" {
     function verify(event, rc, prc) secured="Unverified" {
         try {
             // Check if this is a valid code for this user
-            var valid = userService.findByVerificationCode(userid = prc.userid, code = rc.verificationCode);
+            userService.findByVerificationCode(userid = prc.userid, code = rc.verificationCode);
         }
         catch(UserNotFound e) {
             event

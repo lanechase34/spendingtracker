@@ -1,4 +1,4 @@
-component extends="coldbox.system.Interceptor" {
+component extends="coldbox.system.Interceptor" hint="Interceptor for application life cycle methods" {
 
     property name="async"       inject="asyncManager@coldbox";
     property name="concurrency" inject="coldbox:setting:concurrency";
@@ -6,6 +6,9 @@ component extends="coldbox.system.Interceptor" {
     property name="uploadPath"  inject="coldbox:setting:uploadPath";
     property name="queryLogPath" type="string";
 
+    /**
+     * Configuration
+     */
     function configure() {
         this.queryLogPath = environment == 'development' ? '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/q.html' : '';
     }

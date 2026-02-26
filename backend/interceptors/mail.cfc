@@ -1,11 +1,11 @@
-component extends="coldbox.system.Interceptor" {
+component extends="coldbox.system.Interceptor" hint="Interceptor for mail events" {
 
     property name="async"      inject="asyncManager@coldbox";
     property name="bugService" inject="services.bug";
 
-    function configure() {
-    }
-
+    /**
+     * Interceptor point before mail is sent
+     */
     function preMailSend(event, data, buffer, rc, prc) {
         // Change the subject and mailer if we are on development
         if(getSetting('environment') == 'development') {
@@ -14,6 +14,9 @@ component extends="coldbox.system.Interceptor" {
         }
     }
 
+    /**
+     * Interceptor point after mail is sent
+     */
     function postMailSend(event, data, buffer, rc, prc) {
         if(data.result.error) {
             // Log bug

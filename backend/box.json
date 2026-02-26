@@ -40,6 +40,7 @@
         "cbmailservices":"2.9.0+2",
         "cbstorages":"3.5.0+5",
         "cbsecurity":"3.7.0+9",
+        "commandbox-cflint":"2.4.0",
         "bcrypt":"3.2.0+1",
         "cfmigrations":"5.1.0",
         "commandbox-migrations":"5.3.0",
@@ -54,6 +55,7 @@
         "format:check":"cfformat check Application.cfc,config/,handlers/,interceptors/,models/,tests/,database/, ./.cfformat.json",
         "format:watch":"cfformat watch path='Application.cfc,config/,handlers/,interceptors/,models/,tests/,database/' settingsPath='.cfformat.json'",
         "docker:build":"!docker build --no-cache -t pogotracker -f ./Dockerfile ./",
+        "lint":"cflint handlers/**.cfc,interceptors/**.cfc,models/**.cfc",
         "setEnv":"cp env/${1}.dev.env .env",
         "blankEnv":"cp .env.example .env"
     },
