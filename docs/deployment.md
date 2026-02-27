@@ -1,6 +1,50 @@
 ## Github Actions
 
-#### To Do, files are mostly set up, just need to test and verify results
+### Automated Testing
+
+Both test suites trigger on pushes to `main` and `development` and pull requests targeting those branches.
+Test workflows can also be manually triggered.
+
+#### Frontend (`frontend-tests.yml`)
+
+Runs on `ubuntu-24.04`. Sets up Node.js 24 with npm caching, performs a clean install using `npm ci`, then runs Jest
+with coverage reporting. For pull requests, a coverage summary comment will automatically be posted to the PR via `jest-coverage-comment`. Test results and coverage are retained for 30 days.
+
+#### Backend (`backend-tests.yml`)
+
+Runs on `ubuntu-24.04`. Starts a PostgreSQL 16 database container `test_spendingtracker`, sets up Java 21 with CommandBox, creates the `.env` from GitHub Actions `Test` environment secrets, install dependencies, runs migrations and seeds the database, starts the CommandBox server, and runs the TestBox suite. Results are published as a JUnit TestBox report and are retained for 30 days.
+
+### Automated Deploys
+
+Both deploy workflows are manually trigger **only**. Both use the `Production` environment secrets.
+
+Required GitHub secrets (Production environment):
+
+- `LIGHTSAIL_IP` - AWS Lightsail instance IP
+- `LIGHTSAIL_USERNAME` - SSH user
+- `LIGHTSAIL_SSH_KEY` - SSH private key
+
+#### Frontend (`deploy-frontend.yml`)
+
+Sets up Node.js 24, runs `npm ci` and `npm run build`, then writes a `build/version.json` containing the build date and GitHub run ID. Verifies the build directory exists, then rsyncs the `build/` directory to `/var/www/wwwroot/spendingtracker_frontend/` on the Lightsail instance using `--delete` (removes files on the server that no longer exist in the build).
+
+#### Backend (`deploy-backend.yml`)
+
+Rsyncs `backend/` to `/var/www/wwwroot/spendingtracker_backend/` on the Lightsail instance, excluding the following directories that are managed on the server directly or not needed in the production build:
+
+```
+/coldbox, /database/seeds, /env, /modules, /tests, .env, .cfformat.json
+```
+
+After the file sync, SSHs into the instance and runs the following in sequence:
+
+```
+sudo box server stop
+sudo box update --force  # Update dependencies
+sudo box install --production  # Install new production dependencies
+sudo box migrate up  # Run any pending migrations
+sudo box server start
+```
 
 ## Manual Deploy
 

@@ -134,6 +134,34 @@ The following users are created and available to use for dev
 | test7@gmail.com | Unverified     |
 | test8@gmail.com | Unverified     |
 
+## Testing GitHub Actions Locally
+
+GitHub Actions workflows can be run locally using [act](https://github.com/nektos/act), which simulates the GitHub Actions runner environment via Docker.
+
+### Prerequisites
+
+- Docker running locally
+- `act` installed
+- The `ubuntu-24.04` runner image pulled:
+
+    ```bash
+    docker pull ghcr.io/catthehacker/ubuntu:act-24.04
+    ```
+
+### Running the Workflows
+
+You can run the test workflows from the VS Code Tasks menu (`Terminal > Run Task`) or directly from the terminal at the project root:
+
+```bash
+# Backend
+act -W '.github/workflows/test-backend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 --rm --pull=false
+
+# Frontend
+act -W '.github/workflows/test-frontend.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 --rm --pull=false
+```
+
+Note: The `--pull=false` flag prevents `act` from re-pulling the runner image each run. If the container image is missing or outdated, remove this flag to pull a fresh copy.
+
 ## Dev Setup (No Docker)
 
 ### Prerequisites
