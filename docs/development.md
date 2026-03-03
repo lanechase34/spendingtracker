@@ -162,6 +162,14 @@ act -W '.github/workflows/test-frontend.yml' -P ubuntu-24.04=ghcr.io/catthehacke
 
 Note: The `--pull=false` flag prevents `act` from re-pulling the runner image each run. If the container image is missing or outdated, remove this flag to pull a fresh copy.
 
+### GitHooks
+
+    Test pre-commit GitHooks by running the following
+
+    ```bash
+    lefthook run pre-commit
+    ```
+
 ## Dev Setup (No Docker)
 
 ### Prerequisites

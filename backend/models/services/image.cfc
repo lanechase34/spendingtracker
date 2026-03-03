@@ -4,6 +4,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
 
     /**
      * Verify image magick is running
+     *
      * @CFLintIgnore AVOID_USING_CFEXECUTE_TAG
      */
     public boolean function verifyImageMagick() {
@@ -11,6 +12,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "identify --version",
+                variable  = "result",
                 timeout   = 30
             );
         }
@@ -23,7 +25,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
     /**
      * Uses imagick identify to check if path is a valid image
      *
-     * @path full path to image
+     * @path         full path to image
      * @CFLintIgnore AVOID_USING_CFEXECUTE_TAG
      */
     public boolean function validIdentify(required string path) {
@@ -31,6 +33,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "identify ""#path#""",
+                variable  = "result",
                 timeout   = 30
             );
         }
@@ -43,7 +46,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
     /**
      * Uses imagick mogrify to convert the upload to webp and decrease quality
      *
-     * @path full path to image
+     * @path         full path to image
      * @CFLintIgnore AVOID_USING_CFEXECUTE_TAG
      */
     public boolean function convertToWebp(required string path, numeric quality = 50) {
@@ -51,6 +54,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "mogrify -format webp -thumbnail 750x750 -strip -quality #quality# ""#path#""",
+                variable  = "result",
                 timeout   = 30
             );
         }

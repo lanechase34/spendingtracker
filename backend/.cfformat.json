@@ -45,7 +45,7 @@
   "metadata.multiline.element_count": 5,
   "metadata.multiline.min_length": 40,
   "method_call.chain.multiline": 3,
-  "newline": "os",
+  "newline": "\n",
   "param.key_value.padding": false,
   "param.multiline.element_count": 15,
   "param.multiline.min_length": 500,

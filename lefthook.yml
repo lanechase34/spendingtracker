@@ -1,0 +1,35 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: backend
+      group:
+        piped: true
+        jobs:
+          - name: format
+            root: "backend/"
+            run: box run-script format
+    - name: frontend
+      group:
+        piped: true
+        jobs:
+          - name: format
+            root: "frontend/"
+            run: npm run-script format
+          - name: lint
+            root: "frontend/"
+            run: npm run lint:fix
+    - name: envcheck
+      root: "backend/"
+      run: box dotenv check --reverse
+
+post-checkout:
+  parallel: true
+  commands:
+    box-install:
+      root: "backend/"
+      run: box install
+    npm-install:
+      root: "frontend/"
+      run: npm install
+    box-fix-json-lineending:
+      run: box config set JSON.lineEnding=`#chr 10`
