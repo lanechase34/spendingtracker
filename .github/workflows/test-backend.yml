@@ -34,7 +34,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_spendingtracker
         ports:
-          - 5432:5432
+          - 5436:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -64,7 +64,7 @@ jobs:
           LUCEE_ADMIN_ENABLED=false
           INSPECTTEMPLATE=never
           IMAGEMAGICK=/usr/bin
-          HTTP_HOST=127.0.0.1
+          HTTP_HOST=0.0.0.0
           HTTP_PORT=8082
           REQUESTTIMEOUT=60
           OS=linux
@@ -78,7 +78,7 @@ jobs:
           DB_CLASS=org.postgresql.Driver
           DB_DRIVER=postgresql
           DB_HOST=localhost
-          DB_PORT=5432
+          DB_PORT=5436
           DB_USERNAME=runner
           DB_PASSWORD=postgres
           EMAIL_SERVER=localhost
@@ -101,11 +101,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y postgresql-client
-          until pg_isready -h localhost -p 5432 -U runner; do
+          until pg_isready -h localhost -p 5436 -U runner; do
             echo "Waiting for PostgreSQL..."
             sleep 2
           done
-          psql -h localhost -p 5432 -U runner -d test_spendingtracker -c "SELECT version();"
+          psql -h localhost -p 5436 -U runner -d test_spendingtracker -c "SELECT version();"
         env:
           PGPASSWORD: postgres
 
@@ -129,7 +129,7 @@ jobs:
         run: |
           echo "Waiting for server to start..."
           for i in {1..60}; do
-            if curl -sf http://127.0.0.1:8082 > /dev/null 2>&1; then
+            if curl -sf http://localhost:8082 > /dev/null 2>&1; then
               echo "Server is ready!"
               exit 0
             fi

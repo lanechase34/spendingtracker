@@ -9,7 +9,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
         if(
             !getSetting('warmedUp')
             && ['0:0:0:0:0:0:0:1', '127.0.0.1'].contains(securityService.getRequestIP())
-            && find('Java', cgi.http_user_agent) > 0
+            && findNoCase('Java', cgi.http_user_agent) > 0
         ) {
             setting requestTimeout=300;
 

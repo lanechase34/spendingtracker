@@ -58,7 +58,7 @@ component {
                 task.overviewStruct.urlpath = 'metricsSubscription';
             })
             .call(() => {
-                if(!getSetting('warmedUp')) {
+                if(!getSetting('warmedUp') || !application.keyExists('ws')) {
                     return;
                 }
 

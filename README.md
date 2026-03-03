@@ -78,8 +78,15 @@ The database container will automatically be seeded with dev data.
     - **Backend Health Check**: http://localhost:8082/healthcheck
 
 5.  Stop containers by running
+
     ```
     docker compose down
+    ```
+
+6.  Setup GitHooks from root
+    ```bash
+    npm install -g lefthook
+    lefthook install
     ```
 
 ### Commands
