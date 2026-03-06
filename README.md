@@ -54,36 +54,49 @@ The database container will automatically be seeded with dev data.
 ### Prerequisites
 
 - Docker Desktop
+- Commandbox >=6.3.2
+- Node >=24
 
 ### Setup
 
-1.  Using `docker/env.docker.example` as a template, populate .env in the webroot
+1. Configure Environment
 
-2.  Navigate to Docker dir
+    Copy `docker/.env.docker.example` to `backend/.env`
 
+    ```bash
+      cp backend/env.docker.example backend/env.docker
     ```
+
+    > Modify the environment variables as necessary
+
+    > You will need to set the `JWT_SECRET` and `ENCRYPTIONKEY`
+
+2. Navigate to Docker dir
+
+    ```bash
     cd docker
     ```
 
-3.  Start all services
+3. Start all services
 
     **Note:** On first run, this will build the frontend image automatically. Subsequent runs will use the cached image.
 
-    ```
+    ```bash
     docker compose up -d
     ```
 
-4.  Verify app is running (this may be a few minutes on first start)
+4. Verify app is running (this may be a few minutes on first start)
     - **Frontend**: http://localhost:3000
     - **Backend Health Check**: http://localhost:8082/healthcheck
 
-5.  Stop containers by running
+5. Stop containers by running
 
-    ```
+    ```bash
     docker compose down
     ```
 
-6.  Setup GitHooks from root
+6. Setup GitHooks from root
+
     ```bash
     npm install -g lefthook
     lefthook install
@@ -122,7 +135,7 @@ The database container will automatically be seeded with dev data.
     docker compose logs -f pogotracker_db
     ```
 
-### Connecting to database
+### Connecting to the SpendingTracker database
 
 | Setting      | Value                |
 | ------------ | -------------------- |
