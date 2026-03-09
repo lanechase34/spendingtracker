@@ -16,42 +16,75 @@ import type { SelectOptionType } from 'types/SelectOption.type';
 import { getCachedCategories, setCachedCategories } from 'utils/categoryCache';
 import { z } from 'zod';
 
+// Minimum character length required for a user to add a new category
+const MIN_NEW_CATEGORY_LENGTH = 3;
+
+/**
+ * Overrides MUI Autocomplete's default popper behaviour to always
+ * open downward, preventing the dropdown from flipping above the input.
+ */
 function DownwardPopper(props: PopperProps) {
     return <Popper {...props} placement="bottom-start" modifiers={[{ name: 'flip', enabled: false }]} />;
 }
 
-interface CategorySelectProps {
-    handleCategorySelectChange: (event: SyntheticEvent<Element, Event>, option: SelectOptionType | null) => void;
-    error?: boolean;
-    helperText?: string | null;
-    records?: number;
-    debounceDelay?: number;
-}
-
+// Category record
 interface Category {
     id: number;
     name: string;
 }
 
+// Zod schema for validating a single category record
 const CategorySchema = z.object({
     id: z.number(),
     name: z.string(),
 });
 
+// Zod schema for validating the full category list API response
 const CategoryAPISchema = z.object({
     data: z.array(CategorySchema),
     error: z.optional(z.boolean()),
 });
 
+interface CategorySelectProps {
+    /**
+     * Callback fired when the user selects an existing category or chooses to add a new one.
+     * - Existing category: `option.value` is the numeric category ID.
+     * - New category: `option.value` is the raw input string (no ID yet).
+     */
+    handleCategorySelectChange: (event: SyntheticEvent<Element, Event>, option: SelectOptionType | null) => void;
+    /** Whether the input should display in an error state. */
+    error?: boolean;
+    /** Helper text displayed below the input, typically for validation messages. */
+    helperText?: string | null;
+    /** Number of records to fetch per page. Defaults to 10. */
+    records?: number;
+    /** Debounce delay in milliseconds for search input. Defaults to 500. */
+    debounceDelay?: number;
+}
+
 /**
- * Category select dropdown
+ * Async category select dropdown with server-side search, infinite scroll pagination,
+ * response caching, and the ability to add new categories inline.
+ *
+ * Behaviour
+ * - On open: loads the first page of all categories with no search filter.
+ * - On input: debounces search requests to avoid excessive API calls.
+ * - On scroll: loads additional pages when the user nears the bottom of the list.
+ * - On clear: immediately reloads the default unfiltered category list.
+ * - If no results are found and input meets {MIN_NEW_CATEGORY_LENGTH},
+ *   an "Add" option is surfaced. Selecting it passes the raw string as `value`
+ *   to {CategorySelectProps.handleCategorySelectChange} for the parent to handle creation.
+ *
+ * Caching
+ * - Results are cached per search+page combination via {getCachedCategories}.
+ * - Cached results bypass the loading state and API entirely.
  */
 export default function CategorySelect({
     handleCategorySelectChange,
     error,
     helperText,
     records = 10,
-    debounceDelay = 750,
+    debounceDelay = 500,
 }: CategorySelectProps) {
     const [open, setOpen] = useState<boolean>(false);
     const [options, setOptions] = useState<SelectOptionType[]>([]);
@@ -66,6 +99,16 @@ export default function CategorySelect({
     // Track the current abort controller
     const abortControllerRef = useRef<AbortController | null>(null);
 
+    /**
+     * Fetches a page of category options from the API, optionally appending to existing options.
+     * Checks the cache first - if a cached result exists for this search+page, it is used directly.
+     * Cancels any in-flight request before starting a new one.
+     *
+     * @param search The search string to filter categories by.
+     * @param page The page number to fetch.
+     * @param append If true, appends results to existing options (pagination).
+     *               If false, replaces options entirely (new search).
+     */
     const loadOptions = useCallback(
         async (search: string, page: number, append: boolean) => {
             // Use cached options if exists
@@ -95,7 +138,7 @@ export default function CategorySelect({
                     signal: abortController.signal,
                 });
 
-                if (!response) return;
+                if (!response) throw new Error('No response returned.');
                 if (!response.ok) throw new Error('Invalid network response');
 
                 // Validate the response data
@@ -114,7 +157,7 @@ export default function CategorySelect({
                 setCachedCategories(search, page, formatted);
 
                 setOptions(append ? (prev) => [...prev, ...formatted] : formatted);
-                setHasMore(result.data.length > 0);
+                setHasMore(result.data.length >= records);
                 setLoading(false);
             } catch (err: unknown) {
                 const errorInfo = err as { name?: string; message?: string };
@@ -128,6 +171,10 @@ export default function CategorySelect({
         [records, authFetch, showToast]
     );
 
+    /**
+     * Debounced wrapper around search input
+     * Always starts at page 1
+     */
     const debouncedFetch = useMemo(
         () =>
             debounce((input: string) => {
@@ -154,7 +201,7 @@ export default function CategorySelect({
 
     const handleOpen = () => {
         setOpen(true);
-        // Load options on first open
+        // Intentionally loads all options on open before the user starts typing.
         if (options.length === 0) {
             void loadOptions('', 1, false);
         }
@@ -164,6 +211,11 @@ export default function CategorySelect({
         setOpen(false);
     };
 
+    /**
+     * Handles infinite scroll pagination within the listbox.
+     * Triggers the next page load when the user scrolls within 100px of the bottom,
+     * provided more results are available and no request is currently in flight.
+     */
     const handleScroll = useCallback(
         (event: SyntheticEvent) => {
             const listboxNode = event.currentTarget;
@@ -224,7 +276,7 @@ export default function CategorySelect({
                 filterOptions={(options: SelectOptionType[], params: FilterOptionsState<SelectOptionType>) => {
                     // Category must be min 3 chars, and no option(s) returned from server
                     // ask user to create this category
-                    if (!loading && params.inputValue.length > 3 && !options.length) {
+                    if (!loading && params.inputValue.length >= MIN_NEW_CATEGORY_LENGTH && !options.length) {
                         return [{ value: params.inputValue, label: `Add "${params.inputValue}"` }];
                     }
                     return options;
@@ -234,11 +286,19 @@ export default function CategorySelect({
                     newValue: string,
                     reason: AutocompleteInputChangeReason
                 ) => {
-                    const searchVal = reason === 'clear' ? '' : newValue;
-                    if ((reason === 'input' || reason === 'clear') && searchVal.length >= 3) {
+                    if (reason === 'clear') {
                         setCurrPage(1);
-                        setSearchValue(searchVal);
-                        debouncedFetch(newValue);
+                        setHasMore(true);
+                        setSearchValue('');
+                        void loadOptions('', 1, false);
+                    }
+
+                    if (reason === 'input') {
+                        const trimmedInput = newValue.trim();
+                        setCurrPage(1);
+                        setHasMore(true);
+                        setSearchValue(trimmedInput);
+                        debouncedFetch(trimmedInput);
                     }
                 }}
                 onChange={handleCategorySelectChange}
