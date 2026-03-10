@@ -1,3 +1,4 @@
+import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import useFetchImage from 'hooks/useFetchImage';
@@ -37,14 +38,20 @@ export default function ReceiptImg({ alt, url }: ReceiptImgProps) {
     }, [url, fetchImage]);
 
     if (loading) {
-        return <CircularProgress />;
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" sx={{ pt: 1 }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (error) {
         return (
-            <Typography variant="body2" color="error">
-                Failed to load receipt.
-            </Typography>
+            <Box display="flex" justifyContent="center" alignItems="center">
+                <Typography variant="body2" color="error">
+                    Failed to load receipt.
+                </Typography>
+            </Box>
         );
     }
 

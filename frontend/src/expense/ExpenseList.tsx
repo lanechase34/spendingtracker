@@ -1,5 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
-import ReceiptIcon from '@mui/icons-material/Receipt';
+import ListIcon from '@mui/icons-material/List';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -171,7 +171,7 @@ export default function ExpenseList() {
                                         handleOpenDetail(params.row);
                                     }}
                                 >
-                                    <ReceiptIcon fontSize="small" />
+                                    <ListIcon fontSize="small" />
                                 </Button>
                                 <DeleteButton
                                     rowId={params.id as number}

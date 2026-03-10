@@ -37,6 +37,7 @@ services:
     volumes:
       - ../backend:/workspace # mount backend/ to /workspace
       - ./entrypoint-wrapper.sh:/entrypoint-wrapper.sh:ro
+      - ./policy.xml:/usr/local/etc/ImageMagick-7/policy.xml:ro
     working_dir: /workspace
     entrypoint: ["/bin/bash", "/entrypoint-wrapper.sh"]
     networks:
