@@ -64,35 +64,49 @@ The database container will automatically be seeded with dev data.
     Copy `docker/.env.docker.example` to `backend/.env`
 
     ```bash
-      cp backend/env.docker.example backend/env.docker
+      cp backend/.env.docker.example backend/.env
     ```
 
     > Modify the environment variables as necessary
 
     > You will need to set the `JWT_SECRET` and `ENCRYPTIONKEY`
 
-2. Navigate to Docker dir
+2. Start Application with Docker
+
+    Navigate to Docker dir
 
     ```bash
     cd docker
     ```
 
-3. Start all services
-
-    **Note:** On first run, this will build the frontend image automatically. Subsequent runs will use the cached image.
+    Start all services in detached mode (runs in background):
 
     ```bash
     docker compose up -d
     ```
 
-4. Verify app is running (this may be a few minutes on first start)
-    - **Frontend**: http://localhost:3000
-    - **Backend Health Check**: http://localhost:8082/healthcheck
+    > **First run:** Docker will build the frontend and backend images automatically.
 
-5. Stop containers by running
+    > This may take a few minutes. Subsequent runs will use cached images and start much faster.
+
+3. Verify the Application is
+
+    | Service              | URL                                      |
+    | -------------------- | ---------------------------------------- |
+    | Frontend             | http://localhost:3000                    |
+    | Backend Health Check | http://localhost:8082/api/v1/healthcheck |
+
+4. Stop Application by running
 
     ```bash
     docker compose down
+    ```
+
+5. Install NPM Depdendencies from `/frontend`
+
+    ```bash
+    cd /frontend
+    npm install
     ```
 
 6. Setup GitHooks from root

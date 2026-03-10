@@ -204,7 +204,7 @@ Stack:
     <policy domain="resource" name="time" value="30"/>
     <policy domain="resource" name="width" value="8KP"/>
     <policy domain="resource" name="height" value="8KP"/>
-    <policy domain="module" rights="read|write" value="{JPEG,PNG,WEBP,HEIC}"/>
+    <policy domain="module" rights="read|write" pattern="{JPEG,PNG,WEBP,HEIC}"/>
 
     ```
 

@@ -35,6 +35,8 @@ RUN apt-get update && \
         libpng16-16 \
         libjpeg-turbo8 \
         libwebp7 \
+        libwebpmux3 \
+        libwebpdemux2 \
         libltdl7 \
         libgomp1 \
         wget \
@@ -54,6 +56,8 @@ RUN ldconfig /usr/local/lib
 # Verify imagemagick
 RUN magick -version && \
     magick -list format | grep -i heic
+
+RUN box config set JSON.lineEnding=`#chr 10`
 
 # Make sure dependencies are installed
 RUN box install
