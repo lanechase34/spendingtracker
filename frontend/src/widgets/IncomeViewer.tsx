@@ -49,7 +49,7 @@ export default function IncomeViewer() {
                 title="Net Income"
                 slotProps={{
                     title: {
-                        fontSize: '1.25rem',
+                        fontSize: { xs: '1rem', sm: '1.25rem' },
                     },
                 }}
                 action={<EditIncome date={startDate} />}

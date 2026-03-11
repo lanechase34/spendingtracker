@@ -109,7 +109,12 @@ describe('ReceiptImg', () => {
             setupHook({ imageSrc: 'blob:http://localhost/receipt-123' });
             render(<ReceiptImg alt="Groceries" url="/api/receipt/1" />);
             const img = screen.getByRole('img');
-            expect(img).toHaveStyle({ width: '100%', height: 'auto', maxHeight: '400px', objectFit: 'contain' });
+            expect(img).toHaveStyle({
+                display: 'block',
+                maxHeight: '400px',
+                objectFit: 'contain',
+                borderRadius: '8px',
+            });
         });
 
         it('Does not render the spinner in success state', () => {

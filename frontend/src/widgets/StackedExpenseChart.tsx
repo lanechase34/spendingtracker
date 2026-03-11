@@ -165,7 +165,7 @@ export default function StackedExpenseChart() {
                 title="Expenses Over Time"
                 slotProps={{
                     title: {
-                        fontSize: '1.25rem',
+                        fontSize: { xs: '1rem', sm: '1.25rem' },
                     },
                 }}
                 sx={{ mb: 0, pb: 0 }}

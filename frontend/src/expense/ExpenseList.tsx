@@ -1,22 +1,13 @@
-import CloseIcon from '@mui/icons-material/Close';
 import ListIcon from '@mui/icons-material/List';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { DataGrid } from '@mui/x-data-grid';
 import ConfirmDialog from 'components/ConfirmDialog';
 import CustomPagination from 'components/CustomPagination';
 import DeleteButton from 'components/DeleteButton';
-import DetailRow from 'components/DetailRow';
 import ErrorCard from 'components/ErrorCard';
 import SearchToolbar from 'components/SearchToolbar';
 import TotalFooter from 'components/TotalFooter';
@@ -27,7 +18,7 @@ import type { MouseEvent } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import type { Expense } from 'types/Expense.type';
 
-import ReceiptImg from './ReceiptImg';
+import ExpenseDetailDialog from './ExpenseDetailDialog';
 
 /**
  * Data grid slots
@@ -233,58 +224,12 @@ export default function ExpenseList() {
                 />
             </Box>
 
-            <Dialog
+            <ExpenseDetailDialog
                 open={detailOpen}
-                onClose={(_event: object, reason: string) => {
-                    if (reason !== 'backdropClick') handleCloseDetail();
-                }}
-                slotProps={{
-                    transition: {
-                        onExited: () => setSelectedExpenseDetail(null),
-                    },
-                }}
-                maxWidth="md"
-                fullWidth
-                disableEscapeKeyDown
-            >
-                <DialogTitle
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
-                >
-                    Details
-                    <IconButton aria-label="close" onClick={handleCloseDetail}>
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent dividers>
-                    {selectedExpenseDetail && (
-                        <Stack spacing={1}>
-                            <DetailRow label="Date" value={dayjs(selectedExpenseDetail.date).format('MM/DD/YYYY')} />
-                            <DetailRow label="Amount" value={formatCurrency(selectedExpenseDetail.amount)} />
-                            <DetailRow label="Description" value={selectedExpenseDetail.description} multiline />
-                            <DetailRow label="Category" value={selectedExpenseDetail.category} />
-
-                            {selectedExpenseDetail.receipt > 0 && (
-                                <>
-                                    <Divider />
-                                    <ReceiptImg
-                                        alt={selectedExpenseDetail.description}
-                                        url={`/spendingtracker/api/v1/expenses/${selectedExpenseDetail.id}/receipt`}
-                                    />
-                                </>
-                            )}
-                        </Stack>
-                    )}
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button variant="outlined" onClick={handleCloseDetail}>
-                        Close
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                expense={selectedExpenseDetail}
+                onClose={handleCloseDetail}
+                onExited={() => setSelectedExpenseDetail(null)}
+            />
 
             {selectedExpense > 0 && (
                 <ConfirmDialog

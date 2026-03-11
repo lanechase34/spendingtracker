@@ -3,7 +3,10 @@ import 'react-day-picker/dist/style.css';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
 import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
@@ -12,7 +15,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useBreakpoint from 'hooks/useBreakpoint';
 import useDateRangeContext from 'hooks/useDateRangeContext';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { DayPicker } from 'react-day-picker';
 import type { DateRangeType } from 'types/DateRange.type';
@@ -77,15 +80,29 @@ const StyledDayPickerWrapper = styled(Box)(({ theme }) => ({
     },
 }));
 
-function createDateRange(startDate: Dayjs, endDate: Dayjs): DateRange {
-    return {
-        from: startDate?.toDate(),
-        to: endDate?.toDate(),
-    };
-}
+// Present ranges map button label -> preset type
+const PRESETS: { label: string; type: Exclude<DateRangeType, 'custom'> }[] = [
+    { label: 'This Week', type: 'this-week' },
+    { label: 'Last Week', type: 'last-week' },
+    { label: 'This Month', type: 'this-month' },
+    { label: 'Last Month', type: 'last-month' },
+    { label: 'This Year', type: 'this-year' },
+    { label: 'Last Year', type: 'last-year' },
+];
 
 /**
- * DateRange selector with start and end matching MUI style
+ * DateRange selector with start and end matching MUI style.
+ *
+ * Behaviour
+ * - Preset buttons apply immediately and close the picker.
+ * - Custom calendar selections are staged in local state and only
+ *   committed to context when the user clicks Done.
+ * - On mobile, renders a full-screen Dialog instead of a Popover to
+ *   avoid overflow on small screens.
+ * - Selecting a new range start clears the previous end date so the
+ *   user cannot accidentally confirm a stale range.
+ * - The Done button is disabled until both a start and end date are
+ *   selected, and shows a tooltip if the range exceeds 365 days.
  */
 export default function DateRangeSelector() {
     const { isMobile } = useBreakpoint();
@@ -95,7 +112,7 @@ export default function DateRangeSelector() {
     const [tempStartDate, setTempStartDate] = useState<Dayjs>(startDate);
     const [tempEndDate, setTempEndDate] = useState<Dayjs>(endDate);
 
-    // Handler for one of the preset date range buttons
+    // Handler for one of the preset date range buttons, sets context immediately
     const applyPresetRange = (type: Exclude<DateRangeType, 'custom'>) => {
         setPresetRange(type);
         handleClose();
@@ -105,8 +122,6 @@ export default function DateRangeSelector() {
         if (range?.from) setTempStartDate(dayjs(range.from));
         if (range?.to) setTempEndDate(dayjs(range.to));
     };
-
-    const inputRef = useRef<HTMLDivElement | null>(null);
 
     // Anchors where the picker should be
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -127,72 +142,92 @@ export default function DateRangeSelector() {
         handleClose();
     };
 
+    const presetRanges = (
+        <Stack spacing={1}>
+            {PRESETS.map(({ label, type }) => (
+                <Button key={type} size="small" variant="outlined" onClick={() => applyPresetRange(type)}>
+                    {label}
+                </Button>
+            ))}
+        </Stack>
+    );
+
+    const pickerContent = (
+        <StyledDayPickerWrapper>
+            <DayPicker
+                mode="range"
+                numberOfMonths={isMobile ? 1 : 2}
+                selected={{
+                    from: tempStartDate?.toDate(),
+                    to: tempEndDate?.toDate(),
+                }}
+                onSelect={handleSelect}
+                defaultMonth={tempStartDate.toDate()}
+                max={365}
+            />
+        </StyledDayPickerWrapper>
+    );
+
+    const doneBtn = (
+        <Button variant="contained" disabled={!tempStartDate || !tempEndDate} onClick={handleDone}>
+            Done
+        </Button>
+    );
+
+    // Build the output using pieces above
+    // Mobile screens get a full screen dialog
+    // Desktop screens use a popover
     return (
         <>
-            <Box ref={inputRef} display="flex" gap={2} alignItems="center" flexWrap="wrap">
+            <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
                 <Button variant="outlined" onClick={handleOpen} aria-label="Select date range">
                     <DateRangeIcon sx={{ mr: 1 }} />
                     {startDate?.format('MM/DD/YYYY') ?? ''} - {endDate?.format('MM/DD/YYYY') ?? ''}
                 </Button>
             </Box>
+            {isMobile ? (
+                <Dialog open={open} onClose={handleClose} fullScreen>
+                    <DialogContent>
+                        <Box display="flex" flexDirection="row" gap={1} justifyContent="center">
+                            {pickerContent}
+                        </Box>
 
-            <Popover
-                open={open}
-                anchorEl={anchorEl}
-                onClose={handleClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                role="dialog"
-                aria-modal="true"
-            >
-                <Paper sx={{ p: 2, minWidth: 800 }}>
-                    <Box display="flex" flexDirection="row" gap={2}>
-                        {/* Preset Ranges */}
-                        <Stack spacing={1}>
-                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('this-week')}>
-                                This Week
-                            </Button>
-                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('last-week')}>
-                                Last Week
-                            </Button>
-                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('this-month')}>
-                                This Month
-                            </Button>
-                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('last-month')}>
-                                Last Month
-                            </Button>
-                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('this-year')}>
-                                This Year
-                            </Button>
-                            <Button size="small" variant="outlined" onClick={() => applyPresetRange('last-year')}>
-                                Last Year
-                            </Button>
-                        </Stack>
+                        <Divider orientation="horizontal" />
 
-                        <Divider orientation="vertical" flexItem sx={{ mx: 0 }} />
+                        <Grid container spacing={2} mt={2}>
+                            <Grid size={{ xs: 6 }}>{presetRanges}</Grid>
+                            <Grid size={{ xs: 6 }}>
+                                <Box display="flex" flexDirection="column">
+                                    {doneBtn}
+                                </Box>
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                </Dialog>
+            ) : (
+                <Popover
+                    open={open}
+                    anchorEl={anchorEl}
+                    onClose={handleClose}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                    role="dialog"
+                    aria-modal="true"
+                >
+                    <Paper sx={{ p: 2, minWidth: 800 }}>
+                        <Box display="flex" flexDirection="row" gap={2}>
+                            {presetRanges}
+                            <Divider orientation="vertical" flexItem sx={{ mx: 0 }} />
+                            {pickerContent}
+                        </Box>
 
-                        {/* Range picker */}
-                        <StyledDayPickerWrapper>
-                            <DayPicker
-                                mode="range"
-                                numberOfMonths={isMobile ? 1 : 2}
-                                selected={createDateRange(tempStartDate, tempEndDate)}
-                                onSelect={handleSelect}
-                                defaultMonth={tempStartDate.toDate()}
-                                max={365}
-                            />
-                        </StyledDayPickerWrapper>
-                    </Box>
+                        <Divider orientation="horizontal" />
 
-                    <Divider orientation="horizontal" />
-
-                    {/* Footer with Done button */}
-                    <Box display="flex" justifyContent="flex-end" mt={2}>
-                        <Button variant="contained" disabled={!tempStartDate || !tempEndDate} onClick={handleDone}>
-                            Done
-                        </Button>
-                    </Box>
-                </Paper>
-            </Popover>
+                        <Box display="flex" justifyContent="flex-end" mt={2}>
+                            {doneBtn}
+                        </Box>
+                    </Paper>
+                </Popover>
+            )}
         </>
     );
 }

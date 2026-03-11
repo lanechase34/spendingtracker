@@ -16,13 +16,13 @@ interface SearchToolbarProps {
 export default function SearchToolbar({ title }: SearchToolbarProps) {
     return (
         <Toolbar>
-            <Typography sx={{ mr: 'auto', ml: 1, fontSize: '1.25rem' }}>{title}</Typography>
+            <Typography sx={{ mr: 'auto', ml: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>{title}</Typography>
             <QuickFilter expanded debounceMs={500}>
                 <QuickFilterControl
                     render={({ ref, ...other }) => (
                         <TextField
                             {...other}
-                            sx={{ width: 260 }}
+                            sx={{ width: { xs: 160, sm: 260 } }}
                             inputRef={ref}
                             aria-label="Search"
                             placeholder="Search..."

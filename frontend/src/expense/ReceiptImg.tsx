@@ -39,7 +39,7 @@ export default function ReceiptImg({ alt, url }: ReceiptImgProps) {
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" sx={{ pt: 1 }}>
+            <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: 400 }}>
                 <CircularProgress />
             </Box>
         );
@@ -56,10 +56,12 @@ export default function ReceiptImg({ alt, url }: ReceiptImgProps) {
     }
 
     return (
-        <img
-            style={{ width: '100%', height: 'auto', maxHeight: 400, objectFit: 'contain' }}
-            src={imageSrc}
-            alt={`${alt} receipt`}
-        />
+        <Box display="flex" justifyContent="center">
+            <img
+                style={{ display: 'block', maxHeight: 400, objectFit: 'contain', borderRadius: 8 }}
+                src={imageSrc}
+                alt={`${alt} receipt`}
+            />
+        </Box>
     );
 }
