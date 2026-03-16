@@ -5,6 +5,7 @@ import { createContext, useCallback, useEffect, useEffectEvent, useMemo, useRef,
 import type { UserRoles } from 'types/Roles.type';
 import type { User, UserContextType } from 'types/UserContext.type';
 import { UserResponseSchema } from 'types/UserContext.type';
+import { API_BASE_URL } from 'utils/constants';
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -37,7 +38,7 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
         try {
             const response = await authFetch({
-                url: '/spendingtracker/api/v1/me',
+                url: `${API_BASE_URL}/me`,
                 method: 'GET',
                 signal: signal,
             });

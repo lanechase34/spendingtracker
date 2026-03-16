@@ -2,6 +2,7 @@ import type { MockAbortController } from '@test-utils';
 import { renderHook } from '@test-utils';
 import { act, waitFor } from '@testing-library/react';
 import usePaginatedFetch from 'hooks/usePaginatedFetch';
+import { API_BASE_URL } from 'utils/constants';
 import { z } from 'zod';
 
 global.fetch = jest.fn();
@@ -24,7 +25,7 @@ const ComplexMockSchema = z.object({
 });
 
 describe('usePaginatedFetch', () => {
-    const endpoint = '/spendingtracker/api/v1/data';
+    const endpoint = `${API_BASE_URL}/data`;
     const mockData: MockData[] = [
         { id: 1, name: 'Item 1' },
         { id: 2, name: 'Item 2' },

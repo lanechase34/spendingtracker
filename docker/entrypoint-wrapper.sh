@@ -21,5 +21,8 @@ else
   echo "Database setup complete!"
 fi
 
+# Install dependencies
+[ ! -d "/workspace/app/modules" ] && box install
+
 # Execute the original CommandBox run script
 exec ${BUILD_DIR}/run.sh

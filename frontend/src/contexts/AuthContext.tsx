@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import useLocalStorage from 'hooks/useLocalStorage';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthContextType } from 'types/AuthContext.type';
+import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
@@ -149,7 +150,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
             csrfPromiseRef.current = (async () => {
                 try {
-                    const response = await fetch('/spendingtracker/api/v1/csrf', {
+                    const response = await fetch(`${API_BASE_URL}/csrf`, {
                         method: 'GET',
                         headers: {
                             'x-auth-token': token,
@@ -179,6 +180,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     const newCsrfToken = result.data.csrf_token;
                     updateCsrfToken(newCsrfToken);
                     return newCsrfToken;
+                } catch (error) {
+                    updateCsrfToken(null);
+                    throw error;
                 } finally {
                     // Always clear the promise when done (success or failure)
                     csrfPromiseRef.current = null;
@@ -223,7 +227,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
         refreshPromiseRef.current = (async () => {
             try {
-                const response = await fetch('/spendingtracker/api/v1/security/refreshtoken', {
+                const response = await fetch(`${API_BASE_URL}/security/refreshtoken`, {
                     method: 'POST',
                     credentials: 'include', // x-refresh-token added as cookie automatically (matches path)
                 });
@@ -313,22 +317,42 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             });
     }, [wasAuthenticated, refreshToken, setWasAuthenticated]);
 
-    const value: AuthContextType = {
-        authToken: authToken,
-        getLatestAuthToken: getLatestAuthToken,
-        login: login,
-        logout: logout,
-        refreshToken: refreshToken,
-        csrfToken: csrfToken,
-        getCsrfToken: getCsrfToken,
-        userJustLoggedIn: userJustLoggedIn,
-        clearUserJustLoggedIn: clearUserJustLoggedIn,
-        pendingToken: pendingToken,
-        setPendingToken: setPendingToken,
-        isInitializing: isInitializing,
-        isAuthenticated: isAuthenticated,
-        wasAuthenticated: wasAuthenticated,
-    };
+    /**
+     * Memoize the entire context value to prevent unnecessary re-renders
+     */
+    const value = useMemo<AuthContextType>(() => {
+        return {
+            authToken: authToken,
+            getLatestAuthToken: getLatestAuthToken,
+            login: login,
+            logout: logout,
+            refreshToken: refreshToken,
+            csrfToken: csrfToken,
+            getCsrfToken: getCsrfToken,
+            userJustLoggedIn: userJustLoggedIn,
+            clearUserJustLoggedIn: clearUserJustLoggedIn,
+            pendingToken: pendingToken,
+            setPendingToken: setPendingToken,
+            isInitializing: isInitializing,
+            isAuthenticated: isAuthenticated,
+            wasAuthenticated: wasAuthenticated,
+        };
+    }, [
+        authToken,
+        getLatestAuthToken,
+        login,
+        logout,
+        refreshToken,
+        csrfToken,
+        getCsrfToken,
+        userJustLoggedIn,
+        clearUserJustLoggedIn,
+        pendingToken,
+        setPendingToken,
+        isInitializing,
+        isAuthenticated,
+        wasAuthenticated,
+    ]);
 
     return <AuthContext value={value}>{children}</AuthContext>;
 };

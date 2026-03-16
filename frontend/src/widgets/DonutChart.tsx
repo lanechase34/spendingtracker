@@ -12,6 +12,7 @@ import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { donutPlugins, pointerHover } from 'utils/chartPlugins';
+import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -82,7 +83,7 @@ export default function DonutChart() {
     const fetchDonutChartData = async ({ signal }: { signal: AbortSignal }): Promise<ChartData<'doughnut'>> => {
         const urlParams = new URLSearchParams(additionalParams);
         const response = await authFetch({
-            url: `/spendingtracker/api/v1/widgets/donutChart?${urlParams.toString()}`,
+            url: `${API_BASE_URL}/widgets/donutChart?${urlParams.toString()}`,
             method: 'GET',
             signal: signal,
         });

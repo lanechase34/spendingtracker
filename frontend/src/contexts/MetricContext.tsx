@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { createContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createMetricsClient } from 'sockets/createMetricsClient';
 import type { Metric } from 'types/MetricResponse.type';
+import { WS_URL } from 'utils/constants';
 
 export interface MetricContextType {
     metrics: Metric | null;
@@ -19,8 +20,6 @@ export const MetricContextProvider = ({ children }: { children: ReactNode }) => 
     const clientRef = useRef<Client | null>(null);
     const { authToken } = useAuthContext();
 
-    const BROKER_URL = import.meta.env.PROD ? 'wss://chaselane.dev/spendingtracker/ws' : 'ws://localhost:8082/ws';
-
     useEffect(() => {
         if (!authToken) {
             void clientRef.current?.deactivate();
@@ -33,7 +32,7 @@ export const MetricContextProvider = ({ children }: { children: ReactNode }) => 
         }
 
         const client = createMetricsClient({
-            brokerURL: BROKER_URL,
+            brokerURL: WS_URL,
             token: authToken,
             onMetrics: setMetrics,
             onError: (err) => console.error('Metrics socket error', err),
@@ -46,7 +45,7 @@ export const MetricContextProvider = ({ children }: { children: ReactNode }) => 
             void clientRef.current?.deactivate();
             clientRef.current = null;
         };
-    }, [authToken, BROKER_URL]);
+    }, [authToken]);
 
     /**
      * Memoize the entire context

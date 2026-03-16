@@ -11,6 +11,7 @@ import type { Subscription } from 'types/Subscription.type';
 import type { SubscriptionList } from 'types/SubscriptionList.type';
 import { SubscriptionListSchema } from 'types/SubscriptionList.type';
 import type { UsePaginatedFetchReturn } from 'types/UsePaginatedFetchReturn.type';
+import { API_BASE_URL } from 'utils/constants';
 
 export interface SubscriptionContextType extends Omit<UsePaginatedFetchReturn<SubscriptionList>, 'data'> {
     subscriptions: Subscription[];
@@ -83,7 +84,7 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
         handleSortModelChange,
         handleFilterModelChange,
     } = usePaginatedFetch({
-        endpoint: '/spendingtracker/api/v1/subscriptions',
+        endpoint: `${API_BASE_URL}/subscriptions`,
         initialPageSize: 10,
         additionalParams,
         validator: SubscriptionListSchema,
@@ -118,6 +119,8 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
         [subscriptionAPI, refetch, showToast]
     );
 
+    const currentPageItemCount = data?.subscriptions?.length ?? 0;
+
     /**
      * Deleting subscription
      */
@@ -129,9 +132,7 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
 
                 // Refetch the current page
                 // Check if we need to go back a page
-                const currentPageItemCount = totalRowCount;
-
-                // If we deleted the last item on the last page that isn't the first page
+                // If we deleted the last item on the current page that isn't the first page
                 if (currentPageItemCount === 1 && paginationModel.page > 0) {
                     setPaginationModel({
                         ...paginationModel,
@@ -141,11 +142,11 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
                     await refetch(abortController.signal);
                 }
             } catch (err: unknown) {
-                console.error('Error deleting susbcription', err);
+                console.error('Error deleting subscription', err);
                 showToast('Server Error. Please try again.', 'error');
             }
         },
-        [subscriptionAPI, totalRowCount, paginationModel, setPaginationModel, refetch, showToast]
+        [subscriptionAPI, currentPageItemCount, paginationModel, setPaginationModel, refetch, showToast]
     );
 
     /**

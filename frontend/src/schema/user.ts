@@ -1,6 +1,7 @@
 import useAuthFetch from 'hooks/useAuthFetch';
 import usePendingFetch from 'hooks/usePendingFetch';
 import { APIError } from 'utils/apiError';
+import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
@@ -35,7 +36,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
          * @returns access_token
          */
         async login(formData: FormData): Promise<string> {
-            const response = await fetch('/spendingtracker/api/v1/login', {
+            const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 body: formData,
             });
@@ -75,7 +76,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
         async logout() {
             if (!authFetch) return;
             const response = await authFetch({
-                url: '/spendingtracker/api/v1/security/logout',
+                url: `${API_BASE_URL}/security/logout`,
                 method: 'POST',
             });
 
@@ -100,7 +101,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
             salary: string;
             monthlyTakeHome: string;
         }): Promise<string> {
-            const response = await fetch('/spendingtracker/api/v1/register', {
+            const response = await fetch(`${API_BASE_URL}/register`, {
                 method: 'POST',
                 body: JSON.stringify(body),
             });
@@ -128,7 +129,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
         },
 
         /**
-         * PATCH /spendingtracker/api/v1/me
+         * PATCH /me
          * Save a user's profile settings
          *
          * @rc.password (optional) new password
@@ -141,7 +142,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
             }
 
             const response = await authFetch({
-                url: '/spendingtracker/api/v1/me',
+                url: `${API_BASE_URL}/me`,
                 method: 'PATCH',
                 body: body,
             });
@@ -154,7 +155,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
         },
 
         /**
-         * GET /spendingtracker/api/v1/resendVerificationCode
+         * GET /resendVerificationCode
          *
          * If previous code has expired, resends the verification code via email to the user
          * Returns 429 if limit has not passed or user reached the rate limit
@@ -165,7 +166,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
             }
 
             const response = await pendingFetch({
-                url: '/spendingtracker/api/v1/resendVerificationCode',
+                url: `${API_BASE_URL}/resendVerificationCode`,
                 method: 'GET',
             });
 
@@ -189,7 +190,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
         },
 
         /**
-         * POST /spendingtracker/api/v1/verify
+         * POST /verify
          *
          * Attempts to verify the current user using the code supplied
          *
@@ -201,7 +202,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
             }
 
             const response = await pendingFetch({
-                url: '/spendingtracker/api/v1/verify',
+                url: `${API_BASE_URL}/verify`,
                 method: 'POST',
                 body: formData,
             });

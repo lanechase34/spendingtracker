@@ -14,6 +14,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import { useMemo } from 'react';
 import type { TaskRecord } from 'types/TaskResponse.type';
 import { TaskResponseSchema } from 'types/TaskResponse.type';
+import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 
 export default function TasksPage() {
@@ -24,7 +25,7 @@ export default function TasksPage() {
      */
     const fetchTaskData = async ({ signal }: { signal: AbortSignal }): Promise<TaskRecord[]> => {
         const response = await authFetch({
-            url: '/spendingtracker/api/v1/admin/taskdata',
+            url: `${API_BASE_URL}/admin/taskdata`,
             method: 'GET',
             signal: signal,
         });

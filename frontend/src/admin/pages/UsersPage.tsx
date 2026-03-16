@@ -24,6 +24,7 @@ import usePaginatedFetch from 'hooks/usePaginatedFetch';
 import { useState } from 'react';
 import type { UserRecord } from 'types/UserList.type';
 import { UserListSchema } from 'types/UserList.type';
+import { API_BASE_URL } from 'utils/constants';
 import { ucFirst } from 'utils/ucFirst';
 
 function getSecurityLevelColor(security_level: string) {
@@ -49,7 +50,7 @@ export default function UsersPage() {
         handleSortModelChange,
         handleFilterModelChange,
     } = usePaginatedFetch({
-        endpoint: '/spendingtracker/api/v1/users',
+        endpoint: `${API_BASE_URL}/users`,
         initialPageSize: 25,
         validator: UserListSchema,
         defaultSort: [{ field: 'lastlogin', sort: 'desc' }],

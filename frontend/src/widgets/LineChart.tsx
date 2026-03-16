@@ -23,6 +23,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
+import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, annotationPlugin);
@@ -60,7 +61,7 @@ export default function LineChart() {
     const fetchLineChartData = async ({ signal }: { signal: AbortSignal }): Promise<ChartData<'line'>> => {
         const urlParams = new URLSearchParams(additionalParams);
         const response = await authFetch({
-            url: `/spendingtracker/api/v1/widgets/lineChart?${urlParams.toString()}`,
+            url: `${API_BASE_URL}/widgets/lineChart?${urlParams.toString()}`,
             method: 'GET',
             signal: signal,
         });

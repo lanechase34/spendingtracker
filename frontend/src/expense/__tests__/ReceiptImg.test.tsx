@@ -36,6 +36,10 @@ describe('ReceiptImg', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockFetchImage.mockResolvedValue(undefined);
+
+        jest.spyOn(console, 'error').mockImplementation(() => {
+            // Silence expected errors
+        });
     });
 
     describe('Loading state', () => {

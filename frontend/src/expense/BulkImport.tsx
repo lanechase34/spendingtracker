@@ -9,6 +9,7 @@ import type { ImportedExpense } from 'types/BulkImport.type';
 import { ImportResponseSchema } from 'types/BulkImport.type';
 import type { ExpenseDataRow } from 'types/Expense.type';
 import { clearCategoryCache } from 'utils/categoryCache';
+import { API_BASE_URL } from 'utils/constants';
 import type { ErrorField } from 'validators/validateExpenseRow';
 import { validateExpenseRow } from 'validators/validateExpenseRow';
 
@@ -60,7 +61,7 @@ export default function BulkImport() {
 
         try {
             const response = await authFetch({
-                url: '/spendingtracker/api/v1/expenses/import',
+                url: `${API_BASE_URL}/expenses/import`,
                 method: 'POST',
                 body: formData,
             });
@@ -197,7 +198,7 @@ export default function BulkImport() {
 
         try {
             const response = await authFetch({
-                url: '/spendingtracker/api/v1/expenses/bulk',
+                url: `${API_BASE_URL}/expenses/bulk`,
                 method: 'POST',
                 body: formData,
             });

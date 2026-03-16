@@ -24,6 +24,7 @@ import { useMemo, useState } from 'react';
 import type { Bug } from 'types/Bug.type';
 import type { BugLog } from 'types/BugLog.type';
 import { BugLogSchema } from 'types/BugLog.type';
+import { API_BASE_URL } from 'utils/constants';
 
 interface BugLogProps {
     height?: string;
@@ -61,7 +62,7 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
         handleSortModelChange,
         handleFilterModelChange,
     } = usePaginatedFetch({
-        endpoint: '/spendingtracker/api/v1/admin/bugs',
+        endpoint: `${API_BASE_URL}/admin/bugs`,
         initialPageSize: 10,
         additionalParams,
         validator: BugLogSchema,

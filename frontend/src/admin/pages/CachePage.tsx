@@ -24,6 +24,7 @@ import { Doughnut } from 'react-chartjs-2';
 import type { CacheData, CacheKey } from 'types/CacheResponse.type';
 import { CacheResponseSchema } from 'types/CacheResponse.type';
 import { donutPlugins, pointerHover } from 'utils/chartPlugins';
+import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 import { formatMinutesToTime } from 'utils/timeFormatter';
 
@@ -76,7 +77,7 @@ export default function CachePage() {
      */
     const fetchCacheData = async ({ signal }: { signal: AbortSignal }): Promise<CacheData> => {
         const response = await authFetch({
-            url: '/spendingtracker/api/v1/admin/cachedata',
+            url: `${API_BASE_URL}/admin/cachedata`,
             method: 'GET',
             signal: signal,
         });

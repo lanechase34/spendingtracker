@@ -23,6 +23,7 @@ import { useMemo, useState } from 'react';
 import type { Audit } from 'types/Audit.type';
 import type { AuditLog } from 'types/AuditLog.type';
 import { AuditLogSchema } from 'types/AuditLog.type';
+import { API_BASE_URL } from 'utils/constants';
 
 interface AuditLogProps {
     height?: string;
@@ -60,7 +61,7 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
         handleSortModelChange,
         handleFilterModelChange,
     } = usePaginatedFetch({
-        endpoint: '/spendingtracker/api/v1/admin/audits',
+        endpoint: `${API_BASE_URL}/admin/audits`,
         initialPageSize: 100,
         additionalParams,
         validator: AuditLogSchema,

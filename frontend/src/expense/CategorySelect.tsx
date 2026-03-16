@@ -14,6 +14,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import type { APIResponseType } from 'types/APIResponse.type';
 import type { SelectOptionType } from 'types/SelectOption.type';
 import { getCachedCategories, setCachedCategories } from 'utils/categoryCache';
+import { API_BASE_URL } from 'utils/constants';
 import { z } from 'zod';
 
 // Minimum character length required for a user to add a new category
@@ -133,7 +134,7 @@ export default function CategorySelect({
 
             try {
                 const response = await authFetch({
-                    url: `/spendingtracker/api/v1/categories?page=${page}&records=${records}&search=${search}`,
+                    url: `${API_BASE_URL}/categories?page=${page}&records=${records}&search=${search}`,
                     method: 'GET',
                     signal: abortController.signal,
                 });

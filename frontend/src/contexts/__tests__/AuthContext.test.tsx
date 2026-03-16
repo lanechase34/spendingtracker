@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { AuthContextProvider } from 'contexts/AuthContext';
 import useAuthContext from 'hooks/useAuthContext';
 import type { ReactNode } from 'react';
+import { API_BASE_URL } from 'utils/constants';
 
 // Mock useLocalStorage hook
 const mockSetWasAuthenticated: jest.Mock = jest.fn();
@@ -104,7 +105,7 @@ describe('AuthContext', () => {
             expect(mockFetch).toHaveBeenCalledTimes(2);
             expect(mockFetch).toHaveBeenNthCalledWith(
                 1,
-                '/spendingtracker/api/v1/security/refreshtoken',
+                `${API_BASE_URL}/security/refreshtoken`,
                 expect.objectContaining({
                     method: 'POST',
                     credentials: 'include',
@@ -112,7 +113,7 @@ describe('AuthContext', () => {
             );
             expect(mockFetch).toHaveBeenNthCalledWith(
                 2,
-                '/spendingtracker/api/v1/csrf',
+                `${API_BASE_URL}/csrf`,
                 expect.objectContaining({
                     method: 'GET',
                     headers: { 'x-auth-token': 'new-access-token' },
@@ -229,7 +230,7 @@ describe('AuthContext', () => {
 
             // Verify CSRF was fetched
             expect(mockFetch).toHaveBeenCalledWith(
-                '/spendingtracker/api/v1/csrf',
+                `${API_BASE_URL}/csrf`,
                 expect.objectContaining({
                     method: 'GET',
                     headers: { 'x-auth-token': 'login-token-456' },

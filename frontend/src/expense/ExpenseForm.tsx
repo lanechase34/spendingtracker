@@ -34,6 +34,7 @@ import type { FormEvent } from 'react';
 import { useMemo, useState } from 'react';
 import type { APIResponseType } from 'types/APIResponse.type';
 import { clearCategoryCache } from 'utils/categoryCache';
+import { API_BASE_URL } from 'utils/constants';
 import { maxFileSize, validExtensions, validMimeTypes } from 'utils/receiptDefaults';
 import { validateMoney } from 'validators/validateMoney';
 
@@ -150,7 +151,7 @@ export default function ExpenseForm() {
         setLoading(true);
 
         // Build form data
-        let endpoint = '/spendingtracker/api/v1/expenses';
+        let endpoint = `${API_BASE_URL}/expenses`;
         const formData = new FormData();
         formData.append('date', selectedDate.format('MM-DD-YYYY'));
         formData.append('description', descriptionField.value);
@@ -162,7 +163,7 @@ export default function ExpenseForm() {
 
         // If we are saving a subscription
         if (subscriptionInterval.isSubscription && subscriptionInterval.interval !== null) {
-            endpoint = '/spendingtracker/api/v1/subscriptions';
+            endpoint = `${API_BASE_URL}/subscriptions`;
             formData.append('interval', subscriptionInterval.interval);
         }
 

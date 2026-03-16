@@ -1,5 +1,6 @@
 import useAuthFetch from 'hooks/useAuthFetch';
 import type { Subscription } from 'types/Subscription.type';
+import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
@@ -24,7 +25,7 @@ export function subscriptionService(authFetch: ReturnType<typeof useAuthFetch>) 
          */
         async toggleSubscription(row: Subscription, signal?: AbortSignal) {
             const response = await authFetch({
-                url: `/spendingtracker/api/v1/subscriptions/${row.id}/active/${!row.active}`,
+                url: `${API_BASE_URL}/subscriptions/${row.id}/active/${!row.active}`,
                 method: 'PATCH',
                 signal: signal,
             });
@@ -57,7 +58,7 @@ export function subscriptionService(authFetch: ReturnType<typeof useAuthFetch>) 
          */
         async deleteSubscription(subscriptionId: number, signal?: AbortSignal) {
             const response = await authFetch({
-                url: `/spendingtracker/api/v1/subscriptions/${subscriptionId}`,
+                url: `${API_BASE_URL}/subscriptions/${subscriptionId}`,
                 method: 'DELETE',
                 signal: signal,
             });

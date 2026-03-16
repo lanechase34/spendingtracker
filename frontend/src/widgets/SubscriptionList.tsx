@@ -21,7 +21,7 @@ import dayjs from 'dayjs';
 import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
 import useSubscriptionContext from 'hooks/useSubscriptionContext';
 import type { MouseEvent } from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { Subscription } from 'types/Subscription.type';
 
 type SubscriptionAction =
@@ -29,11 +29,33 @@ type SubscriptionAction =
     | { type: 'delete'; id: number; status?: 'confirming' | 'processing' }
     | null;
 
+/**
+ * Data grid slots
+ */
+function ToolbarSlot() {
+    return <SearchToolbar title="Subscription List" />;
+}
+
+function NoRowsSlot() {
+    return <Typography sx={{ p: 2, textAlign: 'center' }}>No Subscriptions Found</Typography>;
+}
+
+declare module '@mui/x-data-grid' {
+    interface FooterPropsOverrides {
+        totalSum: number | null;
+        filteredSum: number | null;
+    }
+}
+
+function FooterSlot({ totalSum, filteredSum }: { totalSum: number | null; filteredSum: number | null }) {
+    return <TotalFooter totalSum={totalSum} filteredSum={filteredSum} />;
+}
+
 export default function SubscriptionList() {
     const { formatCurrency } = useCurrencyFormatter({});
 
     /**
-     * Context handles state of susbcription list
+     * Context handles state of subscription list
      */
     const {
         subscriptions,
@@ -62,7 +84,7 @@ export default function SubscriptionList() {
     /**
      * Deleting subscription
      */
-    const handleDeleteClick = (subscriptionId: number | string) => {
+    const handleDeleteClick = useCallback((subscriptionId: number | string) => {
         setActiveAction({
             type: 'delete',
             status: 'confirming',
@@ -71,11 +93,13 @@ export default function SubscriptionList() {
                     ? subscriptionId
                     : -1,
         });
-    };
+    }, []);
 
     const confirmedDelete = useCallback(async () => {
-        if (activeAction === null) return;
-        if (activeAction.type === 'delete' && activeAction.status === 'processing') return;
+        // Return if no active subscription selected or we are currently mid-delete
+        if (activeAction === null || (activeAction.type === 'delete' && activeAction.status === 'processing')) {
+            return;
+        }
 
         setActiveAction({ ...activeAction, type: 'delete', status: 'processing' });
         await deleteSubscription(activeAction.id);
@@ -86,144 +110,157 @@ export default function SubscriptionList() {
     /**
      * Toggling subscription
      */
-    const handleSubscriptionToggle = async (row: Subscription) => {
-        if (activeAction !== null) return; // prevent double-trigger
-        setActiveAction({ type: 'toggle', id: row.id });
-        await toggleSubscription(row);
-        setActiveAction(null);
-    };
+    const handleSubscriptionToggle = useCallback(
+        async (row: Subscription) => {
+            if (activeAction !== null) return; // prevent double-trigger
+            setActiveAction({ type: 'toggle', id: row.id });
+            await toggleSubscription(row);
+            setActiveAction(null);
+        },
+        [activeAction, toggleSubscription]
+    );
+
+    // Rows of Subscriptions
+    const rows: Subscription[] = useMemo(() => subscriptions ?? [], [subscriptions]);
+
+    // Columns are the expense properties
+    const columns: GridColDef<Subscription>[] = useMemo(
+        () => [
+            {
+                field: 'nextChargeDate',
+                valueGetter: (value: string, row: Subscription) => {
+                    if (!row.active) return '---';
+                    return dayjs(value).format('MM/DD/YYYY');
+                },
+                headerName: 'Next Charge',
+                width: 150,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'amount',
+                valueFormatter: (value?: number) => {
+                    return value == null ? '' : formatCurrency(value);
+                },
+                headerName: 'Amount',
+                width: 120,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'description',
+                headerName: 'Description',
+                flex: 1,
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'category',
+                headerName: 'Category',
+                flex: 1,
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'interval',
+                headerName: '',
+                minWidth: 150,
+                hideable: false,
+                sortable: false,
+                renderHeader: () => {
+                    return (
+                        <FormControl sx={{ my: 1, minWidth: 100 }} size="small">
+                            <InputLabel id="interval-filter-label">Interval</InputLabel>
+                            <Select
+                                labelId="interval-filter-label"
+                                id="interval-filter"
+                                label="Interval"
+                                value={selectedInterval}
+                                onChange={handleIntervalChange}
+                                autoWidth
+                            >
+                                <MenuItem value="">All</MenuItem>
+                                <MenuItem value={'Y'} data-testid="yearly">
+                                    Yearly
+                                </MenuItem>
+                                <MenuItem value={'M'} data-testid="monthly">
+                                    Monthly
+                                </MenuItem>
+                            </Select>
+                        </FormControl>
+                    );
+                },
+                valueGetter: (value: string) => {
+                    return value == 'Y' ? 'Yearly' : value == 'M' ? 'Monthly' : '';
+                },
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'active',
+                align: 'center',
+                renderCell: (params: GridRenderCellParams<Subscription, number>) => {
+                    return (
+                        <Box
+                            sx={{
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <ButtonGroup variant="outlined">
+                                <Button
+                                    color={params.value ? 'warning' : 'success'}
+                                    aria-label={params.value ? 'Pause subscription' : 'Resume subscription'}
+                                    onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                                        event.preventDefault();
+                                        event.stopPropagation(); // stop row selection
+                                        void handleSubscriptionToggle(params.row);
+                                    }}
+                                    data-pk={params.id}
+                                    disabled={!!activeAction}
+                                >
+                                    {activeAction?.type === 'toggle' && activeAction.id === params.id ? (
+                                        <CircularProgress size={16} color="inherit" />
+                                    ) : params.value ? (
+                                        <PauseIcon fontSize="small" />
+                                    ) : (
+                                        <PlayArrowIcon fontSize="small" />
+                                    )}
+                                </Button>
+                                <DeleteButton
+                                    rowId={params.id as number}
+                                    onClick={handleDeleteClick}
+                                    disabled={!!activeAction}
+                                />
+                            </ButtonGroup>
+                        </Box>
+                    );
+                },
+                headerName: '',
+                minWidth: 125,
+                hideable: false,
+                sortable: false,
+            },
+        ],
+        [
+            formatCurrency,
+            activeAction,
+            handleDeleteClick,
+            handleIntervalChange,
+            handleSubscriptionToggle,
+            selectedInterval,
+        ]
+    );
 
     if (error) {
         return <ErrorCard />;
     }
 
-    // Rows of Subscriptions
-    const rows: Subscription[] = subscriptions ?? [];
-
-    // Columns are the expense properties
-    const columns: GridColDef<Subscription>[] = [
-        {
-            field: 'nextChargeDate',
-            valueGetter: (value: string, row: Subscription) => {
-                if (!row.active) return '---';
-                return dayjs(value).format('MM/DD/YYYY');
-            },
-            headerName: 'Next Charge',
-            width: 150,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'amount',
-            valueFormatter: (value?: number) => {
-                return value == null ? '' : formatCurrency(value);
-            },
-            headerName: 'Amount',
-            width: 120,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'description',
-            headerName: 'Description',
-            flex: 1,
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'category',
-            headerName: 'Category',
-            flex: 1,
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'interval',
-            headerName: '',
-            minWidth: 150,
-            hideable: false,
-            sortable: false,
-            renderHeader: () => {
-                return (
-                    <FormControl sx={{ my: 1, minWidth: 100 }} size="small">
-                        <InputLabel id="interval-filter-label">Interval</InputLabel>
-                        <Select
-                            labelId="interval-filter-label"
-                            id="interval-filter"
-                            label="Interval"
-                            value={selectedInterval}
-                            onChange={handleIntervalChange}
-                            autoWidth
-                        >
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value={'Y'} data-testid="yearly">
-                                Yearly
-                            </MenuItem>
-                            <MenuItem value={'M'} data-testid="monthly">
-                                Monthly
-                            </MenuItem>
-                        </Select>
-                    </FormControl>
-                );
-            },
-            valueGetter: (value: string) => {
-                return value == 'Y' ? 'Yearly' : value == 'M' ? 'Monthly' : '';
-            },
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'active',
-            align: 'center',
-            renderCell: (params: GridRenderCellParams<Subscription, number>) => {
-                return (
-                    <Box
-                        sx={{
-                            height: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <ButtonGroup variant="outlined">
-                            <Button
-                                color={params.value ? 'warning' : 'success'}
-                                aria-label={params.value ? 'Pause subscription' : 'Resume subscription'}
-                                onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                                    event.preventDefault();
-                                    event.stopPropagation(); // stop row selection
-                                    void handleSubscriptionToggle(params.row);
-                                }}
-                                data-pk={params.id}
-                                disabled={!!activeAction}
-                            >
-                                {activeAction?.type === 'toggle' && activeAction.id === params.id ? (
-                                    <CircularProgress size={16} color="inherit" />
-                                ) : params.value ? (
-                                    <PauseIcon fontSize="small" />
-                                ) : (
-                                    <PlayArrowIcon fontSize="small" />
-                                )}
-                            </Button>
-                            <DeleteButton
-                                rowId={params.id as number}
-                                onClick={handleDeleteClick}
-                                disabled={!!activeAction}
-                            />
-                        </ButtonGroup>
-                    </Box>
-                );
-            },
-            headerName: '',
-            minWidth: 125,
-            hideable: false,
-            sortable: false,
-        },
-    ];
-
     return (
         <>
-            <div style={{ height: 600 }}>
+            <Box sx={{ height: 600 }}>
                 <DataGrid
                     paginationMode="server"
                     paginationModel={paginationModel}
@@ -244,17 +281,12 @@ export default function SubscriptionList() {
                     disableColumnFilter
                     showToolbar
                     slots={{
-                        toolbar: () => {
-                            return <SearchToolbar title="Subscription List" />;
-                        },
-                        footer: () => {
-                            return <TotalFooter totalSum={totalSum ?? null} filteredSum={filteredSum ?? null} />;
-                        },
-                        noRowsOverlay: () => (
-                            <Typography sx={{ p: 2, textAlign: 'center' }}>No Subscriptions Found</Typography>
-                        ),
+                        toolbar: ToolbarSlot,
+                        footer: FooterSlot,
+                        noRowsOverlay: NoRowsSlot,
                     }}
                     slotProps={{
+                        footer: { totalSum: totalSum ?? null, filteredSum: filteredSum ?? null },
                         basePagination: {
                             material: {
                                 ActionsComponent: CustomPagination,
@@ -262,7 +294,7 @@ export default function SubscriptionList() {
                         },
                     }}
                 />
-            </div>
+            </Box>
 
             {activeAction?.type === 'delete' && (
                 <ConfirmDialog

@@ -1,5 +1,6 @@
 import useAuthFetch from 'hooks/useAuthFetch';
 import type { APIResponseType } from 'types/APIResponse.type';
+import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
@@ -22,7 +23,7 @@ const APIResponseSchema = validateAPIResponse(IncomeSchema);
 export function incomeService(authFetch: ReturnType<typeof useAuthFetch>) {
     return {
         /**
-         * GET /spendingtracker/api/v1/income
+         * GET /income
          * View income between start and end dates
          *
          * @rc.startDate income in range from start - end
@@ -30,7 +31,7 @@ export function incomeService(authFetch: ReturnType<typeof useAuthFetch>) {
          */
         async fetchIncome(queryString: string, signal?: AbortSignal): Promise<Income> {
             const response = await authFetch({
-                url: `/spendingtracker/api/v1/income?${queryString}`,
+                url: `${API_BASE_URL}/income?${queryString}`,
                 method: 'GET',
                 signal: signal,
             });
@@ -60,7 +61,7 @@ export function incomeService(authFetch: ReturnType<typeof useAuthFetch>) {
         },
 
         /**
-         * PUT /spendingtracker/api/v1/income
+         * PUT /income
          * Save (upsert) income record for date (YYYY-MM)
          *
          * @rc.date  the YYYY-MM for income record
@@ -69,7 +70,7 @@ export function incomeService(authFetch: ReturnType<typeof useAuthFetch>) {
          */
         async updateIncome(body: { date: string; pay: string; extra: string }) {
             const response = await authFetch({
-                url: '/spendingtracker/api/v1/income',
+                url: `${API_BASE_URL}/income`,
                 method: 'PUT',
                 body,
             });

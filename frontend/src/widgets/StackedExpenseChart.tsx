@@ -12,6 +12,7 @@ import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { barPlugins, pointerHover } from 'utils/chartPlugins';
+import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -118,7 +119,7 @@ export default function StackedExpenseChart() {
     const fetchStackedExpenseChart = async ({ signal }: { signal: AbortSignal }): Promise<ChartData<'bar'>> => {
         const urlParams = new URLSearchParams(additionalParams);
         const response = await authFetch({
-            url: `/spendingtracker/api/v1/widgets/stackedBarChart?${urlParams.toString()}`,
+            url: `${API_BASE_URL}/widgets/stackedBarChart?${urlParams.toString()}`,
             method: 'GET',
             signal: signal,
         });

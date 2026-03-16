@@ -11,6 +11,7 @@ import type { Expense } from 'types/Expense.type';
 import type { ExpenseList } from 'types/ExpenseList.type';
 import { ExpenseListSchema } from 'types/ExpenseList.type';
 import type { UsePaginatedFetchReturn } from 'types/UsePaginatedFetchReturn.type';
+import { API_BASE_URL } from 'utils/constants';
 
 export interface ExpenseContextType extends Omit<UsePaginatedFetchReturn<ExpenseList>, 'data'> {
     expenses: Expense[];
@@ -64,7 +65,7 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
         handleSortModelChange,
         handleFilterModelChange,
     } = usePaginatedFetch({
-        endpoint: '/spendingtracker/api/v1/expenses',
+        endpoint: `${API_BASE_URL}/expenses`,
         initialPageSize: 10,
         additionalParams,
         validator: ExpenseListSchema,
@@ -80,6 +81,8 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
         }
     }, [authToken, resetState]);
 
+    const currentPageItemCount = data?.expenses?.length ?? 0;
+
     /**
      * deleteExpense function
      * Keep stable reference of function
@@ -88,7 +91,7 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
         async (expenseId: number) => {
             try {
                 const response = await authFetch({
-                    url: `/spendingtracker/api/v1/expenses/${expenseId}`,
+                    url: `${API_BASE_URL}/expenses/${expenseId}`,
                     method: 'DELETE',
                 });
 
@@ -100,8 +103,6 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
 
                 // Refetch the current page
                 // Check if we need to go back a page
-                const currentPageItemCount = data?.expenses?.length ?? 0;
-
                 // If we deleted the last item on the last page that isn't the first page
                 if (currentPageItemCount === 1 && paginationModel.page > 0) {
                     setPaginationModel({
@@ -119,7 +120,7 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
                 showToast('Server Error. Please try again.', 'error');
             }
         },
-        [authFetch, data?.expenses?.length, paginationModel, setPaginationModel, refetch, showToast, invalidateWidgets]
+        [authFetch, currentPageItemCount, paginationModel, setPaginationModel, refetch, showToast, invalidateWidgets]
     );
 
     /**

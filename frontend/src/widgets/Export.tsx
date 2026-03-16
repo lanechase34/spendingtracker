@@ -13,6 +13,7 @@ import useCooldownAction from 'hooks/useCooldownAction';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useState } from 'react';
 import { APIError } from 'utils/apiError';
+import { API_BASE_URL } from 'utils/constants';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
 import { safeJson } from 'utils/safeJson';
 import { formatSecondsToTime } from 'utils/timeFormatter';
@@ -44,7 +45,7 @@ export default function ExportExpensesCard() {
         await csvExport
             .execute(async () => {
                 const response = await authFetch({
-                    url: '/spendingtracker/api/v1/expenses/export',
+                    url: `${API_BASE_URL}/expenses/export`,
                     method: 'POST',
                     body: {
                         startDate: formattedStartDate,
@@ -106,7 +107,7 @@ export default function ExportExpensesCard() {
         await receiptExport
             .execute(async () => {
                 const response = await authFetch({
-                    url: '/spendingtracker/api/v1/receipts/export',
+                    url: `${API_BASE_URL}/receipts/export`,
                     method: 'POST',
                     body: {
                         startDate: formattedStartDate,

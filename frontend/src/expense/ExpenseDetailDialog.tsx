@@ -10,6 +10,7 @@ import DetailRow from 'components/DetailRow';
 import dayjs from 'dayjs';
 import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
 import type { Expense } from 'types/Expense.type';
+import { API_BASE_URL } from 'utils/constants';
 
 import ReceiptImg from './ReceiptImg';
 
@@ -70,7 +71,7 @@ export default function ExpenseDetailDialog({ open, expense, onClose, onExited }
                         {expense.receipt > 0 && (
                             <ReceiptImg
                                 alt={expense.description}
-                                url={`/spendingtracker/api/v1/expenses/${expense.id}/receipt`}
+                                url={`${API_BASE_URL}/expenses/${expense.id}/receipt`}
                             />
                         )}
                     </Stack>

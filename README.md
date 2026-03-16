@@ -142,13 +142,6 @@ The database container will automatically be seeded with dev data.
     docker compose logs -f
     ```
 
-- View logs from specific service
-
-    ```
-    docker compose logs -f pogotracker_app
-    docker compose logs -f pogotracker_db
-    ```
-
 ### Connecting to the SpendingTracker database
 
 | Setting      | Value                |

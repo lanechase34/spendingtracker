@@ -2,6 +2,7 @@ import { createExpenseContext, render } from '@test-utils';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import ExpenseList from 'expense/ExpenseList';
 import { TextDecoder, TextEncoder } from 'util';
+import { API_BASE_URL } from 'utils/constants';
 
 Object.assign(global, { TextDecoder, TextEncoder });
 
@@ -246,7 +247,7 @@ describe('ExpenseList', () => {
 
             const img = screen.getByTestId('receipt-img');
             expect(img).toBeInTheDocument();
-            expect(img).toHaveAttribute('data-url', '/spendingtracker/api/v1/expenses/1/receipt');
+            expect(img).toHaveAttribute('data-url', `${API_BASE_URL}/expenses/1/receipt`);
             expect(img).toHaveAttribute('data-alt', 'Grocery Run');
         });
 

@@ -2,6 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { render } from '@test-utils';
 import { screen, waitFor } from '@testing-library/react';
 import type { ChartData } from 'chart.js';
+import { API_BASE_URL } from 'utils/constants';
 import LineChart from 'widgets/LineChart';
 
 // Mock hooks and child components
@@ -279,7 +280,7 @@ describe('LineChart Component', () => {
 
         await waitFor(() => {
             expect(mockFetch).toHaveBeenCalledWith(
-                expect.stringContaining('/spendingtracker/api/v1/widgets/lineChart'),
+                expect.stringContaining(`${API_BASE_URL}/widgets/lineChart`),
                 expect.any(Object)
             );
         });
