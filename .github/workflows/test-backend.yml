@@ -74,7 +74,7 @@ jobs:
           DB_SCHEMA=public
           DB_DATABASE=test_spendingtracker
           DB_BUNDLENAME=org.postgresql.jdbc
-          DB_BUNDLEVERSION=42.7.7
+          DB_BUNDLEVERSION=42.7.9
           DB_CLASS=org.postgresql.Driver
           DB_DRIVER=postgresql
           DB_HOST=localhost
