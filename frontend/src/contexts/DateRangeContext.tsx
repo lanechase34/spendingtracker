@@ -39,6 +39,8 @@ function computeDatesForRangeType(rangeType: DateRangeType): {
                 start: now.subtract(1, 'year').startOf('year'),
                 end: now.subtract(1, 'year').endOf('year'),
             };
+        case 'year-to-date':
+            return { start: now.startOf('year'), end: now };
         case 'custom':
         default:
             return { start: now.startOf('month'), end: now.endOf('month') };

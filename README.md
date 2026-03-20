@@ -147,7 +147,7 @@ The database container will automatically be seeded with dev data.
 | Setting      | Value                |
 | ------------ | -------------------- |
 | **Host**     | `localhost`          |
-| **Port**     | `5432`               |
+| **Port**     | `5433`               |
 | **Database** | `spendingtracker_db` |
 | **Username** | `docker_user`        |
 | **Password** | `docker1234`         |

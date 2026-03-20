@@ -7,4 +7,5 @@ export type DateRangeType =
     | 'last-month'
     | 'this-year'
     | 'last-year'
+    | 'year-to-date'
     | 'custom';

@@ -50,13 +50,15 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     const authFetch = useAuthFetch();
     const authReady = useAuthReady();
 
+    const defaultSortRef = useRef<GridSortModel>(defaultSort);
+
     /**
      * Grid State
      * Keep everything in single state - separate state updates would cause separate renders
      */
     const [gridState, setGridState] = useState<GridState>({
         paginationModel: { page: 0, pageSize: initialPageSize },
-        sortModel: defaultSort,
+        sortModel: defaultSortRef.current,
         filterModel: { quickFilterValues: [], items: [] },
     });
 
@@ -207,7 +209,12 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
         setLoading(false);
         setError(false);
         setTotalRowCount(0);
-    }, []);
+        setGridState({
+            paginationModel: { page: 0, pageSize: initialPageSize },
+            sortModel: defaultSortRef.current,
+            filterModel: { quickFilterValues: [], items: [] },
+        });
+    }, [initialPageSize]);
 
     /**
      * MUI Grid Actions

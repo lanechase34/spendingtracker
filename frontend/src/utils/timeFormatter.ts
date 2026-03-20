@@ -1,3 +1,5 @@
+export const TIMESTAMP_FORMAT = 'MM/DD/YYYY HH:mm:ss';
+
 /**
  * Format number of incoming seconds to minutes:seconds time
  */

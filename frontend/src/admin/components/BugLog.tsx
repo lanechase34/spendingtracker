@@ -25,9 +25,21 @@ import type { Bug } from 'types/Bug.type';
 import type { BugLog } from 'types/BugLog.type';
 import { BugLogSchema } from 'types/BugLog.type';
 import { API_BASE_URL } from 'utils/constants';
+import { TIMESTAMP_FORMAT } from 'utils/timeFormatter';
 
 interface BugLogProps {
     height?: string;
+}
+
+/**
+ * Data grid slots
+ */
+function ToolbarSlot() {
+    return <SearchToolbar title="Bug Log" />;
+}
+
+function NoRowsSlot() {
+    return <Typography sx={{ p: 2, textAlign: 'center' }}>No Bugs Found</Typography>;
 }
 
 /**
@@ -74,100 +86,103 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
      */
     const [selectedBug, setSelectedBug] = useState<Bug | null>(null);
 
+    // Rows of Bugs
+    const rows: Bug[] = useMemo(() => data?.bugs ?? [], [data]);
+
+    // Columns are the Bug properties
+    const columns: GridColDef<Bug>[] = useMemo(
+        () => [
+            {
+                field: 'created',
+                valueGetter: (value: string) => {
+                    // format for display, sorting, etc
+                    return dayjs(value).format(TIMESTAMP_FORMAT);
+                },
+                headerName: 'Timestamp',
+                minWidth: 100,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 2,
+            },
+            {
+                field: 'ip',
+                headerName: 'IP',
+                minWidth: 100,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+            },
+            {
+                field: 'urlpath',
+                headerName: 'URL',
+                flex: 3,
+                minWidth: 150,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'method',
+                headerName: 'Method',
+                flex: 1,
+                minWidth: 50,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'agent',
+                headerName: 'Agent',
+                flex: 1,
+                minWidth: 50,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'detail',
+                headerName: 'Detail',
+                flex: 1,
+                minWidth: 200,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'email',
+                headerName: 'User',
+                flex: 1,
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'actions',
+                renderCell: (params: GridRenderCellParams<Bug, boolean>) => {
+                    return (
+                        <Box
+                            sx={{
+                                height: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Button variant="outlined" onClick={() => setSelectedBug(params.row)}>
+                                <ZoomInIcon fontSize="small" />
+                            </Button>
+                        </Box>
+                    );
+                },
+                headerName: '',
+                minWidth: 100,
+                hideable: false,
+                sortable: false,
+                filterable: false,
+            },
+        ],
+        []
+    );
+
     if (error) {
         return <ErrorCard />;
     }
-
-    // Rows of Bugs
-    const rows: Bug[] = data?.bugs ?? [];
-
-    // Columns are the Bug properties
-    const columns: GridColDef<Bug>[] = [
-        {
-            field: 'created',
-            valueGetter: (value: string) => {
-                // format for display, sorting, etc
-                return dayjs(value).format('MM/DD/YYYY HH:mm:ss');
-            },
-            headerName: 'Timestamp',
-            minWidth: 100,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 2,
-        },
-        {
-            field: 'ip',
-            headerName: 'IP',
-            minWidth: 100,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 1,
-        },
-        {
-            field: 'urlpath',
-            headerName: 'URL',
-            flex: 3,
-            minWidth: 150,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'method',
-            headerName: 'Method',
-            flex: 1,
-            minWidth: 50,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'agent',
-            headerName: 'Agent',
-            flex: 1,
-            minWidth: 50,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'detail',
-            headerName: 'Detail',
-            flex: 1,
-            minWidth: 200,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'email',
-            headerName: 'User',
-            flex: 1,
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'actions',
-            renderCell: (params: GridRenderCellParams<Bug, boolean>) => {
-                return (
-                    <Box
-                        sx={{
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Button variant="outlined" onClick={() => setSelectedBug(params.row)}>
-                            <ZoomInIcon fontSize="small" />
-                        </Button>
-                    </Box>
-                );
-            },
-            headerName: '',
-            minWidth: 100,
-            hideable: false,
-            sortable: false,
-            filterable: false,
-        },
-    ];
 
     return (
         <>
@@ -192,8 +207,8 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
                     disableColumnFilter
                     showToolbar
                     slots={{
-                        toolbar: () => <SearchToolbar title="Bug Log" />,
-                        noRowsOverlay: () => <Typography sx={{ p: 2, textAlign: 'center' }}>No Bugs Found</Typography>,
+                        toolbar: ToolbarSlot,
+                        noRowsOverlay: NoRowsSlot,
                     }}
                     slotProps={{
                         basePagination: {
@@ -221,10 +236,7 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
                 <DialogContent dividers>
                     {selectedBug && (
                         <Stack spacing={1}>
-                            <DetailRow
-                                label="Timestamp"
-                                value={dayjs(selectedBug.created).format('MM/DD/YYYY HH:mm:ss')}
-                            />
+                            <DetailRow label="Timestamp" value={dayjs(selectedBug.created).format(TIMESTAMP_FORMAT)} />
                             <DetailRow label="IP Address" value={selectedBug.ip} />
                             <DetailRow label="User Email" value={selectedBug.email ?? '—'} />
                             <DetailRow label="User Agent" value={selectedBug.agent} />

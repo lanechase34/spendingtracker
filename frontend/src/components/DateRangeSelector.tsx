@@ -11,6 +11,7 @@ import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import { alpha, styled } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useBreakpoint from 'hooks/useBreakpoint';
@@ -88,6 +89,7 @@ const PRESETS: { label: string; type: Exclude<DateRangeType, 'custom'> }[] = [
     { label: 'Last Month', type: 'last-month' },
     { label: 'This Year', type: 'this-year' },
     { label: 'Last Year', type: 'last-year' },
+    { label: 'Year-to-date', type: 'year-to-date' },
 ];
 
 /**
@@ -168,6 +170,17 @@ export default function DateRangeSelector() {
         </StyledDayPickerWrapper>
     );
 
+    const selectedRangeLabel = (
+        <Box display="flex" alignItems="center" gap={1}>
+            <DateRangeIcon fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+                {tempStartDate && tempEndDate
+                    ? `${tempStartDate.format('MM/DD/YYYY')} - ${tempEndDate.format('MM/DD/YYYY')}`
+                    : ''}
+            </Typography>
+        </Box>
+    );
+
     const doneBtn = (
         <Button variant="contained" disabled={!tempStartDate || !tempEndDate} onClick={handleDone}>
             Done
@@ -197,7 +210,8 @@ export default function DateRangeSelector() {
                         <Grid container spacing={2} mt={2}>
                             <Grid size={{ xs: 6 }}>{presetRanges}</Grid>
                             <Grid size={{ xs: 6 }}>
-                                <Box display="flex" flexDirection="column">
+                                <Box display="flex" flexDirection="column" gap={1}>
+                                    {selectedRangeLabel}
                                     {doneBtn}
                                 </Box>
                             </Grid>
@@ -222,7 +236,8 @@ export default function DateRangeSelector() {
 
                         <Divider orientation="horizontal" />
 
-                        <Box display="flex" justifyContent="flex-end" mt={2}>
+                        <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} mt={2}>
+                            {selectedRangeLabel}
                             {doneBtn}
                         </Box>
                     </Paper>

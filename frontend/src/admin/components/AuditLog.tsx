@@ -24,6 +24,7 @@ import type { Audit } from 'types/Audit.type';
 import type { AuditLog } from 'types/AuditLog.type';
 import { AuditLogSchema } from 'types/AuditLog.type';
 import { API_BASE_URL } from 'utils/constants';
+import { TIMESTAMP_FORMAT } from 'utils/timeFormatter';
 
 interface AuditLogProps {
     height?: string;
@@ -73,116 +74,119 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
      */
     const [selectedAudit, setSelectedAudit] = useState<Audit | null>(null);
 
+    // Rows of audits
+    const rows: Audit[] = useMemo(() => data?.audits ?? [], [data]);
+
+    // Columns are the audit properties
+    const columns: GridColDef<Audit>[] = useMemo(
+        () => [
+            {
+                field: 'created',
+                valueGetter: (value: string) => {
+                    // format for display, sorting, etc
+                    return dayjs(value).format(TIMESTAMP_FORMAT);
+                },
+                headerName: 'Timestamp',
+                minWidth: 100,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 2,
+            },
+            {
+                field: 'ip',
+                headerName: 'IP',
+                minWidth: 100,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+            },
+            {
+                field: 'urlpath',
+                headerName: 'URL',
+                flex: 3,
+                minWidth: 150,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'method',
+                headerName: 'Method',
+                flex: 1,
+                minWidth: 50,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'agent',
+                headerName: 'Agent',
+                flex: 1,
+                minWidth: 50,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'detail',
+                headerName: 'Detail',
+                flex: 1,
+                minWidth: 200,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'statuscode',
+                headerName: 'Statuscode',
+                flex: 1,
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'delta',
+                headerName: 'Delta',
+                flex: 1,
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'email',
+                headerName: 'User',
+                flex: 1,
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+            },
+            {
+                field: 'actions',
+                renderCell: (params: GridRenderCellParams<Audit, boolean>) => {
+                    return (
+                        <Box
+                            sx={{
+                                height: '100%',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Button variant="outlined" onClick={() => setSelectedAudit(params.row)}>
+                                <ZoomInIcon fontSize="small" />
+                            </Button>
+                        </Box>
+                    );
+                },
+                headerName: '',
+                minWidth: 100,
+                hideable: false,
+                sortable: false,
+                filterable: false,
+            },
+        ],
+        []
+    );
+
     if (error) {
         return <ErrorCard />;
     }
-
-    // Rows of audits
-    const rows: Audit[] = data?.audits ?? [];
-
-    // Columns are the audit properties
-    const columns: GridColDef<Audit>[] = [
-        {
-            field: 'created',
-            valueGetter: (value: string) => {
-                // format for display, sorting, etc
-                return dayjs(value).format('MM/DD/YYYY HH:mm:ss');
-            },
-            headerName: 'Timestamp',
-            minWidth: 100,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 2,
-        },
-        {
-            field: 'ip',
-            headerName: 'IP',
-            minWidth: 100,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 1,
-        },
-        {
-            field: 'urlpath',
-            headerName: 'URL',
-            flex: 3,
-            minWidth: 150,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'method',
-            headerName: 'Method',
-            flex: 1,
-            minWidth: 50,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'agent',
-            headerName: 'Agent',
-            flex: 1,
-            minWidth: 50,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'detail',
-            headerName: 'Detail',
-            flex: 1,
-            minWidth: 200,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'statuscode',
-            headerName: 'Statuscode',
-            flex: 1,
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'delta',
-            headerName: 'Delta',
-            flex: 1,
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'email',
-            headerName: 'User',
-            flex: 1,
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-        },
-        {
-            field: 'actions',
-            renderCell: (params: GridRenderCellParams<Audit, boolean>) => {
-                return (
-                    <Box
-                        sx={{
-                            height: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Button variant="outlined" onClick={() => setSelectedAudit(params.row)}>
-                            <ZoomInIcon fontSize="small" />
-                        </Button>
-                    </Box>
-                );
-            },
-            headerName: '',
-            minWidth: 100,
-            hideable: false,
-            sortable: false,
-            filterable: false,
-        },
-    ];
 
     return (
         <>
@@ -240,7 +244,7 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
                         <Stack spacing={1}>
                             <DetailRow
                                 label="Timestamp"
-                                value={dayjs(selectedAudit.created).format('MM/DD/YYYY HH:mm:ss')}
+                                value={dayjs(selectedAudit.created).format(TIMESTAMP_FORMAT)}
                             />
                             <DetailRow label="IP Address" value={selectedAudit.ip} />
                             <DetailRow label="User Email" value={selectedAudit.email ?? '—'} />

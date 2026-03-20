@@ -4,7 +4,6 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -122,7 +121,6 @@ export default function App() {
                 <Router basename={basename}>
                     <Navbar />
                     <PostLoginRedirect />
-                    <Box component="main"></Box>
                     <AppRouter />
                 </Router>
             </Providers>
