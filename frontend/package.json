@@ -11,7 +11,9 @@
         "lint": "eslint .",
         "lint:fix": "eslint --fix .",
         "audit:prod": "npm audit --omit=dev",
-        "format": "prettier --write \"**/*.{ts,tsx}\""
+        "format": "prettier --config .prettierrc --write \"**/*.{ts,tsx}\"",
+        "format:check": "prettier --config .prettierrc --check \"**/*.{ts,tsx}\"",
+        "typecheck": "tsc --noEmit"
     },
     "dependencies": {
         "@emotion/react": "11.14.0",

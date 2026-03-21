@@ -18,6 +18,9 @@ pre-commit:
           - name: lint
             root: "frontend/"
             run: npm run lint:fix
+          - name: typecheck
+            root: "frontend/"
+            run: npm run typecheck
     - name: envcheck
       root: "backend/"
       run: box dotenv check --reverse

@@ -102,18 +102,17 @@ The database container will automatically be seeded with dev data.
     docker compose down
     ```
 
-5. Install NPM Depdendencies from `/frontend`
-
-    ```bash
-    cd /frontend
-    npm install
-    ```
-
-6. Setup GitHooks from root
+5. Setup GitHooks from root
 
     ```bash
     npm install -g lefthook
     lefthook install
+    ```
+
+6. Run the 'Post-checkout' GitHook
+
+    ```bash
+    lefthook run post-checkout
     ```
 
 ### Commands
