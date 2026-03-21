@@ -53,8 +53,6 @@ jobs:
 
       - name: Setup CommandBox CLI
         uses: Ortus-Solutions/setup-commandbox@v2.0.1
-        with:
-          version: latest
 
       - name: Create .env file
         run: |

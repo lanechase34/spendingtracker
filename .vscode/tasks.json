@@ -2,7 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Format CF",
+            "label": "Format Backend",
             "type": "shell",
             "command": "box run-script format",
             "group": {
@@ -11,7 +11,19 @@
             "options": {
                 "cwd": "${workspaceFolder}/backend"
             },
-            "detail": "Format CF code using CF Formatter"
+            "detail": "Format Backend code using CF Formatter"
+        },
+        {
+            "label": "Format Frontend",
+            "type": "shell",
+            "command": "npm run-script format",
+            "group": {
+                "kind": "build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "detail": "Format Frontend code using Prettier"
         },
         {
             "label": "Lint ts, tsx",
@@ -24,6 +36,18 @@
                 "cwd": "${workspaceFolder}/frontend"
             },
             "detail": "Lint *.ts and *.tsx files"
+        },
+        {
+            "label": "Typecheck ts, tsx",
+            "type": "shell",
+            "command": "npm run typecheck",
+            "group": {
+                "kind": "build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "detail": "Typecheck *.ts and *.tsx files"
         },
         {
             "label": "Github Actions Test Backend",
@@ -43,6 +67,16 @@
                 "kind": "test"
             },
             "detail": "Runs the ./github/workflows/test-frontend.yml locally",
+            "isBackground": true
+        },
+        {
+            "label": "Github Actions Test Housekeeping",
+            "type": "shell",
+            "command": "act -W '.github/workflows/housekeeping.yml' -P ubuntu-24.04=ghcr.io/catthehacker/ubuntu:act-24.04 --rm --pull=false",
+            "group": {
+                "kind": "test"
+            },
+            "detail": "Runs the ./github/workflows/housekeeping.yml locally",
             "isBackground": true
         },
         {

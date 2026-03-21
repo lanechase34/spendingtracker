@@ -50,8 +50,8 @@
         "socketbox":"2.0.12"
     },
     "scripts":{
-        "format":"cfformat run Application.cfc,websocket.cfc,config/,handlers/,interceptors/,models/,tests/,database/ ./.cfformat.json --overwrite",
-        "format:check":"cfformat check Application.cfc,config/,handlers/,interceptors/,models/,tests/,database/, ./.cfformat.json",
+        "format":"cfformat run Application.cfc,WebSocket.cfc,config/,handlers/,interceptors/,models/,tests/,database/ ./.cfformat.json --overwrite",
+        "format:check":"cfformat check Application.cfc,WebSocket.cfc,config/,handlers/,interceptors/,models/,tests/,database/, ./.cfformat.json",
         "format:watch":"cfformat watch path='Application.cfc,config/,handlers/,interceptors/,models/,tests/,database/' settingsPath='.cfformat.json'",
         "docker:build":"!docker build --no-cache -t pogotracker -f ./Dockerfile ./",
         "lint":"cflint handlers/**.cfc,interceptors/**.cfc,models/**.cfc",

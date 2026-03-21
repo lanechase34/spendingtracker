@@ -1,0 +1,213 @@
+name: Format, Lint, and Type Check
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+
+jobs:
+  backend-checks:
+    name: Backend Checks
+    runs-on: ubuntu-24.04
+    environment: Test
+    timeout-minutes: 10
+    outputs:
+      format_result: ${{ steps.export.outputs.format_result }}
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Setup CommandBox CLI
+        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+
+      - name: Configure CommandBox JSON Line Endings
+        run: echo 'config set JSON.lineEnding=`#chr 10`' | box
+
+      - name: Install Dependencies
+        run: box install commandbox-cfformat
+
+      - name: Run Format Check
+        id: format
+        run: box run-script format:check
+
+      - name: Export Step Results
+        id: export
+        if: always()
+        run: |
+          echo "format_result=${{ steps.format.outcome }}" >> $GITHUB_OUTPUT
+
+  frontend-checks:
+    name: Frontend Checks
+    runs-on: ubuntu-24.04
+    environment: Test
+    timeout-minutes: 10
+    outputs:
+      format_result: ${{ steps.export.outputs.format_result }}
+      lint_result: ${{ steps.export.outputs.lint_result }}
+      typecheck_result: ${{ steps.export.outputs.typecheck_result }}
+      audit_result: ${{ steps.export.outputs.audit_result }}
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Format Check
+        id: format
+        run: npm run format:check
+
+      - name: Run Lint Check
+        id: lint
+        if: always()
+        run: npm run lint
+
+      - name: Run Type Check
+        id: typecheck
+        if: always()
+        run: npm run typecheck
+
+      - name: Run Security Audit
+        id: audit
+        if: always()
+        run: npm run audit:prod
+
+      - name: Export Step Results
+        id: export
+        if: always()
+        run: |
+          echo "format_result=${{ steps.format.outcome }}" >> $GITHUB_OUTPUT
+          echo "lint_result=${{ steps.lint.outcome }}" >> $GITHUB_OUTPUT
+          echo "typecheck_result=${{ steps.typecheck.outcome }}" >> $GITHUB_OUTPUT
+          echo "audit_result=${{ steps.audit.outcome }}" >> $GITHUB_OUTPUT
+
+  report:
+    name: Housekeeping Report
+    runs-on: ubuntu-24.04
+    needs: [backend-checks, frontend-checks]
+    if: always()
+
+    steps:
+      - name: Evaluate Job Results
+        id: results
+        run: |
+          backend_fmt="${{ needs.backend-checks.outputs.format_result }}"
+          frontend_fmt="${{ needs.frontend-checks.outputs.format_result }}"
+          frontend_lint="${{ needs.frontend-checks.outputs.lint_result }}"
+          frontend_type="${{ needs.frontend-checks.outputs.typecheck_result }}"
+          frontend_audit="${{ needs.frontend-checks.outputs.audit_result }}"
+
+          to_emoji() {
+            if [ "$1" = "success" ]; then echo "✅"
+            elif [ "$1" = "skipped" ]; then echo "⏭️"
+            else echo "❌"
+            fi
+          }
+
+          backend_fmt_icon=$(to_emoji "$backend_fmt")
+          frontend_fmt_icon=$(to_emoji "$frontend_fmt")
+          frontend_lint_icon=$(to_emoji "$frontend_lint")
+          frontend_type_icon=$(to_emoji "$frontend_type")
+          frontend_audit_icon=$(to_emoji "$frontend_audit")
+
+          backend="${{ needs.backend-checks.result }}"
+          frontend="${{ needs.frontend-checks.result }}"
+
+          if [ "$backend" = "success" ] && [ "$frontend" = "success" ]; then
+            overall="✅ All checks passed"
+            conclusion="success"
+          else
+            overall="❌ Some checks failed - run \`lefthook run pre-commit\` locally to fix before pushing"
+            conclusion="failure"
+          fi
+
+          echo "backend_fmt_icon=$backend_fmt_icon" >> $GITHUB_OUTPUT
+          echo "frontend_fmt_icon=$frontend_fmt_icon" >> $GITHUB_OUTPUT
+          echo "frontend_lint_icon=$frontend_lint_icon" >> $GITHUB_OUTPUT
+          echo "frontend_type_icon=$frontend_type_icon" >> $GITHUB_OUTPUT
+          echo "frontend_audit_icon=$frontend_audit_icon" >> $GITHUB_OUTPUT
+          echo "overall=$overall" >> $GITHUB_OUTPUT
+          echo "conclusion=$conclusion" >> $GITHUB_OUTPUT
+
+      - name: Post PR Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = [
+              '## Housekeeping Report',
+              '',
+              '### Backend',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| Format | ${{ steps.results.outputs.backend_fmt_icon }} ${{ needs.backend-checks.outputs.format_result }} |`,
+              '',
+              '### Frontend',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| Format | ${{ steps.results.outputs.frontend_fmt_icon }} ${{ needs.frontend-checks.outputs.format_result }} |`,
+              `| Lint | ${{ steps.results.outputs.frontend_lint_icon }} ${{ needs.frontend-checks.outputs.lint_result }} |`,
+              `| Typecheck | ${{ steps.results.outputs.frontend_type_icon }} ${{ needs.frontend-checks.outputs.typecheck_result }} |`,
+              `| Security Audit | ${{ steps.results.outputs.frontend_audit_icon }} ${{ needs.frontend-checks.outputs.audit_result }} |`,
+              '',
+              `**${{ steps.results.outputs.overall }}**`,
+              '',
+              '_If failing, run `lefthook run pre-commit` locally to fix before pushing._'
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.login === 'github-actions[bot]' &&
+              c.body.includes('Housekeeping Report')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail if checks failed
+        if: steps.results.outputs.conclusion == 'failure'
+        run: exit 1
