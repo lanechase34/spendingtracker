@@ -61,6 +61,7 @@ jobs:
       format_result: ${{ steps.export.outputs.format_result }}
       lint_result: ${{ steps.export.outputs.lint_result }}
       typecheck_result: ${{ steps.export.outputs.typecheck_result }}
+      audit_result: ${{ steps.export.outputs.audit_result }}
     defaults:
       run:
         working-directory: frontend
@@ -93,6 +94,11 @@ jobs:
         if: always()
         run: npm run typecheck
 
+      - name: Run Security Audit
+        id: audit
+        if: always()
+        run: npm run audit:prod
+
       - name: Export Step Results
         id: export
         if: always()
@@ -100,6 +106,7 @@ jobs:
           echo "format_result=${{ steps.format.outcome }}" >> $GITHUB_OUTPUT
           echo "lint_result=${{ steps.lint.outcome }}" >> $GITHUB_OUTPUT
           echo "typecheck_result=${{ steps.typecheck.outcome }}" >> $GITHUB_OUTPUT
+          echo "audit_result=${{ steps.audit.outcome }}" >> $GITHUB_OUTPUT
 
   report:
     name: Housekeeping Report
@@ -115,6 +122,7 @@ jobs:
           frontend_fmt="${{ needs.frontend-checks.outputs.format_result }}"
           frontend_lint="${{ needs.frontend-checks.outputs.lint_result }}"
           frontend_type="${{ needs.frontend-checks.outputs.typecheck_result }}"
+          frontend_audit="${{ needs.frontend-checks.outputs.audit_result }}"
 
           to_emoji() {
             if [ "$1" = "success" ]; then echo "✅"
@@ -127,6 +135,7 @@ jobs:
           frontend_fmt_icon=$(to_emoji "$frontend_fmt")
           frontend_lint_icon=$(to_emoji "$frontend_lint")
           frontend_type_icon=$(to_emoji "$frontend_type")
+          frontend_audit_icon=$(to_emoji "$frontend_audit")
 
           backend="${{ needs.backend-checks.result }}"
           frontend="${{ needs.frontend-checks.result }}"
@@ -143,6 +152,7 @@ jobs:
           echo "frontend_fmt_icon=$frontend_fmt_icon" >> $GITHUB_OUTPUT
           echo "frontend_lint_icon=$frontend_lint_icon" >> $GITHUB_OUTPUT
           echo "frontend_type_icon=$frontend_type_icon" >> $GITHUB_OUTPUT
+          echo "frontend_audit_icon=$frontend_audit_icon" >> $GITHUB_OUTPUT
           echo "overall=$overall" >> $GITHUB_OUTPUT
           echo "conclusion=$conclusion" >> $GITHUB_OUTPUT
 
@@ -164,6 +174,7 @@ jobs:
               `| Format | ${{ steps.results.outputs.frontend_fmt_icon }} ${{ needs.frontend-checks.outputs.format_result }} |`,
               `| Lint | ${{ steps.results.outputs.frontend_lint_icon }} ${{ needs.frontend-checks.outputs.lint_result }} |`,
               `| Typecheck | ${{ steps.results.outputs.frontend_type_icon }} ${{ needs.frontend-checks.outputs.typecheck_result }} |`,
+              `| Security Audit | ${{ steps.results.outputs.frontend_audit_icon }} ${{ needs.frontend-checks.outputs.audit_result }} |`,
               '',
               `**${{ steps.results.outputs.overall }}**`,
               '',
