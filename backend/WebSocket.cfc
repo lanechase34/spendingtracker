@@ -1,4 +1,4 @@
-component extends="modules.socketbox.models.WebSocketSTOMP" {
+component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endpoint for SocketBox" {
 
     /**
 	 * Socket destination -> Allowed permission(s)

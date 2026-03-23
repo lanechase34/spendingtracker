@@ -53,9 +53,9 @@ component accessors="true" singleton hint="Validator for checking a date is insi
         // startDate must also be present
         if(
             isNull(arguments.targetValue) ||
-            !isDate(arguments.targetValue) ||
+            !isValid('date', arguments.targetValue) ||
             isNull(arguments.target.getStartDate()) ||
-            !isDate(arguments.target.getStartDate())
+            !isValid('date', arguments.target.getStartDate())
         ) {
             errorStruct.message = 'Invalid date range. startDate and endDate must both be valid dates';
             validationResult.addError(

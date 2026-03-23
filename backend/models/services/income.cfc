@@ -79,7 +79,7 @@ component singleton accessors="true" {
                         'income.date',
                         '=',
                         {value: currMonth, cfsqltype: 'date'}
-                    )
+                    );
             })
             .whereNull('income.id')
             .andWhere(

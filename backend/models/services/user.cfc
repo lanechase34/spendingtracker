@@ -276,25 +276,25 @@ component singleton accessors="true" {
                 condition = password.len(),
                 onTrue    = (q) => {
                     var hashedPassword = generateBcryptPassword(password);
-                    q.addUpdate({'password': {value: hashedPassword, cfsqltype: 'varchar'}});
+                    return q.addUpdate({'password': {value: hashedPassword, cfsqltype: 'varchar'}});
                 }
             )
             .when(
                 condition = salary > 0,
                 onTrue    = (q) => {
-                    q.addUpdate({'salary': {value: securityService.encryptValue(salary), cfsqltype: 'varchar'}})
+                    return q.addUpdate({'salary': {value: securityService.encryptValue(salary), cfsqltype: 'varchar'}})
                 }
             )
             .when(
                 condition = monthlyTakeHome > 0,
                 onTrue    = (q) => {
-                    q.addUpdate({'monthlytakehome': {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}})
+                    return q.addUpdate({'monthlytakehome': {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}})
                 }
             )
             .when(
                 condition = settings.keyExists('updated'),
                 onTrue    = (q) => {
-                    q.addUpdate({'settings': q.raw('cast(''#serializeJSON(settings)#'' as jsonb)')})
+                    return q.addUpdate({'settings': q.raw('cast(''#serializeJSON(settings)#'' as jsonb)')})
                 }
             )
             .update();

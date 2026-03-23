@@ -1,4 +1,4 @@
-component extends="base" {
+component extends="base" hint="Auth Endpoints" {
 
     this.allowedMethods = {
         login                 : 'POST',

@@ -8,6 +8,9 @@ pre-commit:
           - name: format
             root: "backend/"
             run: box run-script format
+          - name: lint
+            root: "backend/"
+            run: box run-script lint:error
     - name: frontend
       group:
         piped: true
