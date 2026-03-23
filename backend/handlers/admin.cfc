@@ -1,4 +1,4 @@
-component extends="base" secured="Admin" {
+component extends="base" hint="Admin Endpoints" secured="Admin" {
 
     this.allowedMethods = {
         viewAudits: 'GET',

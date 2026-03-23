@@ -1,4 +1,4 @@
-component extends="base" secured="User,Admin" hint="Income Endpoints" {
+component extends="base" hint="Income Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {view: 'GET', save: 'PUT'};
 

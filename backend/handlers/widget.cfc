@@ -1,4 +1,4 @@
-component extends="base" secured="User,Admin" {
+component extends="base" hint="Widget Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {
         stackedBarChart: 'GET',

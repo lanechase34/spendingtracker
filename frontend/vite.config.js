@@ -3,12 +3,25 @@ import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
     build: {
         outDir: 'build',
+        chunkSizeWarningLimit: 1000,
     },
     base: '/spendingtracker',
-    plugins: [react(), tsconfigPaths(), visualizer({ open: true })],
+    plugins: [
+        react(),
+        tsconfigPaths(),
+        visualizer({ open: true }),
+        {
+            name: 'html-inject-env',
+            transformIndexHtml(html) {
+                const base = 'SpendingTracker';
+                const title = mode === 'production' ? base : `[DEV] ${base}`;
+                return html.replace('%APP_TITLE%', title);
+            },
+        },
+    ],
     server: {
         host: '0.0.0.0',
         port: 3000,
@@ -25,4 +38,4 @@ export default defineConfig({
             },
         },
     },
-});
+}));

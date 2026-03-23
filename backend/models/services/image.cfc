@@ -12,7 +12,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "identify --version",
-                variable  = "result",
+                variable  = "variables.result",
                 timeout   = 30
             );
         }
@@ -33,7 +33,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "identify ""#path#""",
-                variable  = "result",
+                variable  = "variables.result",
                 timeout   = 30
             );
         }
@@ -54,7 +54,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             cfexecute(
                 name      = "#imageMagick#",
                 arguments = "mogrify -format webp -thumbnail 750x750 -strip -quality #quality# ""#path#""",
-                variable  = "result",
+                variable  = "variables.result",
                 timeout   = 30
             );
         }

@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       format_result: ${{ steps.export.outputs.format_result }}
+      lint_result: ${{ steps.export.outputs.lint_result }}
     defaults:
       run:
         working-directory: backend
@@ -40,17 +41,23 @@ jobs:
         run: echo 'config set JSON.lineEnding=`#chr 10`' | box
 
       - name: Install Dependencies
-        run: box install commandbox-cfformat
+        run: box install commandbox-cfformat,commandbox-cflint
 
       - name: Run Format Check
         id: format
         run: box run-script format:check
+
+      - name: Run Lint Check
+        id: lint
+        if: always()
+        run: box run-script lint:error
 
       - name: Export Step Results
         id: export
         if: always()
         run: |
           echo "format_result=${{ steps.format.outcome }}" >> $GITHUB_OUTPUT
+          echo "lint_result=${{ steps.lint.outcome }}" >> $GITHUB_OUTPUT
 
   frontend-checks:
     name: Frontend Checks
@@ -119,6 +126,7 @@ jobs:
         id: results
         run: |
           backend_fmt="${{ needs.backend-checks.outputs.format_result }}"
+          backend_lint="${{ needs.backend-checks.outputs.lint_result }}"
           frontend_fmt="${{ needs.frontend-checks.outputs.format_result }}"
           frontend_lint="${{ needs.frontend-checks.outputs.lint_result }}"
           frontend_type="${{ needs.frontend-checks.outputs.typecheck_result }}"
@@ -132,6 +140,7 @@ jobs:
           }
 
           backend_fmt_icon=$(to_emoji "$backend_fmt")
+          backend_lint_icon=$(to_emoji "$backend_lint")
           frontend_fmt_icon=$(to_emoji "$frontend_fmt")
           frontend_lint_icon=$(to_emoji "$frontend_lint")
           frontend_type_icon=$(to_emoji "$frontend_type")
@@ -149,6 +158,7 @@ jobs:
           fi
 
           echo "backend_fmt_icon=$backend_fmt_icon" >> $GITHUB_OUTPUT
+          echo "backend_lint_icon=$backend_lint_icon" >> $GITHUB_OUTPUT
           echo "frontend_fmt_icon=$frontend_fmt_icon" >> $GITHUB_OUTPUT
           echo "frontend_lint_icon=$frontend_lint_icon" >> $GITHUB_OUTPUT
           echo "frontend_type_icon=$frontend_type_icon" >> $GITHUB_OUTPUT
@@ -167,6 +177,7 @@ jobs:
               '| Check | Status |',
               '|-------|--------|',
               `| Format | ${{ steps.results.outputs.backend_fmt_icon }} ${{ needs.backend-checks.outputs.format_result }} |`,
+              `| Lint | ${{ steps.results.outputs.backend_lint_icon }} ${{ needs.backend-checks.outputs.lint_result }} |`,
               '',
               '### Frontend',
               '| Check | Status |',

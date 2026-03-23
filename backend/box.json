@@ -54,7 +54,8 @@
         "format:check":"cfformat check Application.cfc,WebSocket.cfc,config/,handlers/,interceptors/,models/,tests/,database/, ./.cfformat.json",
         "format:watch":"cfformat watch path='Application.cfc,config/,handlers/,interceptors/,models/,tests/,database/' settingsPath='.cfformat.json'",
         "docker:build":"!docker build --no-cache -t pogotracker -f ./Dockerfile ./",
-        "lint":"cflint handlers/**.cfc,interceptors/**.cfc,models/**.cfc",
+        "lint":"cflint Application.cfc,WebSocket.cfc,handlers/**.cfc,interceptors/**.cfc,models/**.cfc",
+        "lint:error":"cflint pattern=Application.cfc,WebSocket.cfc,handlers/**.cfc,interceptors/**.cfc,models/**.cfc reportLevel=ERROR",
         "setEnv":"cp env/${1}.dev.env .env",
         "blankEnv":"cp .env.example .env"
     },

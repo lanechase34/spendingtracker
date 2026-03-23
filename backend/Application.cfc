@@ -1,4 +1,4 @@
-component extends="coldbox.system.Bootstrap" {
+component extends="coldbox.system.Bootstrap" hint="SpendingTracker" {
 
     this.name = 'SpendingTracker';
 
