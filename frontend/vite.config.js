@@ -7,12 +7,29 @@ export default defineConfig(({ mode }) => ({
     build: {
         outDir: 'build',
         chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+                    'vendor-mui': ['@mui/material', '@mui/icons-material'],
+                    'vendor-mui-x': ['@mui/x-data-grid'],
+                    'vendor-date-pickers': ['@mui/x-date-pickers', 'dayjs'],
+                    'vendor-query': ['@tanstack/react-query'],
+                },
+            },
+        },
     },
     base: '/spendingtracker',
     plugins: [
         react(),
         tsconfigPaths(),
-        visualizer({ open: true }),
+        visualizer({
+            filename: 'bundle-stats.json',
+            json: true,
+        }),
+        visualizer({
+            open: true,
+        }),
         {
             name: 'html-inject-env',
             transformIndexHtml(html) {

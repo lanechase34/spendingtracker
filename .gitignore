@@ -23,6 +23,7 @@ npm-debug.log
 yarn-error.log
 frontend/examples
 frontend/stats.html
+frontend/bundle-stats.json
 *.tsbuildinfo
 tsconfig.tsbuildinfo
 

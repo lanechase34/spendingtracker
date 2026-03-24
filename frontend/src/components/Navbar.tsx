@@ -10,17 +10,18 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import NavBtn from 'components/NavBtn';
-import ExpenseForm from 'expense/ExpenseForm';
 import useAuthContext from 'hooks/useAuthContext';
 import useUserContext from 'hooks/useUserContext';
 import type { ReactNode } from 'react';
-import { Fragment, useMemo } from 'react';
+import { Fragment, lazy, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import LoginDialogButton from 'user/LoginDialogButton';
 import RegisterDialogButton from 'user/RegisterDialogButton';
 import UserMenu from 'user/UserMenu';
+import { withSuspense } from 'utils/withSuspense';
 
-import DateRangeSelector from './DateRangeSelector';
+const DateRangeSelector = lazy(() => import('./DateRangeSelector'));
+const ExpenseForm = lazy(() => import('expense/ExpenseForm'));
 
 interface NavButton {
     id: string;
@@ -58,15 +59,13 @@ function buildRouteButtons({
                           node: <RegisterDialogButton icon={<PersonAddIcon sx={{ mr: 1 }} />} size={buttonSize} />,
                       },
                   ],
-
         '/dashboard': () => [
-            { id: 'date-range-selector', node: <DateRangeSelector /> },
-            { id: 'expense-form', node: <ExpenseForm /> },
+            { id: 'date-range-selector', node: withSuspense(<DateRangeSelector />) },
+            { id: 'expense-form', node: withSuspense(<ExpenseForm />) },
         ],
-
-        '/admin': () => [{ id: 'admin-date-range-selector', node: <DateRangeSelector /> }],
-        '/admin/audit': () => [{ id: 'admin-audit-date-range-selector', node: <DateRangeSelector /> }],
-        '/admin/bug': () => [{ id: 'admin-bug-date-range-selector', node: <DateRangeSelector /> }],
+        '/admin': () => [{ id: 'admin-date-range-selector', node: withSuspense(<DateRangeSelector />) }],
+        '/admin/audit': () => [{ id: 'admin-audit-date-range-selector', node: withSuspense(<DateRangeSelector />) }],
+        '/admin/bug': () => [{ id: 'admin-bug-date-range-selector', node: withSuspense(<DateRangeSelector />) }],
     };
 
     return routes[pathname]?.() ?? [];

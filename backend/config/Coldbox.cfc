@@ -138,9 +138,10 @@ component {
             // Define Appenders
             appenders: {coldboxTracer: {class: 'coldbox.system.logging.appenders.ConsoleAppender'}},
             // Root Logger
-            root     : {levelmax: 'INFO', appenders: '*'},
+            root     : {levelmax: 'DEBUG', appenders: '*'},
             // Implicit Level Categories
-            info     : ['coldbox.system']
+            info     : ['coldbox.system'],
+            warn     : ['WebSocket']
         };
 
         /**

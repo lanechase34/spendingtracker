@@ -4,16 +4,11 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import AuditLogPage from 'admin/pages/AuditLogPage';
-import BugLogPage from 'admin/pages/BugLogPage';
-import CachePage from 'admin/pages/CachePage';
-import AdminDashboard from 'admin/pages/Dashboard';
-import MetricsPage from 'admin/pages/MetricsPage';
-import TasksPage from 'admin/pages/TasksPage';
-import UsersPage from 'admin/pages/UsersPage';
 import Navbar from 'components/Navbar';
 import PostLoginRedirect from 'components/PostLoginRedirect';
 import RoleProtectedRoute from 'components/RoleProtectedRoute';
@@ -21,17 +16,32 @@ import { AuthContextProvider } from 'contexts/AuthContext';
 import { AuthDialogContextProvider } from 'contexts/AuthDialogContext';
 import { DateRangeContextProvider } from 'contexts/DateRangeContext';
 import { ExpenseContextProvider } from 'contexts/ExpenseContext';
-import { MetricContextProvider } from 'contexts/MetricContext';
 import { SubscriptionContextProvider } from 'contexts/SubscriptionContext';
 import { ToastContextProvider } from 'contexts/ToastContext';
 import { UserContextProvider } from 'contexts/UserContext';
 import About from 'pages/About';
-import Dashboard from 'pages/Dashboard';
-import NotFound from 'pages/NotFound';
-import Unauthorized from 'pages/Unauthorized';
 import type { ReactNode } from 'react';
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Outlet, Route, Routes } from 'react-router-dom';
 import { ROLES } from 'types/Roles.type';
+
+// Admin pages
+const AuditLogPage = lazy(() => import('admin/pages/AuditLogPage'));
+const BugLogPage = lazy(() => import('admin/pages/BugLogPage'));
+const CachePage = lazy(() => import('admin/pages/CachePage'));
+const AdminDashboard = lazy(() => import('admin/pages/Dashboard'));
+const MetricsPage = lazy(() => import('admin/pages/MetricsPage'));
+const TasksPage = lazy(() => import('admin/pages/TasksPage'));
+const UsersPage = lazy(() => import('admin/pages/UsersPage'));
+
+const MetricContextProvider = lazy(() =>
+    import('contexts/MetricContext').then((m) => ({ default: m.MetricContextProvider }))
+);
+
+// Pages
+const Dashboard = lazy(() => import('pages/Dashboard'));
+const NotFound = lazy(() => import('pages/NotFound'));
+const Unauthorized = lazy(() => import('pages/Unauthorized'));
 
 const darkTheme = createTheme({
     palette: {
@@ -73,6 +83,14 @@ function Providers({ children }: { children: ReactNode }) {
             <CssBaseline enableColorScheme />
             {wrapped}
         </ThemeProvider>
+    );
+}
+
+function PageLoader() {
+    return (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="75vh">
+            <CircularProgress />
+        </Box>
     );
 }
 
@@ -121,7 +139,9 @@ export default function App() {
                 <Router basename={basename}>
                     <Navbar />
                     <PostLoginRedirect />
-                    <AppRouter />
+                    <Suspense fallback={<PageLoader />}>
+                        <AppRouter />
+                    </Suspense>
                 </Router>
             </Providers>
         </QueryClientProvider>

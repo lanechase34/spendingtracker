@@ -1,8 +1,8 @@
 import CancelIcon from '@mui/icons-material/Cancel';
 import SearchIcon from '@mui/icons-material/Search';
-import { Typography } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import { QuickFilter, QuickFilterClear, QuickFilterControl, Toolbar } from '@mui/x-data-grid';
 
 interface SearchToolbarProps {

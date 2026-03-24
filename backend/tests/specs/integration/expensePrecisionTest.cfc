@@ -534,12 +534,12 @@ component extends="tests.resources.baseTest" {
 
             it('Handles edge case decimal amounts correctly', () => {
                 var edgeCaseExpenses = [
-                    {amount: 0.01, description: 'Single penny'},
-                    {amount: 0.99, description: 'Just under dollar'},
-                    {amount: 999.99, description: 'Large amount max cents'},
-                    {amount: 1000.00, description: 'Round thousand'},
-                    {amount: 12.345, description: 'More than 2 decimals (should round to 12.35)'},
-                    {amount: 7.999, description: 'Should round up to 8.00'}
+                    {amount: 0.01, description: '1 Single penny'},
+                    {amount: 0.99, description: '2 Just under dollar'},
+                    {amount: 999.99, description: '3 Large amount max cents'},
+                    {amount: 1000.00, description: '4 Round thousand'},
+                    {amount: 12.345, description: '5 More than 2 decimals (should round to 12.35)'},
+                    {amount: 7.999, description: '6 Should round up to 8.00'}
                 ];
 
                 // Expected values after conversion to cents and back
@@ -573,7 +573,9 @@ component extends="tests.resources.baseTest" {
                         startDate: dateFormat(startDate, 'yyyy-mm-dd'),
                         endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
                         page     : 1,
-                        records  : 50
+                        records  : 50,
+                        orderCol : 'description',
+                        orderDir : 'asc'
                     }
                 );
 
