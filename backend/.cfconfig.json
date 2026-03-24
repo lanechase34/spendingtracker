@@ -54,6 +54,7 @@
   ],
   "mailSpoolEnable": "${EMAIL_SPOOL}",
   "mailSpoolInterval": "5",
+  "nullSupport":"true",
   "requestQueueEnable": "true",
   "requestQueueTimeout": "600000",
   "requestTimeoutEnabled": "true",

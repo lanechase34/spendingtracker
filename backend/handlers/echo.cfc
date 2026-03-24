@@ -6,7 +6,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
      * Warmup the server on first start
      */
     function warmup(event, rc, prc) {
-        var trustedIPs = ['0:0:0:0:0:0:0:1', '127.0.0.1']
+        var trustedIPs = ['0:0:0:0:0:0:0:1', '127.0.0.1'];
         if(
             !getSetting('warmedUp')
             && trustedIPs.contains(securityService.getRequestIP())
@@ -50,6 +50,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
         }
     }
 
+    /**
+     * Healthcheck status
+     */
     function healthCheck(event, rc, prc) {
         if(!getSetting('healthCheck')) {
             throw('Failed health check');
@@ -61,6 +64,10 @@ component extends="base" hint="Not Resource Specific Endpoints" {
             .setStatusCode(200);
     }
 
+    /**
+     * Returns current status of backend
+     * Shows environment and version
+     */
     function status(event, rc, prc) {
         event
             .getResponse()
@@ -72,6 +79,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
             .setStatusCode(200);
     }
 
+    /**
+     * Invalid HTTP Method Handler
+     */
     function invalidHTTPMethod(event, rc, prc) {
         event
             .getResponse()
@@ -79,6 +89,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
             .setStatusCode(405);
     }
 
+    /**
+     * Invalid Event Handler
+     */
     function invalidEvent(event, rc, prc) {
         event
             .getResponse()
@@ -86,6 +99,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
             .setStatusCode(400);
     }
 
+    /**
+     * Missing Action Handler
+     */
     function onMissingAction(event, rc, prc) {
         event
             .getResponse()
@@ -93,6 +109,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
             .setStatusCode(400);
     }
 
+    /**
+     * Exception Handler
+     */
     function onException(event, rc, prc) {
         /**
          * Handle CB CSRF Exceptions
@@ -112,6 +131,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
             .setStatusCode(500);
     }
 
+    /**
+     * 401 Unauthorized endpoint
+     */
     function unauthorized(event, rc, prc) {
         event
             .getResponse()
@@ -119,6 +141,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
             .setStatusCode(401);
     }
 
+    /**
+     * Missing Template Handler
+     */
     function missingTemplate(event, rc, prc) {
         event
             .getResponse()

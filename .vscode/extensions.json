@@ -9,6 +9,7 @@
         "orta.vscode-jest",
         "redhat.vscode-yaml",
         "redhat.vscode-xml",
-        "ahmadalli.vscode-nginx-conf"
+        "ahmadalli.vscode-nginx-conf",
+        "ortus-solutions.vscode-testbox"
     ]
 }

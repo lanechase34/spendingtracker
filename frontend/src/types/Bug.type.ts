@@ -9,7 +9,7 @@ export const BugSchema = z.object({
     agent: z.string(),
     detail: z.string(),
     stack: z.string(),
-    email: z.string().optional(),
+    email: z.string().nullish(),
 });
 
 export type Bug = z.infer<typeof BugSchema>;

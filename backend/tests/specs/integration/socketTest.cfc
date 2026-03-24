@@ -46,18 +46,6 @@ component extends="tests.resources.baseTest" {
                     var ws = getWebSocket();
                     expect(application).toHaveKey('wsCache');
                 });
-
-                it('configure() stores wsHeartBeatMS in application scope', () => {
-                    var ws = getWebSocket();
-                    expect(application).toHaveKey('wsHeartBeatMS');
-                    expect(application.wsHeartBeatMS).toBeNumeric();
-                });
-
-                it('heartBeatMS in config matches application.wsHeartBeatMS', () => {
-                    var ws     = new WebSocket();
-                    var config = ws.getConfig();
-                    expect(config.heartBeatMS).toBe(application.wsHeartBeatMS);
-                });
             });
 
             /**
@@ -105,12 +93,13 @@ component extends="tests.resources.baseTest" {
                     mockUser.delete(user);
                 });
 
-                it('Cache TTL is derived from wsHeartBeatMS as two intervals in seconds', () => {
-                    var ws          = getWebSocket();
-                    var user        = mockUser.make();
-                    var jwt         = mockUser.login(user);
-                    var channel     = mockChannel();
-                    var expectedTTL = ceiling((application.wsHeartBeatMS * 2) / 1000);
+                it('Cache TTL is set to 1, minimum allowed by CacheBox', () => {
+                    var ws              = getWebSocket();
+                    var user            = mockUser.make();
+                    var jwt             = mockUser.login(user);
+                    var channel         = mockChannel();
+                    var expectedTTL     = 1;
+                    var expectedTimeout = 30;
 
                     ws.authenticate(
                         login              = jwt,
@@ -126,8 +115,8 @@ component extends="tests.resources.baseTest" {
                     var cachedMeta = cache.getCachedObjectMetadata('ws_token_#channel.hashCode()#');
 
                     expect(cachedMeta).toHaveKey('lastAccessTimeout');
-                    expect(cachedMeta.lastAccessTimeout).toBe(expectedTTL);
-                    expect(cachedMeta.timeout).toBe(0);
+                    expect(cachedMeta.lastAccessTimeout).toBe(expectedTTL); // 1 minute last access
+                    expect(cachedMeta.timeout).toBe(expectedTimeout); // 30 minute timeout in cache (matches JWT)
                     expect(cachedMeta.isExpired).toBeFalse();
                     mockUser.delete(user);
                 });
@@ -389,7 +378,7 @@ component extends="tests.resources.baseTest" {
                     application.STOMPBroker.STOMPConnections = {};
 
                     // Populate cache as if authenticate() ran
-                    var tokenTTL = application.wsTokenTTL;
+                    var tokenTTL = 1;
                     cache.set(
                         'ws_token_#channel.hashCode()#',
                         jwtService.decode(jwt),

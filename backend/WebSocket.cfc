@@ -11,13 +11,9 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
         application.wsRequestService = application.wirebox.getInstance('coldbox:requestService');
         application.wsCache          = application.wirebox.getInstance('cachebox:wsStorage');
 
-        // Derive the cache TTL based on 2 consecutive heartbeats
-        application.wsHeartBeatMS = 10000;
-        application.wsTokenTTL    = ceiling((application.wsHeartBeatMS * 2) / 1000);
-
         return {
             debugMode    : false,
-            heartBeatMS  : application.wsHeartBeatMS,
+            heartBeatMS  : 10000,
             exchanges    : {topic: {bindings: {metrics: 'metrics'}}},
             subscriptions: {}
         };
@@ -57,11 +53,13 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
             /**
              * Store the decoded token in cache using the channel's hash code
              */
+            var payload = application.wsRequestService.getContext().getPrivateValue('jwt_payload');
+
             application.wsCache.set(
                 'ws_token_#channel.hashCode()#',
-                application.wsRequestService.getContext().getPrivateValue('jwt_payload'),
-                0,
-                application.wsTokenTTL
+                {scope: payload.scope ?: '', sub: payload.sub ?: ''},
+                30,
+                1
             );
             return true;
         }

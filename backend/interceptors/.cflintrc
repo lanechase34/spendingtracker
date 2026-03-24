@@ -38,13 +38,7 @@
             "code": "AVOID_USING_CFUPDATE_TAG"
         },
         {
-            "code": "ARG_VAR_CONFLICT"
-        },
-        {
             "code": "ARG_HINT_MISSING"
-        },
-        {
-            "code": "ARG_HINT_MISSING_SCRIPT"
         },
         {
             "code": "ARGUMENT_INVALID_NAME"
@@ -146,9 +140,6 @@
             "code": "UNUSED_LOCAL_VARIABLE"
         },
         {
-            "code": "UNUSED_METHOD_ARGUMENT"
-        },
-        {
             "code": "SQL_SELECT_STAR"
         },
         {
@@ -167,7 +158,17 @@
             "code": "VAR_IS_TEMPORARY"
         }
     ],
-    "excludes": [],
+    "excludes": [
+        {
+            "code": "UNUSED_METHOD_ARGUMENT"
+        },
+        {
+            "code": "ARG_HINT_MISSING_SCRIPT"
+        },
+        {
+            "code": "ARG_VAR_CONFLICT"
+        }
+    ],
     "inheritParent": false,
     "parameters": {
         "TooManyFunctionsChecker.maximum": 50

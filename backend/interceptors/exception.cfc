@@ -52,8 +52,10 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
             getSetting('environment') == 'development'
             && (url.keyExists('debug') || getSetting('debugging'))
         ) {
-            writeDump(interceptData.exception);
-            abort;
+            cfsavecontent(variable = "variables.dump") {
+                writeDump(var = interceptData.exception);
+            }
+            return event.renderData(type = 'HTML', data = dump);
         }
     }
 

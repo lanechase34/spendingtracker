@@ -1,12 +1,14 @@
 component extends="base" hint="Expense Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {
-        view       : 'GET',
-        save       : 'POST',
-        remove     : 'DELETE',
-        viewReceipt: 'GET',
-        import     : 'POST',
-        bulkSave   : 'POST'
+        view          : 'GET',
+        save          : 'POST',
+        remove        : 'DELETE',
+        receipt       : 'GET',
+        import        : 'POST',
+        bulkSave      : 'POST',
+        export        : 'POST',
+        exportReceipts: 'POST'
     };
 
     property name="categoryService" inject="services.category";

@@ -32,6 +32,17 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 dayjs.extend(relativeTime);
 
 /**
+ * Data grid slots
+ */
+function ToolbarSlot() {
+    return <SearchToolbar title="Cache Keys" />;
+}
+
+function NoRowsSlot() {
+    return <Typography sx={{ p: 2, textAlign: 'center' }}>No Cache Keys Found</Typography>;
+}
+
+/**
  * ChartJS options
  */
 const options: ChartOptions<'doughnut'> = {
@@ -114,7 +125,7 @@ export default function CachePage() {
         queryKey: ['cacheData'],
         queryFn: fetchCacheData,
         staleTime: 1000 * 60 * 5, // 5 minutes
-        refetchInterval: 1000 * 60, // Auto-refetch every minute
+        refetchInterval: 1000 * 30, // Auto-refetch every 30 seconds
     });
 
     // Calculate metrics
@@ -128,79 +139,90 @@ export default function CachePage() {
     const remaining = Math.max(0, maxObjects - used);
     const utilizationPercent = maxObjects > 0 ? (used / maxObjects) * 100 : 0;
 
-    const rows: CacheKey[] = cacheData?.data ?? [];
-    const columns: GridColDef<CacheKey>[] = [
-        {
-            field: 'key',
-            headerName: 'Key',
-            minWidth: 300,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 4,
-        },
-        {
-            field: 'created',
-            headerName: 'Created',
-            minWidth: 200,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 1,
-            valueGetter: (value: string) => dayjs(value).format('MM/DD/YYYY HH:mm:ss'),
-            renderCell: (params) => (
-                <Stack spacing={0.5}>
-                    <Typography variant="body2">{params.formattedValue}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        {dayjs(params.row.created).fromNow()}
-                    </Typography>
-                </Stack>
-            ),
-        },
-        {
-            field: 'hits',
-            headerName: 'Hits',
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 1,
-        },
-        {
-            field: 'lastaccessed',
-            headerName: 'Last Accessed',
-            minWidth: 200,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 1,
-            valueGetter: (value: string) => dayjs(value).format('MM/DD/YYYY HH:mm:ss'),
-            renderCell: (params) => (
-                <Stack spacing={0.5}>
-                    <Typography variant="body2">{params.formattedValue}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        {dayjs(params.row.lastaccessed).fromNow()}
-                    </Typography>
-                </Stack>
-            ),
-        },
-        {
-            field: 'lastaccesstimeout',
-            headerName: 'Access Timeout',
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 1,
-            type: 'number',
-            valueFormatter: (value: number) => formatMinutesToTime(value),
-        },
-        {
-            field: 'timeout',
-            headerName: 'Timeout',
-            minWidth: 75,
-            hideable: false,
-            cellClassName: 'centered-col',
-            flex: 1,
-            type: 'number',
-            valueFormatter: (value: number) => formatMinutesToTime(value),
-        },
-    ];
+    const rows: CacheKey[] = useMemo(() => cacheData?.data ?? [], [cacheData]);
+    const columns: GridColDef<CacheKey>[] = useMemo(
+        () => [
+            {
+                field: 'key',
+                headerName: 'Key',
+                minWidth: 300,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 4,
+            },
+            {
+                field: 'created',
+                headerName: 'Created',
+                minWidth: 200,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+                valueGetter: (value: string) => dayjs(value).format('MM/DD/YYYY HH:mm:ss'),
+                renderCell: (params) => (
+                    <Stack spacing={0.5}>
+                        <Typography variant="body2">{params.formattedValue}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {dayjs(params.row.created).fromNow()}
+                        </Typography>
+                    </Stack>
+                ),
+            },
+            {
+                field: 'hits',
+                headerName: 'Hits',
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+            },
+            {
+                field: 'lastaccessed',
+                headerName: 'Last Accessed',
+                minWidth: 200,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+                valueGetter: (value: string) => dayjs(value).format('MM/DD/YYYY HH:mm:ss'),
+                renderCell: (params) => (
+                    <Stack spacing={0.5}>
+                        <Typography variant="body2">{params.formattedValue}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {dayjs(params.row.lastaccessed).fromNow()}
+                        </Typography>
+                    </Stack>
+                ),
+            },
+            {
+                field: 'lastaccesstimeout',
+                headerName: 'Access Timeout',
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+                type: 'number',
+                valueFormatter: (value: number) => formatMinutesToTime(value),
+            },
+            {
+                field: 'timeout',
+                headerName: 'Timeout',
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+                type: 'number',
+                valueFormatter: (value: number) => formatMinutesToTime(value),
+            },
+            {
+                field: 'storage',
+                headerName: 'Storage',
+                minWidth: 75,
+                hideable: false,
+                cellClassName: 'centered-col',
+                flex: 1,
+            },
+        ],
+        []
+    );
 
     const chartData: ChartData<'doughnut'> = useMemo(
         () => ({
@@ -374,10 +396,8 @@ export default function CachePage() {
                             disableColumnFilter
                             showToolbar
                             slots={{
-                                toolbar: () => <SearchToolbar title="Cache Keys" />,
-                                noRowsOverlay: () => (
-                                    <Typography sx={{ p: 2, textAlign: 'center' }}>No Cache Keys Found</Typography>
-                                ),
+                                toolbar: ToolbarSlot,
+                                noRowsOverlay: NoRowsSlot,
                             }}
                             slotProps={{
                                 basePagination: {

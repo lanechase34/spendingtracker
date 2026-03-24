@@ -75,7 +75,7 @@ component extends="base" hint="Auth Endpoints" {
         }
 
         try {
-            jwtService.refreshToken()
+            jwtService.refreshToken();
         }
         catch(any e) {
         }

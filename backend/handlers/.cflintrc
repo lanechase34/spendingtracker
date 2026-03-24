@@ -38,19 +38,7 @@
             "code": "AVOID_USING_CFUPDATE_TAG"
         },
         {
-            "code": "ARG_VAR_CONFLICT"
-        },
-        {
-            "code": "ARG_HINT_MISSING"
-        },
-        {
-            "code": "ARG_HINT_MISSING_SCRIPT"
-        },
-        {
             "code": "ARGUMENT_INVALID_NAME"
-        },
-        {
-            "code": "ARGUMENT_ALLCAPS_NAME"
         },
         {
             "code": "ARGUMENT_TOO_WORDY"
@@ -113,16 +101,7 @@
             "code": "FILE_SHOULD_START_WITH_LOWERCASE"
         },
         {
-            "code": "LOCAL_LITERAL_VALUE_USED_TOO_OFTEN"
-        },
-        {
-            "code": "GLOBAL_LITERAL_VALUE_USED_TOO_OFTEN"
-        },
-        {
             "code": "MISSING_VAR"
-        },
-        {
-            "code": "METHOD_INVALID_NAME"
         },
         {
             "code": "METHOD_ALLCAPS_NAME"
@@ -146,9 +125,6 @@
             "code": "UNUSED_LOCAL_VARIABLE"
         },
         {
-            "code": "UNUSED_METHOD_ARGUMENT"
-        },
-        {
             "code": "SQL_SELECT_STAR"
         },
         {
@@ -158,16 +134,23 @@
             "code": "VAR_ALLCAPS_NAME"
         },
         {
-            "code": "VAR_INVALID_NAME"
-        },
-        {
             "code": "VAR_TOO_WORDY"
         },
         {
             "code": "VAR_IS_TEMPORARY"
         }
     ],
-    "excludes": [],
+    "excludes": [
+        {
+            "code": "UNUSED_METHOD_ARGUMENT"
+        },
+        {
+            "code": "ARG_HINT_MISSING_SCRIPT"
+        },
+        {
+            "code": "ARG_VAR_CONFLICT"
+        }
+    ],
     "inheritParent": false,
     "parameters": {
         "TooManyFunctionsChecker.maximum": 50

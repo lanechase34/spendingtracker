@@ -47,6 +47,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
      * Uses imagick mogrify to convert the upload to webp and decrease quality
      *
      * @path         full path to image
+     * @quality      0-100 quality of image
      * @CFLintIgnore AVOID_USING_CFEXECUTE_TAG
      */
     public boolean function convertToWebp(required string path, numeric quality = 50) {
@@ -68,8 +69,9 @@ component singleton accessors="true" hint="Service layer for interacting with im
      * Validate the incoming image upload
      * If valid, move to the user's upload directory and return the filename generated
      *
-     * @formField  image form field
-     * @extensions
+     * @formField       image form field
+     * @uploadDirectory user upload directory to put image after successful validation
+     * @extensions      list of applicable file extensions
      */
     public string function validateUpload(
         required string formField,

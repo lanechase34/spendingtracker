@@ -15,6 +15,8 @@ component singleton accessors="true" hint="Service layer for generating colors u
 
     /**
      * Converts RGB number to hex
+     *
+     * @num rgb number
      */
     private string function toHex(required numeric num) {
         return right('00#formatBaseN(num, 16)#', 2);
@@ -22,6 +24,10 @@ component singleton accessors="true" hint="Service layer for generating colors u
 
     /**
      * HSV algorithm in RGB format
+     *
+     * @h hue
+     * @s saturation
+     * @v value
      */
     private array function hsvToRgb(h, s, v) {
         var r;

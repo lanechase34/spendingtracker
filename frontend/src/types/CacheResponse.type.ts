@@ -10,6 +10,7 @@ const CacheKeySchema = z.object({
     lastaccesstimeout: z.number().nonnegative(),
     lastaccessed: z.string(),
     timeout: z.number(),
+    storage: z.string(),
 });
 
 export const CacheSchema = z.object({

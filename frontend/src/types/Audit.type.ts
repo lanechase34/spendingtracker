@@ -10,7 +10,7 @@ export const AuditSchema = z.object({
     detail: z.string(),
     statuscode: z.number().int(),
     delta: z.number(),
-    email: z.string().optional(),
+    email: z.string().nullish(),
 });
 
 export type Audit = z.infer<typeof AuditSchema>;

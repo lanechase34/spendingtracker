@@ -2,6 +2,7 @@ component singleton accessors="true" {
 
     property name="cacheStorage"     inject="cachebox:coldboxStorage";
     property name="rateCacheStorage" inject="cachebox:rateStorage";
+    property name="wsCacheStorage"   inject="cachebox:wsStorage";
     property name="concurrency"      inject="coldbox:setting:concurrency";
     property name="schedulerService" inject="coldbox:schedulerService";
 
@@ -82,14 +83,17 @@ component singleton accessors="true" {
     }
 
     /**
-     * Return detailed information about the current cache state
-     * Includes list of all keys stored in cache
+     * Returns detailed information the current cache state
+     * Includes list of all keys stored in coldbox, rate, and ws caches
      */
     public struct function getCacheData() {
-        var stats    = cacheStorage.getStats();
-        var allKeys  = cacheStorage.getKeys();
-        var data     = cacheStorage.getCachedObjectMetadataMulti(allKeys.toList(','));
-        var rateData = rateCacheStorage.getCachedObjectMetadataMulti(rateCacheStorage.getKeys().toList(','));
+        var stats = cacheStorage.getStats();
+
+        var cacheData = formatCacheData(cacheStorage, 'cache');
+        var rateData  = formatCacheData(rateCacheStorage, 'rate');
+        var wsData    = formatCacheData(wsCacheStorage, 'ws');
+
+        var data = cacheData.append(rateData, true).append(wsData, true);
 
         var info = {
             lastReapDateTime  : stats.getLastReapDateTime(),
@@ -98,13 +102,22 @@ component singleton accessors="true" {
             evictionCount     : stats.getEvictionCount(),
             garbageCollections: stats.getGarbageCollections(),
             maxObjects        : cacheStorage.getConfiguration().maxObjects,
-            data              : formatCacheData(data).append(formatCacheData(rateData), true)
+            data              : data
         };
 
         return info;
     }
 
-    private array function formatCacheData(required struct data) {
+    /**
+     * Format the data stored in the cached passed in
+     * Returns an array of structs
+     *
+     * @cacheInstance cache instance
+     * @name          what the cache is called
+     */
+    private array function formatCacheData(required component cacheInstance, required string name) {
+        var data = cacheInstance.getCachedObjectMetadataMulti(cacheInstance.getKeys().toList(','));
+
         return data.reduce((result, key, value) => {
             return result.append({
                 id               : key,
@@ -114,7 +127,8 @@ component singleton accessors="true" {
                 expired          : value.isExpired,
                 lastaccessed     : dateTimeFormat(value.lastAccessed, 'long'),
                 lastaccesstimeout: value.lastAccessTimeout,
-                timeout          : value.timeout
+                timeout          : value.timeout,
+                storage          : name
             });
         }, []);
     }

@@ -407,7 +407,7 @@ component singleton accessors="true" {
         records.each(
             (expense) => {
                 expense.delete('id');
-                expense.delete('receipt')
+                expense.delete('receipt');
             },
             true,
             maxThreads

@@ -58,5 +58,15 @@
         "testFileOnly": true
     },
     "prettier.trailingComma": "es5",
-    "files.eol": "\n"
+    "files.eol": "\n",
+    "testbox.bundles": "tests.specs",
+    "testbox.boxBinary": "box",
+    "testbox.runnerUrl": "http://localhost:8082/tests/runner.cfm",
+    "testbox.excludedPaths": "{backend/coldbox/**,backend/modules/**,**/testbox/**}",
+    "testbox.pathMappings": [
+        {
+            "source": "backend/tests",
+            "target": "tests"
+        }
+    ]
 }

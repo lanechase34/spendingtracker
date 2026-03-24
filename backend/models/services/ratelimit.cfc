@@ -36,7 +36,10 @@ component singleton hint="Service layer for rate limiting specific actions" {
 
     /**
      * Build the cache key based on the incoming mode
-     * Options include ip, email, ip+email
+     *
+     * @mode  ip, email, ip+email
+     * @ip    user's ip
+     * @email user's email
      */
     public string function buildKey(
         required string mode,
