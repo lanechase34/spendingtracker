@@ -18,12 +18,17 @@ export const MetricContext = createContext<MetricContextType | undefined>(undefi
 export const MetricContextProvider = ({ children }: { children: ReactNode }) => {
     const [metrics, setMetrics] = useState<Metric | null>(null);
     const clientRef = useRef<Client | null>(null);
+    const failedRef = useRef<boolean>(false); // track if the client failed to connect
     const { authToken } = useAuthContext();
 
     useEffect(() => {
         if (!authToken) {
             void clientRef.current?.deactivate();
             clientRef.current = null;
+            return;
+        }
+
+        if (failedRef.current) {
             return;
         }
 
@@ -36,6 +41,9 @@ export const MetricContextProvider = ({ children }: { children: ReactNode }) => 
             token: authToken,
             onMetrics: setMetrics,
             onError: (err) => console.error('Metrics socket error', err),
+            onFailed: () => {
+                failedRef.current = true;
+            },
         });
 
         client.activate();

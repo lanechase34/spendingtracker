@@ -7,10 +7,9 @@ import CircularProgress from '@mui/material/CircularProgress';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import useAuthContext from 'hooks/useAuthContext';
 import useAuthFetch from 'hooks/useAuthFetch';
+import useBreakpoint from 'hooks/useBreakpoint';
 import type { MouseEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,8 +22,7 @@ export default function UserMenu() {
     const authFetch = useAuthFetch();
     const userAPI = useMemo(() => userService({ authFetch: authFetch }), [authFetch]);
     const navigate = useNavigate();
-    const theme = useTheme();
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const { isMobile } = useBreakpoint();
 
     /**
      * Menu dropdown
@@ -58,6 +56,11 @@ export default function UserMenu() {
         setSettingsOpen(false);
     };
 
+    const handleMenuAction = (action: () => void) => {
+        handleCloseMenu();
+        action();
+    };
+
     // Call logout endpoint and delete JWT from browser
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -65,22 +68,30 @@ export default function UserMenu() {
             await userAPI.logout();
         } catch (err: unknown) {
             console.error('Error logging out', err);
+        } finally {
+            // Always delete token
+            deleteToken();
+            void navigate('/');
+            setIsLoggingOut(false);
         }
-        // Always delete token
-        deleteToken();
-        void navigate('/');
-        setIsLoggingOut(false);
     };
 
     return (
         <>
-            <Button variant="outlined" onClick={handleClickMenu} aria-expanded={menuOpen} disabled={isLoggingOut}>
+            <Button
+                variant="outlined"
+                aria-label="Account menu"
+                onClick={handleClickMenu}
+                aria-expanded={menuOpen}
+                disabled={isLoggingOut}
+                sx={{ minHeight: 36 }}
+            >
                 <AccountCircleIcon sx={{ mx: 1 }} fontSize="small" />
             </Button>
             {menuOpen && (
                 <Menu anchorEl={menuAnchorEl} id="account-menu" open={menuOpen} onClose={handleCloseMenu}>
-                    {isSmallScreen && (
-                        <MenuItem onClick={() => void navigate('/')}>
+                    {isMobile && (
+                        <MenuItem onClick={() => handleMenuAction(() => void navigate('/'))} disabled={isLoggingOut}>
                             <ListItemIcon>
                                 <HomeIcon fontSize="small" />
                             </ListItemIcon>

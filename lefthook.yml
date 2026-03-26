@@ -31,11 +31,5 @@ pre-commit:
 post-checkout:
   parallel: true
   commands:
-    box-install:
-      root: "backend/"
-      run: box install
-    npm-install:
-      root: "frontend/"
-      run: npm install
     box-fix-json-lineending:
       run: echo 'config set JSON.lineEnding=`#chr 10`' | box

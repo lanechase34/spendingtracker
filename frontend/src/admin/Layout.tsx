@@ -1,10 +1,9 @@
-import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import IconButton from '@mui/material/IconButton';
 import AdminSidebar from 'admin/Sidebar';
+import useAdminDrawerContext from 'hooks/useAdminDrawerContext';
 import useBreakpoint from 'hooks/useBreakpoint';
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -14,27 +13,10 @@ export const DRAWER_WIDTH = 240;
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
     const { isMobile } = useBreakpoint();
-    const [mobileOpen, setMobileOpen] = useState(false);
-
-    const handleDrawerToggle = () => {
-        setMobileOpen(!mobileOpen);
-    };
+    const { mobileOpen, toggleDrawer } = useAdminDrawerContext();
 
     return (
         <Box sx={{ display: 'flex' }}>
-            {/* Mobile menu button */}
-            {isMobile && (
-                <IconButton
-                    color="inherit"
-                    aria-label="open drawer"
-                    edge="start"
-                    onClick={handleDrawerToggle}
-                    sx={{ position: 'fixed', top: 8, left: 8, zIndex: 1300 }}
-                >
-                    <MenuIcon />
-                </IconButton>
-            )}
-
             {/* Desktop sidebar */}
             {!isMobile && <AdminSidebar />}
 
@@ -43,7 +25,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <Drawer
                     variant="temporary"
                     open={mobileOpen}
-                    onClose={handleDrawerToggle}
+                    onClose={toggleDrawer}
                     ModalProps={{
                         keepMounted: true, // Better open performance on mobile
                     }}

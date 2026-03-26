@@ -10,7 +10,6 @@ import Typography from '@mui/material/Typography';
 import type { GridColDef } from '@mui/x-data-grid';
 import { DataGrid } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
-import AdminLayout from 'admin/Layout';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import CustomPagination from 'components/CustomPagination';
@@ -248,7 +247,7 @@ export default function CachePage() {
     );
 
     return (
-        <AdminLayout>
+        <>
             {isError ? (
                 <ErrorCard />
             ) : (
@@ -410,6 +409,6 @@ export default function CachePage() {
                     </Card>
                 </Stack>
             )}
-        </AdminLayout>
+        </>
     );
 }

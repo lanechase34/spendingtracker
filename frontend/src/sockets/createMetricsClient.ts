@@ -7,6 +7,7 @@ interface CreateMetricsClientArgs {
     token: string;
     onMetrics: (data: Metric) => void;
     onError?: (err: unknown) => void;
+    onFailed?: () => void;
 }
 
 /**
@@ -17,7 +18,13 @@ interface CreateMetricsClientArgs {
  * @param onError - function to handle error (optional)
  * @returns Client instance
  */
-export function createMetricsClient({ brokerURL, token, onMetrics, onError }: CreateMetricsClientArgs): Client {
+export function createMetricsClient({
+    brokerURL,
+    token,
+    onMetrics,
+    onError,
+    onFailed,
+}: CreateMetricsClientArgs): Client {
     const client = new Client({
         brokerURL,
         reconnectDelay: 5000,
@@ -56,6 +63,8 @@ export function createMetricsClient({ brokerURL, token, onMetrics, onError }: Cr
 
     client.onStompError = (frame: IFrame) => {
         onError?.(new Error(frame.headers.message || 'STOMP broker error'));
+        onFailed?.();
+        void client.deactivate();
     };
 
     client.onWebSocketClose = () => {
@@ -64,6 +73,8 @@ export function createMetricsClient({ brokerURL, token, onMetrics, onError }: Cr
 
     client.onWebSocketError = (event) => {
         onError?.(new Error(`WebSocket error: ${event}`));
+        onFailed?.();
+        void client.deactivate();
     };
 
     client.onUnhandledMessage = (message) => {

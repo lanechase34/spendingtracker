@@ -43,7 +43,7 @@
         "bcrypt":"3.2.0+1",
         "cfmigrations":"5.1.0",
         "commandbox-migrations":"5.3.0",
-        "qb":"13.0.19",
+        "qb":"13.1.0",
         "cbauth":"7.0.0",
         "mementifier":"3.7.0+7",
         "spreadsheet-cfml":"5.3.0",
