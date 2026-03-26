@@ -9,15 +9,21 @@ export default defineConfig(({ mode }) => ({
         chunkSizeWarningLimit: 1000,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-                    'vendor-mui': ['@mui/material', '@mui/icons-material'],
-                    'vendor-mui-x': ['@mui/x-data-grid'],
-                    'vendor-date-pickers': ['@mui/x-date-pickers', 'dayjs'],
-                    'vendor-query': ['@tanstack/react-query'],
+                manualChunks: (id) => {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom'))
+                            return 'vendor-react';
+                        if (id.includes('@mui/material') || id.includes('@mui/icons-material')) return 'vendor-mui';
+                        if (id.includes('@mui/x-data-grid')) return 'vendor-mui-x';
+                        if (id.includes('@mui/x-date-pickers') || id.includes('dayjs')) return 'vendor-date-pickers';
+                        if (id.includes('@tanstack/react-query')) return 'vendor-query';
+                    }
                 },
             },
         },
+    },
+    resolve: {
+        tsconfigPaths: true,
     },
     base: '/spendingtracker',
     plugins: [
