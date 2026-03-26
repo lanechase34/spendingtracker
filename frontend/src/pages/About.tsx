@@ -164,7 +164,7 @@ function TechBullet({ title, text }: TechBulletProps) {
 
 export default function About() {
     const { isInitializing } = useAuthContext();
-    const { isAuthorized, hasRole } = useUserContext();
+    const { isAuthorized, hasRole, loading: userLoading } = useUserContext();
     const boxPadding = 6;
 
     return (
@@ -201,11 +201,11 @@ export default function About() {
                         <Stack direction="row" spacing={2} justifyContent="center">
                             <RegisterDialogButton
                                 size="large"
-                                disabled={isInitializing()}
+                                disabled={isInitializing() || userLoading}
                                 text="Get Started"
                                 variant="contained"
                             />
-                            <LoginDialogButton disabled={isInitializing()} size="large" />
+                            <LoginDialogButton disabled={isInitializing() || userLoading} size="large" />
                         </Stack>
                     )}
                 </Box>

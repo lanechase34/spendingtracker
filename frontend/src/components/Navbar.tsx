@@ -8,9 +8,10 @@ import Container from '@mui/material/Container';
 import { useTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import useMediaQuery from '@mui/material/useMediaQuery';
+import { SidebarIcon } from 'admin/Sidebar';
 import NavBtn from 'components/NavBtn';
 import useAuthContext from 'hooks/useAuthContext';
+import useBreakpoint from 'hooks/useBreakpoint';
 import useUserContext from 'hooks/useUserContext';
 import type { ReactNode } from 'react';
 import { Fragment, lazy, useMemo } from 'react';
@@ -76,15 +77,20 @@ function buildRouteButtons({
  */
 export default function Navbar() {
     const { isInitializing } = useAuthContext();
-    const { isAuthorized } = useUserContext();
+    const { isAuthorized, loading: userLoading } = useUserContext();
     const { pathname } = useLocation();
 
     const theme = useTheme();
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-    const buttonSize = isSmallScreen ? 'small' : 'medium';
+    const { isMobile } = useBreakpoint();
+    const buttonSize = isMobile ? 'small' : 'medium';
+
+    // If this is an admin route
+    const isAdminRoute = pathname.startsWith('/admin');
 
     const routeButtons = useMemo(() => {
-        if (isInitializing()) return [];
+        if (isInitializing() || userLoading) {
+            return [];
+        }
 
         const buttons = buildRouteButtons({
             pathname,
@@ -101,7 +107,7 @@ export default function Navbar() {
         }
 
         return buttons;
-    }, [pathname, isAuthorized, isInitializing, buttonSize]);
+    }, [pathname, isAuthorized, isInitializing, userLoading, buttonSize]);
 
     return (
         <AppBar
@@ -116,27 +122,34 @@ export default function Navbar() {
             }}
         >
             <Container disableGutters maxWidth={false}>
-                <Toolbar disableGutters variant="dense" sx={{ px: 2, py: { xs: 1, md: 0 } }}>
-                    <TrendingUpIcon color="success" sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+                <Toolbar disableGutters variant="dense" sx={{ pl: { xs: 1, md: 2 }, pr: 2, py: { xs: 1, md: 0 } }}>
+                    {isAdminRoute && isMobile ? (
+                        <SidebarIcon />
+                    ) : (
+                        <>
+                            <TrendingUpIcon color="success" sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
 
-                    <Box sx={{ flexGrow: 1 }}>
-                        <Typography
-                            sx={{
-                                display: {
-                                    xs: 'none',
-                                    md: 'block',
-                                    textDecoration: 'none',
-                                    width: 'fit-content',
-                                },
-                            }}
-                            variant="h6"
-                            color="inherit"
-                            component={Link}
-                            to={'/'}
-                        >
-                            SpendingTracker
-                        </Typography>
-                    </Box>
+                            <Typography
+                                sx={{
+                                    display: {
+                                        xs: 'none',
+                                        md: 'block',
+                                        textDecoration: 'none',
+                                        width: 'fit-content',
+                                    },
+                                }}
+                                variant="h6"
+                                color="inherit"
+                                component={Link}
+                                to={'/'}
+                            >
+                                SpendingTracker
+                            </Typography>
+                        </>
+                    )}
+
+                    {/* This spacer always pushes the button group to the right */}
+                    <Box sx={{ flexGrow: 1 }} />
 
                     {routeButtons.length > 0 && (
                         <ButtonGroup variant="outlined" aria-label="Navigation Buttons">

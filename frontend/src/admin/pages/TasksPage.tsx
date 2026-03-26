@@ -5,7 +5,6 @@ import Typography from '@mui/material/Typography';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { DataGrid } from '@mui/x-data-grid';
 import { useQuery } from '@tanstack/react-query';
-import AdminLayout from 'admin/Layout';
 import CustomPagination from 'components/CustomPagination';
 import ErrorCard from 'components/ErrorCard';
 import SearchToolbar from 'components/SearchToolbar';
@@ -184,7 +183,7 @@ export default function TasksPage() {
     );
 
     return (
-        <AdminLayout>
+        <>
             {isError ? (
                 <ErrorCard />
             ) : (
@@ -232,6 +231,6 @@ export default function TasksPage() {
                     />
                 </Card>
             )}
-        </AdminLayout>
+        </>
     );
 }

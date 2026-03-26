@@ -9,9 +9,11 @@ import CircularProgress from '@mui/material/CircularProgress';
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import AdminLayout from 'admin/Layout';
 import Navbar from 'components/Navbar';
 import PostLoginRedirect from 'components/PostLoginRedirect';
 import RoleProtectedRoute from 'components/RoleProtectedRoute';
+import { AdminDrawerContextProvider } from 'contexts/AdminDrawerContext';
 import { AuthContextProvider } from 'contexts/AuthContext';
 import { AuthDialogContextProvider } from 'contexts/AuthDialogContext';
 import { DateRangeContextProvider } from 'contexts/DateRangeContext';
@@ -67,6 +69,7 @@ const CONTEXT_MAP = [
     ToastContextProvider,
     AuthContextProvider,
     AuthDialogContextProvider,
+    AdminDrawerContextProvider,
     UserContextProvider,
     DateRangeContextProvider,
     ExpenseContextProvider,
@@ -110,9 +113,13 @@ function AppRouter() {
             <Route element={<RoleProtectedRoute allowedRoles={[ROLES.ADMIN]} />}>
                 <Route
                     element={
-                        <MetricContextProvider>
-                            <Outlet />
-                        </MetricContextProvider>
+                        <Suspense fallback={<PageLoader />}>
+                            <MetricContextProvider>
+                                <AdminLayout>
+                                    <Outlet />
+                                </AdminLayout>
+                            </MetricContextProvider>
+                        </Suspense>
                     }
                 >
                     <Route path="/admin" element={<AdminDashboard />} />

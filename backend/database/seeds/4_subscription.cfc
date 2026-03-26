@@ -47,7 +47,7 @@ component extends="base" {
         /**
          * Mock subscription data
          */
-        var amount = 5000;
+        var amount = 500;
         for(var i = 1; i <= amount; i++) {
             data.append({
                 'next_charge_date': {

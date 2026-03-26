@@ -14,7 +14,6 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { DataGrid } from '@mui/x-data-grid';
-import AdminLayout from 'admin/Layout';
 import CustomPagination from 'components/CustomPagination';
 import DetailRow from 'components/DetailRow';
 import ErrorCard from 'components/ErrorCard';
@@ -62,11 +61,7 @@ export default function UsersPage() {
     const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
 
     if (error) {
-        return (
-            <AdminLayout>
-                <ErrorCard />
-            </AdminLayout>
-        );
+        return <ErrorCard />;
     }
 
     // Rows of users
@@ -147,7 +142,7 @@ export default function UsersPage() {
     ];
 
     return (
-        <AdminLayout>
+        <>
             <Box sx={{ height: 'calc(100vh - 100px)' }}>
                 <DataGrid
                     paginationMode="server"
@@ -238,6 +233,6 @@ export default function UsersPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </AdminLayout>
+        </>
     );
 }

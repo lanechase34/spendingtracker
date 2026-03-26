@@ -5,7 +5,6 @@ import MemoryMetrics from 'admin/components/MemoryMetrics';
 import RequestMetrics from 'admin/components/RequestMetrics';
 import SlowRequests from 'admin/components/SlowRequests';
 import SystemMetrics from 'admin/components/SystemMetrics';
-import AdminLayout from 'admin/Layout';
 
 const WIDGETS = [
     { key: 'auditLog', Component: AuditLog, props: { height: '50vh' } },
@@ -21,12 +20,10 @@ const WIDGETS = [
  */
 export default function Dashboard() {
     return (
-        <AdminLayout>
-            <Masonry columns={{ xs: 1, xl: 2 }} sx={{ width: 'auto' }} spacing={3}>
-                {WIDGETS.map(({ key, Component, props }) => (
-                    <Component key={key} {...props} />
-                ))}
-            </Masonry>
-        </AdminLayout>
+        <Masonry columns={{ xs: 1, xl: 2 }} sx={{ width: 'auto' }} spacing={3}>
+            {WIDGETS.map(({ key, Component, props }) => (
+                <Component key={key} {...props} />
+            ))}
+        </Masonry>
     );
 }
