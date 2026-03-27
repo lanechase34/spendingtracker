@@ -461,17 +461,13 @@ component {
                     required : true,
                     type     : 'date',
                     dateRange: {
-                        datePart: 'd',
-                        maxRange: 364,
-                        minRange: 364
-                    },
-                    udf: (value, target) => {
-                        if(!isDate(value)) return false;
-                        return month(value) == 12;
-                    },
-                    udfMessage: 'The endDate must be December'
+                        datePart: 'm',
+                        maxRange: 12,
+                        minRange: 1
+                    }
                 }
-            }
+            },
+            'widget.heatMap': widgetBase
         };
 
         // Admin handler

@@ -288,4 +288,35 @@ component singleton accessors="true" {
         return result;
     }
 
+    /**
+     * Get heatmap data
+     * Maps dates to count of expenses on that day
+     */
+    public struct function heatMap(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var expenseData = getWidgetData(
+            startDate = arguments.startDate,
+            endDate   = arguments.endDate,
+            userid    = arguments.userid
+        );
+
+        // map expense date (short) -> count of expenses
+        var heatMap = {};
+
+        expenseData.each((row) => {
+            var curr = dateFormat(row.date, 'yyyy-mm-dd');
+
+            if(!heatMap.keyExists(curr)) {
+                heatMap[curr] = 0;
+            }
+
+            heatMap[curr] += 1;
+        });
+
+        return heatMap;
+    }
+
 }

@@ -1,5 +1,7 @@
 body {
     overflow-y: scroll;
+    overflow-x: auto;
+    scrollbar-width: thin;
     background-color: rgb(18, 18, 18);
 }
 
@@ -14,7 +16,8 @@ html {
 .MuiAutocomplete-listbox,
 .MuiAutocomplete-popper,
 .MuiAutocomplete-listbox,
-.MuiTableContainer-root {
+.MuiTableContainer-root,
+.MuiBox-root {
     scrollbar-width: thin; /* Firefox */
 }
 

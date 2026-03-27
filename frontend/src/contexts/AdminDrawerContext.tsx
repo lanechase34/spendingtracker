@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useMemo, useState } from 'react';
 
-interface AdminDrawerContextType {
+export interface AdminDrawerContextType {
     mobileOpen: boolean;
     toggleDrawer: () => void;
 }

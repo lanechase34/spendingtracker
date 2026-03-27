@@ -3,7 +3,8 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
     this.allowedMethods = {
         stackedBarChart: 'GET',
         donutChart     : 'GET',
-        lineChart      : 'GET'
+        lineChart      : 'GET',
+        heatMap        : 'GET'
     };
 
     property name="chartService" inject="services.chart";
@@ -47,13 +48,32 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
     }
 
     /**
-     * Line chart widget for yearly view
+     * Line chart widget showing total spending per month in start-end range
      *
      * @rc.startDate get data in range from start - end
      * @rc.endDate   end
      */
     function lineChart(event, rc, prc) {
         prc.data = chartService.lineChart(
+            startDate = rc.startDate,
+            endDate   = rc.endDate,
+            userid    = prc.userid
+        );
+
+        event
+            .getResponse()
+            .setData(prc.data)
+            .setStatusCode(200);
+    }
+
+    /**
+     * Heatmap widget showing number of expenses per day
+     *
+     * @rc.startDate get data in range from start - end
+     * @rc.endDate   end
+     */
+    function heatMap(event, rc, prc) {
+        prc.data = chartService.heatMap(
             startDate = rc.startDate,
             endDate   = rc.endDate,
             userid    = prc.userid

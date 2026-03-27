@@ -6,6 +6,7 @@ import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import DonutChart from 'widgets/DonutChart';
 import Export from 'widgets/Export';
+import HeatMap from 'widgets/HeatMap';
 import IncomeViewer from 'widgets/IncomeViewer';
 import LineChart from 'widgets/LineChart';
 import StackedExpenseChart from 'widgets/StackedExpenseChart';
@@ -17,6 +18,7 @@ const BASE_WIDGETS = [
     { key: 'stackedExpenseChart', Component: StackedExpenseChart },
     { key: 'incomeViewer', Component: IncomeViewer },
     { key: 'donutChart', Component: DonutChart },
+    { key: 'heatMap', Component: HeatMap },
     { key: 'bulkImport', Component: BulkImport },
     { key: 'exportData', Component: Export },
 ];
@@ -29,7 +31,7 @@ export default function Dashboard() {
 
     // Determine widgets to show based on rangeType
     const DASHBOARD_WIDGETS = useMemo(() => {
-        const isYearlyView = rangeType === 'this-year' || rangeType === 'last-year';
+        const isYearlyView = rangeType === 'this-year' || rangeType === 'last-year' || rangeType === 'year-to-date';
         if (!isYearlyView) return BASE_WIDGETS;
 
         // Insert LineChart before bulkImport widget
