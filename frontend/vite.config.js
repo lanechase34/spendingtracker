@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(({ mode }) => ({
@@ -28,7 +27,6 @@ export default defineConfig(({ mode }) => ({
     base: '/spendingtracker',
     plugins: [
         react(),
-        tsconfigPaths(),
         visualizer({
             filename: 'bundle-stats.json',
             json: true,

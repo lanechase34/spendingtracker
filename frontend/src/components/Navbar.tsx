@@ -122,7 +122,11 @@ export default function Navbar() {
             }}
         >
             <Container disableGutters maxWidth={false}>
-                <Toolbar disableGutters variant="dense" sx={{ pl: { xs: 1, md: 2 }, pr: 2, py: { xs: 1, md: 0 } }}>
+                <Toolbar
+                    disableGutters
+                    variant="dense"
+                    sx={{ pl: { xs: isAdminRoute ? 1 : 2, md: 2 }, pr: 2, py: { xs: 1, md: 0 } }}
+                >
                     {isAdminRoute && isMobile ? (
                         <SidebarIcon />
                     ) : (

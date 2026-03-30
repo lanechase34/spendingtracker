@@ -15,7 +15,7 @@ import { useMemo } from 'react';
 import type { HeatMap } from 'types/HeatMap.type';
 import { HeatMapResponseSchema } from 'types/HeatMap.type';
 import { API_BASE_URL } from 'utils/constants';
-import { formatDateKey, MONTHS } from 'utils/dates';
+import { DAYS, formatDateKey, MONTHS } from 'utils/dates';
 import type { ColorPalette } from 'utils/palettes';
 import { COLOR_PALETTES, getIntensity } from 'utils/palettes';
 import { queryKeys } from 'utils/queryKeys';
@@ -172,6 +172,24 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
 
                     {/* Grid */}
                     <Box sx={{ display: 'flex', gap: '4px' }}>
+                        {/* Day labels */}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: `${CELL_GAP}px`, mr: '4px' }}>
+                            {DAYS.map((day) => (
+                                <Typography
+                                    key={day}
+                                    variant="caption"
+                                    sx={{
+                                        height: `${cellSize}px`,
+                                        lineHeight: `${cellSize}px`,
+                                        whiteSpace: 'nowrap',
+                                        textAlign: 'right',
+                                    }}
+                                >
+                                    {day}
+                                </Typography>
+                            ))}
+                        </Box>
+
                         {weeks.map((week) => {
                             const weekKey = formatDateKey(week[0]);
                             return (
