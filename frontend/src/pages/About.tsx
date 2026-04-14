@@ -81,7 +81,13 @@ function FeatureCard({ icon, title, description }: FeatureCardProps) {
                     <Typography variant="h6" gutterBottom>
                         {title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" lineHeight={1.6}>
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: 'text.secondary',
+                            lineHeight: 1.6,
+                        }}
+                    >
                         {description}
                     </Typography>
                 </CardContent>
@@ -103,12 +109,30 @@ interface FeatureShowCaseProps {
 function FeatureShowcase({ title, description, media, reverse = false }: FeatureShowCaseProps) {
     return (
         <Box sx={showcaseSurfaceSx}>
-            <Grid container spacing={4} direction={reverse ? 'row-reverse' : 'row'} alignItems="center">
+            <Grid
+                container
+                spacing={4}
+                direction={reverse ? 'row-reverse' : 'row'}
+                sx={{
+                    alignItems: 'center',
+                }}
+            >
                 <Grid size={{ xs: 12, md: 6 }}>
-                    <Typography variant="h5" gutterBottom fontWeight={600}>
+                    <Typography
+                        variant="h5"
+                        gutterBottom
+                        sx={{
+                            fontWeight: 600,
+                        }}
+                    >
                         {title}
                     </Typography>
-                    <Typography color="text.secondary" lineHeight={1.8}>
+                    <Typography
+                        sx={{
+                            color: 'text.secondary',
+                            lineHeight: 1.8,
+                        }}
+                    >
                         {description}
                     </Typography>
                 </Grid>
@@ -150,11 +174,23 @@ function TechBullet({ title, text }: TechBulletProps) {
                     ...infoCardSx,
                 }}
             >
-                <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                <Typography
+                    variant="subtitle1"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 600,
+                    }}
+                >
                     {title}
                 </Typography>
 
-                <Typography variant="body2" color="text.secondary" lineHeight={1.6}>
+                <Typography
+                    variant="body2"
+                    sx={{
+                        color: 'text.secondary',
+                        lineHeight: 1.6,
+                    }}
+                >
                     {text}
                 </Typography>
             </Paper>
@@ -178,16 +214,26 @@ export default function About() {
 
                     <Typography
                         variant="h6"
-                        color="text.secondary"
-                        sx={{ mb: 5, maxWidth: 700, mx: 'auto' }}
-                        lineHeight={1.8}
+                        sx={{
+                            color: 'text.secondary',
+                            lineHeight: 1.8,
+                            mb: 5,
+                            maxWidth: 700,
+                            mx: 'auto',
+                        }}
                     >
                         A full-stack expense and subscription tracking platform designed to surface spending insights,
                         trends, and real-world financial clarity.
                     </Typography>
 
                     {isAuthorized() ? (
-                        <Stack direction="row" spacing={2} justifyContent="center">
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            sx={{
+                                justifyContent: 'center',
+                            }}
+                        >
                             <Button variant="contained" size="large" component={Link} to={'/dashboard'}>
                                 Go to Dashboard
                             </Button>
@@ -198,7 +244,13 @@ export default function About() {
                             )}
                         </Stack>
                     ) : (
-                        <Stack direction="row" spacing={2} justifyContent="center">
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            sx={{
+                                justifyContent: 'center',
+                            }}
+                        >
                             <RegisterDialogButton
                                 size="large"
                                 disabled={isInitializing() || userLoading}
@@ -348,7 +400,14 @@ export default function About() {
                     </Typography>
                     <Divider />
 
-                    <Stack direction="row" spacing={2} justifyContent="center" sx={{ my: 4 }}>
+                    <Stack
+                        direction="row"
+                        spacing={2}
+                        sx={{
+                            justifyContent: 'center',
+                            my: 4,
+                        }}
+                    >
                         <Button
                             variant="outlined"
                             startIcon={<GitHubIcon />}
@@ -370,11 +429,8 @@ export default function About() {
                     </Stack>
                 </Box>
             </Container>
-
             <LoginDialog />
-
             <RegisterDialog />
-
             <VerifyDialog />
         </>
     );

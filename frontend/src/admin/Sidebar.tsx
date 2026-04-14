@@ -100,10 +100,15 @@ export default function AdminSidebar() {
                     <SidebarIcon />
                 </Box>
             )}
-
             {adminNav.map((section) => (
                 <Box key={section.section} sx={{ mt: 1 }}>
-                    <Typography variant="overline" color="text.secondary" sx={{ px: 2 }}>
+                    <Typography
+                        variant="overline"
+                        sx={{
+                            color: 'text.secondary',
+                            px: 2,
+                        }}
+                    >
                         {section.section}
                     </Typography>
 

@@ -17,7 +17,7 @@ pre-commit:
         jobs:
           - name: format
             root: "frontend/"
-            run: npm run-script format
+            run: npm run format
           - name: lint
             root: "frontend/"
             run: npm run lint:fix

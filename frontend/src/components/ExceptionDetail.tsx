@@ -56,7 +56,15 @@ export default function ExceptionDetail({ blob }: { blob: string }) {
     }
 
     if (!parsedException) {
-        return <Typography color="text.secondary">Unable to parse exception details.</Typography>;
+        return (
+            <Typography
+                sx={{
+                    color: 'text.secondary',
+                }}
+            >
+                Unable to parse exception details.
+            </Typography>
+        );
     }
 
     return (

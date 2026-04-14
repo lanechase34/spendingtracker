@@ -67,4 +67,31 @@ component extends="coldbox.system.testing.BaseTestCase" {
         return path;
     }
 
+    /**
+     * Polls a condition closure until it returns true or the timeout is reached.
+     * Useful for testing async operations where results may not be immediately available.
+     *
+     * @condition A closure that returns true when the expected state is reached
+     * @timeout   Maximum seconds to wait before failing (default 5)
+     * @interval  Milliseconds to wait between polls (default 100)
+     * @message   Failure message if timeout is reached
+     */
+    private void function waitFor(
+        required any condition,
+        numeric timeout  = 5,
+        numeric interval = 100,
+        string message   = 'Condition was not met within #timeout# seconds'
+    ) {
+        var start   = getTickCount();
+        var elapsed = 0;
+
+        while(elapsed < (timeout * 1000)) {
+            if(condition()) return;
+            sleep(interval);
+            elapsed = getTickCount() - start;
+        }
+
+        fail(message);
+    }
+
 }

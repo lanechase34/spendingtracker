@@ -109,7 +109,7 @@ export default function EditIncome({ date }: EditIncomeProps) {
     };
 
     const handleClose = (_event: object, reason: string) => {
-        if (formLoading || reason === 'backdropClick') return;
+        if (formLoading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
         setOpen(false);
         setFormError(null);
     };
@@ -165,7 +165,6 @@ export default function EditIncome({ date }: EditIncomeProps) {
                 onClose={handleClose}
                 fullWidth
                 maxWidth={'sm'}
-                disableEscapeKeyDown
                 slotProps={{
                     transition: {
                         onExited: handleExited,

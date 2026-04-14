@@ -39,7 +39,14 @@ export default function ReceiptImg({ alt, url }: ReceiptImgProps) {
 
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" sx={{ height: 400 }}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: 400,
+                }}
+            >
                 <CircularProgress />
             </Box>
         );
@@ -47,7 +54,13 @@ export default function ReceiptImg({ alt, url }: ReceiptImgProps) {
 
     if (error) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center">
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
                 <Typography variant="body2" color="error">
                     Failed to load receipt.
                 </Typography>
@@ -56,7 +69,12 @@ export default function ReceiptImg({ alt, url }: ReceiptImgProps) {
     }
 
     return (
-        <Box display="flex" justifyContent="center">
+        <Box
+            sx={{
+                display: 'flex',
+                justifyContent: 'center',
+            }}
+        >
             <img
                 style={{ display: 'block', maxHeight: 400, objectFit: 'contain', borderRadius: 8 }}
                 src={imageSrc}

@@ -9,8 +9,10 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import dayjs from 'dayjs';
 import useMetricContext from 'hooks/useMetricContext';
 import type { SlowRequest } from 'types/MetricResponse.type';
+import { TIMESTAMP_FORMAT } from 'utils/timeFormatter';
 
 export default function SlowRequests() {
     const { metrics } = useMetricContext();
@@ -34,6 +36,7 @@ export default function SlowRequests() {
                                 <TableCell>Method</TableCell>
                                 <TableCell align="right">ms</TableCell>
                                 <TableCell>User</TableCell>
+                                <TableCell>Timestamp</TableCell>
                             </TableRow>
                         </TableHead>
 
@@ -46,6 +49,7 @@ export default function SlowRequests() {
                                     <TableCell>{r.method}</TableCell>
                                     <TableCell align="right">{r.delta}</TableCell>
                                     <TableCell>{r.userid}</TableCell>
+                                    <TableCell>{dayjs(r.time).format(TIMESTAMP_FORMAT)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

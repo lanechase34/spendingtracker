@@ -842,4 +842,271 @@ describe('CategorySelect', () => {
             expect(mockFetch).toHaveBeenCalledTimes(1);
         });
     });
+
+    describe('Scroll position restoration', () => {
+        it('Restores scroll position after appending paginated results from API', async () => {
+            mockFetch
+                .mockResolvedValueOnce(
+                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                )
+                .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            const listbox = screen.getByRole('listbox');
+            const scrollTopSpy = jest.spyOn(listbox, 'scrollTop', 'set');
+
+            fireScrollNearBottom(listbox);
+            jest.runAllTimers();
+
+            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            expect(scrollTopSpy).toHaveBeenCalled();
+        });
+
+        it('Restores scroll position after appending paginated results from cache', async () => {
+            mockGetCachedCategories.mockReturnValueOnce(null).mockReturnValueOnce([{ value: 11, label: 'Cat 11' }]);
+
+            mockFetch.mockResolvedValueOnce(
+                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+            );
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            const listbox = screen.getByRole('listbox');
+            const scrollTopSpy = jest.spyOn(listbox, 'scrollTop', 'set');
+
+            fireScrollNearBottom(listbox);
+            jest.runAllTimers();
+
+            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            expect(scrollTopSpy).toHaveBeenCalled();
+        });
+
+        it('Restores the most recent scroll position, not the position at fetch trigger time', async () => {
+            mockFetch
+                .mockResolvedValueOnce(
+                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                )
+                .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            const listbox = screen.getByRole('listbox');
+
+            // First scroll triggers the fetch at position 1000
+            fireScrollNearBottom(listbox);
+
+            // User continues scrolling to 1100 while fetch is in flight
+            jest.spyOn(listbox, 'scrollTop', 'get').mockReturnValue(1100);
+            jest.spyOn(listbox, 'clientHeight', 'get').mockReturnValue(200);
+            jest.spyOn(listbox, 'scrollHeight', 'get').mockReturnValue(1500);
+            fireEvent.scroll(listbox);
+
+            const scrollTopSetter = jest.spyOn(listbox, 'scrollTop', 'set');
+
+            jest.runAllTimers();
+            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+
+            // Should restore to 1100 (most recent position), not 1000 (fetch trigger position)
+            expect(scrollTopSetter).toHaveBeenCalledWith(1100);
+        });
+
+        it('Updates saved scroll position on every scroll event, not just when the threshold is crossed', async () => {
+            mockFetch.mockResolvedValueOnce(
+                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+            );
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            const listbox = screen.getByRole('listbox');
+
+            // Scroll near top - below threshold, should not trigger a fetch
+            fireScrollNearTop(listbox);
+
+            expect(mockFetch).toHaveBeenCalledTimes(1);
+        });
+
+        it('Does not restore scroll position when replacing options on a new search', async () => {
+            mockFetch
+                .mockResolvedValueOnce(
+                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                )
+                .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.fruits]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} debounceDelay={500} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            const listbox = screen.getByRole('listbox');
+            const scrollTopSpy = jest.spyOn(listbox, 'scrollTop', 'set');
+
+            await user.type(screen.getByRole('combobox'), 'Fruit');
+            act(() => jest.advanceTimersByTime(600));
+
+            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+            expect(scrollTopSpy).not.toHaveBeenCalled();
+        });
+
+        it('Does not restore scroll position when replacing options on clear', async () => {
+            mockFetch
+                .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.books]))
+                .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.fruits]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} debounceDelay={0} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Books');
+
+            const scrollTopSpy = jest.spyOn(screen.getByRole('listbox'), 'scrollTop', 'set');
+
+            await user.click(screen.getByText('Books'));
+            await waitFor(() => expect(screen.getByTitle('Clear')).toBeInTheDocument());
+
+            await user.click(screen.getByTitle('Clear'));
+            jest.runAllTimers();
+
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+
+            expect(scrollTopSpy).not.toHaveBeenCalled();
+        });
+
+        it('Does not restore scroll position on initial open load', async () => {
+            mockFetch.mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.fruits]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+
+            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+
+            // No listbox scroll interaction occurred, so scrollTop should never be set
+            const listbox = screen.getByRole('listbox');
+            expect(listbox.scrollTop).toBe(0);
+        });
+
+        it('Resets isAppendingRef to false after a replace so subsequent appends restore scroll correctly', async () => {
+            mockFetch
+                .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.books]))
+                .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.fruits]))
+                .mockResolvedValueOnce(
+                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                )
+                .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} debounceDelay={500} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+
+            // Open and load initial options
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Books');
+
+            // Search triggers a replace operation
+            await user.type(screen.getByRole('combobox'), 'Fruit');
+            act(() => jest.advanceTimersByTime(600));
+            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+
+            // Select and clear to get back to a pageable list
+            await user.click(screen.getByText('Fruits'));
+            await waitFor(() => expect(screen.getByTitle('Clear')).toBeInTheDocument());
+            await user.click(screen.getByTitle('Clear'));
+            jest.runAllTimers();
+
+            // Reopen and load the full list
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            // Scroll to trigger pagination append
+            const listbox = screen.getByRole('listbox');
+            const scrollTopSpy = jest.spyOn(listbox, 'scrollTop', 'set');
+
+            fireScrollNearBottom(listbox);
+            jest.runAllTimers();
+
+            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            expect(scrollTopSpy).toHaveBeenCalled();
+        });
+
+        it('Preserves all existing options in the list after new page is appended', async () => {
+            mockFetch
+                .mockResolvedValueOnce(
+                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                )
+                .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            const listbox = screen.getByRole('listbox');
+            fireScrollNearBottom(listbox);
+            jest.runAllTimers();
+
+            await waitFor(() => {
+                expect(screen.getByText('Cat 1')).toBeInTheDocument();
+                expect(screen.getByText('Cat 5')).toBeInTheDocument();
+                expect(screen.getByText('Cat 10')).toBeInTheDocument();
+                expect(screen.getByText('Cat 11')).toBeInTheDocument();
+            });
+        });
+
+        it('Does not throw and skips restore when listbox is unmounted before append completes', async () => {
+            mockFetch
+                .mockResolvedValueOnce(
+                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                )
+                .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            jest.runAllTimers();
+            await screen.findByText('Cat 1');
+
+            const listbox = screen.getByRole('listbox');
+            fireScrollNearBottom(listbox);
+
+            // Close the dropdown before the fetch resolves
+            await user.keyboard('{Escape}');
+
+            // Should not throw
+            jest.runAllTimers();
+            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+        });
+    });
 });

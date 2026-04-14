@@ -37,7 +37,9 @@ export default function ExpenseDetailDialog({ open, expense, onClose, onExited }
         <Dialog
             open={open}
             onClose={(_event: object, reason: string) => {
-                if (reason !== 'backdropClick') onClose();
+                if (reason !== 'backdropClick' && reason !== 'escapeKeyDown') {
+                    onClose();
+                }
             }}
             slotProps={{
                 transition: {
@@ -46,7 +48,6 @@ export default function ExpenseDetailDialog({ open, expense, onClose, onExited }
             }}
             maxWidth="md"
             fullWidth
-            disableEscapeKeyDown
         >
             <DialogTitle
                 sx={{

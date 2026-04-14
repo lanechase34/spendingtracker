@@ -171,9 +171,20 @@ export default function DateRangeSelector() {
     );
 
     const selectedRangeLabel = (
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+            }}
+        >
             <DateRangeIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+                variant="body2"
+                sx={{
+                    color: 'text.secondary',
+                }}
+            >
                 {tempStartDate && tempEndDate
                     ? `${tempStartDate.format('MM/DD/YYYY')} - ${tempEndDate.format('MM/DD/YYYY')}`
                     : ''}
@@ -192,7 +203,14 @@ export default function DateRangeSelector() {
     // Desktop screens use a popover
     return (
         <>
-            <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
+            <Box
+                sx={{
+                    display: 'flex',
+                    gap: 2,
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                }}
+            >
                 <Button variant="outlined" onClick={handleOpen} aria-label="Select date range">
                     <DateRangeIcon sx={{ mr: 1 }} />
                     {startDate?.format('MM/DD/YYYY') ?? ''} - {endDate?.format('MM/DD/YYYY') ?? ''}
@@ -201,16 +219,35 @@ export default function DateRangeSelector() {
             {isMobile ? (
                 <Dialog open={open} onClose={handleClose} fullScreen>
                     <DialogContent>
-                        <Box display="flex" flexDirection="row" gap={1} justifyContent="center">
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: 1,
+                                justifyContent: 'center',
+                            }}
+                        >
                             {pickerContent}
                         </Box>
 
                         <Divider orientation="horizontal" />
 
-                        <Grid container spacing={2} mt={2}>
+                        <Grid
+                            container
+                            spacing={2}
+                            sx={{
+                                mt: 2,
+                            }}
+                        >
                             <Grid size={{ xs: 6 }}>{presetRanges}</Grid>
                             <Grid size={{ xs: 6 }}>
-                                <Box display="flex" flexDirection="column" gap={1}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 1,
+                                    }}
+                                >
                                     {selectedRangeLabel}
                                     {doneBtn}
                                 </Box>
@@ -228,7 +265,13 @@ export default function DateRangeSelector() {
                     aria-modal="true"
                 >
                     <Paper sx={{ p: 2, minWidth: 800 }}>
-                        <Box display="flex" flexDirection="row" gap={2}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                gap: 2,
+                            }}
+                        >
                             {presetRanges}
                             <Divider orientation="vertical" flexItem sx={{ mx: 0 }} />
                             {pickerContent}
@@ -236,7 +279,15 @@ export default function DateRangeSelector() {
 
                         <Divider orientation="horizontal" />
 
-                        <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} mt={2}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                                alignItems: 'center',
+                                gap: 2,
+                                mt: 2,
+                            }}
+                        >
                             {selectedRangeLabel}
                             {doneBtn}
                         </Box>

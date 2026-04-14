@@ -1,6 +1,7 @@
 component singleton accessors="true" {
 
     property name="async"           inject="asyncManager@coldbox";
+    property name="auditService"    inject="services.audit";
     property name="cacheStorage"    inject="cachebox:coldboxStorage";
     property name="expenseService"  inject="services.expense";
     property name="maxThreads"      inject="coldbox:setting:maxThreads";
@@ -239,6 +240,8 @@ component singleton accessors="true" {
     /**
      * Scheduled task nightly to go through subscriptions and 'charge'
      * aka add record to expense table if they are due for their interval
+     *
+     * (optional) @subscriptionid the pk of only a specific subscription record that should be charged
      */
     public void function charge(numeric subscriptionid = -1) {
         var charges = q
@@ -247,6 +250,11 @@ component singleton accessors="true" {
                 'subscription.next_charge_date',
                 '<=',
                 {value: now(), cfsqltype: 'date'}
+            )
+            .andWhere(
+                'active',
+                '=',
+                {value: true, cfsqltype: 'boolean'}
             )
             .when(
                 condition = subscriptionid > 0,
@@ -295,7 +303,13 @@ component singleton accessors="true" {
                     }
                     catch(any e) {
                         transactionRollback(e);
-                        // audit here
+                        auditService.audit(
+                            ip      = 'localhost',
+                            urlpath = 'subscriptionService.charge',
+                            method  = '',
+                            agent   = '',
+                            detail  = 'Failed to charge a subscription | #e.message#'
+                        );
                     }
                 }
             },

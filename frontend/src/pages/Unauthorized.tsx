@@ -26,11 +26,23 @@ export default function Unauthorized() {
                     }}
                 />
 
-                <Typography variant="h4" fontWeight={600} gutterBottom>
+                <Typography
+                    variant="h4"
+                    gutterBottom
+                    sx={{
+                        fontWeight: 600,
+                    }}
+                >
                     Access Denied
                 </Typography>
 
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+                <Typography
+                    variant="body1"
+                    sx={{
+                        color: 'text.secondary',
+                        mb: 4,
+                    }}
+                >
                     You don't have permission to access this page.
                 </Typography>
 

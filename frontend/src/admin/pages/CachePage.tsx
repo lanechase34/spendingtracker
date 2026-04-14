@@ -160,7 +160,12 @@ export default function CachePage() {
                 renderCell: (params) => (
                     <Stack spacing={0.5}>
                         <Typography variant="body2">{params.formattedValue}</Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'text.secondary',
+                            }}
+                        >
                             {dayjs(params.row.created).fromNow()}
                         </Typography>
                     </Stack>
@@ -185,7 +190,12 @@ export default function CachePage() {
                 renderCell: (params) => (
                     <Stack spacing={0.5}>
                         <Typography variant="body2">{params.formattedValue}</Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                color: 'text.secondary',
+                            }}
+                        >
                             {dayjs(params.row.lastaccessed).fromNow()}
                         </Typography>
                     </Stack>
@@ -253,9 +263,22 @@ export default function CachePage() {
             ) : (
                 <Stack spacing={3}>
                     {/* Main Content Grid */}
-                    <Grid container spacing={2} alignItems="stretch">
+                    <Grid
+                        container
+                        spacing={2}
+                        sx={{
+                            alignItems: 'stretch',
+                        }}
+                    >
                         {/* Summary Cards */}
-                        <Grid size={{ xs: 12, lg: 8 }} container spacing={2} alignItems="stretch">
+                        <Grid
+                            size={{ xs: 12, lg: 8 }}
+                            container
+                            spacing={2}
+                            sx={{
+                                alignItems: 'stretch',
+                            }}
+                        >
                             <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex' }}>
                                 <Card
                                     sx={{
@@ -266,13 +289,24 @@ export default function CachePage() {
                                     }}
                                 >
                                     <CardContent>
-                                        <Typography color="text.secondary" gutterBottom variant="overline">
+                                        <Typography
+                                            gutterBottom
+                                            variant="overline"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Hit Rate
                                         </Typography>
                                         <Typography variant="h4" color={hitRate > 80 ? 'success.main' : 'text.primary'}>
                                             {hitRate.toFixed(1)}%
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             {cacheData?.hits ?? 0} hits / {cacheData?.misses ?? 0} misses
                                         </Typography>
                                     </CardContent>
@@ -289,7 +323,13 @@ export default function CachePage() {
                                     }}
                                 >
                                     <CardContent>
-                                        <Typography color="text.secondary" gutterBottom variant="overline">
+                                        <Typography
+                                            gutterBottom
+                                            variant="overline"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Utilization
                                         </Typography>
                                         <Typography
@@ -298,7 +338,12 @@ export default function CachePage() {
                                         >
                                             {utilizationPercent.toFixed(1)}%
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             {used} / {maxObjects} keys
                                         </Typography>
                                     </CardContent>
@@ -315,11 +360,22 @@ export default function CachePage() {
                                     }}
                                 >
                                     <CardContent>
-                                        <Typography color="text.secondary" gutterBottom variant="overline">
+                                        <Typography
+                                            gutterBottom
+                                            variant="overline"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Evictions
                                         </Typography>
                                         <Typography variant="h4">{cacheData?.evictionCount ?? 0}</Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Total evicted keys
                                         </Typography>
                                     </CardContent>
@@ -336,11 +392,22 @@ export default function CachePage() {
                                     }}
                                 >
                                     <CardContent>
-                                        <Typography color="text.secondary" gutterBottom variant="overline">
+                                        <Typography
+                                            gutterBottom
+                                            variant="overline"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             GC Count
                                         </Typography>
                                         <Typography variant="h4">{cacheData?.garbageCollections ?? 0}</Typography>
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Garbage collections
                                         </Typography>
                                     </CardContent>
@@ -368,7 +435,13 @@ export default function CachePage() {
                                     <Box sx={{ width: '100%', maxWidth: 280, height: 280 }}>
                                         <Doughnut data={chartData} options={options} />
                                     </Box>
-                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 2 }}>
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: 'text.secondary',
+                                            mt: 2,
+                                        }}
+                                    >
                                         {utilizationPercent > 80 && 'Warning: Cache nearly full'}
                                     </Typography>
                                 </CardContent>

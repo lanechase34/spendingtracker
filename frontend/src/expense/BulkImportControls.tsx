@@ -62,7 +62,12 @@ export default function BulkImportControls({ csvFile, onCsvChange, onProcess }: 
                                         Download Template
                                     </Button>
 
-                                    <Typography variant="caption" color="text.secondary">
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: 'text.secondary',
+                                        }}
+                                    >
                                         Follow this CSV format for import.
                                     </Typography>
                                 </Stack>
@@ -116,7 +121,12 @@ export default function BulkImportControls({ csvFile, onCsvChange, onProcess }: 
                                     )}
 
                                     {!csvFile && (
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Accepted format: .csv
                                         </Typography>
                                     )}
