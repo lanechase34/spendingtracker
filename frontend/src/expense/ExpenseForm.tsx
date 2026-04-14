@@ -57,7 +57,7 @@ export default function ExpenseForm() {
 
     // Avoid re-renders on close - typescript params that start with _ are optional
     const handleClose = (_event: object, reason: string) => {
-        if (loading || reason === 'backdropClick') return;
+        if (loading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
         setOpen(false);
     };
 
@@ -228,7 +228,6 @@ export default function ExpenseForm() {
                 onClose={handleClose}
                 fullWidth={true}
                 maxWidth={'sm'}
-                disableEscapeKeyDown={true}
                 slotProps={{
                     transition: {
                         onExited: handleExited,

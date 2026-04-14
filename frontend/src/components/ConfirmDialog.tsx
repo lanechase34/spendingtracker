@@ -19,7 +19,15 @@ interface ConfirmDialogProps {
  */
 export default function ConfirmDialog({ open, message, handleConfirm, handleClose, confirmed }: ConfirmDialogProps) {
     return (
-        <Dialog open={open} fullWidth={true} maxWidth={'sm'} disableEscapeKeyDown={true} data-testid="confirm-dialog">
+        <Dialog
+            open={open}
+            fullWidth={true}
+            maxWidth={'sm'}
+            onClose={() => {
+                // intentionally left blank
+            }}
+            data-testid="confirm-dialog"
+        >
             <Divider />
             <DialogContent>
                 <Box

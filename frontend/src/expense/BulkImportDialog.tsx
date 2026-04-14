@@ -57,7 +57,14 @@ export default function BulkImportDialog({
     onDelete,
 }: BulkImportDialogProps) {
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="xl" disableEscapeKeyDown>
+        <Dialog
+            open={open}
+            onClose={() => {
+                // managed in onClose prop
+            }}
+            fullWidth
+            maxWidth="xl"
+        >
             <DialogTitle
                 sx={{
                     display: 'flex',

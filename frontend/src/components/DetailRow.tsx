@@ -15,7 +15,12 @@ export default function DetailRow({
 }) {
     return (
         <Stack spacing={0.5}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+                variant="caption"
+                sx={{
+                    color: 'text.secondary',
+                }}
+            >
                 {label}
             </Typography>
             <Typography

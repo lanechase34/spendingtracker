@@ -91,7 +91,14 @@ function Providers({ children }: { children: ReactNode }) {
 
 function PageLoader() {
     return (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="75vh">
+        <Box
+            sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '75vh',
+            }}
+        >
             <CircularProgress />
         </Box>
     );

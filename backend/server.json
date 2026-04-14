@@ -1,6 +1,6 @@
 {
     "app":{
-        "cfengine":"lucee@7.0.2.106",
+        "cfengine":"lucee@7.0.3+43",
         "sessionCookieSecure":"true",
         "sessionCookieHTTPOnly":"true"
     },

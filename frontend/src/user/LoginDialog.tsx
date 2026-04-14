@@ -37,7 +37,7 @@ export default function LoginDialog() {
     const userAPI = useMemo(() => userService({}), []);
 
     const handleClose = (_event: object, reason: string) => {
-        if (loading || reason === 'backdropClick') return;
+        if (loading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
         closeLoginDialog();
     };
 
@@ -115,7 +115,6 @@ export default function LoginDialog() {
                 onClose={handleClose}
                 fullWidth={true}
                 maxWidth={'sm'}
-                disableEscapeKeyDown={true}
                 slotProps={{
                     transition: {
                         onExited: handleExited,

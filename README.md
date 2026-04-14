@@ -24,6 +24,7 @@ trends, financial clarity.
 - Stacked Bar Chart - Breakdown of expenses by category over time
 - Donut Chart - Category breakdown of total spending
 - Line Chart - Expense spending by month for the year
+- Heatmap - Showing days where the most purchases were made
 
 #### Income Tracking
 

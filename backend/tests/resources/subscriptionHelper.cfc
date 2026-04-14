@@ -210,4 +210,34 @@ component extends="coldbox.system.testing.BaseTestCase" {
             .get();
     }
 
+    // Create a subscriptionService component where the charge() function
+    // will throw an error on the first charge attempt
+    component function createBrokenChargeMock() {
+        // Create a real instance with a mocked broken expense service
+        var subscriptionServiceObj  = new models.services.subscription();
+        var mockSubscriptionService = prepareMock(object = subscriptionServiceObj);
+
+        // Manually wire up all dependencies
+        mockSubscriptionService.setQ(getInstance('provider:QueryBuilder@qb'));
+        mockSubscriptionService.setSecurityService(getInstance('services.security'));
+        mockSubscriptionService.setAuditService(getInstance('services.audit'));
+        mockSubscriptionService.setCacheStorage(getInstance('cachebox:coldboxStorage'));
+        mockSubscriptionService.setAsync(getInstance('asyncManager@coldbox'));
+        mockSubscriptionService.setMaxThreads(0);
+
+        // Wire in the mock broken expense service
+        var mockExpenseService = createObject('component', 'tests.resources.brokenExpenseService');
+        mockSubscriptionService.setExpenseService(mockExpenseService);
+
+        return mockSubscriptionService;
+    }
+
+    numeric function countSubscriptionAudits() {
+        return queryExecute('
+            SELECT COUNT(id) AS count
+            FROM audit
+            WHERE urlpath LIKE ''%subscriptionService.%''
+        ').count;
+    }
+
 }

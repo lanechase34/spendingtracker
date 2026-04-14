@@ -93,7 +93,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth={true} maxWidth={'sm'} disableEscapeKeyDown={true}>
+        <Dialog open={open} onClose={onClose} fullWidth={true} maxWidth={'sm'}>
             <DialogTitle
                 sx={{
                     display: 'flex',

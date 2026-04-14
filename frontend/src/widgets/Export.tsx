@@ -212,7 +212,12 @@ export default function ExportExpensesCard() {
                                     </Button>
 
                                     {csvExport.isCooldownActive && (
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Export available in ({formatSecondsToTime(csvExport.remainingSeconds)})
                                         </Typography>
                                     )}
@@ -258,7 +263,12 @@ export default function ExportExpensesCard() {
                                     </Button>
 
                                     {receiptExport.isCooldownActive && (
-                                        <Typography variant="caption" color="text.secondary">
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: 'text.secondary',
+                                            }}
+                                        >
                                             Download available in ({formatSecondsToTime(receiptExport.remainingSeconds)}
                                             )
                                         </Typography>

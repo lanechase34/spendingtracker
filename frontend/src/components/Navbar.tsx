@@ -134,7 +134,11 @@ export default function Navbar() {
                             <TrendingUpIcon color="success" sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
 
                             <Typography
+                                variant="h6"
+                                component={Link}
+                                to={'/'}
                                 sx={{
+                                    color: 'inherit',
                                     display: {
                                         xs: 'none',
                                         md: 'block',
@@ -142,10 +146,6 @@ export default function Navbar() {
                                         width: 'fit-content',
                                     },
                                 }}
-                                variant="h6"
-                                color="inherit"
-                                component={Link}
-                                to={'/'}
                             >
                                 SpendingTracker
                             </Typography>

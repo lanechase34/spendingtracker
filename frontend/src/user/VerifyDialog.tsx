@@ -1,4 +1,4 @@
-import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -182,11 +182,11 @@ export default function VerifyDialog() {
         <Dialog
             open={verifyDialogOpen}
             onClose={() => {
+                // Dialog is non-closable
                 return;
             }}
             fullWidth={true}
             maxWidth={'sm'}
-            disableEscapeKeyDown={true}
             slotProps={{
                 transition: {
                     onExited: handleExited,
@@ -219,13 +219,13 @@ export default function VerifyDialog() {
                             </Alert>
                         )}
 
-                        <Alert severity="info" icon={<InfoOutlineIcon fontSize="small" />}>
+                        <Alert severity="info" icon={<InfoOutlinedIcon fontSize="small" />}>
                             <Box>
                                 Check your email for a verification code and enter it below. You may need to check your
                                 'Spam' and 'Junk' folders and trust senders from '<b>@chaselane.dev</b>'
                             </Box>
 
-                            <Box mt={2}>
+                            <Box sx={{ mt: 2 }}>
                                 <Button
                                     size="small"
                                     variant="outlined"

@@ -10,7 +10,7 @@ import { debounce } from '@mui/material/utils';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useToastContext from 'hooks/useToastContext';
 import type { SyntheticEvent } from 'react';
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { APIResponseType } from 'types/APIResponse.type';
 import type { SelectOptionType } from 'types/SelectOption.type';
 import { getCachedCategories, setCachedCategories } from 'utils/categoryCache';
@@ -84,7 +84,7 @@ export default function CategorySelect({
     handleCategorySelectChange,
     error,
     helperText,
-    records = 10,
+    records = 15,
     debounceDelay = 500,
 }: CategorySelectProps) {
     const [open, setOpen] = useState<boolean>(false);
@@ -96,6 +96,22 @@ export default function CategorySelect({
 
     const authFetch = useAuthFetch();
     const { showToast } = useToastContext();
+
+    const BOTTOM_THRESHOLD = 350; // px to bottom
+    const listboxRef = useRef<HTMLElement | null>(null);
+    const isAppendingRef = useRef<boolean>(false);
+    const savedScrollTopRef = useRef<number>(0);
+
+    /**
+     * Restore the current scroll position in the dropdown to the current position
+     * This is needed because MUI will re-create the entire select DOM element
+     */
+    useLayoutEffect(() => {
+        if (isAppendingRef.current && listboxRef.current) {
+            listboxRef.current.scrollTop = savedScrollTopRef.current;
+        }
+        isAppendingRef.current = false;
+    }, [options]);
 
     // Track the current abort controller
     const abortControllerRef = useRef<AbortController | null>(null);
@@ -115,7 +131,9 @@ export default function CategorySelect({
             // Use cached options if exists
             const cached = getCachedCategories(search, page);
             if (cached) {
+                if (append) isAppendingRef.current = true;
                 setOptions(append ? (prev) => [...prev, ...cached] : cached);
+
                 setHasMore(cached.length > 0);
                 return;
             }
@@ -157,7 +175,9 @@ export default function CategorySelect({
                 // Save to cache
                 setCachedCategories(search, page, formatted);
 
+                if (append) isAppendingRef.current = true;
                 setOptions(append ? (prev) => [...prev, ...formatted] : formatted);
+
                 setHasMore(result.data.length >= records);
                 setLoading(false);
             } catch (err: unknown) {
@@ -219,11 +239,17 @@ export default function CategorySelect({
      */
     const handleScroll = useCallback(
         (event: SyntheticEvent) => {
-            const listboxNode = event.currentTarget;
+            const listboxNode = event.currentTarget as HTMLElement;
+            listboxRef.current = listboxNode;
+
+            // Track current position in the select
+            savedScrollTopRef.current = listboxNode.scrollTop;
+
             const scrollPosition = listboxNode.scrollTop + listboxNode.clientHeight;
             const scrollHeight = listboxNode.scrollHeight;
-            // Load more when user scrolls to within 50px of the bottom
-            if (scrollHeight - scrollPosition <= 100 && hasMore && !loading) {
+
+            // Load more when user scrolls close to the bottom threshold
+            if (scrollHeight - scrollPosition <= BOTTOM_THRESHOLD && hasMore && !loading) {
                 const nextPage = currPage + 1;
                 setCurrPage(nextPage);
                 void loadOptions(searchValue, nextPage, true);
@@ -247,12 +273,13 @@ export default function CategorySelect({
                         {...params}
                         label="Category"
                         slotProps={{
+                            ...params.slotProps,
                             input: {
-                                ...params.InputProps,
+                                ...params.slotProps?.input,
                                 endAdornment: (
                                     <Fragment>
                                         {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                        {params.InputProps.endAdornment}
+                                        {params.slotProps?.input?.endAdornment}
                                     </Fragment>
                                 ),
                             },

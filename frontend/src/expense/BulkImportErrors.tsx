@@ -1,4 +1,4 @@
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Chip from '@mui/material/Chip';
@@ -25,7 +25,7 @@ export default function BulkImportErrors({ errors, onClose }: BulkImportErrorPro
     return (
         <Alert
             severity="error"
-            icon={<ErrorOutlineIcon />}
+            icon={<ErrorOutlinedIcon />}
             sx={{
                 mb: 2,
                 alignItems: 'flex-start',
@@ -50,7 +50,6 @@ export default function BulkImportErrors({ errors, onClose }: BulkImportErrorPro
             >
                 {errorCount} {errorCount === 1 ? 'Row' : 'Rows'} failed to import
             </AlertTitle>
-
             <Stack spacing={1} sx={{ mt: 1.5 }}>
                 {errors.map((error) => (
                     <Paper
@@ -65,7 +64,13 @@ export default function BulkImportErrors({ errors, onClose }: BulkImportErrorPro
                             borderLeftColor: 'error.main',
                         }}
                     >
-                        <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                        <Stack
+                            direction="row"
+                            spacing={1.5}
+                            sx={{
+                                alignItems: 'flex-start',
+                            }}
+                        >
                             <Chip
                                 label={`Row ${error.row}`}
                                 size="small"

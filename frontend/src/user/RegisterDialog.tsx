@@ -42,7 +42,7 @@ export default function RegisterDialog() {
     const userAPI = useMemo(() => userService({}), []);
 
     const handleClose = (_event: object, reason: string) => {
-        if (loading || reason === 'backdropClick') return;
+        if (loading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
         closeRegisterDialog();
     };
 
@@ -127,7 +127,6 @@ export default function RegisterDialog() {
                 onClose={handleClose}
                 fullWidth={true}
                 maxWidth={'sm'}
-                disableEscapeKeyDown={true}
                 slotProps={{
                     transition: {
                         onExited: handleExited,

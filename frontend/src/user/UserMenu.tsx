@@ -52,7 +52,7 @@ export default function UserMenu() {
     };
 
     const handleCloseSettings = (_event: object, reason: string) => {
-        if (reason === 'backdropClick') return;
+        if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
         setSettingsOpen(false);
     };
 

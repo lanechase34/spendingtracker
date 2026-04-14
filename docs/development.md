@@ -13,6 +13,7 @@ This document covers developer workflows including dependency updates, formattin
     ```
 
 2. Review and confirm updates to `box.json` when prompted
+
 3. Restart server
     ```
     server restart
@@ -38,9 +39,10 @@ This document covers developer workflows including dependency updates, formattin
     npm install
     ```
 
-4. (Optional) Run audit fixes
+4. (Optional) Run audit on prod dependencies
+
     ```
-    npm audit fix
+    audit:prod
     ```
 
 ## Code Formatting
@@ -55,7 +57,7 @@ This document covers developer workflows including dependency updates, formattin
 
 ### Backend
 
-1. Format all `*.cfc` files by running this in box
+1. Format all `*.cfc` files by running this in the box shell
 
     ```
     run-script format
@@ -66,6 +68,7 @@ This document covers developer workflows including dependency updates, formattin
 ### Frontend
 
 1. Make sure vscode can resolve `eslint.config.ts`
+
 2. Check for lint errors by running
 
     ```
@@ -74,7 +77,7 @@ This document covers developer workflows including dependency updates, formattin
 
 ### Backend
 
-1. Lint cfc using CFLint by running in box
+1. Lint cfc using CFLint by running this in the box shell
     ```
     run-script lint
     ```
@@ -219,27 +222,21 @@ Note: The `--pull=false` flag prevents `act` from re-pulling the runner image ea
 
 2. Install and run commandbox with `box`
 
-3. Setup Git Hooks by running
-
-    ```
-    githooks install
-    ```
-
-4. Install modules using
+3. Install modules using
 
     ```
     install
     ```
 
-5. Create PostgreSQL database with user
+4. Create PostgreSQL database with user
 
-6. Generate and populate a development `.env` file
+5. Generate and populate a development `.env` file
 
     ```
     run-script blankEnv
     ```
 
-7. Create the database tables and seed with dev data
+6. Create the database tables and seed with dev data
 
     ```
     migrate install
@@ -247,13 +244,13 @@ Note: The `--pull=false` flag prevents `act` from re-pulling the runner image ea
     migrate seed run
     ```
 
-8. Start server
+7. Start server
 
     ```
     server start
     ```
 
-9. Backend will be running at
+8. Backend will be running at
     ```
     http://localhost:8082
     ```
