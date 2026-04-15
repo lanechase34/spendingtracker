@@ -1,6 +1,7 @@
 component extends="coldbox.system.testing.BaseTestCase" {
 
     function init() {
+        cacheStorage    = getInstance('cachebox:coldboxStorage');
         q               = getInstance('provider:QueryBuilder@qb');
         securityService = getInstance('services.security');
     }
@@ -24,6 +25,45 @@ component extends="coldbox.system.testing.BaseTestCase" {
             receipt    : receipt,
             userid     : userid
         };
+    }
+
+    struct function mockMany(
+        required date date,
+        required string interval,
+        required numeric userid,
+        string receipt     = '',
+        string description = createUUID(),
+        numeric categoryid = 1,
+        boolean active     = true,
+        numeric count      = 1
+    ) {
+        var result = {sum: 0, ids: []};
+
+        for(var i = 1; i <= count; i++) {
+            var amount = round(randRange(1, 100) + (randRange(1, 99) / 100), 2);
+
+            var curr = q
+                .from('subscription')
+                .returning('id')
+                .insert({
+                    next_charge_date: {value: date, cfsqltype: 'date'},
+                    amount          : {value: securityService.encryptValue(amount), cfsqltype: 'varchar'},
+                    description     : {value: description, cfsqltype: 'varchar'},
+                    interval        : {value: interval, cfsqltype: 'varchar'},
+                    active          : {value: active, cfsqltype: 'boolean'},
+                    categoryid      : {value: categoryid, cfsqltype: 'numeric'},
+                    receipt         : {value: receipt, cfsqltype: 'varchar'},
+                    userid          : {value: userid, cfsqltype: 'numeric'}
+                })
+                .result
+                .id;
+
+            result.ids.append(curr);
+            result.sum += amount;
+        }
+
+        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|subscription');
+        return result;
     }
 
     /**
@@ -238,6 +278,114 @@ component extends="coldbox.system.testing.BaseTestCase" {
             FROM audit
             WHERE urlpath LIKE ''%subscriptionService.%''
         ').count;
+    }
+
+    // Validates Response returned from get(/subscriptions)
+    void function validateApiResponse(
+        required any response,
+        // data response
+        required numeric totalSum,
+        required numeric filteredSum,
+        required numeric recordsReturned,
+        // pagination response
+        required numeric totalRecords,
+        required numeric filteredRecords,
+        required numeric pageSize,
+        required numeric page
+    ) {
+        expect(response.getFormat()).toBe('json');
+        expect(response.getStatusCode()).toBe(200);
+        expect(response.getError()).toBeFalse();
+
+        var data = response.getData();
+        validateData(
+            dataResponse    = data,
+            totalSum        = totalSum,
+            filteredSum     = filteredSum,
+            recordsReturned = recordsReturned
+        );
+
+        var pagination = response.getPagination();
+        validatePaginate(
+            paginateResponse = pagination,
+            totalRecords     = totalRecords,
+            filteredRecords  = filteredRecords,
+            pageSize         = pageSize,
+            page             = page
+        );
+    }
+
+    /**
+     * The api response contains a pagination struct with the following keys
+     * totalRecords
+     * filteredRecords
+     * page
+     * offset
+     *
+     * Validates this is a legitimate response from api
+     *
+     * @result The api pagination response
+     */
+    void function validatePaginate(
+        required struct paginateResponse,
+        required numeric totalRecords,
+        required numeric filteredRecords,
+        required numeric pageSize,
+        required numeric page
+    ) {
+        expect(paginateResponse).toHaveKey('totalRecords');
+        expect(paginateResponse.totalRecords).toBe(
+            totalRecords,
+            'Total records mismatch. Expected: #totalRecords#, Got: #paginateResponse.totalRecords#'
+        );
+
+        expect(paginateResponse).toHaveKey('filteredRecords');
+        expect(paginateResponse.filteredRecords).toBe(
+            filteredRecords,
+            'Filtered records mismatch. Expected: #filteredRecords#, Got: #paginateResponse.filteredRecords#'
+        );
+
+        expect(paginateResponse).toHaveKey('offset');
+        expect(paginateResponse.offset).toBe(pageSize * (page - 1));
+
+        expect(paginateResponse).toHaveKey('page');
+        expect(paginateResponse.page).toBe(page);
+    }
+
+    /**
+     * The api response contains a data struct with the following keys
+     * totalSum
+     * filteredSum
+     * expense[] array of expense records
+     *
+     * Validates this is a legitimate response from api
+     *
+     * @result the api data response
+     */
+    void function validateData(
+        required struct dataResponse,
+        required numeric totalSum,
+        required numeric filteredSum,
+        required numeric recordsReturned
+    ) {
+        expect(dataResponse).toHaveKey('subscriptions');
+        expect(dataResponse.subscriptions).toBeArray();
+        expect(dataResponse.subscriptions.len()).toBe(
+            recordsReturned,
+            'Records returned mismatch. Expected: #recordsReturned#, Got: #dataResponse.subscriptions.len()#'
+        );
+
+        expect(dataResponse).toHaveKey('totalSum');
+        expect(dataResponse.totalSum).toBe(
+            totalSum,
+            'Total sum mismatch. Expected: #totalSum#, Got: #dataResponse.totalSum#'
+        );
+
+        expect(dataResponse).toHaveKey('filteredSum');
+        expect(dataResponse.filteredSum).toBe(
+            filteredSum,
+            'Filtered sum mismatch. Expected: #filteredSum#, Got: #dataResponse.filteredSum#'
+        );
     }
 
 }

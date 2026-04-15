@@ -415,9 +415,8 @@ component extends="tests.resources.baseTest" {
                     // Wait for A or B to charge
                     waitFor(
                         condition = () => {
-                            return subscriptionHelper.getExpenses(aId).len() == 1 || subscriptionHelper
-                                .getExpenses(bId)
-                                .len() == 1
+                            return subscriptionHelper.getExpenses(aId).len() == 1 ||
+                            subscriptionHelper.getExpenses(bId).len() == 1
                         },
                         timeout = 5,
                         message = 'Successful subscription was never created within the timeout period'

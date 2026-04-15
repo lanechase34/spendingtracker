@@ -29,7 +29,7 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
         required string passcode,
         string host,
         required channel,
-        required Struct connectionMetadata
+        required struct connectionMetadata
     ) {
         var jwt = arguments.login;
 
@@ -88,7 +88,7 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
         required string destination,
         required string access,
         required channel,
-        required Struct connectionMetadata
+        required struct connectionMetadata
     ) {
         /**
          * Check this is a valid destination
