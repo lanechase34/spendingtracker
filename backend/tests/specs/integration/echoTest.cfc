@@ -84,7 +84,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                     var event    = get(route = '/api/v1/status');
                     var response = event.getResponse();
 
-                    expect(response.getData().environment).toBeIn(['development', 'staging', 'production']);
+                    expect(response.getData().environment).toBeIn(['development', 'staging', 'production', 'test']);
                 });
 
                 it('Does not require authentication', () => {
