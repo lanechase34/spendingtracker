@@ -44,7 +44,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                  * Still logged out
                  */
                 expect(cbauth.isLoggedIn()).toBeFalse();
-            })
+            });
 
             it('Will receive a 401 with bad credentials', () => {
                 expect(cbauth.isLoggedIn()).toBeFalse();

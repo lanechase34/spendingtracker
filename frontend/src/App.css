@@ -17,6 +17,7 @@ html {
 .MuiAutocomplete-popper,
 .MuiAutocomplete-listbox,
 .MuiTableContainer-root,
+.MuiTablePagination-root,
 .MuiBox-root {
     scrollbar-width: thin; /* Firefox */
 }

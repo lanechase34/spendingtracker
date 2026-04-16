@@ -56,10 +56,15 @@ component singleton accessors="true" {
         var base = q
             .from('audit')
             .leftJoin('users', 'audit.userid', '=', 'users.id')
-            .whereBetween(
+            .where(
                 'audit.created',
-                {value: startDate, cfsqltype: 'date'},
-                {value: endDate, cfsqltype: 'date'}
+                '>=',
+                {value: startDate, cfsqltype: 'date'}
+            )
+            .andWhere(
+                'audit.created',
+                '<',
+                {value: dateAdd('d', 1, endDate), cfsqltype: 'date'}
             )
             .andWhere((q1) => {
                 q1.whereLike(q.raw('lower(audit.urlpath)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})

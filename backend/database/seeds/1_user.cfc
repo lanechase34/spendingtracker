@@ -9,8 +9,8 @@ component extends="base" {
                     'email'               : 'test1@gmail.com',
                     'password'            : 'mypassword',
                     'security_level'      : 50,
-                    'salary'              : securityService.encryptValue(80000),
-                    'monthlytakehome'     : securityService.encryptValue(4000),
+                    'salary'              : securityService.encryptValue(60000),
+                    'monthlytakehome'     : securityService.encryptValue(3000),
                     'verified'            : true,
                     'verificationsentdate': createDate(2000, 1, 1),
                     'verificationcode'    : 'asdfasdf'

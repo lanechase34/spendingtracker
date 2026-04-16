@@ -12,8 +12,10 @@ component singleton accessors="true" {
      * Expense Import CSV format
      */
     property name="headers" type="array";
+    property name="maxRows" type="numeric";
     function init() {
         setHeaders(['Date', 'Amount', 'Description']);
+        setMaxRows(100); // limit to 100 rows for performance
     }
 
     /**
@@ -349,6 +351,12 @@ component singleton accessors="true" {
         }
 
         if(!result.valid) return result;
+
+        if(import.data.len() > getMaxRows()) {
+            result.valid   = false;
+            result.message = 'Error file contains too many rows. Please limit to a maximum of #getMaxRows()# rows';
+            return result;
+        }
 
         // Import the data and verify the types for each
         import.data.each((row, index) => {

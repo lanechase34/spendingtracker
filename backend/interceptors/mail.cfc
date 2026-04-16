@@ -1,7 +1,7 @@
 component extends="coldbox.system.Interceptor" hint="Interceptor for mail events" {
 
     property name="async"      inject="asyncManager@coldbox";
-    property name="bugService" inject="services.bug";
+    property name="bugService" inject="provider:services.bug";
 
     /**
      * Interceptor point before mail is sent

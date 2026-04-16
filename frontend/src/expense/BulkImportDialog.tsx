@@ -73,7 +73,7 @@ export default function BulkImportDialog({
                 }}
             >
                 Bulk Import
-                <IconButton aria-label="close" onClick={onClose}>
+                <IconButton aria-label="close" disabled={loading || saving} onClick={onClose}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>

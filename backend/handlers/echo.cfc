@@ -14,8 +14,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
         ) {
             setting requestTimeout=300;
 
-            var start      = getTickCount();
-            application.ws = new WebSocket();
+            var start = getTickCount();
             if(getSetting('environment') == 'development') {
                 /**
                  * Data setup by forcing tasks to run

@@ -4,6 +4,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
     property name="bugService" inject="services.bug";
     property name="excludedEvents" type="struct" default="{}";
     property name="excludedTypes"  type="struct" default="{}";
+    property name="emailService" inject="provider:services.email";
 
     /**
      * Configuration
@@ -42,7 +43,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         prc.requestAudit.stack  = interceptData;
         async.newFuture(() => {
             bugService.log(argumentCollection = prc.requestAudit);
-            getInstance('services.email').sendBug(bugInfo = prc.requestAudit);
+            emailService.sendBug(bugInfo = prc.requestAudit);
         });
 
         /**

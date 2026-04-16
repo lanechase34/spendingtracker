@@ -677,6 +677,7 @@ component extends="tests.resources.baseTest" {
      */
     private component function getWebSocket() {
         var ws = new WebSocket();
+        ws.initDeps();
         ws.getConfig();
         return ws;
     }

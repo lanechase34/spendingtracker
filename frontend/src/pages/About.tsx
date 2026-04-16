@@ -3,6 +3,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CategoryIcon from '@mui/icons-material/Category';
 import DescriptionIcon from '@mui/icons-material/Description';
 import GitHubIcon from '@mui/icons-material/GitHub';
+import GridViewIcon from '@mui/icons-material/GridView';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import Masonry from '@mui/lab/Masonry';
@@ -295,6 +296,11 @@ export default function About() {
                             title="CSV Bulk Import"
                             description="Efficiently import large datasets using a validated and resilient CSV ingestion pipeline."
                         />
+                        <FeatureCard
+                            icon={<GridViewIcon />}
+                            title="Activity Heatmap"
+                            description="See spending patterns at a glance - a color-coded calendar reveals your busiest and quietest days across any date range."
+                        />
                     </Grid>
                 </Box>
 
@@ -307,7 +313,7 @@ export default function About() {
 
                     <FeatureShowcase
                         title="Expense Tracking"
-                        description="A high-performance expense table supports sorting, pagination, search, receipt viewing, and dynamic totals—built to handle real-world datasets."
+                        description="A high-performance expense table supports sorting, pagination, search, receipt viewing, and dynamic totals - built to handle real-world datasets."
                         media={`${import.meta.env.BASE_URL}/screenshots/expense_widget.webp`}
                     />
 

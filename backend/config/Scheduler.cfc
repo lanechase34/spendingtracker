@@ -1,5 +1,11 @@
 component {
 
+    property name="adminService"        inject="provider:services.admin";
+    property name="auditService"        inject="provider:services.audit";
+    property name="bugService"          inject="provider:services.bug";
+    property name="incomeService"       inject="provider:services.income";
+    property name="subscriptionService" inject="provider:services.subscription";
+
     /**
 	 * Configure the ColdBox Scheduler
 	 * https://coldbox.ortusbooks.com/digging-deeper/scheduled-tasks
@@ -28,7 +34,7 @@ component {
                 task.overviewStruct.urlpath = 'chargeSubscriptions';
             })
             .call(() => {
-                getInstance('services.subscription').charge();
+                subscriptionService.charge();
             })
             .onFailure((task, exception) => {
                 callbackOnFailure(task, exception);
@@ -43,7 +49,7 @@ component {
                 task.overviewStruct.urlpath = 'payMonthly';
             })
             .call(() => {
-                getInstance('services.income').payMonthly();
+                incomeService.payMonthly();
             })
             .onFailure((task, exception) => {
                 callbackOnFailure(task, exception);
@@ -58,23 +64,16 @@ component {
                 task.overviewStruct.urlpath = 'metricsSubscription';
             })
             .call(() => {
-                if(!application.keyExists('ws')) {
-                    return;
-                }
-
-                var ws           = application.ws;
-                var adminService = getInstance('services.admin');
-
                 /**
                  * Check if there are any current subscribers to the 'metrics' subscription
                  */
-                var subscriptions = ws.getSubscriptions();
+                var subscriptions = application.ws.getSubscriptions();
                 if((subscriptions?.metrics?.count() ?: 0) > 0) {
                     /**
                      * Post metrics response message to topic/metrics
                      */
                     var metrics = adminService.getMetrics();
-                    ws.send('topic/metrics', {data: metrics, error: false});
+                    application.ws.send('topic/metrics', {data: metrics, error: false});
                 }
 
                 /**
@@ -91,13 +90,13 @@ component {
     function callbackOnFailure(required struct task, struct exception = {}) {
         task.overviewStruct.detail = 'Task Error (Callback)';
         task.overviewStruct.stack  = exception;
-        getInstance('services.bug').log(argumentCollection = task.overviewStruct);
+        bugService.log(argumentCollection = task.overviewStruct);
     }
 
     function callbackOnSuccess(required struct task) {
         task.overviewStruct.detail = 'Task Success (Callback)';
         task.overviewStruct.delta  = getTickCount() - task.overviewStruct.startTick;
-        getInstance('services.audit').audit(argumentCollection = task.overviewStruct);
+        auditService.audit(argumentCollection = task.overviewStruct);
     }
 
     /**

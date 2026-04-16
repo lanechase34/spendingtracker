@@ -6,6 +6,9 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
     property name="uploadPath"  inject="coldbox:setting:uploadPath";
     property name="queryLogPath" type="string";
 
+    property name="emailService" inject="provider:services.email";
+    property name="imageService" inject="provider:services.image";
+
     /**
      * Configuration
      */
@@ -22,11 +25,19 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
             directoryCreate(uploadPath);
         }
 
-        if(environment == 'production' && !getInstance('services.image').verifyImageMagick()) {
+        // Check DB
+        try {
+            queryExecute('SELECT 1', []);
+        }
+        catch(any e) {
+            throw('Cannot connect to database');
+        }
+
+        if(environment == 'production' && !imageService.verifyImageMagick()) {
             throw('Imagemagick is not running');
         }
 
-        if(environment == 'production' && !getInstance('services.email').verifyConnection()) {
+        if(environment == 'production' && !emailService.verifyConnection()) {
             throw('Cannot connect to email server');
         }
 
@@ -37,6 +48,10 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
             catch(any e) {
             }
         }
+
+        // Set up websocket cfc
+        application.ws = new WebSocket();
+        application.ws.initDeps();
     }
 
     /**

@@ -5,12 +5,15 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
 	 */
     this.validSockets = {'metrics': 'ADMIN'};
 
-    function configure() {
+    // Initialize dependencies and store in app scope
+    function initDeps() {
         application.wsLog            = application.wirebox.getInstance('logbox:logger:WebSocket');
         application.wsJwtService     = application.wirebox.getInstance('JwtService@cbsecurity');
         application.wsRequestService = application.wirebox.getInstance('coldbox:requestService');
         application.wsCache          = application.wirebox.getInstance('cachebox:wsStorage');
+    }
 
+    function configure() {
         return {
             debugMode    : false,
             heartBeatMS  : 10000,
