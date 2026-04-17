@@ -108,7 +108,7 @@ component {
              */
             securityHeaders: {
                 // Master switch for security headers
-                enabled              : true,
+                enabled              : false,
                 // If you trust the upstream then we will check the upstream first for specific headers
                 trustUpstream        : false,
                 // Content Security Policy

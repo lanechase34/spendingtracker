@@ -58,6 +58,7 @@ jobs:
         run: |
           cat > .env << 'EOL'
           ENVIRONMENT=test
+          OTHER_EXTENSIONS=,CED6227E-0F49-6367-A68D21AACA6B07E8;version=1.0.0.7,37C61C0A-5D7E-4256-8572639BE0CF5838;version=3.0.0.14,B737ABC4-D43F-4D91-8E8E973E37C40D1B;version=3.0.1.1
           CFCONFIG_ADMINPASSWORD=commandbox
           LUCEE_ADMIN_ENABLED=false
           INSPECTTEMPLATE=never
@@ -67,7 +68,6 @@ jobs:
           REQUESTTIMEOUT=60
           OS=linux
           JAVAHEAP=2048
-          JAVAMINHEAP=512
           DB_GRAMMAR=PostgresGrammar@qb
           DB_SCHEMA=public
           DB_DATABASE=test_spendingtracker

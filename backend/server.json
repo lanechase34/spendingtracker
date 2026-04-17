@@ -1,12 +1,12 @@
 {
     "app":{
-        "cfengine":"lucee@7.0.3+43",
+        "cfengine":"lucee-light@7.0.3+43",
         "sessionCookieSecure":"true",
         "sessionCookieHTTPOnly":"true"
     },
     "cfconfigfile":".cfconfig.json",
     "env":{
-        "LUCEE_EXTENSIONS":"671B01B8-B3B3-42B9-AC055A356BED5281;version=${DB_BUNDLEVERSION}",
+        "LUCEE_EXTENSIONS":"671B01B8-B3B3-42B9-AC055A356BED5281;version=${DB_BUNDLEVERSION},8D7FB0DF-08BB-1589-FE3975678F07DB17;version=2.0.0.3${OTHER_EXTENSIONS:''}",
         "LUCEE_APPLICATION_LISTENER":"modern",
         "LUCEE_APPLICATION_MODE":"curr2root",
         "LUCEE_APPLICATION_PATH_CACHE_TIMEOUT":300,
@@ -15,7 +15,7 @@
     },
     "jvm":{
         "heapSize":"${JAVAHEAP}",
-        "minHeapSize":"${JAVAMINHEAP}",
+        "minHeapSize":"${JAVAHEAP}",
         "javaVersion":"openjdk21_jre_x64_${OS}_hotspot_jdk-21.0.10+7",
         "args":"-Duser.timezone=UTC"
     },
@@ -43,7 +43,7 @@
             "path-prefix-nocase(/lucee/) -> ip-access-control[default-allow=false, acl={'127.0.0.* allow', '::1 allow'}, failure-status=404]",
             "path(/WebSocket.cfc) -> done",
             "regex-nocase('.*(box\\.json|Dockerfile|cfconfig\\.json|server\\.json)') or path-suffix-nocase(.env) or path-suffix-nocase(.md) or path-suffix-nocase(.cfc) or path-prefix-nocase(/.well-known/) -> set-error(404)",
-            "regex-nocase('.*\\.(webp|css|js|ico)$') or regex-nocase('.*\\?v=[a-zA-Z0-9]{10}$') -> set(attribute='%{o,Cache-Control}', value='public, max-age=25552000')"
+            "regex-nocase('.*\\.(webp|css|js|ico|woff|woff2|ttf|svg)$') or regex-nocase('.*\\?v=[a-zA-Z0-9]{10}$') -> set(attribute='%{o,Cache-Control}', value='public, max-age=25552000')"
         ],
         "maxRequests":"50",
         "webroot":"",

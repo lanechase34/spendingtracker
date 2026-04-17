@@ -3,31 +3,37 @@
     "name": "SpendingTracker",
     "icons": [
         {
-            "src": "/icons/logo64.svg",
+            "src": "/spendingtracker/icons/logo64.svg",
             "type": "image/svg+xml",
             "sizes": "any"
         },
         {
-            "src": "/icons/favicon.ico",
+            "src": "/spendingtracker/icons/favicon.ico",
             "type": "image/x-icon",
             "sizes": "64x64 32x32 24x24 16x16"
         },
         {
-            "src": "/icons/logo192.png",
+            "src": "/spendingtracker/icons/logo192.png",
             "type": "image/png",
             "sizes": "192x192"
         },
         {
-            "src": "/icons/logo512.png",
+            "src": "/spendingtracker/icons/logo512.png",
             "type": "image/png",
             "sizes": "512x512",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/spendingtracker/icons/logo512.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "maskable"
         }
     ],
-    "start_url": "/",
+    "start_url": "/spendingtracker/",
     "display": "standalone",
     "theme_color": "#121212",
     "background_color": "#121212",
     "orientation": "portrait",
-    "scope": "/"
+    "scope": "/spendingtracker/"
 }
