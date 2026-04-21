@@ -55,7 +55,6 @@ describe('useFetchImage', () => {
             expect.objectContaining({
                 method: 'GET',
                 signal: expect.any(AbortSignal) as AbortSignal,
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
                 headers: expect.objectContaining({
                     Accept: 'application/json',
                 }) as unknown as RequestInit,
