@@ -12,11 +12,10 @@ import TextField from '@mui/material/TextField';
 import ErrorAlert from 'components/ErrorAlert';
 import useAuthContext from 'hooks/useAuthContext';
 import useAuthDialogContext from 'hooks/useAuthDialogContext';
+import useCooldownAction from 'hooks/useCooldownAction';
 import useFormField from 'hooks/useFormField';
-import useLocalStorage from 'hooks/useLocalStorage';
 import usePendingFetch from 'hooks/usePendingFetch';
-import type { FormEvent } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
@@ -51,12 +50,18 @@ export default function VerifyDialog() {
     const userAPI = useMemo(() => userService({ pendingFetch: pendingFetch }), [pendingFetch]);
 
     /**
+     * State for when user is allowed to resend a verification code
+     */
+    const [resendAlert, setResendAlert] = useState<string | null>(null);
+
+    /**
      * If verify dialog open and pending token gets set to null (invalid state),
      * force close the verify dialog and logout
      */
     useEffect(() => {
         if (verifyDialogOpen && pendingToken == null) {
             // Reset modal state
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setResendAlert(null);
             setError(null);
             logout();
@@ -64,69 +69,35 @@ export default function VerifyDialog() {
         }
     }, [pendingToken, verifyDialogOpen, closeVerifyDialog, logout]);
 
-    /**
-     * State for when user is allowed to resend a verification code
-     */
-    const [resendLoading, setResendLoading] = useState<boolean>(false);
-    const [cooldownUntil, setCooldownUntil] = useLocalStorage<number | null>({
-        key: 'verificationResendCooldownUntil',
-        initialValue: Date.now() + COOLDOWN_MS,
+    const {
+        execute: executeResend,
+        loading: resendLoading,
+        isCooldownActive,
+        remainingSeconds,
+    } = useCooldownAction<void>({
+        cooldownMs: COOLDOWN_MS,
+        storageKey: 'verificationResendCooldownUntil',
+        setInitialCooldown: true,
     });
-    const [resendAlert, setResendAlert] = useState<string | null>(null);
-
-    /**
-     * Tracks active cooldown and remaining seconds for cooldown
-     */
-    const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
-
-    useEffect(() => {
-        if (!cooldownUntil) {
-            setRemainingSeconds(0);
-            return;
-        }
-
-        const tick = () => {
-            const diff = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
-            setRemainingSeconds(diff);
-        };
-
-        tick();
-        const interval = setInterval(tick, 1000);
-
-        return () => clearInterval(interval);
-    }, [cooldownUntil]);
-
-    const isCooldownActive = remainingSeconds > 0;
 
     /**
      * Handles resend verification code when users requests it
      */
     const handleResend = async () => {
-        if (resendLoading || isCooldownActive) return;
-
-        setResendLoading(true);
-
+        setError(null);
         try {
-            await userAPI.resendVerificationCode();
-            // Success
-            setError(null);
-            setResendAlert('Success! Please check your email for a new verification code.');
-
-            // Set cooldown til next time they can send
-            const until = Date.now() + COOLDOWN_MS;
-            setCooldownUntil(until);
+            await executeResend(async () => {
+                await userAPI.resendVerificationCode();
+                setResendAlert('Success! Please check your email for a new verification code.');
+            });
         } catch (err: unknown) {
-            if (err instanceof APIError && err.statusCode == 429) {
+            if (err instanceof APIError && err.statusCode === 429) {
                 setError(parseApiValidationError(err.message));
             } else {
-                console.error('Network error:', err);
                 setError(['Server error. Please try again.']);
             }
-        } finally {
-            setResendLoading(false);
         }
     };
-
     const verificationField = useFormField({
         initialValue: '',
         validator: (value: string): string | null => {
@@ -138,7 +109,7 @@ export default function VerifyDialog() {
     /**
      * Submit the verification code
      */
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         if (loading) return;

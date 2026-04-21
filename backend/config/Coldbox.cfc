@@ -47,7 +47,7 @@ component {
             customErrorTemplate     : '/views/error.cfm',
             // Application Aspects
             handlerCaching          : true,
-            eventCaching            : true,
+            eventCaching            : false,
             viewCaching             : true,
             // Will automatically do a mapDirectory() on your `models` for you.
             autoMapModels           : true,
@@ -69,7 +69,7 @@ component {
                 slowRequestThreshold: 1000, // ms
                 maxSlowRequests     : 25
             },
-            authTokenTTL: 360, // 60 minutes in seconds
+            authTokenTTL: 1800, // 30 minutes in seconds (for cookie), matches jwt.expiration
             basePath    : replace(expandPath('/'), '\', '/', 'all'),
             concurrency : {
                 activeRequests: 0,

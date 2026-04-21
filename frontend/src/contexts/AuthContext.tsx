@@ -304,6 +304,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
         // If user was never authenticated, skip the refresh attempt entirely
         if (!wasAuthenticated) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setHasCompletedInitialCheck(true);
             return;
         }

@@ -7,7 +7,7 @@ import { useTheme } from '@mui/material/styles';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import useMetricContext from 'hooks/useMetricContext';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useMemo } from 'react';
 import { Doughnut } from 'react-chartjs-2';
 import { donutPlugins, pointerHover } from 'utils/chartPlugins';
 
@@ -46,46 +46,30 @@ export default function MemoryMetrics() {
     const { metrics } = useMetricContext();
     const theme = useTheme();
 
-    const [chartData, setChartData] = useState<ChartData<'doughnut'>>({
-        labels: ['Used', 'Free', 'Max (Unallocated)'],
-        datasets: [],
-    });
-
-    /**
-     * setState calls are allowed in useEffectEvent
-     * This listens for when metrics is updated and will update the state used here
-     */
-    const updateChartData = useEffectEvent((used: number, free: number, max: number) => {
-        setChartData((prev) => ({
-            ...prev,
-            datasets: [
-                {
-                    label: 'JVM Memory (MB)',
-                    data: [used, free, max],
-                    backgroundColor: [
-                        theme.palette.success.main, // Used
-                        theme.palette.warning.main, // Free
-                        theme.palette.grey[800], // Unallocated
-                    ],
-                    hoverOffset: 4,
-                    borderWidth: 0,
-                },
-            ],
-        }));
-    });
-
-    useEffect(() => {
-        if (!metrics) return;
+    const chartData = useMemo<ChartData<'doughnut'>>(() => {
+        if (!metrics) {
+            return { labels: ['Used', 'Free', 'Max (Unallocated)'], datasets: [] };
+        }
 
         const used = metrics.memory.usedMB;
         const allocated = metrics.memory.totalMB;
         const max = metrics.memory.maxMB;
-
         const free = allocated - used;
         const unallocated = max - allocated;
 
-        updateChartData(used, free, unallocated);
-    }, [metrics]);
+        return {
+            labels: ['Used', 'Free', 'Max (Unallocated)'],
+            datasets: [
+                {
+                    label: 'JVM Memory (MB)',
+                    data: [used, free, unallocated],
+                    backgroundColor: [theme.palette.success.main, theme.palette.warning.main, theme.palette.grey[800]],
+                    hoverOffset: 4,
+                    borderWidth: 0,
+                },
+            ],
+        };
+    }, [metrics, theme]);
 
     if (!metrics || !chartData.datasets.length) {
         return <Skeleton variant="rectangular" height={300} />;

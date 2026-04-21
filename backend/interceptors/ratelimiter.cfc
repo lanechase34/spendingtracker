@@ -42,12 +42,19 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
 
         // Not valid - too many requests
         if(!valid) {
+            var message = 'Too many attempts. Please try again later.'
+            event
+                .getResponse()
+                .setError(true)
+                .addMessage(message)
+                .setStatusCode(429);
+
             event.renderData(
-                data       = {error: true, messages: ['Too many attempts. Please try again later.']},
+                data       = {error: true, messages: [message]},
                 statusCode = 429,
                 type       = 'json'
             );
-            // Stop execution
+            // Stop execution of the current request - the response is handled above
             event.noExecution();
             return;
         }

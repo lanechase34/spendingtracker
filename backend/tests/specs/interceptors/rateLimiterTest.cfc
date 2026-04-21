@@ -133,6 +133,13 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
             });
 
             it('Should block request and return 429 when rate limit is exceeded', () => {
+                var mockResponse = createMock('coldbox.system.web.context.RequestContext');
+                mockResponse.$('setError', mockResponse);
+                mockResponse.$('addMessage', mockResponse);
+                mockResponse.$('setStatusCode', mockResponse);
+                mockResponse.$('getDataPacket', {error: true, messages: ['Too many attempts. Please try again later.']});
+
+                mockRequestContext.$('getResponse', mockResponse);
                 interceptor.$property(propertyName = 'useRateLimiter', mock = true);
                 interceptor.$property(
                     propertyName = 'settings',
@@ -151,15 +158,24 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                     prc    = prc
                 );
 
+                // Response object was populated
+                expect(mockResponse.$once('setError')).toBeTrue();
+                expect(mockResponse.$once('addMessage')).toBeTrue();
+                expect(mockResponse.$once('setStatusCode')).toBeTrue();
+
+                var setStatusCodeCall = mockResponse.$callLog().setStatusCode[1];
+                expect(setStatusCodeCall[1]).toBe(429);
+
+                var addMessageCall = mockResponse.$callLog().addMessage[1];
+                expect(addMessageCall[1]).toBe('Too many attempts. Please try again later.');
+
+                // renderData and noExecution still called
                 expect(mockRequestContext.$once('renderData')).toBeTrue();
                 expect(mockRequestContext.$once('noExecution')).toBeTrue();
 
-                // 429 JSON Response
                 var renderDataCall = mockRequestContext.$callLog().renderData[1];
                 expect(renderDataCall.statusCode).toBe(429);
                 expect(renderDataCall.type).toBe('json');
-                expect(renderDataCall.data.error).toBeTrue();
-                expect(renderDataCall.data.messages[1]).toBe('Too many attempts. Please try again later.');
             });
 
             it('Should use email from rc when building key with email mode', () => {
@@ -243,6 +259,103 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 expect(hitCall.key).toBe('ratelimit:api.login:192.168.1.1');
                 expect(hitCall.limit).toBe(5);
                 expect(hitCall.window).toBe(60);
+            });
+
+            it('Should use email from prc.authUser when rc.email is not present', () => {
+                var mockAuthUser = createEmptyMock('models.objects.userobj');
+                mockAuthUser.$('getEmail', 'authuser@example.com');
+                prc.authUser = mockAuthUser;
+
+                interceptor.$property(propertyName = 'useRateLimiter', mock = true);
+                interceptor.$property(
+                    propertyName = 'settings',
+                    mock         = {'api.register': {key: 'email', limit: 3, window: 3600}}
+                );
+                mockRequestContext.$('getCurrentEvent', 'api.register');
+                mockSecurityService.$('getRequestIP', '192.168.1.1');
+                mockRateLimitService
+                    .$('buildKey')
+                    .$args(
+                        mode  = 'email',
+                        ip    = '192.168.1.1',
+                        email = 'authuser@example.com'
+                    )
+                    .$results('authuser@example.com');
+                mockRateLimitService.$('hit', true);
+
+                interceptor.preProcess(
+                    event  = mockRequestContext,
+                    data   = mockData,
+                    buffer = mockBuffer,
+                    rc     = rc,
+                    prc    = prc
+                );
+
+                var buildKeyCall = mockRateLimitService.$callLog().buildKey[1];
+                expect(buildKeyCall.email).toBe('authuser@example.com');
+            });
+
+            it('Should fall back to IP when neither rc.email nor prc.authUser are present', () => {
+                interceptor.$property(propertyName = 'useRateLimiter', mock = true);
+                interceptor.$property(
+                    propertyName = 'settings',
+                    mock         = {'api.register': {key: 'email', limit: 3, window: 3600}}
+                );
+                mockRequestContext.$('getCurrentEvent', 'api.register');
+                mockSecurityService.$('getRequestIP', '192.168.1.1');
+                mockRateLimitService
+                    .$('buildKey')
+                    .$args(
+                        mode  = 'email',
+                        ip    = '192.168.1.1',
+                        email = '192.168.1.1'
+                    )
+                    .$results('192.168.1.1');
+                mockRateLimitService.$('hit', true);
+
+                interceptor.preProcess(
+                    event  = mockRequestContext,
+                    data   = mockData,
+                    buffer = mockBuffer,
+                    rc     = rc,
+                    prc    = prc
+                );
+
+                var buildKeyCall = mockRateLimitService.$callLog().buildKey[1];
+                expect(buildKeyCall.email).toBe('192.168.1.1');
+            });
+
+            it('Should pass both ip and email when key mode is ip+email', () => {
+                rc.email = 'test@example.com';
+                interceptor.$property(propertyName = 'useRateLimiter', mock = true);
+                interceptor.$property(
+                    propertyName = 'settings',
+                    mock         = {'auth.login': {key: 'ip+email', limit: 10, window: 5}}
+                );
+                mockRequestContext.$('getCurrentEvent', 'auth.login');
+                mockSecurityService.$('getRequestIP', '192.168.1.1');
+                mockRateLimitService
+                    .$('buildKey')
+                    .$args(
+                        mode  = 'ip+email',
+                        ip    = '192.168.1.1',
+                        email = 'test@example.com'
+                    )
+                    .$results('192.168.1.1:test@example.com');
+                mockRateLimitService.$('hit', true);
+
+                interceptor.preProcess(
+                    event  = mockRequestContext,
+                    data   = mockData,
+                    buffer = mockBuffer,
+                    rc     = rc,
+                    prc    = prc
+                );
+
+                var buildKeyCall = mockRateLimitService.$callLog().buildKey[1];
+                expect(buildKeyCall.mode).toBe('ip+email');
+                expect(buildKeyCall.ip).toBe('192.168.1.1');
+                expect(buildKeyCall.email).toBe('test@example.com');
             });
         });
     }

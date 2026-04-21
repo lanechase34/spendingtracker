@@ -58,7 +58,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
      */
     const [gridState, setGridState] = useState<GridState>({
         paginationModel: { page: 0, pageSize: initialPageSize },
-        sortModel: defaultSortRef.current,
+        sortModel: defaultSort,
         filterModel: { quickFilterValues: [], items: [] },
     });
 
@@ -176,6 +176,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     useEffect(() => {
         if (!authReady) return; // this is a problem because this depends on auth fetch, which it really shouldn't be retriggering when that updates
         // this can be mitigated with useEffectEvent but the refetch function may get a little tricky.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void fetchData(gridState, additionalParamsString);
 
         return () => {

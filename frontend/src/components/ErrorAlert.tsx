@@ -10,7 +10,13 @@ interface ErrorAlertProps {
 
 export default function ErrorAlert({ messages, onClose }: ErrorAlertProps) {
     return (
-        <Alert severity="error" onClose={onClose}>
+        <Alert
+            severity="error"
+            onClose={onClose}
+            sx={{
+                alignItems: 'center',
+            }}
+        >
             <List dense disablePadding>
                 {messages.map((msg: string) => (
                     <ListItem key={`${msg}_list_item`} disableGutters>

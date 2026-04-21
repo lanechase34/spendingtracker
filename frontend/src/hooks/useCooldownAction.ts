@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 interface UseCooldownActionOptions {
     cooldownMs: number;
     storageKey: string;
+    setInitialCooldown?: boolean; // if true, starts cooldown on mount
 }
 
 interface UseCooldownActionReturn<T> {
@@ -30,54 +31,61 @@ interface UseCooldownActionReturn<T> {
 export default function useCooldownAction<T = void>({
     cooldownMs,
     storageKey,
+    setInitialCooldown = false,
 }: UseCooldownActionOptions): UseCooldownActionReturn<T> {
     const [loading, setLoading] = useState<boolean>(false);
     const [cooldownUntil, setCooldownUntil] = useLocalStorage<number | null>({
         key: storageKey,
         initialValue: null,
     });
-    const [remainingSeconds, setRemainingSeconds] = useState<number>(0);
 
-    // Updates the remaining seconds cooldown
+    // Set initial cooldown on mount if requested
     useEffect(() => {
-        if (!cooldownUntil) {
-            setRemainingSeconds(0);
-            return;
+        if (setInitialCooldown) {
+            setCooldownUntil((prev) => {
+                if (prev === null || prev < Date.now()) {
+                    return Date.now() + cooldownMs;
+                }
+                return prev;
+            });
         }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-        const tick = () => {
-            const diff = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
-            setRemainingSeconds(diff);
+    // Tick now every second while cooldown is active
+    const [now, setNow] = useState(Date.now);
 
-            // Clear cooldown if expired
-            if (diff === 0) {
+    useEffect(() => {
+        if (!cooldownUntil) return;
+
+        // Reset now immediately so remainingSeconds is accurate from the start of a new cooldown
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setNow(Date.now());
+
+        const interval = setInterval(() => {
+            const currentNow = Date.now();
+            setNow(currentNow);
+            if (currentNow >= cooldownUntil) {
+                clearInterval(interval);
                 setCooldownUntil(null);
             }
-        };
-
-        tick();
-        const interval = setInterval(tick, 1000);
+        }, 1000);
 
         return () => clearInterval(interval);
     }, [cooldownUntil, setCooldownUntil]);
 
+    const remainingSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0;
+
     const isCooldownActive = remainingSeconds > 0;
 
-    // Wraps the calling action in cooldown enforcement
     const execute = useCallback(
         async (action: () => Promise<T>): Promise<T | undefined> => {
-            // Prevents execution if already loading or cooldown is active
             if (loading || isCooldownActive) return;
 
             setLoading(true);
 
             try {
                 const result = await action();
-
-                // Set cooldown on success
-                const until = Date.now() + cooldownMs;
-                setCooldownUntil(until);
-
+                setCooldownUntil(Date.now() + cooldownMs);
                 return result;
             } finally {
                 setLoading(false);
@@ -86,10 +94,5 @@ export default function useCooldownAction<T = void>({
         [loading, isCooldownActive, cooldownMs, setCooldownUntil]
     );
 
-    return {
-        execute,
-        loading,
-        isCooldownActive,
-        remainingSeconds,
-    };
+    return { execute, loading, isCooldownActive, remainingSeconds };
 }

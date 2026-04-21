@@ -47,7 +47,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                         }
                     );
                     var response = event.getResponse();
-                    expect(response.getStatusCode()).toBeGTE(400);
+                    expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
                 });
 
@@ -61,7 +61,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                         }
                     );
                     var response = event.getResponse();
-                    expect(response.getStatusCode()).toBeGTE(400);
+                    expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
                 });
 
@@ -75,7 +75,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                         }
                     );
                     var response = event.getResponse();
-                    expect(response.getStatusCode()).toBeGTE(400);
+                    expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
                 });
 
@@ -90,7 +90,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                         }
                     );
                     var response = event.getResponse();
-                    expect(response.getStatusCode()).toBeGTE(400);
+                    expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
                 });
 
@@ -119,8 +119,71 @@ component extends="tests.resources.baseTest" asyncAll="true" {
                         }
                     );
                     var response = event.getResponse();
-                    expect(response.getStatusCode()).toBeGTE(400);
+                    expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
+                });
+            });
+
+            describe('POST /register - rate limiting', () => {
+                beforeEach(() => {
+                    // / Ensure the rate limiter is on
+                    var rateLimiter = application.cbController
+                        .getInterceptorService()
+                        .getInterceptor('rateLimiterInterceptor');
+                    rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = true);
+
+                    // Clear the rate limit cache
+                    getInstance('cachebox:rateStorage').clearAll();
+                });
+
+                afterEach(() => {
+                    // Restore rate limiter to off so other tests are unaffected
+                    var rateLimiter = application.cbController
+                        .getInterceptorService()
+                        .getInterceptor('rateLimiterInterceptor');
+                    rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = false);
+                });
+
+                it('Returns 429 with correct JSON response after exceeding the rate limit', () => {
+                    var registerLimit = application.cbController.getSetting('rateLimits')['auth.register'].limit;
+
+                    // exhaust the limit
+                    for(var i = 1; i <= registerLimit; i++) {
+                        setup();
+                        post(
+                            route  = '/api/v1/register',
+                            params = {
+                                email          : 'test_#createUUID()#@example.com',
+                                password       : testPassword,
+                                salary         : testSalary,
+                                monthlyTakeHome: testTakeHome
+                            }
+                        );
+                    }
+
+                    // Next request should be rate limited
+                    setup();
+                    var event = post(
+                        route  = '/api/v1/register',
+                        params = {
+                            email          : 'test_#createUUID()#@example.com',
+                            password       : testPassword,
+                            salary         : testSalary,
+                            monthlyTakeHome: testTakeHome
+                        }
+                    );
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(429);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe('Too many attempts. Please try again later.');
+
+                    // Check the rendered data and ensure json packet
+                    var renderData = event.getRenderData();
+
+                    expect(renderData.statusCode).toBe(429);
+                    expect(renderData.type).toBe('json');
+                    expect(renderData.data.error).toBeTrue();
+                    expect(renderData.data.messages[1]).toBe('Too many attempts. Please try again later.');
                 });
             });
 

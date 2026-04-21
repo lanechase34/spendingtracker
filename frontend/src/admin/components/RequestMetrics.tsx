@@ -83,6 +83,7 @@ export default function RequestMetrics() {
 
     useEffect(() => {
         if (!metrics) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         updateChartData(metrics.concurrency.activeRequests);
     }, [metrics]);
 

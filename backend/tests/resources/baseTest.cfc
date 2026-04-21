@@ -27,13 +27,21 @@ component extends="coldbox.system.testing.BaseTestCase" {
         /**
          * Mock a temp dir to use
          */
-        tempDir = '#uploadPath#/#createUUID()#';
+        tempDir = '#uploadPath#/tests/#createUUID()#';
         directoryCreate(tempDir);
+        application.cbController.setSetting('uploadPath', '#uploadPath#/tests/');
 
         /**
          * Log out any lingering user
          */
         cbauth.logout();
+
+        /**
+         * Make sure rate limiter is turned off
+         */
+        var rateLimiter                   = application.cbController.getInterceptorService().getInterceptor('rateLimiterInterceptor');
+        variables._originalUseRateLimiter = rateLimiter.getPropertyMixin('useRateLimiter', 'variables');
+        rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = false);
     }
 
     function afterAll() {
@@ -43,12 +51,21 @@ component extends="coldbox.system.testing.BaseTestCase" {
          * Delete temp dir
          */
         directoryDelete(tempDir, true);
+
+        /**
+         * Restore rate limiter setting
+         */
+        var rateLimiter = application.cbController.getInterceptorService().getInterceptor('rateLimiterInterceptor');
+        rateLimiter.injectPropertyMixin(
+            propertyName  = 'useRateLimiter',
+            propertyValue = variables._originalUseRateLimiter
+        );
     }
 
     /**
      * Fetch img blob and return absolute path of img
      */
-    string function fetchAndWriteImg(required string imgUrl, required string extension) {
+    private string function fetchAndWriteImg(required string imgUrl, required string extension) {
         /**
          * Fetch image blob
          */

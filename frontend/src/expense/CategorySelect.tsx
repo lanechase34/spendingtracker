@@ -198,6 +198,7 @@ export default function CategorySelect({
      */
     const debouncedFetch = useMemo(
         () =>
+            // eslint-disable-next-line react-hooks/refs
             debounce((input: string) => {
                 void loadOptions(input, 1, false);
             }, debounceDelay),
