@@ -644,7 +644,7 @@ describe('<EditIncome />', () => {
             const dateInput = await screen.findByLabelText(/date/i);
             const newDate = baseDate.add(2, 'months');
 
-            fireEvent.change(dateInput as HTMLInputElement, {
+            fireEvent.change(dateInput, {
                 target: { value: newDate.format('YYYY-MM') },
             });
 

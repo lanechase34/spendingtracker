@@ -165,7 +165,7 @@ export default function ExpenseList() {
                                     <ListIcon fontSize="small" />
                                 </Button>
                                 <DeleteButton
-                                    rowId={params.id as number}
+                                    rowId={params.id}
                                     onClick={handleDeleteClick}
                                     disabled={deletingExpense}
                                 />

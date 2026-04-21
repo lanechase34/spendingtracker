@@ -41,7 +41,7 @@ function buildValidApiResponse(
         data: {
             salary: overrides?.salary ?? 80000,
             monthlytakehome: overrides?.monthlytakehome ?? 5000,
-            role: overrides?.role ?? ('ADMIN' as UserRoles),
+            role: overrides?.role ?? 'ADMIN',
         },
     };
 }
@@ -61,8 +61,8 @@ function TestConsumer() {
             <span data-testid="loading">{String(context.loading)}</span>
             <span data-testid="user">{context.user ? JSON.stringify(context.user) : 'null'}</span>
             <span data-testid="is-authorized">{String(context.isAuthorized())}</span>
-            <span data-testid="has-role-admin">{String(context.hasRole('ADMIN' as UserRoles))}</span>
-            <span data-testid="has-role-user">{String(context.hasRole('USER' as UserRoles))}</span>
+            <span data-testid="has-role-admin">{String(context.hasRole('ADMIN'))}</span>
+            <span data-testid="has-role-user">{String(context.hasRole('USER'))}</span>
         </div>
     );
 }

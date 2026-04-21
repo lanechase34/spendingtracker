@@ -229,11 +229,7 @@ export default function SubscriptionList() {
                                         <PlayArrowIcon fontSize="small" />
                                     )}
                                 </Button>
-                                <DeleteButton
-                                    rowId={params.id as number}
-                                    onClick={handleDeleteClick}
-                                    disabled={!!activeAction}
-                                />
+                                <DeleteButton rowId={params.id} onClick={handleDeleteClick} disabled={!!activeAction} />
                             </ButtonGroup>
                         </Box>
                     );

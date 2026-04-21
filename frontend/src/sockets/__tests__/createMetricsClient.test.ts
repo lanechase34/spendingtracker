@@ -300,7 +300,7 @@ describe('createMetricsClient', () => {
             const onError = jest.fn();
             const client = createMetricsClient({ ...defaultArgs, onError: onError });
 
-            client.onWebSocketClose({} as CloseEvent);
+            client.onWebSocketClose({});
             expect(onError).toHaveBeenCalledWith(new Error('WebSocket closed'));
         });
 
@@ -311,7 +311,7 @@ describe('createMetricsClient', () => {
                 onMetrics: jest.fn(),
             });
 
-            expect(() => client.onWebSocketClose({} as CloseEvent)).not.toThrow();
+            expect(() => client.onWebSocketClose({})).not.toThrow();
         });
     });
 
