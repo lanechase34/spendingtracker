@@ -121,6 +121,27 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
             arguments.exception = e;
             this.onEntityNotFoundException(argumentCollection = arguments);
         }
+        // TOTP Exceptions
+        catch('TOTP.NotInitiated' e) {
+            arguments.exception = e;
+            arguments.msg       = '2FA setup has not been initiated. Please call setup first.';
+            this.onTOTPError(argumentCollection = arguments);
+        }
+        catch('TOTP.AlreadyEnabled' e) {
+            arguments.exception = e;
+            arguments.msg       = '2FA is already enabled on this account.';
+            this.onTOTPError(argumentCollection = arguments);
+        }
+        catch('TOTP.InvalidCode' e) {
+            arguments.exception = e;
+            arguments.msg       = 'Invalid or expired verification code.';
+            this.onTOTPError(argumentCollection = arguments);
+        }
+        catch('TOTP.NotEnabled' e) {
+            arguments.exception = e;
+            arguments.msg       = '2FA is not enabled for this user.';
+            this.onTOTPError(argumentCollection = arguments);
+        }
         // Global Catch
         catch(Any e) {
             arguments.exception = e;
@@ -176,6 +197,38 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         if(!isNull(local.actionResults)) {
             return local.actionResults;
         }
+    }
+
+    /**
+	 * Action for when TOTP Errors have been thrown
+     * TOTP.NotInitiated
+     * TOTP.AlreadyEnabled
+     * TOTP.InvalidCode
+     * TOTP.NotEnabled
+	 */
+    function onTOTPError(
+        event,
+        rc,
+        prc,
+        eventArguments,
+        exception = {},
+        msg       = ''
+    ) {
+        // Setup response
+        arguments.event
+            .getResponse()
+            .setErrorMessage(arguments.msg)
+            .setStatusCode(400);
+
+        // Render Error Out
+        arguments.event.renderData(
+            type        = arguments.prc.response.getFormat(),
+            data        = arguments.prc.response.getDataPacket(reset = this.resetDataOnError),
+            contentType = arguments.prc.response.getContentType(),
+            statusCode  = arguments.prc.response.getStatusCode(),
+            location    = arguments.prc.response.getLocation(),
+            isBinary    = arguments.prc.response.getBinary()
+        );
     }
 
     /**

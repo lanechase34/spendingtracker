@@ -1,4 +1,4 @@
-component extends="tests.resources.baseTest" asyncAll="true" {
+component extends="tests.resources.baseTest" {
 
     property name="jwtService" inject="JwtService@cbsecurity";
     property name="cbauth"     inject="authenticationService@cbauth";
@@ -23,7 +23,7 @@ component extends="tests.resources.baseTest" asyncAll="true" {
             });
 
             afterEach(() => {
-                // Make sure we log any user(s) made
+                // Make sure we log out any user(s) made
                 cbauth.logout();
                 jwtService.getTokenStorage().clearAll();
             });

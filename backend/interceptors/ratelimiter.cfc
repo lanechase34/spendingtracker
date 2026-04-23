@@ -45,8 +45,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
             var message = 'Too many attempts. Please try again later.'
             event
                 .getResponse()
-                .setError(true)
-                .addMessage(message)
+                .setErrorMessage(message)
                 .setStatusCode(429);
 
             event.renderData(
@@ -54,6 +53,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
                 statusCode = 429,
                 type       = 'json'
             );
+
             // Stop execution of the current request - the response is handled above
             event.noExecution();
             return;

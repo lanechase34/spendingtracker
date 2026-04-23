@@ -339,6 +339,13 @@ component {
                 password  : userBase.password,
                 rememberMe: {required: true, type: 'boolean'}
             },
+            'auth.verify2fa': {
+                code: {
+                    required: true,
+                    type    : 'string',
+                    size    : '6..19' // 6 for TOTP code, 19 for recovery code
+                }
+            },
             'auth.logout'  : {},
             'auth.register': {
                 email: {
@@ -430,6 +437,21 @@ component {
                         return ['asc', 'desc'].contains(lCase(value));
                     },
                     udfMessage: 'orderDir must be asc or desc'
+                }
+            },
+            'user.setup2fa'  : {},
+            'user.confirm2fa': {
+                code: {
+                    required: true,
+                    type    : 'string',
+                    size    : '6'
+                }
+            },
+            'user.disable2fa': {
+                code: {
+                    required: true,
+                    type    : 'string',
+                    size    : '6..19' // 6 for TOTP code, 19 for recovery code
                 }
             }
         };

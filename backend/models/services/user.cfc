@@ -8,6 +8,7 @@ component singleton accessors="true" {
     property name="bcrypt"          inject="@BCrypt";
     property name="emailService"    inject="services.email";
     property name="incomeService"   inject="services.income";
+    property name="requestService"  inject="coldbox:requestService";
     property name="securityService" inject="services.security";
 
     property name="impersonation"        inject="coldbox:setting:impersonation";
@@ -17,6 +18,7 @@ component singleton accessors="true" {
 
     this.roleMap = {
         '0' : 'UNVERIFIED',
+        '5' : 'PENDING2FA',
         '10': 'USER',
         '50': 'ADMIN'
     };
@@ -139,11 +141,23 @@ component singleton accessors="true" {
     /**
      * Retrieve a user by id (pk)
      *
-     * @id pk
+     * @id           pk
+     * @checkPending boolean to check the jwt_payload for if this should be a pending2fa token
      *
      * @return userObj that implements JWTSubject
      */
-    public userObj function retrieveUserById(required numeric id) {
+    public userObj function retrieveUserById(required numeric id, boolean checkPending = true) {
+        var prc = requestService.getContext().getPrivateCollection();
+
+        // Check if there is a custom scope set in the incoming JWT payload
+        // If so, we need to use this for the user's permission
+        if(checkPending && prc.keyExists('jwt_payload') && (prc.jwt_payload?.scope ?: '') == 'Pending2FA') {
+            var pendingUser = new ();
+            pendingUser.setId(arguments.id);
+            pendingUser.setPermissions('Pending2FA');
+            return pendingUser;
+        }
+
         var cacheKey = 'user_#id#';
         var user     = cacheStorage.get(cacheKey);
         if(isNull(user)) {
@@ -163,17 +177,6 @@ component singleton accessors="true" {
     }
 
     /**
-     * Generate salt and hashed password using bcrypt
-     *
-     * @return hashedPassword
-     */
-    private string function generateBcryptPassword(required string password) {
-        var salt           = bcrypt.generateSalt();
-        var hashedPassword = bcrypt.hashPassword(password = password, salt = salt);
-        return hashedPassword;
-    }
-
-    /**
      * Registers a new user
      */
     public void function register(
@@ -182,7 +185,7 @@ component singleton accessors="true" {
         required numeric salary,
         required numeric monthlyTakeHome
     ) {
-        var hashedPassword = generateBcryptPassword(password);
+        var hashedPassword = securityService.generateBcryptPassword(password);
         var qResult        = q
             .from('users')
             .returning(['id'])
@@ -275,7 +278,7 @@ component singleton accessors="true" {
             .when(
                 condition = password.len(),
                 onTrue    = (q) => {
-                    var hashedPassword = generateBcryptPassword(password);
+                    var hashedPassword = securityService.generateBcryptPassword(password);
                     return q.addUpdate({'password': {value: hashedPassword, cfsqltype: 'varchar'}});
                 }
             )
@@ -316,7 +319,10 @@ component singleton accessors="true" {
             .returning('email')
             .where('id', '=', {value: userid, cfsqltype: 'numeric'})
             .update({
-                verificationcode    : {value: generateBcryptPassword(verificationCode), cfsqltype: 'varchar'},
+                verificationcode: {
+                    value    : securityService.generateBcryptPassword(verificationCode),
+                    cfsqltype: 'varchar'
+                },
                 verificationsentdate: {value: now(), cfsqltype: 'datetime'}
             });
 

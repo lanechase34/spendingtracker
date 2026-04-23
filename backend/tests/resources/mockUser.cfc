@@ -55,6 +55,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     public string function login(required component userObj) {
         expect(cbauth.isLoggedIn()).toBeFalse();
+        setup();
 
         var event = post(
             route  = '/api/v1/login',
@@ -95,6 +96,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * GET CSRF token from /csrf
      */
     public string function getCSRF(required string jwt) {
+        setup();
         var event = get(route = '/api/v1/csrf', headers = {'x-auth-token': jwt});
 
         var response = event.getResponse();
@@ -112,6 +114,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     public void function logout(required component userObj, required string jwt) {
         expect(cbauth.isLoggedIn()).toBeTrue();
+        setup();
 
         var event = post(route = '/api/v1/security/logout', headers = {'x-auth-token': jwt});
 

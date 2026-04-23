@@ -43,6 +43,7 @@ component {
 
             // Authentication
             route('/login').withAction({POST: 'login'}).toHandler('auth');
+            route('/verify2fa').withAction({POST: 'verify2fa'}).toHandler('auth');
             route('/register').withAction({POST: 'register'}).toHandler('auth');
             route('/verify').withAction({POST: 'verify'}).toHandler('auth');
             route('/resendverificationcode').withAction({GET: 'resendVerificationCode'}).toHandler('auth');
@@ -55,6 +56,11 @@ component {
             route('/security/refreshtoken').withAction({POST: 'refreshToken'}).toHandler('cbsecurity:jwt');
 
             // User
+            // 2fa endpoints
+            route('/me/2fa/setup').withAction({POST: 'setup2fa'}).toHandler('user');
+            route('/me/2fa/confirm').withAction({POST: 'confirm2fa'}).toHandler('user');
+            route('/me/2fa/disable').withAction({POST: 'disable2fa'}).toHandler('user');
+
             route('/me').withAction({GET: 'getProfile', PATCH: 'updateProfile'}).toHandler('user');
             route('/users').withAction({GET: 'view'}).toHandler('user');
 

@@ -1,17 +1,15 @@
 component extends="coldbox.system.testing.BaseTestCase" {
 
+    this.loadColdBox   = true;
+    this.unloadColdBox = false;
+
     property name="cbauth"     inject="authenticationService@cbauth";
     property name="uploadPath" inject="coldbox:setting:uploadPath";
 
     function beforeAll() {
         /**
-         * Clear application and re-wire everything
+         * Re-wire everything
          */
-        application.delete('cbController');
-        application.delete('wirebox')
-        application.delete('socketBox');
-        application.delete('SocketBoxConfig');
-        application.delete('STOMPBroker');
         super.beforeAll();
         application.wirebox.autowire(this);
 
@@ -22,6 +20,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
         var testName = listToArray(metadata.fullname, '.');
         if(testname.len() == 5 && fileExists('tests/resources/#testname[4]#Helper.cfc')) {
             variables['#testname[4]#Helper'] = getInstance('tests.resources.#testname[4]#Helper');
+        }
+        if(testname.len() == 4) {
+            var helper = replaceNoCase(testname[4], 'test', '');
+            if(fileExists('tests/resources/#helper#Helper.cfc')) {
+                variables['#helper#Helper'] = getInstance('tests.resources.#helper#Helper');
+            }
         }
 
         /**

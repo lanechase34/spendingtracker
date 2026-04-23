@@ -247,7 +247,7 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
                                 value={dayjs(selectedAudit.created).format(TIMESTAMP_FORMAT)}
                             />
                             <DetailRow label="IP Address" value={selectedAudit.ip} />
-                            <DetailRow label="User Email" value={selectedAudit.email ?? '—'} />
+                            <DetailRow label="User Email" value={selectedAudit.email ?? '-'} />
                             <DetailRow label="User Agent" value={selectedAudit.agent} />
 
                             <Divider />

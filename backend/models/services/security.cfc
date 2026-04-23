@@ -1,6 +1,7 @@
 component singleton accessors="true" {
 
     property name="authTokenTTL"    inject="coldbox:setting:authTokenTTL";
+    property name="bcrypt"          inject="provider:@BCrypt";
     property name="encryptionKey"   inject="coldbox:setting:encryptionKey";
     property name="environment"     inject="coldbox:setting:environment";
     property name="refreshTokenTTL" inject="coldbox:setting:refreshTokenTTL";
@@ -127,6 +128,45 @@ component singleton accessors="true" {
      */
     public numeric function intToFloat(required numeric intVal) {
         return precisionEvaluate(intVal / 100);
+    }
+
+    /**
+     * Generate salt and hashed password using bcrypt
+     *
+     * @return hashedPassword
+     */
+    public string function generateBcryptPassword(required string password) {
+        var salt           = bcrypt.generateSalt();
+        var hashedPassword = bcrypt.hashPassword(password = password, salt = salt);
+        return hashedPassword;
+    }
+
+    /**
+     * Encryption for TOTP secret
+     *
+     * @secret TOTP Secret
+     */
+    public string function encryptTOTPSecret(required string secret) {
+        return encrypt(
+            secret,
+            getEncryptionKey(),
+            'AES/CBC/PKCS5Padding',
+            'Base64'
+        );
+    }
+
+    /**
+     * Decryption for TOTP secret
+     *
+     * @encryptedSecret Encrypted TOTP secret
+     */
+    public string function decryptTOTPSecret(required string encryptedSecret) {
+        return decrypt(
+            encryptedSecret,
+            getEncryptionKey(),
+            'AES/CBC/PKCS5Padding',
+            'Base64'
+        );
     }
 
 }

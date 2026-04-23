@@ -61,7 +61,8 @@ component {
 		 * --------------------------------------------------------------------------
 		 */
         settings = {
-            audit: {
+            appName: 'SpendingTracker',
+            audit  : {
                 urlpathLength       : 500,
                 methodLength        : 10,
                 agentLength         : 250,
@@ -76,21 +77,22 @@ component {
                 maxRequests   : 0,
                 slowRequests  : []
             },
-            contactEmail  : 'spendingtracker@chaselane.dev',
-            dateMask      : 'mm-dd-yyyy',
-            debugging     : false,
-            encryptionKey : getSystemSetting('ENCRYPTIONKEY'),
-            fromEmail     : 'spendingtracker@chaselane.dev',
-            gcTime        : 0,
-            healthCheck   : true,
-            imageExtension: '.webp',
-            imageMagick   : getSystemSetting('IMAGEMAGICK'),
-            impersonation : false,
-            jwt_secret    : getSystemSetting('JWT_SECRET'),
-            logQueries    : false,
-            logRequests   : true,
-            maxThreads    : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
-            rateLimits    : {
+            contactEmail   : 'spendingtracker@chaselane.dev',
+            dateMask       : 'mm-dd-yyyy',
+            debugging      : false,
+            encryptionKey  : getSystemSetting('ENCRYPTIONKEY'),
+            fromEmail      : 'spendingtracker@chaselane.dev',
+            gcTime         : 0,
+            guestOnlyRoutes: ['auth.login', 'auth.register'],
+            healthCheck    : true,
+            imageExtension : '.webp',
+            imageMagick    : getSystemSetting('IMAGEMAGICK'),
+            impersonation  : false,
+            jwt_secret     : getSystemSetting('JWT_SECRET'),
+            logQueries     : false,
+            logRequests    : true,
+            maxThreads     : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
+            rateLimits     : {
                 /**
                  * limit - num of request allowed per window
                  * window - time in minutes
@@ -194,6 +196,11 @@ component {
                 class     : 'interceptors.ratelimiter',
                 name      : 'rateLimiterInterceptor',
                 properties: {}
+            },
+            {
+                class     : 'interceptors.guestOnly',
+                name      : 'guestOnlyInterceptor',
+                properties: {}
             }
         ];
 
@@ -252,14 +259,18 @@ component {
         coldbox.reinitPassword          = '';
         coldbox.debugMode               = true;
 
+        settings.appName = 'SpendingTracker (DEV)';
+
         /**
          * Begin dev flags, use your .env to change these
          */
         settings.impersonation  = getSystemSetting('IMPERSONATION', true);
         settings.debugging      = getSystemSetting('DEBUGGING', true);
-        settings.useRateLimiter = getSystemSetting('USERATELIMITER', false);
+        settings.useRateLimiter = false; // getSystemSetting('USERATELIMITER', false);
         settings.logQueries     = getSystemSetting('LOGQUERIES', true);
         settings.logRequests    = getSystemSetting('LOGREQUESTS', true);
+
+        moduleSettings = {bcrypt: {workFactor: 4}};
     }
 
     /**
@@ -268,6 +279,9 @@ component {
     function test() {
         settings.impersonation  = true;
         settings.useRateLimiter = false;
+        settings.appName        = 'SpendingTracker (TEST)';
+
+        moduleSettings = {bcrypt: {workFactor: 4}};
     }
 
 }

@@ -4,6 +4,7 @@ component extends="tests.resources.baseTest" {
 
     function beforeAll() {
         super.beforeAll();
+        imageService = getInstance('services.image');
     }
 
     function afterAll() {
@@ -14,8 +15,6 @@ component extends="tests.resources.baseTest" {
         describe('Image Service Test', () => {
             beforeEach(() => {
                 setup();
-
-                imageService = getInstance('services.image');
             });
 
             it('Service can be created', () => {

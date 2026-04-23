@@ -134,8 +134,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
             it('Should block request and return 429 when rate limit is exceeded', () => {
                 var mockResponse = createMock('coldbox.system.web.context.RequestContext');
-                mockResponse.$('setError', mockResponse);
-                mockResponse.$('addMessage', mockResponse);
+                mockResponse.$('setErrorMessage', mockResponse);
                 mockResponse.$('setStatusCode', mockResponse);
                 mockResponse.$('getDataPacket', {error: true, messages: ['Too many attempts. Please try again later.']});
 
@@ -159,15 +158,14 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 );
 
                 // Response object was populated
-                expect(mockResponse.$once('setError')).toBeTrue();
-                expect(mockResponse.$once('addMessage')).toBeTrue();
+                expect(mockResponse.$once('setErrorMessage')).toBeTrue();
                 expect(mockResponse.$once('setStatusCode')).toBeTrue();
 
                 var setStatusCodeCall = mockResponse.$callLog().setStatusCode[1];
                 expect(setStatusCodeCall[1]).toBe(429);
 
-                var addMessageCall = mockResponse.$callLog().addMessage[1];
-                expect(addMessageCall[1]).toBe('Too many attempts. Please try again later.');
+                var setErrorMessageCall = mockResponse.$callLog().setErrorMessage[1];
+                expect(setErrorMessageCall[1]).toBe('Too many attempts. Please try again later.');
 
                 // renderData and noExecution still called
                 expect(mockRequestContext.$once('renderData')).toBeTrue();
