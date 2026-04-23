@@ -58,8 +58,8 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
      *
      * @return Struct of recovery codes
      *
-     * @throws TOTP.InvalidCode                                 
-     * @throws TOTP.NotInitiated
+     * @throws (TOTP.InvalidCode)
+     * @throws (TOTP.NotInitiated)
      */
     public struct function confirmSetup(required userObj user, required string code) {
         var record = getUserTOTPRecord(user.getId());
@@ -108,8 +108,8 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
      * @userid The userObj
      * @code   The 6-digit code from the authenticator app or a recovery code
      *
-     * @throws TOTP.InvalidCode
-     * @throws TOTP.NotEnabled                                
+     * @throws (TOTP.InvalidCode)
+     * @throws (TOTP.NotEnabled) 
      */
     public void function verifyTOTP(required userObj user, required string code) {
         var record = getUserTOTPRecord(user.getId());
@@ -129,8 +129,8 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
      * @user The userObj
      * @code The 6-digit code from the authenticator app or a recovery code
      *
-     * @throws TOTP.InvalidCode
-     * @throws TOTP.NotEnabled                                
+     * @throws (TOTP.InvalidCode)
+     * @throws (TOTP.NotEnabled)                         
      */
     public void function disable(required userObj user, required string code) {
         var record = getUserTOTPRecord(user.getId());
