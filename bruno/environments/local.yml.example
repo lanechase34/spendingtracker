@@ -1,0 +1,8 @@
+name: local
+variables:
+  - name: access_token
+    value: ""
+  - name: csrf_token
+    value: ""
+  - name: base_url
+    value: http://localhost:8082

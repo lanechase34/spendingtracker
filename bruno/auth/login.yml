@@ -1,0 +1,43 @@
+info:
+  name: login
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/api/v1/login?fwreinit"
+  params:
+    - name: fwreinit
+      value: ""
+      type: query
+  body:
+    type: multipart-form
+    data:
+      - name: email
+        type: text
+        value: test2@gmail.com
+      - name: password
+        type: text
+        value: sfasfsasdfasdfdf
+      - name: rememberMe
+        type: text
+        value: "false"
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        var response = res.getBody();
+        var token = response.data.access_token;
+        bru.setVar('access_token', token);
+        console.log('access_token updated:', token);
+
+        // Automatically run the CSRF request after login
+        await bru.runRequest('csrf');
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

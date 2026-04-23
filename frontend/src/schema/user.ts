@@ -8,7 +8,6 @@ import { z } from 'zod';
 
 /**
  * API return formats for:
- * /login (JWT)
  * /register (Pending JWT)
  * /verify (Actual JWT on success)
  */
@@ -17,6 +16,22 @@ const AuthAPIResponseSchema = validateAPIResponse(
         access_token: z.string().min(2),
     })
 );
+
+/**
+ * API return format for /login
+ * Extends the base auth response to include the optional mfa_required flag
+ */
+const LoginAPIResponseSchema = validateAPIResponse(
+    z.object({
+        access_token: z.string().min(2),
+        mfa_required: z.boolean().optional(),
+    })
+);
+
+interface LoginResult {
+    access_token: string;
+    mfa_required?: boolean;
+}
 
 interface UserServiceParams {
     authFetch?: ReturnType<typeof useAuthFetch>;
@@ -31,11 +46,12 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
         /**
          * POST /login
          * Login a user and receive their JWT
+         * If 2FA is enabled, returns a pending token with mfa_required: true
          *
          * @param formData {email, password}
          * @returns access_token
          */
-        async login(formData: FormData): Promise<string> {
+        async login(formData: FormData): Promise<LoginResult> {
             const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 body: formData,
@@ -47,7 +63,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
 
             // Validate the response data
             const json = await safeJson(response);
-            const parsed = AuthAPIResponseSchema.safeParse(json);
+            const parsed = LoginAPIResponseSchema.safeParse(json);
 
             if (!parsed.success) {
                 throw new APIError('Login Validation failed: Invalid response format', response.status);
@@ -64,8 +80,11 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
                 throw new APIError('Invalid Login.', response.status);
             }
 
-            // Return access token
-            return result.data.access_token;
+            // Return access token and mfa_required flag
+            return {
+                access_token: result.data.access_token,
+                mfa_required: result.data.mfa_required,
+            };
         },
 
         /**

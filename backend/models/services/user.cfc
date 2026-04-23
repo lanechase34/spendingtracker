@@ -33,7 +33,8 @@ component singleton accessors="true" {
         'verificationsentdate',
         'settings',
         'salary',
-        'monthlytakehome'
+        'monthlytakehome',
+        'totp_enabled'
     ];
 
     /**

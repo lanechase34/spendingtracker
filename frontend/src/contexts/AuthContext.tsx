@@ -60,6 +60,12 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const [pendingToken, setPendingToken] = useState<string | null>(null);
 
     /**
+     * Stores a pending 2fa token for a user who still needs to enter a 2fa code
+     */
+    const [pending2FAToken, setPending2FAToken] = useState<string | null>(null);
+    const [mfaRequired, setMfaRequired] = useState<boolean>(false);
+
+    /**
      *  Store CSRF Token
      */
     const [csrfToken, setCsrfToken] = useState<string | null>(null);
@@ -124,6 +130,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         updateAuthToken(null);
         updateCsrfToken(null);
         setPendingToken(null);
+        setPending2FAToken(null);
+        setMfaRequired(false);
         setWasAuthenticated(false);
         setUserJustLoggedIn(false);
 
@@ -194,6 +202,9 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         [logout, updateCsrfToken]
     );
 
+    /**
+     * Sets the auth token, sets the flag that the user just logged in, and fetches the csrf token immediately
+     */
     const login = useCallback(
         async (token: string | null) => {
             updateAuthToken(token);
@@ -205,6 +216,18 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             }
         },
         [getCsrfToken, updateAuthToken]
+    );
+
+    /**
+     * Completes the 2FA login process
+     */
+    const complete2FALogin = useCallback(
+        async (token: string) => {
+            setPending2FAToken(null);
+            setMfaRequired(false);
+            await login(token);
+        },
+        [login]
     );
 
     /**
@@ -332,8 +355,18 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             getCsrfToken: getCsrfToken,
             userJustLoggedIn: userJustLoggedIn,
             clearUserJustLoggedIn: clearUserJustLoggedIn,
+
+            // Pending verification
             pendingToken: pendingToken,
             setPendingToken: setPendingToken,
+
+            // Pending 2FA verification
+            pending2FAToken: pending2FAToken,
+            setPending2FAToken: setPending2FAToken,
+            mfaRequired: mfaRequired,
+            setMfaRequired: setMfaRequired,
+            complete2FALogin: complete2FALogin,
+
             isInitializing: isInitializing,
             isAuthenticated: isAuthenticated,
             wasAuthenticated: wasAuthenticated,
@@ -350,6 +383,11 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         clearUserJustLoggedIn,
         pendingToken,
         setPendingToken,
+        pending2FAToken,
+        setPending2FAToken,
+        mfaRequired,
+        setMfaRequired,
+        complete2FALogin,
         isInitializing,
         isAuthenticated,
         wasAuthenticated,

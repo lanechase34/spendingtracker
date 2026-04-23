@@ -78,6 +78,17 @@ const defaultAuthContextValue: AuthContextType = {
     setPendingToken: () => {
         /*empty*/
     },
+    pending2FAToken: '',
+    setPending2FAToken: () => {
+        /*empty*/
+    },
+    mfaRequired: false,
+    setMfaRequired: () => {
+        /*empty*/
+    },
+    complete2FALogin: async (_token) => {
+        return Promise.resolve();
+    },
     isInitializing: () => {
         return false;
     },

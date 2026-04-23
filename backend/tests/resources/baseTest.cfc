@@ -79,11 +79,21 @@ component extends="coldbox.system.testing.BaseTestCase" {
             method = "GET"
         );
 
+        var path = '#tempDir#/#createUUID()#.#extension#';
+
+        /**
+         * HEIC is not supported by CF's imageNew(), so write raw bytes
+         * directly to disk and let ImageMagick handle decoding later.
+         */
+        if(lCase(extension) == 'heic') {
+            fileWrite(path, imgResult.filecontent);
+            return path;
+        }
+
         /**
          * CF make image object and write to disk
          */
-        var img  = imageNew(imgResult.filecontent);
-        var path = '#tempDir#/#createUUID()#.#extension#';
+        var img = imageNew(imgResult.filecontent);
         img.write(path);
         return path;
     }

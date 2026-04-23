@@ -86,9 +86,19 @@ export default function LoginDialog() {
         formData.append('rememberMe', rememberMe.toString());
 
         try {
-            const token = await userAPI.login(formData);
-            // Set the JWT
-            await setToken(token);
+            const result = await userAPI.login(formData);
+
+            // If the user is pending 2fa token, show the 2fa dialog
+            if (result.mfa_required) {
+                //setPending2FAToken(result.access_token);
+                //setMfaRequired(true);
+                //openVerify2FADialog();
+                closeLoginDialog();
+                return;
+            }
+
+            // Normal login flow - set the JWT
+            await setToken(result.access_token);
             closeLoginDialog();
         } catch (err: unknown) {
             if (err instanceof APIError) {

@@ -266,10 +266,11 @@ component {
          */
         settings.impersonation  = getSystemSetting('IMPERSONATION', true);
         settings.debugging      = getSystemSetting('DEBUGGING', true);
-        settings.useRateLimiter = false; // getSystemSetting('USERATELIMITER', false);
+        settings.useRateLimiter = getSystemSetting('USERATELIMITER', false);
         settings.logQueries     = getSystemSetting('LOGQUERIES', true);
         settings.logRequests    = getSystemSetting('LOGREQUESTS', true);
 
+        // Lower bcrypt workfactor for faster performance
         moduleSettings = {bcrypt: {workFactor: 4}};
     }
 
