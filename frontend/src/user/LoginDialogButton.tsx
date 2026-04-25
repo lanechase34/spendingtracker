@@ -19,7 +19,7 @@ export default function LoginDialogButton({
 
     return (
         <Button disabled={disabled} size={size} variant={variant} onClick={() => openLoginDialog()}>
-            {icon && icon}
+            {icon}
             Log In
         </Button>
     );

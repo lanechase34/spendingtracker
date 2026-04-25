@@ -30,7 +30,7 @@ import useFormField from 'hooks/useFormField';
 import { useInvalidateWidgets } from 'hooks/useInvalidateWidgets';
 import useSubscriptionContext from 'hooks/useSubscriptionContext';
 import useSubscriptionInterval from 'hooks/useSubscriptionInterval';
-import type { FormEvent } from 'react';
+import { type SubmitEvent } from 'react';
 import { useMemo, useState } from 'react';
 import type { APIResponseType } from 'types/APIResponse.type';
 import { clearCategoryCache } from 'utils/categoryCache';
@@ -128,7 +128,7 @@ export default function ExpenseForm() {
         maxFileSize: maxFileSize,
     });
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
         if (loading) return; // Prevents double submit

@@ -61,7 +61,7 @@ export const barPlugins = {
      */
     footer: (tooltipItems: TooltipItem<'bar'>[]): string => {
         // Only one element - no need for footer
-        if (tooltipItems.length == 1) return '';
+        if (tooltipItems.length === 1) return '';
 
         // Calculate the total of all bars at this x-axis position
         let total = 0;

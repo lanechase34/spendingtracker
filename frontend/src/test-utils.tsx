@@ -1,7 +1,8 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, renderHook, RenderHookOptions, RenderOptions } from '@testing-library/react';
+import type { RenderHookOptions, RenderOptions } from '@testing-library/react';
+import { render, renderHook } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 
 import { AuthContext, AuthContextProvider } from './contexts/AuthContext';
@@ -80,10 +81,6 @@ const defaultAuthContextValue: AuthContextType = {
     },
     pending2FAToken: '',
     setPending2FAToken: () => {
-        /*empty*/
-    },
-    mfaRequired: false,
-    setMfaRequired: () => {
         /*empty*/
     },
     complete2FALogin: async (_token) => {

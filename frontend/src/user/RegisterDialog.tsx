@@ -19,7 +19,7 @@ import useAuthContext from 'hooks/useAuthContext';
 import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
-import type { FormEvent } from 'react';
+import { type SubmitEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
@@ -76,7 +76,7 @@ export default function RegisterDialog() {
         validator: validateMoney,
     });
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
         if (loading) return;

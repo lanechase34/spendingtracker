@@ -21,7 +21,7 @@ export default function RegisterDialogButton({
 
     return (
         <Button disabled={disabled} size={size} variant={variant} onClick={() => openRegisterDialog()}>
-            {icon && icon}
+            {icon}
             {text}
         </Button>
     );

@@ -1,8 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import VerifyDialog from 'user/VerifyDialog';
 import { APIError } from 'utils/apiError';
-
-import VerifyDialog from '../VerifyDialog';
 
 // Mock all external dependencies
 const mockCloseVerifyDialog = jest.fn();

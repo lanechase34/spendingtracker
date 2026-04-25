@@ -99,7 +99,7 @@ component extends="base" hint="Auth Endpoints" {
             event
                 .getResponse()
                 .setErrorMessage('Invalid or expired code.')
-                .setStatusCode(401);
+                .setStatusCode(400);
             return;
         }
 
@@ -107,7 +107,7 @@ component extends="base" hint="Auth Endpoints" {
         var token = jwtService.fromUser(user = userService.retrieveUserById(id = prc.userid, checkPending = false));
 
         // Set refresh token if remember me was checked in login
-        if(prc?.rememberMe ?: false) {
+        if(prc?.jwt_payload?.rememberMe ?: false) {
             securityService.setRefreshTokenCookie(token = token.refresh_token);
         }
 

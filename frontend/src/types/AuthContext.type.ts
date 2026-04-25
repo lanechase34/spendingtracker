@@ -16,8 +16,6 @@ export interface AuthContextType {
     // Access token state for users pending 2FA verification
     pending2FAToken: string | null;
     setPending2FAToken: (token: string | null) => void;
-    mfaRequired: boolean;
-    setMfaRequired: (required: boolean) => void;
     complete2FALogin: (token: string) => Promise<void>;
 
     // Auth loading states

@@ -63,7 +63,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
      * Stores a pending 2fa token for a user who still needs to enter a 2fa code
      */
     const [pending2FAToken, setPending2FAToken] = useState<string | null>(null);
-    const [mfaRequired, setMfaRequired] = useState<boolean>(false);
 
     /**
      *  Store CSRF Token
@@ -131,7 +130,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         updateCsrfToken(null);
         setPendingToken(null);
         setPending2FAToken(null);
-        setMfaRequired(false);
         setWasAuthenticated(false);
         setUserJustLoggedIn(false);
 
@@ -224,7 +222,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const complete2FALogin = useCallback(
         async (token: string) => {
             setPending2FAToken(null);
-            setMfaRequired(false);
             await login(token);
         },
         [login]
@@ -363,8 +360,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             // Pending 2FA verification
             pending2FAToken: pending2FAToken,
             setPending2FAToken: setPending2FAToken,
-            mfaRequired: mfaRequired,
-            setMfaRequired: setMfaRequired,
             complete2FALogin: complete2FALogin,
 
             isInitializing: isInitializing,
@@ -385,8 +380,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         setPendingToken,
         pending2FAToken,
         setPending2FAToken,
-        mfaRequired,
-        setMfaRequired,
         complete2FALogin,
         isInitializing,
         isAuthenticated,

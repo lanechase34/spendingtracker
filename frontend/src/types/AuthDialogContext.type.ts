@@ -3,6 +3,10 @@ export interface AuthDialogContextType {
     openLoginDialog: () => void;
     closeLoginDialog: () => void;
 
+    verify2FADialogOpen: boolean;
+    openVerify2FADialog: () => void;
+    closeVerify2FADialog: () => void;
+
     registerDialogOpen: boolean;
     openRegisterDialog: () => void;
     closeRegisterDialog: () => void;

@@ -449,14 +449,14 @@ component extends="tests.resources.baseTest" {
                     expect(payload.scope).toBe('USER');
                 });
 
-                it('Returns 401 with an invalid TOTP code', () => {
+                it('Returns 400 with an invalid TOTP code', () => {
                     var event = post(
                         route   = '/api/v1/verify2fa',
                         params  = {code: '000000'},
                         headers = {'x-auth-token': pendingToken}
                     );
 
-                    expect(event.getResponse().getStatusCode()).toBe(401);
+                    expect(event.getResponse().getStatusCode()).toBe(400);
                     expect(event.getResponse().getError()).toBeTrue();
                 });
 

@@ -1,5 +1,6 @@
-import useAuthFetch from 'hooks/useAuthFetch';
-import usePendingFetch from 'hooks/usePendingFetch';
+import type useAuthFetch from 'hooks/useAuthFetch';
+import type usePendingFetch from 'hooks/usePendingFetch';
+import type { usePending2FAFetch } from 'hooks/usePendingFetch';
 import { APIError } from 'utils/apiError';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
@@ -8,6 +9,7 @@ import { z } from 'zod';
 
 /**
  * API return formats for:
+ * /verify2fa (Actual JWT on success)
  * /register (Pending JWT)
  * /verify (Actual JWT on success)
  */
@@ -19,7 +21,9 @@ const AuthAPIResponseSchema = validateAPIResponse(
 
 /**
  * API return format for /login
- * Extends the base auth response to include the optional mfa_required flag
+ * Includes the optional mfa_required flag
+ *
+ * If mfa_required is true, the access_token only allows the /verify2fa endpoint to be reached
  */
 const LoginAPIResponseSchema = validateAPIResponse(
     z.object({
@@ -36,12 +40,13 @@ interface LoginResult {
 interface UserServiceParams {
     authFetch?: ReturnType<typeof useAuthFetch>;
     pendingFetch?: ReturnType<typeof usePendingFetch>;
+    pending2FAFetch?: ReturnType<typeof usePending2FAFetch>;
 }
 
 /**
  * Service layer for the user API endpoints
  */
-export function userService({ authFetch, pendingFetch }: UserServiceParams) {
+export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserServiceParams) {
     return {
         /**
          * POST /login
@@ -125,7 +130,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
                 body: JSON.stringify(body),
             });
 
-            if (response.status == 429) {
+            if (response.status === 429) {
                 throw new APIError('Too many requests. Please wait.', response.status);
             }
 
@@ -198,7 +203,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
             }
 
             const result = parsed.data;
-            if (response.status == 429) {
+            if (response.status === 429) {
                 throw new APIError(result.messages?.[0] ?? 'Too many requests. Please wait.', 429);
             }
 
@@ -206,6 +211,51 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
                 throw new Error('Invalid network response');
             }
             return;
+        },
+
+        /**
+         * POST /verify2fa
+         * Verify the 2FA code during login using the pending 2FA token
+         * Accepts either a 6-digit TOTP code or a recovery code (xxxx-xxxx-xxxx-xxxx)
+         *
+         * @params formData {code - The TOTP code or recovery code}
+         * @returns access_token - the full user JWT
+         */
+        async verify2fa(formData: FormData) {
+            if (!pending2FAFetch) {
+                throw new Error('Invalid state');
+            }
+
+            const response = await pending2FAFetch({
+                url: `${API_BASE_URL}/verify2fa`,
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response) {
+                throw new APIError('Invalid state', 401);
+            }
+
+            if (response.status === 429) {
+                throw new APIError('Too many requests. Please wait.', 429);
+            }
+
+            // Validate the response data
+            const json = await safeJson(response);
+            const parsed = AuthAPIResponseSchema.safeParse(json);
+
+            if (!parsed.success) {
+                throw new APIError('Invalid response format.', response.status);
+            }
+
+            const result = parsed.data;
+
+            if (result.error || !response.ok) {
+                throw new APIError(result.messages?.[0] ?? 'Invalid or expired code.', response.status);
+            }
+
+            // Return access token
+            return result.data.access_token;
         },
 
         /**
@@ -230,7 +280,7 @@ export function userService({ authFetch, pendingFetch }: UserServiceParams) {
                 throw new APIError('Invalid state', 401);
             }
 
-            if (response.status == 429) {
+            if (response.status === 429) {
                 throw new APIError('Too many requests. Please wait.', 429);
             }
 

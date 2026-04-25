@@ -1,4 +1,4 @@
-import useAuthFetch from 'hooks/useAuthFetch';
+import type useAuthFetch from 'hooks/useAuthFetch';
 import type { APIResponseType } from 'types/APIResponse.type';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';

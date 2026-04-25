@@ -1,4 +1,4 @@
-import useAuthFetch from 'hooks/useAuthFetch';
+import type useAuthFetch from 'hooks/useAuthFetch';
 import type { Subscription } from 'types/Subscription.type';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
@@ -8,9 +8,10 @@ import { z } from 'zod';
 const NoDataAPIResponseSchema = validateAPIResponse(z.null().optional());
 const ToggleSubscriptionAPISchema = validateAPIResponse(
     z.object({
-        nextDate: z.string().datetime({ local: true }),
+        nextDate: z.iso.datetime({ local: true }),
     })
 );
+
 /**
  * Service layer for the Subscription API endpoints
  */

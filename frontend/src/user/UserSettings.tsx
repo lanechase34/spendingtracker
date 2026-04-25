@@ -18,7 +18,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
 import useUserContext from 'hooks/useUserContext';
-import type { FormEvent } from 'react';
+import { type SubmitEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { validateMoney } from 'validators/validateMoney';
@@ -39,7 +39,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
     const passwordField = useFormField({
         initialValue: '',
         validator: (value: string) => {
-            if (!value || value.trim().length == 0) return null; // not required
+            if (!value || value.trim().length === 0) return null; // not required
             if (value.trim().length < 10) return 'Password must be at least 10 characters';
             return null;
         },
@@ -55,7 +55,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         validator: validateMoney,
     });
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
         if (saving) return;

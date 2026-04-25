@@ -1,4 +1,5 @@
-import { Client, IFrame, IMessage } from '@stomp/stompjs';
+import type { IFrame, IMessage } from '@stomp/stompjs';
+import { Client } from '@stomp/stompjs';
 import { createMetricsClient } from 'sockets/createMetricsClient';
 import type { Metric } from 'types/MetricResponse.type';
 import { MetricResponseSchema } from 'types/MetricResponse.type';
