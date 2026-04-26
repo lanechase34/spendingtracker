@@ -106,6 +106,7 @@ component {
                 'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'}
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
+            recoveryCodeCount   : 8, // number of recovery codes to provide for TOTP
             refreshTokenTTL     : 2592000, // 30 days in seconds
             slowRequest         : 1000, // 1000ms
             testEmailPath       : '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/_testemails',

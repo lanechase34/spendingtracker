@@ -1,17 +1,13 @@
 component singleton accessors="true" hint="Service for managing TOTP two-factor auth" {
 
-    property name="appName"         inject="coldbox:setting:appName";
-    property name="bcrypt"          inject="@BCrypt";
-    property name="cacheStorage"    inject="cachebox:coldboxStorage";
-    property name="encryptionKey"   inject="coldbox:setting:encryptionKey";
-    property name="q"               inject="provider:QueryBuilder@qb";
-    property name="securityService" inject="services.security";
-    property name="totp"            inject="@totp";
-
-    property name="recoveryCodeCount" type="numeric";
-    function init() {
-        setRecoveryCodeCount(8);
-    }
+    property name="appName"           inject="coldbox:setting:appName";
+    property name="bcrypt"            inject="@BCrypt";
+    property name="cacheStorage"      inject="cachebox:coldboxStorage";
+    property name="encryptionKey"     inject="coldbox:setting:encryptionKey";
+    property name="q"                 inject="provider:QueryBuilder@qb";
+    property name="recoveryCodeCount" inject="coldbox:setting:recoveryCodeCount";
+    property name="securityService"   inject="services.security";
+    property name="totp"              inject="@totp";
 
     /**
      * Initiates 2FA setup for a user
@@ -80,7 +76,7 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         }
 
         // Generate recovery codes
-        var plainCodes  = totp.generateRecoveryCodes(getRecoveryCodeCount());
+        var plainCodes  = totp.generateRecoveryCodes(recoveryCodeCount);
         var hashedCodes = hashRecoveryCodes(plainCodes);
 
         // Activate 2FA
