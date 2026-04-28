@@ -599,7 +599,18 @@ component {
             },
             'admin.metrics'  : {},
             'admin.cachedata': {},
-            'admin.taskdata' : {}
+            'admin.taskdata' : {},
+            'admin.viewLogs' : {},
+            'admin.readLog'  : {
+                filename: {required: true, type: 'string'},
+                lines   : {
+                    required: false,
+                    type    : 'numeric',
+                    min     : 1,
+                    max     : 2000
+                },
+                search: {required: false, type: 'string'}
+            }
         };
 
         // Generics

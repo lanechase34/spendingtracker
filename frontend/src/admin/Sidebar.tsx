@@ -8,6 +8,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import SpeedIcon from '@mui/icons-material/Speed';
 import StorageIcon from '@mui/icons-material/Storage';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
@@ -48,6 +49,7 @@ export const adminNav: NavSection[] = [
         items: [
             { label: 'Audit Log', path: '/admin/audit', icon: ListAltIcon },
             { label: 'Bug Log', path: '/admin/bug', icon: BugReportIcon },
+            { label: 'Server Logs', path: '/admin/server-logs', icon: TerminalIcon },
         ],
     },
     {
@@ -114,7 +116,11 @@ export default function AdminSidebar() {
 
                     <List disablePadding>
                         {section.items.map(({ label, path, icon: Icon }) => {
-                            const isActive = location.pathname === path;
+                            // Active if exact match, or if we're on a sub-route
+                            const isActive =
+                                location.pathname === path ||
+                                (path !== '/admin' && path !== '/' && location.pathname.startsWith(path));
+
                             return (
                                 <ListItemButton
                                     key={path}

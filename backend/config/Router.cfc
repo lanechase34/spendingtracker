@@ -70,6 +70,8 @@ component {
             route('/admin/metrics').withAction({GET: 'metrics'}).toHandler('admin');
             route('/admin/cachedata').withAction({GET: 'cacheData'}).toHandler('admin');
             route('/admin/taskdata').withAction({GET: 'taskData'}).toHandler('admin');
+            route('/admin/logs/:filename').withAction({GET: 'readLog'}).toHandler('admin');
+            route('/admin/logs').withAction({GET: 'viewLogs'}).toHandler('admin');
 
             // Generics
             route('/healthcheck').to('echo.healthCheck');

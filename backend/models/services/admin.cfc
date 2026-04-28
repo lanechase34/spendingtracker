@@ -1,6 +1,7 @@
 component singleton accessors="true" {
 
     property name="cacheStorage"     inject="cachebox:coldboxStorage";
+    property name="logPath"          inject="coldbox:setting:logPath";
     property name="rateCacheStorage" inject="cachebox:rateStorage";
     property name="wsCacheStorage"   inject="cachebox:wsStorage";
     property name="concurrency"      inject="coldbox:setting:concurrency";
@@ -177,6 +178,129 @@ component singleton accessors="true" {
             });
 
         return tasks;
+    }
+
+    /**
+     * Returns a query of all discoverable log files across
+     * CommandBox and Lucee runtimes, ordered by last modified desc.
+     */
+    public query function getLogs() {
+        // Commandbox Logs
+        var cbLogs = directoryList(
+            path    : '#logPath#/../logs',
+            recurse : false,
+            listInfo: 'query',
+            filter  : '*.log|*.txt',
+            sort    : ''
+        );
+
+        // Lucee Logs
+        var luceeServerLogs = directoryList(
+            path    : '#logPath#/lucee-server/context/logs',
+            recurse : false,
+            listInfo: 'query',
+            filter  : '*.log',
+            sort    : ''
+        );
+
+        return queryExecute(
+            '
+            select name, size, type, dateLastModified, directory
+            from cbLogs
+            where type = :type
+            union
+            select name, size, type, dateLastModified, directory
+            from luceeServerLogs
+            where type = :type
+            order by dateLastModified desc
+        ',
+            {type: {value: 'File', cfsqltype: 'varchar'}},
+            {dbtype: 'query'}
+        );
+    }
+
+    /**
+     * Reads the tail of a validated log file, with optional line filtering.
+     * Derives the directory by matching the filename against discovered logs.
+     *
+     * @filename name of the log file
+     * @lines    number of lines to tail
+     * @search   optional string to filter lines by
+     */
+    public struct function readLog(
+        required string  filename,
+        numeric          lines  = 200,
+        string           search = ''
+    ) {
+        // Derive directory from discovered logs by matching filename
+        var logs  = getLogs();
+        var match = logs.filter((row) => {
+            return row.name == filename;
+        });
+
+        if(!match.recordCount) {
+            throw(type = 'LogViewer.FileNotFound', message = 'Log file not found in available logs: #filename#');
+        }
+
+        var fullPath = match.directory[1] & '/' & filename;
+
+        // Final safety check on the resolved path
+        if(!fileExists(fullPath)) {
+            throw(type = 'LogViewer.FileNotFound', message = 'Log file could not be found on disk: #fullPath#');
+        }
+
+        var lines = tailFile(fullPath, lines, lCase(search));
+
+        return {
+            'filename': filename,
+            'lines'   : lines,
+            'count'   : lines.len(),
+            'filtered': search.len() > 0
+        };
+    }
+
+    /**
+     * Streams a file line by line, keeping only the last N matching lines
+     * in a bounded deque to avoid loading large files into memory.
+     *
+     * @path     absolute path to log file
+     * @maxLines maximum lines to return
+     * @search   lowercase search term, empty string means no filter
+     */
+    private array function tailFile(
+        required string  path,
+        required numeric maxLines,
+        string           search = ''
+    ) {
+        var result = [];
+        var buffer = createObject('java', 'java.util.ArrayDeque');
+        var reader = createObject('java', 'java.io.BufferedReader').init(
+            createObject('java', 'java.io.FileReader').init(path)
+        );
+
+        try {
+            var line = reader.readLine();
+
+            while(!isNull(line)) {
+                if(!search.len() || lCase(line).find(search)) {
+                    buffer.addLast(line);
+                    if(buffer.size() > maxLines) {
+                        buffer.removeFirst();
+                    }
+                }
+                line = reader.readLine();
+            }
+        }
+        finally {
+            reader.close();
+        }
+
+        var iter = buffer.iterator();
+        while(iter.hasNext()) {
+            result.append(iter.next());
+        }
+
+        return result;
     }
 
 }

@@ -89,6 +89,7 @@ component {
             imageMagick    : getSystemSetting('IMAGEMAGICK'),
             impersonation  : false,
             jwt_secret     : getSystemSetting('JWT_SECRET'),
+            logPath        : getPageContext().getServletContext().getRealPath('/WEB-INF/'),
             logQueries     : false,
             logRequests    : true,
             maxThreads     : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),

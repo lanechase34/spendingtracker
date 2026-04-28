@@ -57,7 +57,7 @@ function usePendingTokenFetch(
 
             // Unauthorized - clear the token
             // Invalid CSRF (session expired)
-            if (response.status === 401 || (response.status === 403 && useCsrf)) {
+            if (response.status === 401 || (response.status === 403 && useCsrf) || response.status === 502) {
                 clearToken();
             }
 

@@ -121,6 +121,12 @@ export default function useAuthFetch() {
                 }
             }
 
+            // 502 - for logout
+            else if (response.status === 502) {
+                logout();
+                return response;
+            }
+
             return response;
         },
         [getLatestAuthToken, getCsrfToken, refreshToken, logout]

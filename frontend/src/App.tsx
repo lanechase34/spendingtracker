@@ -35,6 +35,7 @@ const AdminDashboard = lazy(() => import('admin/pages/Dashboard'));
 const MetricsPage = lazy(() => import('admin/pages/MetricsPage'));
 const TasksPage = lazy(() => import('admin/pages/TasksPage'));
 const UsersPage = lazy(() => import('admin/pages/UsersPage'));
+const ServerLogsPage = lazy(() => import('admin/pages/ServerLogs'));
 
 const MetricContextProvider = lazy(() =>
     import('contexts/MetricContext').then((m) => ({ default: m.MetricContextProvider }))
@@ -136,6 +137,7 @@ function AppRouter() {
                     <Route path="/admin/cache" element={<CachePage />} />
                     <Route path="/admin/tasks" element={<TasksPage />} />
                     <Route path="/admin/users" element={<UsersPage />} />
+                    <Route path="/admin/server-logs" element={<ServerLogsPage />} />
                 </Route>
             </Route>
 
