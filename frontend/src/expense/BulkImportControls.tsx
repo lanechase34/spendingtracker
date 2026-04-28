@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { VisuallyHiddenInput } from 'components/VisuallyHiddenInput';
 import type { ChangeEvent } from 'react';
+import { BASE_URL } from 'utils/constants';
 
 interface BulkImportControlsProps {
     csvFile: File | null;
@@ -56,7 +57,7 @@ export default function BulkImportControls({ csvFile, onCsvChange, onProcess }: 
                                         variant="outlined"
                                         component="a"
                                         fullWidth
-                                        href={`${import.meta.env.BASE_URL}/templates/bulk_import_template.csv`}
+                                        href={`${BASE_URL}/templates/bulk_import_template.csv`}
                                         download
                                     >
                                         Download Template

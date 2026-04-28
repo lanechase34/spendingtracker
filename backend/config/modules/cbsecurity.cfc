@@ -44,6 +44,7 @@ component {
                     'auth.login',
                     'auth.register',
                     'auth.logout',
+                    'auth.verify2fa',
                     'echo.*',
                     'cbsecurity:jwt'
                 ], // A list of events to exclude from csrf verification, regex allowed: e.g. stripe\..*

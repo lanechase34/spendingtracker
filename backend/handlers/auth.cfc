@@ -2,6 +2,7 @@ component extends="base" hint="Auth Endpoints" {
 
     this.allowedMethods = {
         login                 : 'POST',
+        verify2fa             : 'POST',
         logout                : 'POST',
         register              : 'POST',
         verify                : 'POST',
@@ -9,11 +10,11 @@ component extends="base" hint="Auth Endpoints" {
         generateCSRF          : 'GET'
     };
 
-    property name="csrfService"     inject="cbcsrf@cbcsrf";
-    property name="jwtService"      inject="JwtService@cbsecurity";
-    property name="securityService" inject="services.security";
-    property name="userService"     inject="services.user";
-
+    property name="csrfService"          inject="cbcsrf@cbcsrf";
+    property name="jwtService"           inject="JwtService@cbsecurity";
+    property name="securityService"      inject="services.security";
+    property name="totpService"          inject="services.totp";
+    property name="userService"          inject="services.user";
     property name="verificationCooldown" inject="coldbox:setting:verificationCooldown";
 
     /**
@@ -24,13 +25,8 @@ component extends="base" hint="Auth Endpoints" {
      * @rc.rememberMe (boolean) sets refresh token cookie if true
      */
     function login(event, rc, prc) {
-        prc.valid = false;
         try {
             var token = jwtService.attempt(username = rc.email, password = rc.password);
-            if(rc.rememberMe) {
-                securityService.setRefreshTokenCookie(token = token.refresh_token);
-            }
-            prc.valid = true;
         }
         catch(VerificationException e) {
             // Verification Exception only thrown after email/password validated
@@ -43,22 +39,83 @@ component extends="base" hint="Auth Endpoints" {
             return;
         }
         catch(any e) {
-        }
-
-        if(!prc.valid) {
             securityService.deleteTokenCookies(); // force delete any lingering cookies
             event
                 .getResponse()
                 .setErrorMessage('Invalid Login.')
                 .setStatusCode(401);
+            return;
         }
-        else {
+
+        // Check if user has 2FA enabled
+        var user = userService.retrieveUserByUsername(rc.email);
+        if(totpService.isEnabled(user.getId())) {
+            // Issue a short lived Pending2FA token
+            var pendingUser = getInstance('objects.userobj');
+
+            var pendingToken = jwtService.fromUser(
+                user         = pendingUser,
+                customClaims = {
+                    pending2fa: true,
+                    rememberMe: rc.rememberMe,
+                    scope     : 'Pending2FA',
+                    sub       : user.getId(),
+                    exp       : int(getTickCount() / 1000) + 300 // 5 minutes
+                }
+            );
             event
                 .getResponse()
-                .setData({access_token: token.access_token})
-                .addMessage('Bearer token created and it expires in #jwtService.getSettings().jwt.expiration# minutes')
+                .setData({access_token: pendingToken.access_token, mfa_required: true})
+                .addMessage('Please complete two-factor authentication.')
                 .setStatusCode(200);
+            return;
         }
+
+        // Normal login - no 2FA
+
+        // Set refresh token if they selected option
+        if(rc.rememberMe) {
+            securityService.setRefreshTokenCookie(token = token.refresh_token);
+        }
+
+        event
+            .getResponse()
+            .setData({access_token: token.access_token})
+            .addMessage('Bearer token created and it expires in #jwtService.getSettings().jwt.expiration# minutes')
+            .setStatusCode(200);
+    }
+
+    /**
+     * Verify 2FA code during login
+     * Returns valid user JWT on success
+     *
+     * @rc.code The 6-digit code from the authenticator app or a recovery code
+     */
+    function verify2fa(event, rc, prc) secured="Pending2FA" {
+        try {
+            totpService.verifyTOTP(user = prc.authUser, code = rc.code);
+        }
+        catch('TOTP.InvalidCode' e) {
+            event
+                .getResponse()
+                .setErrorMessage('Invalid or expired code.')
+                .setStatusCode(400);
+            return;
+        }
+
+        // Issue full JWT now that 2FA is confirmed
+        var token = jwtService.fromUser(user = userService.retrieveUserById(id = prc.userid, checkPending = false));
+
+        // Set refresh token if remember me was checked in login
+        if(prc?.jwt_payload?.rememberMe ?: false) {
+            securityService.setRefreshTokenCookie(token = token.refresh_token);
+        }
+
+        event
+            .getResponse()
+            .setData({access_token: token.access_token})
+            .addMessage('Bearer token created and it expires in #jwtService.getSettings().jwt.expiration# minutes')
+            .setStatusCode(200);
     }
 
     /**
@@ -150,7 +207,7 @@ component extends="base" hint="Auth Endpoints" {
         /**
          * Create new JWT and refresh token
          */
-        var token = jwtService.fromUser(user = userService.retrieveUserById(id = prc.userid));
+        var token = jwtService.fromUser(user = userService.retrieveUserById(id = prc.userid, checkPending = false));
         securityService.setRefreshTokenCookie(token = token.refresh_token);
         event
             .getResponse()
@@ -196,7 +253,7 @@ component extends="base" hint="Auth Endpoints" {
     /**
      * Generate CSRF token for Authenticated User
      */
-    function generateCSRF(event, rc, prc) secured="Unverified,User,Admin" {
+    function generateCSRF(event, rc, prc) secured="Unverified,Pending2FA,User,Admin" {
         prc.csrfToken = csrfService.generate();
         event
             .getResponse()

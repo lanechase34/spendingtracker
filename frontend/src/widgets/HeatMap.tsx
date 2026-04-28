@@ -76,7 +76,7 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
         let lastMonth = -1;
 
         weeks.forEach((week, wi) => {
-            // Use Thursday (index 4) as the representative day — same logic git uses
+            // Use Thursday (index 4) as the representative day - same logic git uses
             const rep = week[4] ?? week[0];
             const month = rep.getMonth();
 

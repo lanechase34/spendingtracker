@@ -100,10 +100,7 @@ component extends="tests.resources.baseTest" {
                      * Mock subscription with receipt
                      */
                     var receipt = createUUID();
-                    var path    = fetchAndWriteImg(
-                        'https://upload.wikimedia.org/wikipedia/commons/f/f6/Sample_0.JPEG',
-                        'jpeg'
-                    );
+                    var path    = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpeg');
                     fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
                     var id = subscriptionHelper.insert(
                         data = subscriptionHelper.mock(
@@ -132,10 +129,7 @@ component extends="tests.resources.baseTest" {
                      */
                     var description = createUUID();
                     var receipt     = createUUID();
-                    var path        = fetchAndWriteImg(
-                        'https://upload.wikimedia.org/wikipedia/commons/f/f6/Sample_0.JPEG',
-                        'jpeg'
-                    );
+                    var path        = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpeg');
                     fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
                     var id = subscriptionHelper.insert(
                         data = subscriptionHelper.mock(

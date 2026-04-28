@@ -24,7 +24,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useFormField from 'hooks/useFormField';
 import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
-import type { FormEvent } from 'react';
+import { type SubmitEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { validateMoney } from 'validators/validateMoney';
 
@@ -118,7 +118,7 @@ export default function EditIncome({ date }: EditIncomeProps) {
         setFormLoading(false);
     };
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
         if (formLoading) return;

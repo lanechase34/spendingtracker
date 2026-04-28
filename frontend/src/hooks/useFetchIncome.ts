@@ -1,6 +1,7 @@
 import useAuthFetch from 'hooks/useAuthFetch';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Income, incomeService } from 'schema/income';
+import type { Income } from 'schema/income';
+import { incomeService } from 'schema/income';
 
 /**
  * useFetchIncome Props

@@ -11,33 +11,33 @@ interface PendingFetchParams {
 }
 
 /**
- * Fetch's secured endpoints using user's JWT - only for unverified users only.
- * Does not interfere with the authToken flowchart
+ * Core fetch logic for pending token based requests.
+ * Shared between usePendingFetch and usePending2FAFetch.
  * Returns null if no token defined yet
  */
-export default function usePendingFetch() {
-    const { pendingToken, getCsrfToken, setPendingToken } = useAuthContext();
-
+function usePendingTokenFetch(
+    token: string | null,
+    clearToken: () => void,
+    getCsrfToken: (token: string) => Promise<string | null>
+) {
     /**
-     * Fetch for 'unverfied' user secured API endpoints. Add's the users pendingToken to the header for the request
-     * useCallback for stable function reference unless pendingToken changes
+     * Fetch for 'unverfied' and 'pending2FAF' user secured API endpoints. Add's the users token to the header for the request
+     * useCallback for stable function reference
      * @url secured url
      * @method http method
      * @fetchSignal abort signal
      * @additionalHeaders headers
      * @body body
-     *
-     * Attempts to refetch the JWT if the user gets a 401 (unauthorized) error returned
      */
-    const pendingFetch = useCallback(
+    return useCallback(
         async ({ url, method = 'GET', signal, additionalHeaders = {}, body }: PendingFetchParams) => {
-            if (!pendingToken) return null;
+            if (!token) return null;
 
             // For non-GET: ensure we have a CSRF token
             const useCsrf = method !== 'GET';
-            const csrf = useCsrf ? await getCsrfToken(pendingToken) : null;
+            const csrf = useCsrf ? await getCsrfToken(token) : null;
 
-            const doFetch = async (token: string, csrfToken: string) => {
+            const doFetch = async (csrfToken: string) => {
                 const isFormData = body instanceof FormData;
                 return fetch(url, {
                     method: method,
@@ -53,18 +53,40 @@ export default function usePendingFetch() {
                 });
             };
 
-            const response = await doFetch(pendingToken, csrf ?? '');
+            const response = await doFetch(csrf ?? '');
 
-            // Unauthorized - blank the pending token
+            // Unauthorized - clear the token
             // Invalid CSRF (session expired)
             if (response.status === 401 || (response.status === 403 && useCsrf)) {
-                setPendingToken(null);
+                clearToken();
             }
 
             return response;
         },
-        [pendingToken, getCsrfToken, setPendingToken]
+        [token, getCsrfToken, clearToken]
     );
+}
 
-    return pendingFetch;
+/**
+ * Fetch for unverified user secured endpoints using pendingToken.
+ * Returns null if no pending token defined.
+ */
+export default function usePendingFetch() {
+    const { pendingToken, getCsrfToken, setPendingToken } = useAuthContext();
+
+    const clearToken = useCallback(() => setPendingToken(null), [setPendingToken]);
+
+    return usePendingTokenFetch(pendingToken, clearToken, getCsrfToken);
+}
+
+/**
+ * Fetch for Pending2FA secured endpoints using pending2FAToken.
+ * Returns null if no pending 2FA token defined.
+ */
+export function usePending2FAFetch() {
+    const { pending2FAToken, getCsrfToken, setPending2FAToken } = useAuthContext();
+
+    const clearToken = useCallback(() => setPending2FAToken(null), [setPending2FAToken]);
+
+    return usePendingTokenFetch(pending2FAToken, clearToken, getCsrfToken);
 }

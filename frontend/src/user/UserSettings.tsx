@@ -1,4 +1,5 @@
 import CloseIcon from '@mui/icons-material/Close';
+import SecurityIcon from '@mui/icons-material/Security';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -14,24 +15,34 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
 import useUserContext from 'hooks/useUserContext';
-import type { FormEvent } from 'react';
+import { type SubmitEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { validateMoney } from 'validators/validateMoney';
+
+import Disable2FADialog from './Disable2FADialog';
+import Setup2FADialog from './Setup2FADialog';
 
 interface UserSettingsProps {
     open: boolean;
     onClose: (_event: object, reason: string) => void;
 }
 
+/**
+ * Various options pertaining to the user
+ */
 export default function UserSettings({ open, onClose }: UserSettingsProps) {
     const [saving, setSaving] = useState<boolean>(false);
 
-    const { user } = useUserContext();
+    const [setup2FAOpen, setSetup2FAOpen] = useState<boolean>(false);
+    const [disable2FAOpen, setDisable2FAOpen] = useState<boolean>(false);
+
+    const { user, updateUser } = useUserContext();
     const { showToast } = useToastContext();
     const authFetch = useAuthFetch();
     const userAPI = useMemo(() => userService({ authFetch: authFetch }), [authFetch]);
@@ -39,8 +50,17 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
     const passwordField = useFormField({
         initialValue: '',
         validator: (value: string) => {
-            if (!value || value.trim().length == 0) return null; // not required
+            if (!value || value.trim().length === 0) return null; // not required
             if (value.trim().length < 10) return 'Password must be at least 10 characters';
+            return null;
+        },
+    });
+
+    const confirmPasswordField = useFormField({
+        initialValue: '',
+        validator: (value: string) => {
+            if (!value || value.trim().length === 0) return 'Please confirm your new password';
+            if (value !== passwordField.value) return 'Passwords do not match';
             return null;
         },
     });
@@ -55,10 +75,38 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         validator: validateMoney,
     });
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleExited = () => {
+        passwordField.reset();
+        confirmPasswordField.reset();
+        salaryField.reset();
+        monthlyTakeHomeField.reset();
+    };
+
+    /**
+     * Whether the user has made any changes worth saving
+     */
+    const hasChanges = passwordField.value.trim().length > 0 || salaryField.isDirty || monthlyTakeHomeField.isDirty;
+
+    /**
+     * Whether a password is being changed - controls confirm field visibility
+     */
+    const isChangingPassword = passwordField.value.trim().length > 0;
+
+    /**
+     * Whether the form is valid to submit
+     */
+    const isValid =
+        hasChanges &&
+        !salaryField.error &&
+        !monthlyTakeHomeField.error &&
+        !passwordField.error &&
+        // If changing password, confirm must match
+        (!isChangingPassword || confirmPasswordField.value === passwordField.value);
+
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
-        if (saving) return;
+        if (saving || !isValid) return;
         setSaving(true);
 
         // Final validation
@@ -67,6 +115,10 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
             salary: salaryField.validateField(),
             monthlyTakeHome: monthlyTakeHomeField.validateField(),
         };
+
+        if (isChangingPassword) {
+            newErrors.password = confirmPasswordField.validateField();
+        }
 
         // Don't submit if error(s) exist
         const hasErrors = Object.values(newErrors).some((err) => err && err !== null && err !== '');
@@ -82,6 +134,11 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                 monthlyTakeHome: monthlyTakeHomeField.value,
             });
 
+            salaryField.resetTo(salaryField.value);
+            monthlyTakeHomeField.resetTo(monthlyTakeHomeField.value);
+            passwordField.reset();
+            confirmPasswordField.reset();
+
             showToast('Successfully saved!', 'success');
             onClose({}, 'doneLoading');
         } catch (err: unknown) {
@@ -93,81 +150,176 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth={true} maxWidth={'sm'}>
-            <DialogTitle
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+        <>
+            <Dialog
+                open={open}
+                onClose={onClose}
+                fullWidth={true}
+                maxWidth={'sm'}
+                slotProps={{
+                    transition: {
+                        onExited: handleExited,
+                    },
                 }}
             >
-                Settings
-                <IconButton disabled={saving} aria-label="close" onClick={() => onClose({}, 'button')}>
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
-            <Divider />
-            <DialogContent>
-                <Box
-                    component="form"
-                    id="userForm"
-                    onSubmit={(event) => void handleSubmit(event)}
-                    sx={{}}
-                    noValidate
-                    autoComplete="off"
+                <DialogTitle
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                    }}
                 >
-                    <Stack spacing={3} sx={{ width: '100%' }}>
-                        <TextField
-                            id="inputPassword"
-                            label="Change Password"
-                            name="password"
-                            type="password"
-                            value={passwordField.value}
-                            onChange={passwordField.handleChange}
-                            onBlur={passwordField.handleBlur}
-                            error={!!passwordField.error}
-                            helperText={passwordField.error}
-                        />
-                        <FormControl variant="outlined" error={!!salaryField.error} fullWidth>
-                            <InputLabel htmlFor="outlined-adornment-salary">Salary</InputLabel>
-                            <OutlinedInput
-                                id="outlined-adornment-salary"
-                                startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                                label="Salary"
-                                required
-                                value={salaryField.value}
-                                onChange={salaryField.handleChange}
-                                onBlur={salaryField.handleBlur}
-                            />
-                            {salaryField.error && <FormHelperText>{salaryField.error}</FormHelperText>}
-                        </FormControl>
+                    Settings
+                    <IconButton disabled={saving} aria-label="close" onClick={() => onClose({}, 'button')}>
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <Divider />
+                <DialogContent>
+                    {/* Account section */}
+                    <Box
+                        component="form"
+                        id="userForm"
+                        onSubmit={(event) => void handleSubmit(event)}
+                        sx={{ pb: 3 }}
+                        noValidate
+                        autoComplete="off"
+                    >
+                        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+                            Account
+                        </Typography>
 
-                        <FormControl variant="outlined" error={!!monthlyTakeHomeField.error} fullWidth>
-                            <InputLabel htmlFor="outlined-adornment-salary">Monthly Take Home</InputLabel>
-                            <OutlinedInput
-                                id="outlined-adornment-takehome"
-                                startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                                label="Monthly Take Home"
-                                required
-                                value={monthlyTakeHomeField.value}
-                                onChange={monthlyTakeHomeField.handleChange}
-                                onBlur={monthlyTakeHomeField.handleBlur}
+                        <Stack spacing={3} sx={{ width: '100%' }}>
+                            <TextField
+                                id="inputPassword"
+                                label="Change Password"
+                                name="password"
+                                type="password"
+                                value={passwordField.value}
+                                onChange={passwordField.handleChange}
+                                onBlur={passwordField.handleBlur}
+                                error={!!passwordField.error}
+                                helperText={passwordField.error}
                             />
-                            {monthlyTakeHomeField.error && (
-                                <FormHelperText>{monthlyTakeHomeField.error}</FormHelperText>
+
+                            {/* Confirm password - only shown when user starts typing a new password */}
+                            {isChangingPassword && (
+                                <TextField
+                                    id="inputConfirmPassword"
+                                    label="Confirm New Password"
+                                    name="confirmPassword"
+                                    type="password"
+                                    value={confirmPasswordField.value}
+                                    onChange={confirmPasswordField.handleChange}
+                                    onBlur={confirmPasswordField.handleBlur}
+                                    error={!!confirmPasswordField.error}
+                                    helperText={confirmPasswordField.error ?? ' '}
+                                />
                             )}
-                        </FormControl>
-                    </Stack>
-                </Box>
-            </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 1 }}>
-                <Button disabled={saving} variant="outlined" onClick={() => onClose({}, 'button')}>
-                    Close
-                </Button>
-                <Button loading={saving} loadingPosition="start" variant="outlined" type="submit" form="userForm">
-                    Save
-                </Button>
-            </DialogActions>
-        </Dialog>
+
+                            <FormControl variant="outlined" error={!!salaryField.error} fullWidth>
+                                <InputLabel htmlFor="outlined-adornment-salary">Salary</InputLabel>
+                                <OutlinedInput
+                                    id="outlined-adornment-salary"
+                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                    label="Salary"
+                                    required
+                                    value={salaryField.value}
+                                    onChange={salaryField.handleChange}
+                                    onBlur={salaryField.handleBlur}
+                                />
+                                {salaryField.error && <FormHelperText>{salaryField.error}</FormHelperText>}
+                            </FormControl>
+
+                            <FormControl variant="outlined" error={!!monthlyTakeHomeField.error} fullWidth>
+                                <InputLabel htmlFor="outlined-adornment-salary">Monthly Take Home</InputLabel>
+                                <OutlinedInput
+                                    id="outlined-adornment-takehome"
+                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                    label="Monthly Take Home"
+                                    required
+                                    value={monthlyTakeHomeField.value}
+                                    onChange={monthlyTakeHomeField.handleChange}
+                                    onBlur={monthlyTakeHomeField.handleBlur}
+                                />
+                                {monthlyTakeHomeField.error && (
+                                    <FormHelperText>{monthlyTakeHomeField.error}</FormHelperText>
+                                )}
+                            </FormControl>
+                        </Stack>
+                    </Box>
+
+                    <Divider />
+
+                    {/* Security section */}
+                    <Box>
+                        <Typography variant="subtitle2" color="text.secondary" sx={{ my: 2 }}>
+                            Security
+                        </Typography>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                p: 2,
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <SecurityIcon fontSize="small" color={user?.totpEnabled ? 'success' : 'action'} />
+                                <Box>
+                                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                        Two-Factor Authentication
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {user?.totpEnabled
+                                            ? 'Enabled - your account is protected with 2FA.'
+                                            : 'Disabled - add an extra layer of security.'}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                color={user?.totpEnabled ? 'error' : 'primary'}
+                                onClick={() => (user?.totpEnabled ? setDisable2FAOpen(true) : setSetup2FAOpen(true))}
+                                sx={{ ml: 2, flexShrink: 0 }}
+                            >
+                                {user?.totpEnabled ? 'Disable' : 'Enable'}
+                            </Button>
+                        </Box>
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 1 }}>
+                    <Button disabled={saving} variant="outlined" onClick={() => onClose({}, 'button')}>
+                        Close
+                    </Button>
+                    <Button
+                        loading={saving}
+                        loadingPosition="start"
+                        variant="outlined"
+                        type="submit"
+                        form="userForm"
+                        disabled={!isValid || saving}
+                    >
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Setup2FADialog
+                open={setup2FAOpen}
+                onClose={() => setSetup2FAOpen(false)}
+                onEnabled={() => updateUser({ totpEnabled: true })}
+            />
+
+            <Disable2FADialog
+                open={disable2FAOpen}
+                onClose={() => setDisable2FAOpen(false)}
+                onDisabled={() => updateUser({ totpEnabled: false })}
+            />
+        </>
     );
 }

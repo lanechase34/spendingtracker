@@ -1,4 +1,4 @@
-import { Client } from '@stomp/stompjs';
+import type { Client } from '@stomp/stompjs';
 import useAuthContext from 'hooks/useAuthContext';
 import type { ReactNode } from 'react';
 import { createContext, useEffect, useMemo, useRef, useState } from 'react';

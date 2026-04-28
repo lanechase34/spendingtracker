@@ -362,4 +362,182 @@ describe('useFormField', () => {
             expect(result.current.error).toBe('Value must be at least 3 characters');
         });
     });
+
+    describe('isDirty', () => {
+        it('Should be false on initialization', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            expect(result.current.isDirty).toBe(false);
+        });
+
+        it('Should be true when value differs from baseline', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('changed'));
+            });
+
+            expect(result.current.isDirty).toBe(true);
+        });
+
+        it('Should be false when value is changed back to baseline', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('changed'));
+            });
+            expect(result.current.isDirty).toBe(true);
+
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('initial'));
+            });
+            expect(result.current.isDirty).toBe(false);
+        });
+
+        it('Should be false after reset', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('changed'));
+            });
+            expect(result.current.isDirty).toBe(true);
+
+            act(() => {
+                result.current.reset();
+            });
+            expect(result.current.isDirty).toBe(false);
+        });
+
+        it('Should be false after resetTo with same value', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('changed'));
+            });
+            act(() => {
+                result.current.resetTo('changed');
+            });
+
+            expect(result.current.isDirty).toBe(false);
+        });
+
+        it('Should use new baseline after resetTo', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.resetTo('saved');
+            });
+
+            // Changing back to original initial value is now dirty
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('initial'));
+            });
+            expect(result.current.isDirty).toBe(true);
+
+            // New baseline is 'saved'
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('saved'));
+            });
+            expect(result.current.isDirty).toBe(false);
+        });
+    });
+
+    describe('resetTo', () => {
+        it('Should update value to the new value', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.resetTo('new-baseline');
+            });
+
+            expect(result.current.value).toBe('new-baseline');
+        });
+
+        it('Should clear errors', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'ab', validator: mockValidator }));
+
+            act(() => {
+                result.current.handleBlur(createMockBlurEvent('ab'));
+            });
+            expect(result.current.error).toBe('Value must be at least 3 characters');
+
+            act(() => {
+                result.current.resetTo('valid value');
+            });
+            expect(result.current.error).toBeNull();
+        });
+
+        it('Should update the baseline so reset goes to the new value', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.resetTo('saved-value');
+            });
+
+            // Change the value
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('something else'));
+            });
+            expect(result.current.value).toBe('something else');
+
+            // Reset should go back to new baseline not original initial value
+            act(() => {
+                result.current.reset();
+            });
+            expect(result.current.value).toBe('saved-value');
+        });
+
+        it('Should cancel pending debounce', () => {
+            const { result } = renderHook(() =>
+                useFormField({ initialValue: 'initial', validator: mockValidator, debounceDelay: 750 })
+            );
+
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('ab'));
+            });
+
+            act(() => {
+                jest.advanceTimersByTime(500);
+                result.current.resetTo('saved-value');
+            });
+
+            act(() => {
+                jest.advanceTimersByTime(500);
+            });
+
+            // Validator should not fire after resetTo cancelled the debounce
+            expect(mockValidator).not.toHaveBeenCalled();
+            expect(result.current.value).toBe('saved-value');
+        });
+
+        it('Should mark field as not dirty after resetTo', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'initial', validator: mockValidator }));
+
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('changed'));
+            });
+            expect(result.current.isDirty).toBe(true);
+
+            act(() => {
+                result.current.resetTo('changed');
+            });
+            expect(result.current.isDirty).toBe(false);
+        });
+
+        it('Calling resetTo then reset returns to the resetTo value not the original initial', () => {
+            const { result } = renderHook(() => useFormField({ initialValue: 'original', validator: mockValidator }));
+
+            act(() => {
+                result.current.resetTo('after-save');
+            });
+            act(() => {
+                result.current.handleChange(createMockChangeEvent('modified'));
+            });
+            act(() => {
+                result.current.reset();
+            });
+
+            expect(result.current.value).toBe('after-save');
+        });
+    });
 });

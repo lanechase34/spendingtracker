@@ -193,7 +193,7 @@ export default function SubscriptionList() {
                     );
                 },
                 valueGetter: (value: string) => {
-                    return value == 'Y' ? 'Yearly' : value == 'M' ? 'Monthly' : '';
+                    return value === 'Y' ? 'Yearly' : value === 'M' ? 'Monthly' : '';
                 },
                 cellClassName: 'centered-col',
             },

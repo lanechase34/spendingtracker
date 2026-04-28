@@ -628,7 +628,7 @@ describe('CategorySelect', () => {
             const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
             await user.click(screen.getByLabelText('Category'));
 
-            // Fetch is in flight — try to scroll (listbox not yet rendered, loading is true)
+            // Fetch is in flight - try to scroll (listbox not yet rendered, loading is true)
             expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
             expect(mockFetch).toHaveBeenCalledTimes(1);
 
@@ -836,7 +836,7 @@ describe('CategorySelect', () => {
             // Unmount before debounce fires
             unmount();
 
-            // Advance past debounce — should not fire
+            // Advance past debounce - should not fire
             act(() => jest.advanceTimersByTime(1500));
 
             expect(mockFetch).toHaveBeenCalledTimes(1);

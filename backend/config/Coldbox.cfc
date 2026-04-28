@@ -61,7 +61,8 @@ component {
 		 * --------------------------------------------------------------------------
 		 */
         settings = {
-            audit: {
+            appName: 'SpendingTracker',
+            audit  : {
                 urlpathLength       : 500,
                 methodLength        : 10,
                 agentLength         : 250,
@@ -76,21 +77,22 @@ component {
                 maxRequests   : 0,
                 slowRequests  : []
             },
-            contactEmail  : 'spendingtracker@chaselane.dev',
-            dateMask      : 'mm-dd-yyyy',
-            debugging     : false,
-            encryptionKey : getSystemSetting('ENCRYPTIONKEY'),
-            fromEmail     : 'spendingtracker@chaselane.dev',
-            gcTime        : 0,
-            healthCheck   : true,
-            imageExtension: '.webp',
-            imageMagick   : getSystemSetting('IMAGEMAGICK'),
-            impersonation : false,
-            jwt_secret    : getSystemSetting('JWT_SECRET'),
-            logQueries    : false,
-            logRequests   : true,
-            maxThreads    : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
-            rateLimits    : {
+            contactEmail   : 'spendingtracker@chaselane.dev',
+            dateMask       : 'mm-dd-yyyy',
+            debugging      : false,
+            encryptionKey  : getSystemSetting('ENCRYPTIONKEY'),
+            fromEmail      : 'spendingtracker@chaselane.dev',
+            gcTime         : 0,
+            guestOnlyRoutes: ['auth.login', 'auth.register'],
+            healthCheck    : true,
+            imageExtension : '.webp',
+            imageMagick    : getSystemSetting('IMAGEMAGICK'),
+            impersonation  : false,
+            jwt_secret     : getSystemSetting('JWT_SECRET'),
+            logQueries     : false,
+            logRequests    : true,
+            maxThreads     : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
+            rateLimits     : {
                 /**
                  * limit - num of request allowed per window
                  * window - time in minutes
@@ -101,9 +103,14 @@ component {
                 'auth.verify'                : {limit: 5, window: 10, key: 'email'},
                 'auth.resendverificationcode': {limit: 3, window: 10, key: 'email'},
                 'expense.export'             : {limit: 1, window: 1, key: 'email'},
-                'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'}
+                'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'},
+                'user.setup2fa'              : {limit: 5, window: 60, key: 'email'},
+                'user.conirm2fa'             : {limit: 5, window: 10, key: 'email'},
+                'user.disable2fa'            : {limit: 3, window: 10, key: 'email'},
+                'auth.verify2fa'             : {limit: 5, window: 10, key: 'ip'}
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
+            recoveryCodeCount   : 8, // number of recovery codes to provide for TOTP
             refreshTokenTTL     : 2592000, // 30 days in seconds
             slowRequest         : 1000, // 1000ms
             testEmailPath       : '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/_testemails',
@@ -194,6 +201,11 @@ component {
                 class     : 'interceptors.ratelimiter',
                 name      : 'rateLimiterInterceptor',
                 properties: {}
+            },
+            {
+                class     : 'interceptors.guestOnly',
+                name      : 'guestOnlyInterceptor',
+                properties: {}
             }
         ];
 
@@ -252,6 +264,8 @@ component {
         coldbox.reinitPassword          = '';
         coldbox.debugMode               = true;
 
+        settings.appName = 'SpendingTracker (DEV)';
+
         /**
          * Begin dev flags, use your .env to change these
          */
@@ -260,6 +274,9 @@ component {
         settings.useRateLimiter = getSystemSetting('USERATELIMITER', false);
         settings.logQueries     = getSystemSetting('LOGQUERIES', true);
         settings.logRequests    = getSystemSetting('LOGREQUESTS', true);
+
+        // Lower bcrypt workfactor for faster performance
+        moduleSettings = {bcrypt: {workFactor: 4}};
     }
 
     /**
@@ -268,6 +285,9 @@ component {
     function test() {
         settings.impersonation  = true;
         settings.useRateLimiter = false;
+        settings.appName        = 'SpendingTracker (TEST)';
+
+        moduleSettings = {bcrypt: {workFactor: 4}};
     }
 
 }

@@ -8,6 +8,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         mockJwtService      = createEmptyMock('cbsecurity.models.jwt.JwtService');
         mockSecurityService = createEmptyMock('models.services.security');
         mockUserService     = createEmptyMock('models.services.user');
+        mockTotpService     = createEmptyMock('models.services.totp');
 
         // Get the handler
         handler = createMock('handlers.auth');
@@ -32,8 +33,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 handler.$property(propertyName = 'csrfService', mock = mockCSRFService);
                 handler.$property(propertyName = 'jwtService', mock = mockJwtService);
                 handler.$property(propertyName = 'securityService', mock = mockSecurityService);
+                handler.$property(propertyName = 'totpService', mock = mockTotpService);
                 handler.$property(propertyName = 'userService', mock = mockUserService);
                 handler.$property(propertyName = 'verificationCooldown', mock = 5);
+
+                mockTotpService.$('isEnabled', false);
 
                 // Prepare request context
                 prepareMock(getRequestContext());
@@ -82,6 +86,10 @@ component extends="coldbox.system.testing.BaseTestCase" {
                         .$args('password')
                         .$results('password123');
 
+                    var mockUser = createEmptyMock(className = 'models.objects.userobj');
+                    mockUser.$('getId', -1);
+                    mockUserService.$('retrieveUserByUsername', mockUser);
+
                     mockJwtService.$('attempt', mockToken);
                     mockJwtService.$('getSettings', mockSettings);
                     mockSecurityService.$('SetRefreshTokenCookie');
@@ -95,7 +103,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     var result = handler.login(event, rc, prc);
 
-                    expect(prc.valid).toBeTrue();
                     expect(mockJwtService.$once('attempt')).toBeTrue();
                     expect(mockSecurityService.$once('SetRefreshTokenCookie')).toBeFalse(); // rememberMe -> false
                 });
@@ -116,6 +123,10 @@ component extends="coldbox.system.testing.BaseTestCase" {
                         .$args('password')
                         .$results('password123');
 
+                    var mockUser = createEmptyMock(className = 'models.objects.userobj');
+                    mockUser.$('getId', -1);
+                    mockUserService.$('retrieveUserByUsername', mockUser);
+
                     mockJwtService.$('attempt', mockToken);
                     mockJwtService.$('getSettings', mockSettings);
                     mockSecurityService.$('SetRefreshTokenCookie');
@@ -129,7 +140,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     var result = handler.login(event, rc, prc);
 
-                    expect(prc.valid).toBeTrue();
                     expect(mockJwtService.$once('attempt')).toBeTrue();
                     expect(mockSecurityService.$once('SetRefreshTokenCookie')).toBeTrue();
 
@@ -186,7 +196,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.login(event, rc, prc);
 
-                    expect(prc.valid).toBeFalse();
                     expect(mockSecurityService.$once('deleteTokenCookies')).toBeTrue();
                     expect(mockResponse.$once('SetStatusCode')).toBeTrue();
 
@@ -194,7 +203,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     expect(statusCodeCall[1]).toBe(401);
                 });
 
-                it('Should delete cookies and return 401 when prc.valid is false', () => {
+                it('Should delete cookies and return 401 on invalid login', () => {
                     var event = getRequestContext();
 
                     var rc  = {email: 'test@example.com', password: 'password'};
@@ -227,6 +236,10 @@ component extends="coldbox.system.testing.BaseTestCase" {
                         rememberMe: false
                     };
                     var prc = {};
+
+                    var mockUser = createEmptyMock(className = 'models.objects.userobj');
+                    mockUser.$('getId', -1);
+                    mockUserService.$('retrieveUserByUsername', mockUser);
 
                     mockJwtService.$('attempt', mockToken);
                     mockJwtService.$('getSettings', mockSettings);

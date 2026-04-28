@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Generic validator for the API Response
  * The schema passed in is used to validate the data key
  */
-export const validateAPIResponse = <T extends z.ZodTypeAny>(schema: T) => {
+export const validateAPIResponse = <T extends z.ZodType>(schema: T) => {
     return z.discriminatedUnion('error', [
         z.object({
             error: z.literal(false),

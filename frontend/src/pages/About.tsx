@@ -19,13 +19,15 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import useAuthContext from 'hooks/useAuthContext';
 import useUserContext from 'hooks/useUserContext';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import LoginDialog from 'user/LoginDialog';
 import LoginDialogButton from 'user/LoginDialogButton';
 import RegisterDialog from 'user/RegisterDialog';
 import RegisterDialogButton from 'user/RegisterDialogButton';
+import Verify2FADialog from 'user/Verify2FADialog';
 import VerifyDialog from 'user/VerifyDialog';
+import { BASE_URL } from 'utils/constants';
 
 const infoCardSx = {
     borderRadius: 3,
@@ -314,33 +316,33 @@ export default function About() {
                     <FeatureShowcase
                         title="Expense Tracking"
                         description="A high-performance expense table supports sorting, pagination, search, receipt viewing, and dynamic totals - built to handle real-world datasets."
-                        media={`${import.meta.env.BASE_URL}/screenshots/expense_widget.webp`}
+                        media={`${BASE_URL}/screenshots/expense_widget.webp`}
                     />
 
                     <FeatureShowcase
                         title="Category Breakdown"
                         description="Visual breakdown by category of where your money is going."
-                        media={`${import.meta.env.BASE_URL}/screenshots/category_widget.webp`}
+                        media={`${BASE_URL}/screenshots/category_widget.webp`}
                         reverse
                     />
 
                     <FeatureShowcase
                         title="Weekly Trends"
                         description="Visualize category and spending trends over time using dynamic date ranges."
-                        media={`${import.meta.env.BASE_URL}/screenshots/stacked_widget.webp`}
+                        media={`${BASE_URL}/screenshots/stacked_widget.webp`}
                     />
 
                     <FeatureShowcase
                         title="Subscription Management"
                         description="Automatically recurring subscriptions with weekly or monthly billing cycles."
-                        media={`${import.meta.env.BASE_URL}/screenshots/subscription_widget.webp`}
+                        media={`${BASE_URL}/screenshots/subscription_widget.webp`}
                         reverse
                     />
 
                     <FeatureShowcase
                         title="CSV Bulk Import"
                         description="Bulk import expenses using a CSV with parsing, validation, transformation, and error handling."
-                        media={`${import.meta.env.BASE_URL}/gifs/csv_import.gif`}
+                        media={`${BASE_URL}/gifs/csv_import.gif`}
                     />
                 </Box>
 
@@ -436,6 +438,7 @@ export default function About() {
                 </Box>
             </Container>
             <LoginDialog />
+            <Verify2FADialog />
             <RegisterDialog />
             <VerifyDialog />
         </>

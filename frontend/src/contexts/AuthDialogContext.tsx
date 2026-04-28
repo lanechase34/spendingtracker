@@ -9,6 +9,7 @@ export const AuthDialogContext = createContext<AuthDialogContextType | undefined
  * related to the auth circuit:
  *
  * LoginDialog
+ * Verify2FADialog
  * RegisterDialog
  * VerifyDialog
  *
@@ -20,6 +21,13 @@ export const AuthDialogContextProvider = ({ children }: { children: ReactNode })
     const [loginDialogOpen, setLoginDialogOpen] = useState<boolean>(false);
     const openLoginDialog = useCallback(() => setLoginDialogOpen(true), []);
     const closeLoginDialog = useCallback(() => setLoginDialogOpen(false), []);
+
+    /**
+     * Verify 2FA Dialog State
+     */
+    const [verify2FADialogOpen, setVerify2FADialogOpen] = useState<boolean>(false);
+    const openVerify2FADialog = useCallback(() => setVerify2FADialogOpen(true), []);
+    const closeVerify2FADialog = useCallback(() => setVerify2FADialogOpen(false), []);
 
     /**
      * Register Dialog State
@@ -40,6 +48,9 @@ export const AuthDialogContextProvider = ({ children }: { children: ReactNode })
             loginDialogOpen,
             openLoginDialog,
             closeLoginDialog,
+            verify2FADialogOpen,
+            openVerify2FADialog,
+            closeVerify2FADialog,
             registerDialogOpen,
             openRegisterDialog,
             closeRegisterDialog,
@@ -49,12 +60,15 @@ export const AuthDialogContextProvider = ({ children }: { children: ReactNode })
         }),
         [
             loginDialogOpen,
-            registerDialogOpen,
-            verifyDialogOpen,
             openLoginDialog,
             closeLoginDialog,
+            verify2FADialogOpen,
+            openVerify2FADialog,
+            closeVerify2FADialog,
+            registerDialogOpen,
             openRegisterDialog,
             closeRegisterDialog,
+            verifyDialogOpen,
             openVerifyDialog,
             closeVerifyDialog,
         ]

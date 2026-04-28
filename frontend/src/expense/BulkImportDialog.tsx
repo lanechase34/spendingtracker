@@ -92,7 +92,7 @@ export default function BulkImportDialog({
                     {loading && <CircularProgress />}
                     {!loading && (
                         <Stack spacing={1} sx={{ width: '100%' }}>
-                            {rowOrder.length == 0 && <Alert severity="error">No rows to import.</Alert>}
+                            {rowOrder.length === 0 && <Alert severity="error">No rows to import.</Alert>}
                             {!loading && (
                                 <>
                                     <BulkImportErrors errors={importErrors} onClose={clearImportErrors} />
@@ -142,7 +142,7 @@ export default function BulkImportDialog({
                         Cancel
                     </Button>
                     <Button
-                        disabled={loading || rowOrder.length == 0}
+                        disabled={loading || rowOrder.length === 0}
                         loading={saving}
                         variant="outlined"
                         onClick={() => {

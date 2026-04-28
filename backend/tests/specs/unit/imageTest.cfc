@@ -4,6 +4,7 @@ component extends="tests.resources.baseTest" {
 
     function beforeAll() {
         super.beforeAll();
+        imageService = getInstance('services.image');
     }
 
     function afterAll() {
@@ -14,8 +15,6 @@ component extends="tests.resources.baseTest" {
         describe('Image Service Test', () => {
             beforeEach(() => {
                 setup();
-
-                imageService = getInstance('services.image');
             });
 
             it('Service can be created', () => {
@@ -33,11 +32,8 @@ component extends="tests.resources.baseTest" {
                         expect(verify).toBe(true);
                     });
 
-                    it('Validate identity of JPG image', () => {
-                        var path = fetchAndWriteImg(
-                            'https://upload.wikimedia.org/wikipedia/commons/1/16/HDRI_Sample_Scene_Balls_%28JPEG-HDR%29.jpg',
-                            'jpg'
-                        );
+                    it('Validate identity of .jpg image', () => {
+                        var path = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpg');
 
                         /**
                          * Validate identity of this image
@@ -45,10 +41,30 @@ component extends="tests.resources.baseTest" {
                         expect(imageService.validIdentify(path = path)).toBeTrue();
                     });
 
-                    it('Can convert a jpeg to webp', () => {
+                    it('Can convert a .jpeg to .webp', () => {
+                        var path = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpeg');
+
+                        /**
+                         * Validate identity of this image
+                         */
+                        expect(imageService.validIdentify(path = path)).toBeTrue();
+
+                        /**
+                         * Convert to webp
+                         */
+                        expect(imageService.convertToWebp(path = path, quality = 10)).toBeTrue();
+
+                        /**
+                         * Both JPEG and WEBP will now exist
+                         */
+                        expect(fileExists(path)).toBeTrue();
+                        expect(fileExists('#left(path, path.len() - 4)#webp')).toBeTrue();
+                    });
+
+                    it('Can convert a .heic to .webp', () => {
                         var path = fetchAndWriteImg(
-                            'https://upload.wikimedia.org/wikipedia/commons/f/f6/Sample_0.JPEG',
-                            'jpeg'
+                            'https://raw.githubusercontent.com/nokiatech/heif_conformance/master/conformance_files/C001.heic',
+                            'heic'
                         );
 
                         /**

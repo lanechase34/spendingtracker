@@ -15,7 +15,8 @@ import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useCooldownAction from 'hooks/useCooldownAction';
 import useFormField from 'hooks/useFormField';
 import usePendingFetch from 'hooks/usePendingFetch';
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { type SubmitEvent } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
@@ -98,10 +99,11 @@ export default function VerifyDialog() {
             }
         }
     };
+
     const verificationField = useFormField({
         initialValue: '',
         validator: (value: string): string | null => {
-            if (!value.trim() || value.length != 8) return 'Please enter a valid code.';
+            if (!value.trim() || value.length !== 8) return 'Please enter a valid code.';
             return null;
         },
     });
@@ -109,7 +111,7 @@ export default function VerifyDialog() {
     /**
      * Submit the verification code
      */
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
         if (loading) return;

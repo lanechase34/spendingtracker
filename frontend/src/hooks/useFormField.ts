@@ -11,10 +11,12 @@ interface FormField {
 interface UseFormFieldReturn {
     value: string;
     error: string | null;
+    isDirty: boolean;
     handleChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
     handleBlur: (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
     validateField: () => string | null;
     reset: () => void;
+    resetTo: (newValue: string) => void;
     setValue: Dispatch<SetStateAction<string>>;
 }
 
@@ -34,6 +36,17 @@ export default function useFormField({ initialValue, validator, debounceDelay = 
      * Keep track of reference to inline lambda validator - avoid re-memoizing on subsequent calls if function did not actually change
      */
     const validatorRef = useRef(validator);
+
+    /**
+     * Track the baseline value for dirty checking.
+     * Updated by resetTo()
+     */
+    const [baseline, setBaseline] = useState<string>(initialValue);
+
+    /**
+     * Whether the current value differs from the last saved baseline
+     */
+    const isDirty = value !== baseline;
 
     useEffect(() => {
         validatorRef.current = validator;
@@ -88,25 +101,44 @@ export default function useFormField({ initialValue, validator, debounceDelay = 
     }, [value]);
 
     /**
-     * Reset the field to initial value
+     * Reset the field back to its baseline value and clear errors
      */
     const reset = useCallback(() => {
         debounceValidate.clear();
-        setValue(initialValue);
+        setValue(baseline);
         setError(null);
-    }, [initialValue, debounceValidate]);
+    }, [debounceValidate, baseline]);
+
+    /**
+     * Reset the field to a new value and update the baseline.
+     * Use this after a successful save so isDirty correctly
+     * reflects the new saved state going forward.
+     *
+     * @param newValue the newly saved value to use as the new baseline
+     */
+    const resetTo = useCallback(
+        (newValue: string) => {
+            debounceValidate.clear();
+            setBaseline(newValue);
+            setValue(newValue);
+            setError(null);
+        },
+        [debounceValidate]
+    );
 
     // Memoize the return object so it maintains referential stability
     return useMemo(
         () => ({
             value,
             error,
+            isDirty,
             handleChange,
             handleBlur,
             validateField,
             reset,
+            resetTo,
             setValue,
         }),
-        [value, error, handleChange, handleBlur, validateField, reset]
+        [value, error, isDirty, handleChange, handleBlur, validateField, reset, resetTo]
     );
 }

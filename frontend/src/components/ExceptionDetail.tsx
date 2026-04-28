@@ -123,7 +123,7 @@ export default function ExceptionDetail({ blob }: { blob: string }) {
                                 <Accordion key={`tag_error_detail_${ctx.line}_${ctx.template}`} variant="outlined">
                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                         <Typography variant="body2">
-                                            {ctx.template} — line {ctx.line}
+                                            {ctx.template} - line {ctx.line}
                                         </Typography>
                                     </AccordionSummary>
                                     <AccordionDetails>

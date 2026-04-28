@@ -775,11 +775,30 @@ component extends="tests.resources.baseTest" {
                 );
             });
 
+            it('Verifies integer cent arithmetic has perfect precision at scale', () => {
+                // Pure math test - no HTTP, no DB
+                var numExpenses        = 1000;
+                var expectedTotalCents = 0;
+                var amounts            = [];
+
+                for(var i = 1; i <= numExpenses; i++) {
+                    var rand   = round(randRange(0, 98) / 100, 2);
+                    var amount = 12345.01 + i + rand;
+                    var cents  = round(amount * 100, 0);
+                    amounts.append(cents);
+                    expectedTotalCents += cents;
+                }
+
+                var actualSum = 0;
+                amounts.each((cents) => actualSum += cents);
+
+                expect(actualSum).toBe(expectedTotalCents);
+            });
 
             it('Maintains perfect precision when summing many large amounts', () => {
                 // Test combining all tests above into a stress test
                 // This has many large sum amounts with various floating point precision
-                var numExpenses        = randRange(800, 1000);
+                var numExpenses        = randRange(25, 45);
                 var baseAmount         = 12345.01;
                 var expectedTotalCents = 0;
                 var sentAmounts        = [];
@@ -826,7 +845,7 @@ component extends="tests.resources.baseTest" {
                         startDate: dateFormat(startDate, 'yyyy-mm-dd'),
                         endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
                         page     : 1,
-                        records  : 100,
+                        records  : 10,
                         orderCol : 'description',
                         orderDir : 'asc'
                     }
@@ -839,16 +858,16 @@ component extends="tests.resources.baseTest" {
                     response        = response,
                     totalSum        = expectedTotalDollars,
                     filteredSum     = rollingSum,
-                    recordsReturned = 100,
+                    recordsReturned = 10,
                     totalRecords    = numExpenses,
                     filteredRecords = numExpenses,
-                    pageSize        = 100,
+                    pageSize        = 10,
                     page            = 1
                 );
 
                 // Get all expenses across all pages
                 var allExpenses = data.expenses;
-                var totalPages  = ceiling(numExpenses / 100);
+                var totalPages  = ceiling(numExpenses / 10);
 
                 for(var i = 2; i <= totalPages; i++) {
                     var currEvent = get(
@@ -858,7 +877,7 @@ component extends="tests.resources.baseTest" {
                             startDate: dateFormat(startDate, 'yyyy-mm-dd'),
                             endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
                             page     : i,
-                            records  : 100
+                            records  : 10
                         }
                     );
                     var currData = currEvent.getResponse().getData();

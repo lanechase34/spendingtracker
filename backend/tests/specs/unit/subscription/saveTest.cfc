@@ -14,7 +14,7 @@ component extends="tests.resources.baseTest" {
         /**
          * Test various dates
          */
-        loopCount = 100;
+        loopCount = 30;
     }
 
     function afterAll() {

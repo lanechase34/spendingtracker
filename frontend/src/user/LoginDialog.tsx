@@ -15,10 +15,11 @@ import ErrorAlert from 'components/ErrorAlert';
 import useAuthContext from 'hooks/useAuthContext';
 import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useFormField from 'hooks/useFormField';
-import type { FormEvent } from 'react';
+import { type SubmitEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
+import { IS_DEV } from 'utils/constants';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
 import { validateEmail } from 'validators/validateEmail';
 import { validatePassword } from 'validators/validatePassword';
@@ -27,13 +28,13 @@ import { validatePassword } from 'validators/validatePassword';
  * Login form inside dialog
  */
 export default function LoginDialog() {
-    const { loginDialogOpen, closeLoginDialog, openVerifyDialog } = useAuthDialogContext();
+    const { loginDialogOpen, closeLoginDialog, openVerify2FADialog, openVerifyDialog } = useAuthDialogContext();
 
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string[] | null>(null);
     const [rememberMe, setRememberMe] = useState<boolean>(false);
 
-    const { login: setToken, setPendingToken } = useAuthContext();
+    const { login: setToken, setPending2FAToken, setPendingToken } = useAuthContext();
     const userAPI = useMemo(() => userService({}), []);
 
     const handleClose = (_event: object, reason: string) => {
@@ -60,7 +61,7 @@ export default function LoginDialog() {
         validator: validatePassword,
     });
 
-    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
         if (loading) return;
@@ -86,13 +87,22 @@ export default function LoginDialog() {
         formData.append('rememberMe', rememberMe.toString());
 
         try {
-            const token = await userAPI.login(formData);
-            // Set the JWT
-            await setToken(token);
+            const result = await userAPI.login(formData);
+
+            // If the user is pending 2fa token, show the 2fa dialog
+            if (result.mfa_required) {
+                setPending2FAToken(result.access_token);
+                openVerify2FADialog();
+                closeLoginDialog();
+                return;
+            }
+
+            // Normal login flow - set the JWT
+            await setToken(result.access_token);
             closeLoginDialog();
         } catch (err: unknown) {
             if (err instanceof APIError) {
-                if (err.statusCode == 403) {
+                if (err.statusCode === 403) {
                     openVerifyDialog(); // Show the verify dialog
                     setPendingToken(err.data); // set the pending user JWT
                     closeLoginDialog();
@@ -187,7 +197,7 @@ export default function LoginDialog() {
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    {import.meta.env.DEV && (
+                    {IS_DEV && (
                         <Button
                             variant="outlined"
                             color="secondary"

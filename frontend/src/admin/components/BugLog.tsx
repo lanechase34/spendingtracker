@@ -238,7 +238,7 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
                         <Stack spacing={1}>
                             <DetailRow label="Timestamp" value={dayjs(selectedBug.created).format(TIMESTAMP_FORMAT)} />
                             <DetailRow label="IP Address" value={selectedBug.ip} />
-                            <DetailRow label="User Email" value={selectedBug.email ?? '—'} />
+                            <DetailRow label="User Email" value={selectedBug.email ?? '-'} />
                             <DetailRow label="User Agent" value={selectedBug.agent} />
 
                             <Divider />

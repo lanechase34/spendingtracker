@@ -3,7 +3,7 @@ import Drawer from '@mui/material/Drawer';
 import AdminSidebar from 'admin/Sidebar';
 import useAdminDrawerContext from 'hooks/useAdminDrawerContext';
 import useBreakpoint from 'hooks/useBreakpoint';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 interface AdminLayoutProps {
     children: ReactNode;

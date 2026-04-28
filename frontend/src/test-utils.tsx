@@ -1,7 +1,8 @@
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, renderHook, RenderHookOptions, RenderOptions } from '@testing-library/react';
+import type { RenderHookOptions, RenderOptions } from '@testing-library/react';
+import { render, renderHook } from '@testing-library/react';
 import type { ReactElement, ReactNode } from 'react';
 
 import { AuthContext, AuthContextProvider } from './contexts/AuthContext';
@@ -78,6 +79,13 @@ const defaultAuthContextValue: AuthContextType = {
     setPendingToken: () => {
         /*empty*/
     },
+    pending2FAToken: '',
+    setPending2FAToken: () => {
+        /*empty*/
+    },
+    complete2FALogin: async (_token) => {
+        return Promise.resolve();
+    },
     isInitializing: () => {
         return false;
     },
@@ -95,6 +103,7 @@ const defaultUserContextValue: UserContextType = {
         salary: 1,
         monthlyTakeHome: 1,
         role: 'USER',
+        totpEnabled: false,
     },
     loading: false,
     isAuthorized: () => {
@@ -102,6 +111,9 @@ const defaultUserContextValue: UserContextType = {
     },
     hasRole: () => {
         return true;
+    },
+    updateUser: () => {
+        return;
     },
 };
 
