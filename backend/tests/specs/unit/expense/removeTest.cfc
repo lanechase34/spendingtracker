@@ -96,10 +96,7 @@ component extends="tests.resources.baseTest" {
                      * Mock an expense with a receipt
                      */
                     var receipt = createUUID();
-                    var path    = fetchAndWriteImg(
-                        'https://picsum.photos/seed/test/200/200',
-                        'jpeg'
-                    );
+                    var path    = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpeg');
                     fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
 
                     var id = expenseHelper.mock(
