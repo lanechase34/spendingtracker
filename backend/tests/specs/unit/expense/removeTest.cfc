@@ -97,7 +97,7 @@ component extends="tests.resources.baseTest" {
                      */
                     var receipt = createUUID();
                     var path    = fetchAndWriteImg(
-                        'https://upload.wikimedia.org/wikipedia/commons/f/f6/Sample_0.JPEG',
+                        'https://picsum.photos/seed/test/200/200',
                         'jpeg'
                     );
                     fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
