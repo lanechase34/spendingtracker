@@ -103,7 +103,11 @@ component {
                 'auth.verify'                : {limit: 5, window: 10, key: 'email'},
                 'auth.resendverificationcode': {limit: 3, window: 10, key: 'email'},
                 'expense.export'             : {limit: 1, window: 1, key: 'email'},
-                'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'}
+                'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'},
+                'user.setup2fa'              : {limit: 5, window: 60, key: 'email'},
+                'user.conirm2fa'             : {limit: 5, window: 10, key: 'email'},
+                'user.disable2fa'            : {limit: 3, window: 10, key: 'email'},
+                'auth.verify2fa'             : {limit: 5, window: 10, key: 'ip'}
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
             recoveryCodeCount   : 8, // number of recovery codes to provide for TOTP

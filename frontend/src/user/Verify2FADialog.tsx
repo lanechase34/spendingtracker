@@ -19,18 +19,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
-
-/**
- * Validates a 2FA code - accepts either a 6-digit TOTP code or a recovery code
- * in the format xxxx-xxxx-xxxx-xxxx
- */
-function validate2FACode(value: string): string | null {
-    if (!value.length) return 'Please enter your code.';
-    const isTOTP = /^\d{6}$/.test(value);
-    const isRecovery = /^[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$/.test(value);
-    if (!isTOTP && !isRecovery) return 'Enter a 6-digit code or recovery code (xxxx-xxxx-xxxx-xxxx).';
-    return null;
-}
+import { validate2FACode } from 'validators/validateTOTP';
 
 /**
  * Dialog for completing 2FA verification during login.

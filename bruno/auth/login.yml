@@ -34,7 +34,7 @@ runtime:
         console.log('access_token updated:', token);
 
         // Automatically run the CSRF request after login
-        await bru.runRequest('csrf');
+        await bru.runRequest('auth/csrf');
 
 settings:
   encodeUrl: true

@@ -7,6 +7,7 @@ export interface User {
     salary: number | null;
     monthlyTakeHome: number | null;
     role: UserRoles | null;
+    totpEnabled: boolean | null;
 }
 
 export interface UserContextType {
@@ -14,6 +15,7 @@ export interface UserContextType {
     loading: boolean;
     isAuthorized: () => boolean;
     hasRole: (role: UserRoles) => boolean;
+    updateUser: (updates: Partial<User>) => void;
 }
 
 // API Response Format
@@ -22,5 +24,6 @@ export const UserResponseSchema = validateAPIResponse(
         salary: z.number(),
         monthlytakehome: z.number(),
         role: z.enum(ROLES),
+        totp_enabled: z.number().int().min(0).max(1),
     })
 );

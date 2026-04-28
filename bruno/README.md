@@ -33,5 +33,5 @@ All other requests use these tokens via the `x-auth-token` and `x-csrf-token` he
 
 ## Notes
 
-- `environments/local.yml` is gitignored — never commit it as it contains live tokens
+- `environments/local.yml` is gitignored - never commit it as it contains live tokens
 - `environments/local.yml.example` is the template with empty values for new devs

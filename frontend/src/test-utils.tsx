@@ -103,6 +103,7 @@ const defaultUserContextValue: UserContextType = {
         salary: 1,
         monthlyTakeHome: 1,
         role: 'USER',
+        totpEnabled: false,
     },
     loading: false,
     isAuthorized: () => {
@@ -110,6 +111,9 @@ const defaultUserContextValue: UserContextType = {
     },
     hasRole: () => {
         return true;
+    },
+    updateUser: () => {
+        return;
     },
 };
 

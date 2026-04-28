@@ -238,7 +238,8 @@ component singleton accessors="true" {
                     'security_level',
                     'salary',
                     'monthlytakehome',
-                    'settings'
+                    'settings',
+                    'totp_enabled'
                 ])
                 .first();
 
@@ -249,7 +250,8 @@ component singleton accessors="true" {
                 salary         : securityService.intToFloat(securityService.decryptValue(base.salary, 'numeric')),
                 monthlytakehome: securityService.intToFloat(
                     securityService.decryptValue(base.monthlytakehome, 'numeric')
-                )
+                ),
+                totp_enabled: base.totp_enabled
             };
 
             cacheStorage.set(cacheKey, result);

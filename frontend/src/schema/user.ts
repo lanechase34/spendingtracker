@@ -32,6 +32,29 @@ const LoginAPIResponseSchema = validateAPIResponse(
     })
 );
 
+/**
+ * API Return format for
+ * /me/2fa/setup
+ */
+const Setup2FAResponseSchema = validateAPIResponse(
+    z.object({
+        qrCode: z.string(),
+        secret: z.string(),
+    })
+);
+
+/**
+ * Api Return format for
+ * /me/2fa/confirm
+ */
+const Confirm2FAResponseSchema = validateAPIResponse(
+    z.object({
+        recoveryCodes: z.array(z.string()),
+    })
+);
+
+const Disable2FAResponseSchema = validateAPIResponse(z.undefined().optional());
+
 interface LoginResult {
     access_token: string;
     mfa_required?: boolean;
@@ -42,6 +65,9 @@ interface UserServiceParams {
     pendingFetch?: ReturnType<typeof usePendingFetch>;
     pending2FAFetch?: ReturnType<typeof usePending2FAFetch>;
 }
+
+type Setup2FAResult = Extract<z.infer<typeof Setup2FAResponseSchema>, { error: false }>['data'];
+type Confirm2FAResult = Extract<z.infer<typeof Confirm2FAResponseSchema>, { error: false }>['data'];
 
 /**
  * Service layer for the user API endpoints
@@ -300,6 +326,124 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
 
             // Return access token
             return result.data.access_token;
+        },
+
+        /**
+         * POST /me/2fa/setup
+         *
+         * Initiates 2FA setup - returns QR code (base64 encoded img tag) and plain text secret
+         */
+        async setup2fa(): Promise<Setup2FAResult> {
+            if (!authFetch) {
+                throw new Error('Invalid state');
+            }
+
+            const response = await authFetch({
+                url: `${API_BASE_URL}/me/2fa/setup`,
+                method: 'POST',
+            });
+
+            if (!response) {
+                throw new APIError('Invalid state', 401);
+            }
+
+            // Validate the response data
+            const json = await safeJson(response);
+            const parsed = Setup2FAResponseSchema.safeParse(json);
+
+            if (!parsed.success) {
+                throw new APIError('Validation failed: Invalid response format', response.status);
+            }
+
+            const result = parsed.data;
+
+            if (result.error) {
+                throw new APIError(result.messages?.[0] ?? 'Failed to initiate 2FA setup.', response.status);
+            }
+
+            return result.data;
+        },
+
+        /**
+         * POST /me/2fa/confirm
+         * Confirms 2FA setup with a valid TOTP code - returns recovery codes shown once only
+         *
+         * @param code The 6-digit code from the authenticator app
+         */
+        async confirm2fa(code: string): Promise<Confirm2FAResult> {
+            if (!authFetch) {
+                throw new Error('Invalid state');
+            }
+
+            const response = await authFetch({
+                url: `${API_BASE_URL}/me/2fa/confirm`,
+                method: 'POST',
+                body: { code },
+            });
+
+            if (!response) {
+                throw new APIError('Invalid state', 401);
+            }
+
+            if (response.status === 429) {
+                throw new APIError('Too many requests. Please wait.', 429);
+            }
+
+            // Validate the response data
+            const json = await safeJson(response);
+            const parsed = Confirm2FAResponseSchema.safeParse(json);
+
+            if (!parsed.success) {
+                throw new APIError('Validation failed: Invalid response format', response.status);
+            }
+
+            const result = parsed.data;
+            if (result.error) {
+                throw new APIError(result.messages?.[0] ?? 'Invalid or expired code.', response.status);
+            }
+
+            return result.data;
+        },
+
+        /**
+         * POST /me/2fa/disable
+         * Disables 2FA after verifying current TOTP code or recovery code
+         *
+         * @param code The 6-digit TOTP code or recovery code
+         */
+        async disable2fa(code: string): Promise<void> {
+            if (!authFetch) {
+                throw new Error('Invalid state');
+            }
+
+            const response = await authFetch({
+                url: `${API_BASE_URL}/me/2fa/disable`,
+                method: 'POST',
+                body: { code },
+            });
+
+            if (!response) {
+                throw new APIError('Invalid state', 401);
+            }
+
+            if (response.status === 429) {
+                throw new APIError('Too many requests. Please wait.', 429);
+            }
+
+            // Validate the response data
+            const json = await safeJson(response);
+            const parsed = Disable2FAResponseSchema.safeParse(json);
+
+            if (!parsed.success) {
+                throw new APIError('Validation failed: Invalid response format', response.status);
+            }
+
+            const result = parsed.data;
+            if (result.error) {
+                throw new APIError(result.messages?.[0] ?? 'Invalid or expired code.', response.status);
+            }
+
+            return;
         },
     };
 }

@@ -17,6 +17,7 @@ export const UserContext = createContext<UserContextType | undefined>(undefined)
  * monthlyTakeHome
  * settings
  * roles
+ * totp_enabled
  */
 export const UserContextProvider = ({ children }: { children: ReactNode }) => {
     const { authToken, isInitializing } = useAuthContext();
@@ -62,6 +63,7 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
                 salary: result.data.salary,
                 monthlyTakeHome: result.data.monthlytakehome,
                 role: result.data.role,
+                totpEnabled: result.data.totp_enabled === 1,
             });
 
             hasLoadedProfileRef.current = true;
@@ -114,6 +116,13 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
         return userProfile !== null && (userProfile?.role ?? '').length > 0;
     }, [userProfile]);
 
+    /**
+     * Helper to update fields of the userprofile object
+     */
+    const updateUser = useCallback((updates: Partial<User>) => {
+        setUserProfile((prev) => (prev ? { ...prev, ...updates } : prev));
+    }, []);
+
     const hasRole = useCallback((role: UserRoles) => userProfile?.role === role, [userProfile]);
 
     const value: UserContextType = useMemo(
@@ -122,8 +131,9 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
             loading: loading,
             isAuthorized: isAuthorized,
             hasRole: hasRole,
+            updateUser: updateUser,
         }),
-        [userProfile, loading, isAuthorized, hasRole]
+        [userProfile, loading, isAuthorized, hasRole, updateUser]
     );
 
     return <UserContext value={value}>{children}</UserContext>;

@@ -33,6 +33,7 @@ function buildValidApiResponse(
         salary: number;
         monthlytakehome: number;
         role: UserRoles;
+        totp_enabled: number;
         error: boolean;
     }>
 ) {
@@ -42,6 +43,7 @@ function buildValidApiResponse(
             salary: overrides?.salary ?? 80000,
             monthlytakehome: overrides?.monthlytakehome ?? 5000,
             role: overrides?.role ?? 'ADMIN',
+            totp_enabled: overrides?.totp_enabled ?? 0,
         },
     };
 }
@@ -56,6 +58,7 @@ function buildMockResponse(body: unknown, ok = true) {
 function TestConsumer() {
     const context = useContext(UserContext);
     if (!context) return <div data-testid="no-context">No context</div>;
+
     return (
         <div>
             <span data-testid="loading">{String(context.loading)}</span>
@@ -63,6 +66,13 @@ function TestConsumer() {
             <span data-testid="is-authorized">{String(context.isAuthorized())}</span>
             <span data-testid="has-role-admin">{String(context.hasRole('ADMIN'))}</span>
             <span data-testid="has-role-user">{String(context.hasRole('USER'))}</span>
+            <span data-testid="totp-enabled">{String(context.user?.totpEnabled ?? false)}</span>
+            <button data-testid="update-totp" onClick={() => context.updateUser({ totpEnabled: true })}>
+                Enable TOTP
+            </button>
+            <button data-testid="disable-totp" onClick={() => context.updateUser({ totpEnabled: false })}>
+                Disable TOTP
+            </button>
         </div>
     );
 }
@@ -190,7 +200,7 @@ describe('UserContextProvider - successful profile load', () => {
         });
     });
 
-    it('Populates user with salary, monthlyTakeHome, and role', async () => {
+    it('Populates user with salary, monthlyTakeHome, role and totpEnabled', async () => {
         renderWithProvider();
 
         await waitFor(() => {
@@ -200,6 +210,7 @@ describe('UserContextProvider - successful profile load', () => {
                 salary: 80000,
                 monthlyTakeHome: 5000,
                 role: 'ADMIN',
+                totpEnabled: false,
             });
         });
     });
@@ -474,5 +485,91 @@ describe('UserContextProvider - hasLoadedProfileRef deduplication', () => {
         await waitFor(() => {
             expect(screen.getByTestId('user')).toHaveTextContent('null');
         });
+    });
+});
+
+describe('UserContextProvider - totpEnabled', () => {
+    it('Maps totp_enabled 1 to totpEnabled true', async () => {
+        mockAuthFetch.mockResolvedValue(buildMockResponse(buildValidApiResponse({ totp_enabled: 1 })));
+        renderWithProvider();
+
+        await waitFor(() => {
+            expect(screen.getByTestId('totp-enabled')).toHaveTextContent('true');
+        });
+    });
+
+    it('Maps totp_enabled 0 to totpEnabled false', async () => {
+        mockAuthFetch.mockResolvedValue(buildMockResponse(buildValidApiResponse({ totp_enabled: 0 })));
+        renderWithProvider();
+
+        await waitFor(() => {
+            expect(screen.getByTestId('totp-enabled')).toHaveTextContent('false');
+        });
+    });
+});
+
+describe('UserContextProvider - updateUser', () => {
+    it('Updates totpEnabled to true when updateUser is called with totpEnabled: true', async () => {
+        mockAuthFetch.mockResolvedValue(buildMockResponse(buildValidApiResponse({ totp_enabled: 0 })));
+        renderWithProvider();
+
+        await waitFor(() => {
+            expect(screen.getByTestId('totp-enabled')).toHaveTextContent('false');
+        });
+
+        act(() => {
+            screen.getByTestId('update-totp').click();
+        });
+
+        expect(screen.getByTestId('totp-enabled')).toHaveTextContent('true');
+    });
+
+    it('Updates totpEnabled to false when updateUser is called with totpEnabled: false', async () => {
+        mockAuthFetch.mockResolvedValue(buildMockResponse(buildValidApiResponse({ totp_enabled: 1 })));
+        renderWithProvider();
+
+        await waitFor(() => {
+            expect(screen.getByTestId('totp-enabled')).toHaveTextContent('true');
+        });
+
+        act(() => {
+            screen.getByTestId('disable-totp').click();
+        });
+
+        expect(screen.getByTestId('totp-enabled')).toHaveTextContent('false');
+    });
+
+    it('Preserves other user fields when updateUser is called', async () => {
+        mockAuthFetch.mockResolvedValue(buildMockResponse(buildValidApiResponse({ totp_enabled: 0 })));
+        renderWithProvider();
+
+        await waitFor(() => {
+            expect(screen.getByTestId('user')).not.toHaveTextContent('null');
+        });
+
+        act(() => {
+            screen.getByTestId('update-totp').click();
+        });
+
+        const user = JSON.parse(screen.getByTestId('user').textContent ?? 'null') as User;
+
+        expect(user.salary).toBe(80000);
+        expect(user.monthlyTakeHome).toBe(5000);
+        expect(user.role).toBe('ADMIN');
+        expect(user.totpEnabled).toBe(true);
+    });
+
+    it('Does not update user when userProfile is null', async () => {
+        renderWithProvider(null);
+
+        await waitFor(() => {
+            expect(screen.getByTestId('user')).toHaveTextContent('null');
+        });
+
+        act(() => {
+            screen.getByTestId('update-totp').click();
+        });
+
+        expect(screen.getByTestId('user')).toHaveTextContent('null');
     });
 });
