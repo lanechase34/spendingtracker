@@ -60,7 +60,11 @@ component extends="tests.resources.baseTest" {
                 var event = put(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {date: '2025-01-01', pay: 5000, extra: 200}
+                    params  = {
+                        date : '2025-01-01',
+                        pay  : 5000,
+                        extra: 200
+                    }
                 );
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
@@ -113,7 +117,11 @@ component extends="tests.resources.baseTest" {
                 var event = put(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {date: '2025-01-01', pay: 500, extra: 87}
+                    params  = {
+                        date : '2025-01-01',
+                        pay  : 500,
+                        extra: 87
+                    }
                 );
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
