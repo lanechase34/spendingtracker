@@ -69,23 +69,23 @@ component extends="coldbox.system.testing.BaseTestCase" {
     /**
      * Fetch img blob and return absolute path of img
      */
-    private string function fetchAndWriteImg(required string imgUrl, required string extension) {
-        /**
-         * Fetch image blob
-         */
-        cfhttp(
-            url    = imgUrl,
-            result = "imgResult",
-            method = "GET"
-        );
-
+    public string function fetchAndWriteImg(required string imgUrl, required string extension) {
         var path = '#tempDir#/#createUUID()#.#extension#';
 
         /**
-         * HEIC is not supported by CF's imageNew(), so write raw bytes
+         * HEIC is not supported by imageNew(), so write raw bytes
          * directly to disk and let ImageMagick handle decoding later.
          */
         if(lCase(extension) == 'heic') {
+            /**
+             * Fetch image blob
+             */
+            cfhttp(
+                url    = imgUrl,
+                result = "imgResult",
+                method = "GET"
+            );
+
             fileWrite(path, imgResult.filecontent);
             return path;
         }
@@ -93,7 +93,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         /**
          * CF make image object and write to disk
          */
-        var img = imageNew(imgResult.filecontent);
+        var img = imageNew(imgUrl);
         img.write(path);
         return path;
     }
@@ -107,7 +107,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * @interval  Milliseconds to wait between polls (default 100)
      * @message   Failure message if timeout is reached
      */
-    private void function waitFor(
+    public void function waitFor(
         required any condition,
         numeric timeout  = 5,
         numeric interval = 100,

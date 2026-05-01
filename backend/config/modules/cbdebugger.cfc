@@ -4,7 +4,7 @@ component {
         return {
             // This flag enables/disables the tracking of request data to our storage facilities
             // To disable all tracking, turn this master key off
-            enabled         : controller.getSetting('debugging'),
+            enabled         : false, // controller.getSetting('debugging'),
             // This setting controls if you will activate the debugger for visualizations ONLY
             // The debugger will still track requests even in non debug mode.
             debugMode       : controller.getSetting(name = 'environment', defaultValue = 'production') == 'development',

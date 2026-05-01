@@ -75,5 +75,22 @@
   "thisTimeZone": "UTC",
   "watchConfigFilesForChangesEnabled": "false",
   "webCharset": "UTF-8",
-  "whitespaceManagement": "white-space-pref"
+  "whitespaceManagement": "white-space-pref",
+  "modules": {
+        "compat-cfml": {
+            "disabled": false,
+            "clientManagement": false,
+            "settings": {
+                "engine": "lucee",
+                "jsonEscapeControlCharacters": false,
+                "booleansAreNumbers": false,
+                "queryNullToEmpty": false,
+                "transpiler": {
+                    "upperCaseKeys": false,
+                    "forceOutputTrue": false,
+                    "mergeDocsIntoAnnotations": true
+                }
+            }
+        }
+    }
 }

@@ -174,14 +174,14 @@ component {
                 startDate: {
                     required    : true,
                     type        : 'date',
-                    regex       : '[0-9]{4}-[0-9]{2}',
-                    regexMessage: 'The date must be in the format of YYYY-MM'
+                    regex       : '[0-9]{4}-[0-9]{2}-[0-9]{2}',
+                    regexMessage: 'The date must be in the format of YYYY-MM-DD'
                 },
                 endDate: {
                     required    : true,
                     type        : 'date',
-                    regex       : '[0-9]{4}-[0-9]{2}',
-                    regexMessage: 'The date must be in the format of YYYY-MM',
+                    regex       : '[0-9]{4}-[0-9]{2}-[0-9]{2}',
+                    regexMessage: 'The date must be in the format of YYYY-MM-DD',
                     dateRange   : {}
                 }
             },
@@ -189,9 +189,8 @@ component {
                 date: {
                     required    : true,
                     type        : 'date',
-                    regex       : '[0-9]{4}-[0-9]{2}',
-                    regexMessage: 'The date must be in the format of YYYY-MM',
-                    after       : '01/01/2024',
+                    regex       : '[0-9]{4}-[0-9]{2}-[0-9]{2}',
+                    regexMessage: 'The date must be in the format of YYYY-MM-DD',
                     after       : '01/01/2024',
                     before      : '01/01/2075'
                 },

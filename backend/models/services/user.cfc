@@ -246,7 +246,7 @@ component singleton accessors="true" {
             // Transform result
             result = {
                 role           : this.roleMap[base.security_level],
-                settings       : deserializeJSON(base.settings),
+                settings       : deserializeJSON(base.settings.toString()),
                 salary         : securityService.intToFloat(securityService.decryptValue(base.salary, 'numeric')),
                 monthlytakehome: securityService.intToFloat(
                     securityService.decryptValue(base.monthlytakehome, 'numeric')
@@ -474,7 +474,7 @@ component singleton accessors="true" {
                     'lastlogin'
                 ])
                 .get()
-                .each(
+                .map(
                     (value) => {
                         // Format lastlogin to ensure consistent timestamp format
                         if(!isNull(value.lastlogin)) {
@@ -482,7 +482,7 @@ component singleton accessors="true" {
                         }
                         // Map security_level -> permission
                         value.security_level = this.roleMap[value.security_level];
-                        value.verified       = value.verified == 1;
+                        return value;
                     },
                     true,
                     maxThreads

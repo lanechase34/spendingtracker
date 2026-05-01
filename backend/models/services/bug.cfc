@@ -121,9 +121,10 @@ component singleton accessors="true" {
                     'users.email'
                 ])
                 .get()
-                .each(
+                .map(
                     (value) => {
                         value.created = dateTimeFormat(value.created, 'yyyy-mm-dd HH:mm:ss');
+                        return value;
                     },
                     true,
                     maxThreads
