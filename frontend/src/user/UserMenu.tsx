@@ -1,4 +1,5 @@
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -10,12 +11,12 @@ import MenuItem from '@mui/material/MenuItem';
 import useAuthContext from 'hooks/useAuthContext';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useBreakpoint from 'hooks/useBreakpoint';
+import useUserContext from 'hooks/useUserContext';
 import type { MouseEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from 'schema/user';
-
-import UserSettings from './UserSettings';
+import UserSettings from 'user/UserSettings';
 
 export default function UserMenu() {
     const { logout: deleteToken } = useAuthContext();
@@ -23,6 +24,7 @@ export default function UserMenu() {
     const userAPI = useMemo(() => userService({ authFetch: authFetch }), [authFetch]);
     const navigate = useNavigate();
     const { isMobile } = useBreakpoint();
+    const { hasRole } = useUserContext();
 
     /**
      * Menu dropdown
@@ -96,6 +98,17 @@ export default function UserMenu() {
                                 <HomeIcon fontSize="small" />
                             </ListItemIcon>
                             Home
+                        </MenuItem>
+                    )}
+                    {hasRole('ADMIN') && (
+                        <MenuItem
+                            onClick={() => handleMenuAction(() => void navigate('/admin'))}
+                            disabled={isLoggingOut}
+                        >
+                            <ListItemIcon>
+                                <DashboardIcon fontSize="small"></DashboardIcon>
+                            </ListItemIcon>
+                            Admin
                         </MenuItem>
                     )}
                     <MenuItem onClick={handleOpenSettings} disabled={isLoggingOut}>

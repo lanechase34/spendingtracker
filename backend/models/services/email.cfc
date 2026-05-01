@@ -1,6 +1,7 @@
 component singleton accessors="true" hint="Service layer for sending email" {
 
     property name="contactEmail"         inject="coldbox:setting:contactEmail";
+    property name="emailLog"             inject="logbox:logger:Email";
     property name="fromEmail"            inject="coldbox:setting:fromEmail";
     property name="mailService"          inject="MailService@cbmailservices";
     property name="verificationLifespan" inject="coldbox:setting:verificationLifespan";
@@ -23,6 +24,7 @@ component singleton accessors="true" hint="Service layer for sending email" {
             return true;
         }
         catch(any e) {
+            emailLog.error('Error verifying email connection: #serializeJSON(e)#');
         }
         return false;
     }

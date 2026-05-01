@@ -381,6 +381,7 @@ component singleton accessors="true" {
                 }
             }
             catch(any e) {
+                result.errors.append({row: index + 1, message: 'Error importing row. Please try again.'});
             }
         });
 

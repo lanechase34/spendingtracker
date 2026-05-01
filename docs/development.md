@@ -254,3 +254,65 @@ Note: The `--pull=false` flag prevents `act` from re-pulling the runner image ea
     ```
     http://localhost:8082
     ```
+
+## Running in WSL
+
+- Access with `localhost:${HTTP_PORT}`
+- Add winhost mapping to ~/.bashrc for database connection
+
+    ```
+    # Add DNS entry for Windows host
+    if ! grep -q 'winhost' /etc/hosts; then
+        echo 'Adding DNS entry for Windows host in /etc/hosts'
+        # Get the Windows host IP from the default gateway or ip route
+        WIN_HOST_IP=$(ip route show default | awk '{print $3}')
+
+        if [ -n "$WIN_HOST_IP" ]; then
+            echo '' | sudo tee -a /etc/hosts
+            echo '# Windows host - added via ~/.bashrc' | sudo tee -a /etc/hosts
+            echo "$WIN_HOST_IP    winhost" | sudo tee -a /etc/hosts
+            echo "Added winhost entry: $WIN_HOST_IP"
+        else
+            echo "Warning: Could not determine Windows host IP"
+        fi
+    fi
+    ```
+
+- Connect to database using the following
+
+    Install PostgreSQL client if needed
+
+    ```
+    sudo apt install postgresql-client-common
+    sudo apt install postgresql-client-16
+    ```
+
+    Check connection
+
+    ```
+    psql -h winhost -p 5432 -U postgres
+    ```
+
+    You may need to create a new rule in windows firewall (as admin)
+
+    ```
+    New-NetFirewallRule -DisplayName "PostgreSQL WSL" -Direction Inbound -LocalPort 5432 -Protocol TCP -Action Allow
+    ```
+
+    And, update the postgres conf to allow wsl connections
+    The file is location in `PostgreSQL/${version}/data/pg_hba.conf`
+
+    ```
+    # Allow connections from WSL
+    host    all             all             172.16.0.0/12           scram-sha-256
+    ```
+
+- Make sure you set the following `.env` keys for WSL
+
+    ```
+    HTTP_HOST=0.0.0.0 # allows access from windows
+    OS=linux
+
+    DB_HOST=winhost
+    DB_PORT=5432
+    ```

@@ -71,7 +71,7 @@ component singleton accessors="true" {
         var cacheKey = 'userid=#userid#|category.paginate|page=#page#|records=#records#';
 
         if(useCache) {
-            data = cacheStorage.get(cacheKey);
+            var data = cacheStorage.get(cacheKey);
             if(!isNull(data)) return data;
         }
 

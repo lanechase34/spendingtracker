@@ -1,5 +1,6 @@
 component singleton accessors="true" {
 
+    property name="adminLog"         inject="logbox:logger:Admin";
     property name="cacheStorage"     inject="cachebox:coldboxStorage";
     property name="logPath"          inject="coldbox:setting:logPath";
     property name="rateCacheStorage" inject="cachebox:rateStorage";
@@ -30,6 +31,7 @@ component singleton accessors="true" {
             processCpuLoad = osBean.getProcessCpuLoad() * 100;
         }
         catch(any e) {
+            adminLog.error('Error retrieving system cpu stats.');
         }
 
         // Garbage collection
@@ -249,12 +251,12 @@ component singleton accessors="true" {
             throw(type = 'LogViewer.FileNotFound', message = 'Log file could not be found on disk: #fullPath#');
         }
 
-        var lines = tailFile(fullPath, lines, lCase(search));
+        var readLines = tailFile(fullPath, lines, lCase(search));
 
         return {
             'filename': filename,
-            'lines'   : lines,
-            'count'   : lines.len(),
+            'lines'   : readLines,
+            'count'   : readLines.len(),
             'filtered': search.len() > 0
         };
     }
