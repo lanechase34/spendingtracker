@@ -76,10 +76,9 @@ component singleton accessors="true" {
          */
         var offset           = (page - 1) * records;
         var asyncFilteredSum = async.newFuture(() => {
-            var curr = 0;
-            filtered.each((record) => {
-                curr += securityService.decryptValue(record.amount, 'numeric');
-            });
+            var curr = filtered.reduce((prev, record) => {
+                return prev + securityService.decryptValue(record.amount, 'numeric');
+            }, 0);
             return securityService.intToFloat(curr);
         });
         var asyncTotalInfo = async.newFuture(() => {
@@ -111,11 +110,11 @@ component singleton accessors="true" {
                 ])
                 .selectRaw('expense.receipt is not null as receipt')
                 .get()
-                .each(
+                .map(
                     (value) => {
-                        // lucee? pulls 'date' column back as 'timestamp' -> format to remove any timestamp identifier
                         value.date   = dateFormat(value.date, 'yyyy-mm-dd');
                         value.amount = securityService.intToFloat(securityService.decryptValue(value.amount, 'numeric'));
+                        return value;
                     },
                     true,
                     maxThreads
@@ -179,10 +178,9 @@ component singleton accessors="true" {
             );
 
             // Decrypt and sum amounts
-            var totalAmount = 0;
-            result.each((row) => {
-                totalAmount += securityService.decryptValue(row.amount, 'numeric');
-            });
+            var totalAmount = result.reduce((prev, row) => {
+                return prev + securityService.decryptValue(row.amount, 'numeric');
+            }, 0);
 
             total = {count: result.recordCount(), amount: securityService.intToFloat(totalAmount)};
 
@@ -237,6 +235,7 @@ component singleton accessors="true" {
     ) {
         var qResult = q
             .from('expense')
+            .returning(['receipt', 'subscriptionid'])
             .where('id', '=', {value: id, cfsqltype: 'numeric'})
             .andWhere(
                 'userid',

@@ -5,6 +5,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useFormField from 'hooks/useFormField';
 import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
+import { BASE_FORMAT } from 'utils/dates';
 import EditIncome from 'widgets/EditIncome';
 
 /**
@@ -35,7 +36,7 @@ jest.mock('@mui/x-date-pickers/DatePicker', () => ({
     }) => (
         <input
             aria-label={label}
-            value={value.format('YYYY-MM')}
+            value={value.format(BASE_FORMAT)}
             onChange={(e) => {
                 const newVal = e.target.value ? dayjs(e.target.value) : null;
                 if (newVal && !newVal.isValid()) {
@@ -63,7 +64,7 @@ describe('<EditIncome />', () => {
         reset: jest.fn(),
     };
 
-    const baseDate = dayjs('2025-01-01');
+    const baseDate = dayjs('01-01-2025');
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -121,8 +122,8 @@ describe('<EditIncome />', () => {
             // Verify useFetchIncome was called with enabled: true after opening
             await waitFor(() => {
                 expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                    startDate: baseDate.format('YYYY-MM'),
-                    endDate: baseDate.format('YYYY-MM'),
+                    startDate: baseDate.format(BASE_FORMAT),
+                    endDate: baseDate.format(BASE_FORMAT),
                     enabled: true,
                 });
             });
@@ -133,8 +134,8 @@ describe('<EditIncome />', () => {
 
             // Before opening, enabled should be false
             expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                startDate: baseDate.format('YYYY-MM'),
-                endDate: baseDate.format('YYYY-MM'),
+                startDate: baseDate.format(BASE_FORMAT),
+                endDate: baseDate.format(BASE_FORMAT),
                 enabled: false,
             });
         });
@@ -212,12 +213,12 @@ describe('<EditIncome />', () => {
             fireEvent.click(screen.getByLabelText(/edit/i));
 
             const dateInput = await screen.findByLabelText(/date/i);
-            expect(dateInput).toHaveValue(baseDate.format('YYYY-MM'));
+            expect(dateInput).toHaveValue(baseDate.format(BASE_FORMAT));
 
             // Change date
             const newDate = baseDate.add(1, 'month');
             fireEvent.change(dateInput, {
-                target: { value: newDate.format('YYYY-MM') },
+                target: { value: newDate.format(BASE_FORMAT) },
             });
 
             // Close dialog
@@ -233,7 +234,7 @@ describe('<EditIncome />', () => {
 
             await waitFor(() => {
                 const dateInputReopened = screen.getByLabelText(/date/i);
-                expect(dateInputReopened).toHaveValue(baseDate.format('YYYY-MM'));
+                expect(dateInputReopened).toHaveValue(baseDate.format(BASE_FORMAT));
             });
         });
 
@@ -310,7 +311,7 @@ describe('<EditIncome />', () => {
             const dateInput = screen.getByLabelText(/date/i);
             const newDate = baseDate.add(1, 'month');
             fireEvent.change(dateInput, {
-                target: { value: newDate.format('YYYY-MM') },
+                target: { value: newDate.format(BASE_FORMAT) },
             });
 
             // Mock new data for new month
@@ -423,7 +424,7 @@ describe('<EditIncome />', () => {
 
             await waitFor(() => {
                 expect(mockMutateAsync).toHaveBeenCalledWith({
-                    date: baseDate.format('YYYY-MM'),
+                    date: baseDate.format(BASE_FORMAT),
                     pay: '5000',
                     extra: '5000',
                 });
@@ -624,13 +625,13 @@ describe('<EditIncome />', () => {
             const newDate = baseDate.add(1, 'month');
 
             fireEvent.change(dateInput, {
-                target: { value: newDate.format('YYYY-MM') },
+                target: { value: newDate.format(BASE_FORMAT) },
             });
 
             await waitFor(() => {
                 expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                    startDate: newDate.format('YYYY-MM'),
-                    endDate: newDate.format('YYYY-MM'),
+                    startDate: newDate.format(BASE_FORMAT),
+                    endDate: newDate.format(BASE_FORMAT),
                     enabled: true,
                 });
             });
@@ -645,7 +646,7 @@ describe('<EditIncome />', () => {
             const newDate = baseDate.add(2, 'months');
 
             fireEvent.change(dateInput, {
-                target: { value: newDate.format('YYYY-MM') },
+                target: { value: newDate.format(BASE_FORMAT) },
             });
 
             const updateBtn = screen.getByRole('button', { name: /update/i });
@@ -653,7 +654,7 @@ describe('<EditIncome />', () => {
 
             await waitFor(() => {
                 expect(mockMutateAsync).toHaveBeenCalledWith({
-                    date: newDate.format('YYYY-MM'),
+                    date: newDate.format(BASE_FORMAT),
                     pay: expect.any(String) as unknown,
                     extra: expect.any(String) as unknown,
                 });
@@ -671,7 +672,7 @@ describe('<EditIncome />', () => {
             fireEvent.change(dateInput, { target: { value: '' } });
 
             // Date should remain unchanged (null is ignored)
-            expect(dateInput).toHaveValue(baseDate.format('YYYY-MM'));
+            expect(dateInput).toHaveValue(baseDate.format(BASE_FORMAT));
         });
     });
 });

@@ -29,7 +29,7 @@ component extends="tests.resources.baseTest" {
                 var event = get(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {startDate: '2025-01', endDate: '2025-03'}
+                    params  = {startDate: '2025-01-01', endDate: '2025-03-01'}
                 );
 
                 var response = event.getResponse();
@@ -45,8 +45,8 @@ component extends="tests.resources.baseTest" {
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
                     params  = {
-                        startDate: '2025-01-01', // invalid format should be YYYY-MM
-                        endDate  : '2025-03'
+                        startDate: '2025-01-x', // invalid format should be YYYY-MM-DD
+                        endDate  : '2025-03-01'
                     }
                 );
 
@@ -60,7 +60,11 @@ component extends="tests.resources.baseTest" {
                 var event = put(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {date: '2025-01', pay: 5000, extra: 200}
+                    params  = {
+                        date : '2025-01-01',
+                        pay  : 5000,
+                        extra: 200
+                    }
                 );
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
@@ -73,7 +77,7 @@ component extends="tests.resources.baseTest" {
                 event = get(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {startDate: '2025-01', endDate: '2025-03'}
+                    params  = {startDate: '2025-01-01', endDate: '2025-03-01'}
                 );
                 response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
@@ -86,7 +90,7 @@ component extends="tests.resources.baseTest" {
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
                     params  = {
-                        date : '2025-01',
+                        date : '2025-01-01',
                         pay  : -5000,
                         extra: 200
                     }
@@ -103,7 +107,7 @@ component extends="tests.resources.baseTest" {
                     'select count(id) from income where userid = :userid and date = :date',
                     {
                         userid: {value: user.getId(), cfsqltype: 'numeric'},
-                        date  : {value: '2025-01-01', cfsqltype: 'date'}
+                        date  : {value: '2025-01-01-01', cfsqltype: 'date'}
                     }
                 ).count;
 
@@ -113,7 +117,11 @@ component extends="tests.resources.baseTest" {
                 var event = put(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {date: '2025-01', pay: 500, extra: 87}
+                    params  = {
+                        date : '2025-01-01',
+                        pay  : 500,
+                        extra: 87
+                    }
                 );
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
@@ -126,7 +134,7 @@ component extends="tests.resources.baseTest" {
                 event = get(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {startDate: '2025-01', endDate: '2025-03'}
+                    params  = {startDate: '2025-01-01', endDate: '2025-03-01'}
                 );
                 response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
@@ -140,7 +148,7 @@ component extends="tests.resources.baseTest" {
                     'select count(id) from income where userid = :userid and date = :date',
                     {
                         userid: {value: user.getId(), cfsqltype: 'numeric'},
-                        date  : {value: '2025-01-01', cfsqltype: 'date'}
+                        date  : {value: '2025-01-01-01', cfsqltype: 'date'}
                     }
                 ).count;
 
@@ -151,22 +159,22 @@ component extends="tests.resources.baseTest" {
                 var event;
 
                 /**
-                 * Save data for 2025-02, 2025-03, and 2025-04
+                 * Save data for 2025-02, 2025-03-01, and 2025-04-01
                  */
                 event = put(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {date: '2025-02', pay: 10, extra: 1}
+                    params  = {date: '2025-02-01', pay: 10, extra: 1}
                 );
                 event = put(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {date: '2025-03', pay: 20, extra: 2}
+                    params  = {date: '2025-03-01', pay: 20, extra: 2}
                 );
                 event = put(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {date: '2025-04', pay: 30, extra: 3}
+                    params  = {date: '2025-04-01', pay: 30, extra: 3}
                 );
 
                 /**
@@ -175,7 +183,7 @@ component extends="tests.resources.baseTest" {
                 event = get(
                     route   = '/api/v1/income',
                     headers = {'x-auth-token': jwt},
-                    params  = {startDate: '2025-02', endDate: '2025-04'}
+                    params  = {startDate: '2025-02-01', endDate: '2025-04-01'}
                 );
 
                 var response = event.getResponse();

@@ -1,0 +1,25 @@
+{
+    "description": "Validation Failed",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": [
+                            "Invalid Parameters. The 'email' value is required",
+                            "Invalid Parameters. The 'password' value must be at least 8 characters",
+                            "Invalid Parameters. The 'page' value must be between 1 and 100"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}

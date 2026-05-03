@@ -5,11 +5,18 @@ component extends="base" hint="Category Endpoints" secured="User,Admin" {
     property name="categoryService" inject="services.category";
 
     /**
-     * Paginated view for categories
+     * Paginated list of categories
      *
-     * @rc.page    page num
-     * @rc.records total records to return
-     * @rc         (optional) search search param
+     * @summary       List Categories
+     * @tags          Category
+     * @security      ApiKeyAuth
+     * @hint          Returns a paginated list of categories, optionally filtered by search.
+     * @param-page    { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1,   "example": 1  } }
+     * @param-records { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10,  "maximum": 100, "example": 25 } }
+     * @param-search  { "in": "query", "required": false, "schema": { "type": "string",  "maxLength": 50, "example": "electronics" } }
+     * @response-200  { "description": "Paginated category results" }
+     * @response-400  ~errors/400.json
+     * @response-401  ~errors/401.json
      */
     function view(event, rc, prc) {
         prc.data = categoryService.paginate(

@@ -19,7 +19,7 @@ component
     property name="security_level"       type="numeric";
     property name="permissions"          type="array";
     property name="dir"                  type="string";
-    property name="verified"             type="numeric";
+    property name="verified"             type="boolean";
     property name="verificationSentDate" type="date";
 
     /**

@@ -33,6 +33,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
          */
         tempDir = '#uploadPath#/tests/#createUUID()#';
         directoryCreate(tempDir);
+        variables._originalUploadPath = uploadPath;
         application.cbController.setSetting('uploadPath', '#uploadPath#/tests/');
 
         /**
@@ -64,12 +65,19 @@ component extends="coldbox.system.testing.BaseTestCase" {
             propertyName  = 'useRateLimiter',
             propertyValue = variables._originalUseRateLimiter
         );
+
+        /**
+         * Restore the upload dir
+         */
+        application.cbController.setSetting('uploadPath', '#uploadPath#');
     }
 
     /**
      * Fetch img blob and return absolute path of img
      */
-    private string function fetchAndWriteImg(required string imgUrl, required string extension) {
+    public string function fetchAndWriteImg(required string imgUrl, required string extension) {
+        setup();
+
         /**
          * Fetch image blob
          */
@@ -107,7 +115,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * @interval  Milliseconds to wait between polls (default 100)
      * @message   Failure message if timeout is reached
      */
-    private void function waitFor(
+    public void function waitFor(
         required any condition,
         numeric timeout  = 5,
         numeric interval = 100,

@@ -1,0 +1,14 @@
+{
+    "required": true,
+    "content": {
+        "application/x-www-form-urlencoded": {
+            "schema": {
+                "type": "object",
+                "required": ["verificationCode"],
+                "properties": {
+                    "verificationCode": { "type": "string", "example": "ABC123" }
+                }
+            }
+        }
+    }
+}

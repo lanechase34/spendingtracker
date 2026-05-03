@@ -133,10 +133,10 @@ component singleton accessors="true" {
                     'users.email'
                 ])
                 .get()
-                // lucee? pulls 'date' column back as 'timestamp' -> format to remove any timestamp identifier
-                .each(
+                .map(
                     (value) => {
                         value.created = dateTimeFormat(value.created, 'yyyy-mm-dd HH:mm:ss');
+                        return value;
                     },
                     true,
                     maxThreads

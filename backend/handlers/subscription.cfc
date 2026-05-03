@@ -15,12 +15,19 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
     /**
      * Paginated view for subscriptions
      *
-     * @rc.page     page num
-     * @rc.records  total records to return
-     * @rc.search   (optional) search param
-     * @rc.orderCol (optional) which col to order
-     * @rc.orderDir (optional) order direction
-     * @rc.interval (optional) filter for subscription's interval
+     * @summary        List Subscriptions
+     * @tags           Subscriptions
+     * @security       ApiKeyAuth
+     * @hint           Returns a paginated list of subscriptions, optionally filtered by search, ordering, and billing interval.
+     * @param-page     { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
+     * @param-records  { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
+     * @param-search   { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
+     * @param-orderCol { "in": "query", "required": false, "schema": { "type": "string", "enum": ["nextchargedate","amount","description","category"] } }
+     * @param-orderDir { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @param-interval { "in": "query", "required": false, "schema": { "type": "string", "enum": ["Y","M",""] }, "description": "Filter by billing interval. Y = Yearly, M = Monthly, blank = all." }
+     * @response-200   { "description": "Paginated subscription results." }
+     * @response-400   ~errors/400.json
+     * @response-401   ~errors/401.json
      */
     function view(event, rc, prc) {
         prc.data = subscriptionService.paginate(
@@ -44,16 +51,16 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
     }
 
     /**
-     * Saves a new subscription 
+     * Save a new subscription
      *
-     * @rc.date        subscription starting date
-     * @rc.amount      dollar amount
-     * @rc.description description
-     * @rc.interval    interval which this subscription will charge
-     * @rc.categoryid  (required if category empty) the pk of category record
-     * @rc.category    (required if categoryid empty) the name for a new category
-     * @rc.receipt     (optional) image upload
-     * @prc.receipt    (transformed from rc.receipt) valid receipt name or empty string
+     * @summary      Save Subscription
+     * @tags         Subscriptions
+     * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
+     * @hint         Creates a new subscription record. Interval must be Y (Yearly) or M (Monthly). Provide either categoryid for an existing category or category name to create a new one. Optionally attach a receipt image.
+     * @requestBody  ~subscription/save/requestBody.json
+     * @response-200 { "description": "Subscription saved successfully." }
+     * @response-400 ~errors/400.json
+     * @response-401 ~errors/401.json
      */
     function save(event, rc, prc) {
         // Create category if needed
@@ -80,7 +87,14 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
     /**
      * Delete a subscription
      *
-     * @rc.id pk of subscription
+     * @summary      Delete Subscription
+     * @tags         Subscriptions
+     * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
+     * @hint         Permanently deletes a subscription record by its ID.
+     * @param-id     { "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1, "example": 7 } }
+     * @response-200 { "description": "Subscription deleted successfully." }
+     * @response-401 ~errors/401.json
+     * @response-404 { "description": "Subscription not found." }
      */
     function remove(event, rc, prc) {
         prc.success = subscriptionService.delete(id = rc.id, userid = prc.userid);
@@ -101,8 +115,15 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
     /**
      * Toggle a subscription's active status
      *
-     * @rc.id     pk of subscription
-     * @rc.active t/f
+     * @summary      Toggle Subscription
+     * @tags         Subscriptions
+     * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
+     * @hint         Activates or deactivates a subscription. Returns the next scheduled charge date when activating.
+     * @requestBody  ~subscription/toggle/requestBody.json
+     * @response-200 { "description": "Subscription toggled successfully. Returns nextDate when activating." }
+     * @response-400 ~errors/400.json
+     * @response-401 ~errors/401.json
+     * @response-404 { "description": "Subscription not found." }
      */
     function toggle(event, rc, prc) {
         prc.result = subscriptionService.toggle(

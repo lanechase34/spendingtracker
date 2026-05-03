@@ -19,15 +19,15 @@ import EditIncome from './EditIncome';
  */
 export default function IncomeViewer() {
     const { formatCurrency } = useCurrencyFormatter({});
-    const { startDate, shortFormattedStartDate, shortFormattedEndDate } = useDateRangeContext();
+    const { startDate, formattedStartDate, formattedEndDate } = useDateRangeContext();
     const { totalSum } = useExpenseContext();
 
     /**
      * Tanstack Query hook to fetch income when start/end date change
      */
     const { data, isLoading, isError } = useFetchIncome({
-        startDate: shortFormattedStartDate,
-        endDate: shortFormattedEndDate,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
     });
 
     if (isLoading) {

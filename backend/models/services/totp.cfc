@@ -210,7 +210,7 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         }
 
         if(!isNull(result.totp_recovery_codes)) {
-            result.totp_recovery_codes = deserializeJSON(result.totp_recovery_codes);
+            result.totp_recovery_codes = deserializeJSON(result.totp_recovery_codes.toString());
         }
 
         return result;

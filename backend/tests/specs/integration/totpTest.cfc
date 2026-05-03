@@ -180,7 +180,7 @@ component extends="tests.resources.baseTest" {
                     expect(record[1].totp_enabled).toBeTrue();
                     expect(record[1].totp_recovery_codes).notToBeNull();
 
-                    var recovery_codes = deserializeJSON(record[1].totp_recovery_codes);
+                    var recovery_codes = deserializeJSON(record[1].totp_recovery_codes.toString());
                     expect(recovery_codes).toBeArray();
                     expect(recovery_codes.len()).toBeGT(1);
                 });

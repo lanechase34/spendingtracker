@@ -1,0 +1,25 @@
+{
+    "required": true,
+    "content": {
+        "application/x-www-form-urlencoded": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 256,
+                        "format": "password",
+                        "example": "newsecretpassword"
+                    },
+                    "salary": { "type": "number", "minimum": 1, "example": 75000 },
+                    "monthlyTakeHome": { "type": "number", "minimum": 1, "example": 4500 },
+                    "settings": {
+                        "type": "string",
+                        "description": "JSON string of settings key/value pairs to update."
+                    }
+                }
+            }
+        }
+    }
+}

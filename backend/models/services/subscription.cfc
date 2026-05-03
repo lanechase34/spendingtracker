@@ -64,11 +64,10 @@ component singleton accessors="true" {
          */
         var offset           = (page - 1) * records;
         var asyncFilteredSum = async.newFuture(() => {
-            var curr = 0;
-            filtered.each((record) => {
-                if(!record.active) return;
-                curr += securityService.decryptValue(record.amount, 'numeric');
-            });
+            var curr = filtered.reduce((prev, record) => {
+                if(!record.active) return prev;
+                return prev + securityService.decryptValue(record.amount, 'numeric');
+            }, 0);
             return securityService.intToFloat(curr);
         });
         var asyncTotalInfo = async.newFuture(() => {
@@ -97,11 +96,11 @@ component singleton accessors="true" {
                     'subscription.active'
                 ])
                 .get()
-                // lucee? pulls 'date' column back as 'timestamp' -> format to remove any timestamp identifier
-                .each(
+                .map(
                     (value) => {
                         value.nextChargeDate = dateFormat(value.nextChargeDate, 'yyyy-mm-dd');
                         value.amount         = securityService.intToFloat(securityService.decryptValue(value.amount, 'numeric'));
+                        return value;
                     },
                     true,
                     maxThreads
@@ -159,10 +158,9 @@ component singleton accessors="true" {
             );
 
             // Decrypt and sum amounts
-            var totalAmount = 0;
-            result.each((row) => {
-                totalAmount += securityService.decryptValue(row.amount, 'numeric');
-            });
+            var totalAmount = result.reduce((prev, row) => {
+                return prev + securityService.decryptValue(row.amount, 'numeric');
+            }, 0);
 
             total = {count: result.recordCount(), amount: securityService.intToFloat(totalAmount)};
 

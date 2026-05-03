@@ -1,0 +1,20 @@
+{
+    "required": true,
+    "content": {
+        "application/x-www-form-urlencoded": {
+            "schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 6,
+                        "maxLength": 6,
+                        "example": "123456",
+                        "description": "6-digit code from the authenticator app."
+                    }
+                }
+            }
+        }
+    }
+}
