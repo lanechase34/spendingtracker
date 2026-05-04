@@ -17,13 +17,20 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
     /**
      * Paginated view for audits
      *
-     * @rc.startDate get records in range from start - end
-     * @rc.endDate   end                                     
-     * @rc.page      page num
-     * @rc.records   total records to return
-     * @rc.search    (optional) search param
-     * @rc.orderCol  (optional) which col to order
-     * @rc.orderDir  (optional) order direction
+     * @summary         List Audits
+     * @tags            Admin
+     * @security        ApiKeyAuth
+     * @hint            Returns a paginated list of audit records, optionally filtered by date range, search, and ordering.
+     * @param-startDate { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @param-page      { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
+     * @param-records   { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
+     * @param-search    { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
+     * @param-orderCol  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["created","ip","urlpath","method","agent","statuscode","delta","email"] } }
+     * @param-orderDir  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @response-200    { "description": "Paginated audit results" }
+     * @response-400    ~errors/400.json
+     * @response-401    ~errors/401.json
      */
     function viewAudits(event, rc, prc) {
         prc.data = auditService.paginate(
@@ -50,13 +57,20 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
     /**
      * Paginated view for bugs
      *
-     * @rc.startDate get records in range from start - end
-     * @rc.endDate   end                                     
-     * @rc.page      page num
-     * @rc.records   total records to return
-     * @rc.search    (optional) search param
-     * @rc.orderCol  (optional) which col to order
-     * @rc.orderDir  (optional) order direction
+     * @summary         List Bugs
+     * @tags            Admin
+     * @security        ApiKeyAuth
+     * @hint            Returns a paginated list of bug records, optionally filtered by date range, search, and ordering.
+     * @param-startDate { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @param-page      { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
+     * @param-records   { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
+     * @param-search    { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
+     * @param-orderCol  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["created","ip","urlpath","method","agent","detail","email"] } }
+     * @param-orderDir  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @response-200    { "description": "Paginated bug results" }
+     * @response-400    ~errors/400.json
+     * @response-401    ~errors/401.json
      */
     function viewBugs(event, rc, prc) {
         prc.data = bugService.paginate(
@@ -82,6 +96,13 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
 
     /**
      * Get server metrics
+     *
+     * @summary      Server Metrics
+     * @tags         Admin
+     * @security     ApiKeyAuth
+     * @hint         Returns current server performance and resource metrics.
+     * @response-200 { "description": "Server metrics data" }
+     * @response-401 ~errors/401.json
      */
     function metrics(event, rc, prc) {
         prc.data = adminService.getMetrics();
@@ -94,6 +115,13 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
 
     /**
      * Get current cache state
+     *
+     * @summary      Cache Data
+     * @tags         Admin
+     * @security     ApiKeyAuth
+     * @hint         Returns the current state of the application cache.
+     * @response-200 { "description": "Cache state data" }
+     * @response-401 ~errors/401.json
      */
     function cacheData(event, rc, prc) {
         prc.data = adminService.getCacheData();
@@ -106,6 +134,13 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
 
     /**
      * Get current task data
+     *
+     * @summary      Task Data
+     * @tags         Admin
+     * @security     ApiKeyAuth
+     * @hint         Returns the current state of scheduled and running tasks.
+     * @response-200 { "description": "Task state data" }
+     * @response-401 ~errors/401.json
      */
     function taskData(event, rc, prc) {
         prc.data = adminService.getTaskData();
@@ -117,7 +152,14 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
     }
 
     /**
-     * List all available log files with metadata
+     * List all available log files
+     *
+     * @summary      List Log Files
+     * @tags         Admin
+     * @security     ApiKeyAuth
+     * @hint         Returns a list of all available log files with their metadata.
+     * @response-200 { "description": "List of log files" }
+     * @response-401 ~errors/401.json
      */
     function viewLogs(event, rc, prc) {
         prc.data = adminService.getLogs();
@@ -129,11 +171,18 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
     }
 
     /**
-     * Read the tail of a specific log file
+     * Read the tail of a log file
      *
-     * @rc.filename filename of the log file
-     * @rc.lines    number of lines to tail (default 200, max 2000)
-     * @rc.search   (optional) filter lines containing this string
+     * @summary        Read Log File
+     * @tags           Admin
+     * @security       ApiKeyAuth
+     * @hint           Returns the last N lines of a specific log file, optionally filtered by a search string.
+     * @param-filename { "in": "path",  "required": true,  "schema": { "type": "string", "example": "coldbox.log" } }
+     * @param-lines    { "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 2000, "example": 200 } }
+     * @param-search   { "in": "query", "required": false, "schema": { "type": "string", "example": "ERROR" } }
+     * @response-200   { "description": "Log file tail content" }
+     * @response-400   ~errors/400.json
+     * @response-401   ~errors/401.json
      */
     function readLog(event, rc, prc) {
         prc.data = adminService.readLog(

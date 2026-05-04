@@ -1,6 +1,6 @@
 {
     "app":{
-        "cfengine":"boxlang@1.12.0+49"
+        "cfengine":"boxlang@1.13.0+50"
     },
     "cfconfig":{
         "file":".cfconfig.json"

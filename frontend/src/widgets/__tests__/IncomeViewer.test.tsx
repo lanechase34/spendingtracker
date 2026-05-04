@@ -5,6 +5,7 @@ import dayjs from 'dayjs';
 import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useFetchIncome } from 'hooks/useIncomeQuery';
+import { BASE_FORMAT } from 'utils/dates';
 import IncomeViewer from 'widgets/IncomeViewer';
 
 /**
@@ -16,7 +17,7 @@ jest.mock('hooks/useCurrencyFormatter');
 jest.mock('components/LoadingCard', () => () => <div data-testid="loading-card" />);
 jest.mock('components/ErrorCard', () => () => <div data-testid="error-card" />);
 jest.mock('widgets/EditIncome', () => ({ date }: { date: dayjs.Dayjs }) => (
-    <div data-testid="edit-income" data-date={date.format('YYYY-MM-DD')} />
+    <div data-testid="edit-income" data-date={date.format(BASE_FORMAT)} />
 ));
 
 const mockUseFetchIncome = useFetchIncome as jest.Mock;
@@ -30,7 +31,7 @@ const mockFormatCurrency = jest.fn((v: number) => `$${v.toFixed(2)}`);
 
 describe('IncomeViewer Component', () => {
     let queryClient: QueryClient;
-    const baseDate = dayjs('2025-01-01');
+    const baseDate = dayjs('01-01-2025-01');
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -51,8 +52,8 @@ describe('IncomeViewer Component', () => {
 
         mockUseDateRangeContext.mockReturnValue({
             startDate: baseDate,
-            shortFormattedStartDate: '2025-01',
-            shortFormattedEndDate: '2025-01',
+            formattedStartDate: '01-01-2025',
+            formattedEndDate: '01-01-2025',
         });
 
         mockUseFetchIncome.mockReturnValue({
@@ -82,8 +83,8 @@ describe('IncomeViewer Component', () => {
             render(<IncomeViewer />, { queryClient });
 
             expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                startDate: '2025-01',
-                endDate: '2025-01',
+                startDate: '01-01-2025',
+                endDate: '01-01-2025',
             });
             expect(screen.getByTestId('loading-card')).toBeInTheDocument();
         });
@@ -385,22 +386,22 @@ describe('IncomeViewer Component', () => {
 
             const editIncome = screen.getByTestId('edit-income');
             expect(editIncome).toBeInTheDocument();
-            expect(editIncome).toHaveAttribute('data-date', baseDate.format('YYYY-MM-DD'));
+            expect(editIncome).toHaveAttribute('data-date', baseDate.format(BASE_FORMAT));
         });
 
         it('Passes startDate from date range context to EditIncome', () => {
-            const customDate = dayjs('2026-03-15');
+            const customDate = dayjs('03-01-2026-15');
 
             mockUseDateRangeContext.mockReturnValue({
                 startDate: customDate,
-                shortFormattedStartDate: '2026-03',
-                shortFormattedEndDate: '2026-03',
+                formattedStartDate: '03-01-2026',
+                formattedEndDate: '03-01-2026',
             });
 
             render(<IncomeViewer />, { queryClient });
 
             const editIncome = screen.getByTestId('edit-income');
-            expect(editIncome).toHaveAttribute('data-date', customDate.format('YYYY-MM-DD'));
+            expect(editIncome).toHaveAttribute('data-date', customDate.format(BASE_FORMAT));
         });
     });
 
@@ -408,14 +409,14 @@ describe('IncomeViewer Component', () => {
         it('Calls useFetchIncome with correct date range', () => {
             mockUseDateRangeContext.mockReturnValue({
                 startDate: baseDate,
-                shortFormattedStartDate: '2025-01',
-                shortFormattedEndDate: '2025-03',
+                formattedStartDate: '01-01-2025',
+                formattedEndDate: '2025-03',
             });
 
             render(<IncomeViewer />, { queryClient });
 
             expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                startDate: '2025-01',
+                startDate: '01-01-2025',
                 endDate: '2025-03',
             });
         });
@@ -426,8 +427,8 @@ describe('IncomeViewer Component', () => {
             // Change date range
             mockUseDateRangeContext.mockReturnValue({
                 startDate: dayjs('2025-02-01'),
-                shortFormattedStartDate: '2025-02',
-                shortFormattedEndDate: '2025-04',
+                formattedStartDate: '02-01-2025',
+                formattedEndDate: '04-01-2025',
             });
 
             mockUseFetchIncome.mockReturnValue({
@@ -439,8 +440,8 @@ describe('IncomeViewer Component', () => {
             rerender(<IncomeViewer />);
 
             expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                startDate: '2025-02',
-                endDate: '2025-04',
+                startDate: '02-01-2025',
+                endDate: '04-01-2025',
             });
 
             // Verify new totals are calculated
@@ -450,30 +451,30 @@ describe('IncomeViewer Component', () => {
         it('Handles single month range', () => {
             mockUseDateRangeContext.mockReturnValue({
                 startDate: baseDate,
-                shortFormattedStartDate: '2025-06',
-                shortFormattedEndDate: '2025-06',
+                formattedStartDate: '06-01-2025',
+                formattedEndDate: '06-01-2025',
             });
 
             render(<IncomeViewer />, { queryClient });
 
             expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                startDate: '2025-06',
-                endDate: '2025-06',
+                startDate: '06-01-2025',
+                endDate: '06-01-2025',
             });
         });
 
         it('Handles multi-month range', () => {
             mockUseDateRangeContext.mockReturnValue({
                 startDate: baseDate,
-                shortFormattedStartDate: '2025-01',
-                shortFormattedEndDate: '2025-12',
+                formattedStartDate: '01-01-2025',
+                formattedEndDate: '12-01-2025',
             });
 
             render(<IncomeViewer />, { queryClient });
 
             expect(mockUseFetchIncome).toHaveBeenCalledWith({
-                startDate: '2025-01',
-                endDate: '2025-12',
+                startDate: '01-01-2025',
+                endDate: '12-01-2025',
             });
         });
     });

@@ -18,11 +18,17 @@ component extends="base" hint="Auth Endpoints" {
     property name="verificationCooldown" inject="coldbox:setting:verificationCooldown";
 
     /**
-     * Login a user and return the JWT and refresh token
+     * Login a user and return a JWT access token
      *
-     * @rc.email      Email
-     * @rc.password   Password
-     * @rc.rememberMe (boolean) sets refresh token cookie if true
+     * @summary      Login
+     * @tags         Auth
+     * @security     []
+     * @hint         Authenticates a user and returns a JWT. If 2FA is enabled a pending token is returned instead. If rememberMe is true a refresh token cookie is set.
+     * @requestBody  ~auth/login/requestBody.json
+     * @response-200 { "description": "Authenticated successfully. Returns access_token. If 2FA required, also returns mfa_required: true." }
+     * @response-400 ~errors/400.json
+     * @response-403 { "description": "Email not verified. Returns access_token to use with /verify endpoints." }
+     * @response-429 ~errors/429.json
      */
     function login(event, rc, prc) {
         try {
@@ -87,9 +93,16 @@ component extends="base" hint="Auth Endpoints" {
 
     /**
      * Verify 2FA code during login
-     * Returns valid user JWT on success
      *
-     * @rc.code The 6-digit code from the authenticator app or a recovery code
+     * @summary      Verify 2FA
+     * @tags         Auth
+     * @security     ApiKeyAuth
+     * @hint         Verifies a 6-digit TOTP code or recovery code during login. Requires the pending JWT returned from /login. Returns a full JWT on success.
+     * @requestBody  ~auth/verify2fa/requestBody.json
+     * @response-200 { "description": "2FA verified successfully. Returns full access_token." }
+     * @response-400 { "description": "Invalid or expired code." }
+     * @response-401 ~errors/401.json
+     * @response-429 ~errors/429.json
      */
     function verify2fa(event, rc, prc) secured="Pending2FA" {
         try {
@@ -119,7 +132,14 @@ component extends="base" hint="Auth Endpoints" {
     }
 
     /**
-     * Logout a user and invalidate their JWT 
+     * Logout the current user
+     *
+     * @summary      Logout
+     * @tags         Auth
+     * @security     ApiKeyAuth
+     * @hint         Invalidates the user's JWT and refresh token, and clears the refresh token cookie.
+     * @response-200 { "description": "Successfully logged out." }
+     * @response-401 ~errors/401.json
      */
     function logout(event, rc, prc) {
         /**
@@ -152,10 +172,14 @@ component extends="base" hint="Auth Endpoints" {
     /**
      * Register a new user
      *
-     * @rc.email           unique email
-     * @rc.password        user password
-     * @rc.salary          salary
-     * @rc.monthlyTakehome monthly take home
+     * @summary      Register
+     * @tags         Auth
+     * @security     []
+     * @hint         Creates a new user account and sends an email verification code. Returns a pending JWT to use with /verify endpoints.
+     * @requestBody  ~auth/register/requestBody.json
+     * @response-200 { "description": "Registered successfully. Returns access_token. Check email for verification code." }
+     * @response-400 ~errors/400.json
+     * @response-429 ~errors/429.json
      */
     function register(event, rc, prc) {
         userService.register(
@@ -175,9 +199,17 @@ component extends="base" hint="Auth Endpoints" {
     }
 
     /**
-     * Verify the code sent to a user's email
+     * Verify email address with a verification code
      *
-     * @rc.verificationCode the emailed verification code
+     * @summary      Verify Email
+     * @tags         Auth
+     * @security     ApiKeyAuth
+     * @hint         Verifies the code sent to the user's email. Returns a full JWT and sets a refresh token cookie on success.
+     * @requestBody  ~auth/verify/requestBody.json
+     * @response-200 { "description": "Email verified successfully. Returns full access_token." }
+     * @response-400 { "description": "Invalid or expired verification code, or account already verified." }
+     * @response-401 ~errors/401.json
+     * @response-429 ~errors/429.json
      */
     function verify(event, rc, prc) secured="Unverified" {
         try {
@@ -217,7 +249,15 @@ component extends="base" hint="Auth Endpoints" {
     }
 
     /**
-     * Resend a verification code to the user's email
+     * Resend the email verification code
+     *
+     * @summary      Resend Verification Code
+     * @tags         Auth
+     * @security     ApiKeyAuth
+     * @hint         Resends the verification code to the user's email. Subject to a cooldown period between requests.
+     * @response-200 { "description": "Verification code resent successfully." }
+     * @response-401 ~errors/401.json
+     * @response-429 ~errors/429.json
      */
     function resendVerificationCode(event, rc, prc) secured="Unverified" {
         /**
@@ -251,7 +291,14 @@ component extends="base" hint="Auth Endpoints" {
     }
 
     /**
-     * Generate CSRF token for Authenticated User
+     * Generate a CSRF token for the authenticated user
+     *
+     * @summary      Generate CSRF Token
+     * @tags         Auth
+     * @security     ApiKeyAuth
+     * @hint         Generates and returns a CSRF token. Required before any state-changing requests (POST, PUT, PATCH, DELETE).
+     * @response-200 { "description": "CSRF token generated successfully. Returns csrf_token." }
+     * @response-401 ~errors/401.json
      */
     function generateCSRF(event, rc, prc) secured="Unverified,Pending2FA,User,Admin" {
         prc.csrfToken = csrfService.generate();

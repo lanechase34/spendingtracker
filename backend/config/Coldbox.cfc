@@ -93,6 +93,7 @@ component {
             logQueries     : false,
             logRequests    : true,
             maxThreads     : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
+            port           : getSystemSetting('HTTP_PORT'),
             rateLimits     : {
                 /**
                  * limit - num of request allowed per window

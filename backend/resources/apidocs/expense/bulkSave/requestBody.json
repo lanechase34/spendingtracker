@@ -1,0 +1,17 @@
+{
+    "required": true,
+    "content": {
+        "multipart/form-data": {
+            "schema": {
+                "type": "object",
+                "required": ["expenses"],
+                "properties": {
+                    "expenses": {
+                        "type": "string",
+                        "description": "JSON string of expense array. Each item: { date, amount, description, categoryid|category, receipt? }"
+                    }
+                }
+            }
+        }
+    }
+}

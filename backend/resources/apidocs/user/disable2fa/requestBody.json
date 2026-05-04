@@ -1,0 +1,20 @@
+{
+    "required": true,
+    "content": {
+        "application/x-www-form-urlencoded": {
+            "schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "minLength": 6,
+                        "maxLength": 19,
+                        "example": "123456",
+                        "description": "Either a 6-digit TOTP code from the authenticator app, or a recovery code in the format xxxx-xxxx-xxxx-xxxx."
+                    }
+                }
+            }
+        }
+    }
+}

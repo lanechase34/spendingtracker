@@ -107,7 +107,7 @@ component extends="tests.resources.baseTest" {
                     'select count(id) from income where userid = :userid and date = :date',
                     {
                         userid: {value: user.getId(), cfsqltype: 'numeric'},
-                        date  : {value: '2025-01-01', cfsqltype: 'date'}
+                        date  : {value: '2025-01-01-01', cfsqltype: 'date'}
                     }
                 ).count;
 
@@ -148,7 +148,7 @@ component extends="tests.resources.baseTest" {
                     'select count(id) from income where userid = :userid and date = :date',
                     {
                         userid: {value: user.getId(), cfsqltype: 'numeric'},
-                        date  : {value: '2025-01-01', cfsqltype: 'date'}
+                        date  : {value: '2025-01-01-01', cfsqltype: 'date'}
                     }
                 ).count;
 
@@ -159,7 +159,7 @@ component extends="tests.resources.baseTest" {
                 var event;
 
                 /**
-                 * Save data for 2025-02, 2025-03, and 2025-04
+                 * Save data for 2025-02, 2025-03-01, and 2025-04-01
                  */
                 event = put(
                     route   = '/api/v1/income',

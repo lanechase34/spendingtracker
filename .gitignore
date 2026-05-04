@@ -43,4 +43,4 @@ frontend/coverage/
 temp/
 temp/**
 
-bruno/environments/local.yml
+backend/resources/apidocs/environments/local.json

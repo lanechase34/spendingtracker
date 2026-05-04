@@ -1,0 +1,21 @@
+{
+    "required": true,
+    "content": {
+        "application/x-www-form-urlencoded": {
+            "schema": {
+                "type": "object",
+                "required": ["date", "pay", "extra"],
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "04-01-2025",
+                        "description": "The year and month for this income record in MM-DD-YYYY format. (DD does not matter)."
+                    },
+                    "pay": { "type": "number", "minimum": 0, "maximum": 99999, "example": 4500 },
+                    "extra": { "type": "number", "minimum": 0, "maximum": 99999, "example": 250 }
+                }
+            }
+        }
+    }
+}

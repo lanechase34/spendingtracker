@@ -12,8 +12,15 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
     /**
      * Stacked bar chart widget
      *
-     * @rc.startDate get data in range from start - end
-     * @rc.endDate   end
+     * @summary         Stacked Bar Chart
+     * @tags            Widget
+     * @security        ApiKeyAuth
+     * @hint            Returns spending data grouped by category across the given date range, suitable for rendering a stacked bar chart.
+     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @response-200    { "description": "Stacked bar chart data." }
+     * @response-400    ~errors/400.json
+     * @response-401    ~errors/401.json
      */
     function stackedBarChart(event, rc, prc) {
         prc.data = chartService.stackedBarChart(
@@ -31,8 +38,15 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
     /**
      * Donut chart widget
      *
-     * @rc.startDate get data in range from start - end
-     * @rc.endDate   end
+     * @summary         Donut Chart
+     * @tags            Widget
+     * @security        ApiKeyAuth
+     * @hint            Returns spending totals grouped by category across the given date range, suitable for rendering a donut chart.
+     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @response-200    { "description": "Donut chart data." }
+     * @response-400    ~errors/400.json
+     * @response-401    ~errors/401.json
      */
     function donutChart(event, rc, prc) {
         prc.data = chartService.donutChart(
@@ -48,10 +62,19 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
     }
 
     /**
-     * Line chart widget showing total spending per month in start-end range
+     * Line chart widget
      *
-     * @rc.startDate get data in range from start - end
-     * @rc.endDate   end
+     *               startDate must be January 1st of the desired year. The range must be between 1 and 12 months.
+     *
+     * @summary         Line Chart
+     * @tags            Widget
+     * @security        ApiKeyAuth
+     * @hint            Returns total spending per month across the given date range, suitable for rendering a line chart.
+     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" }, "description": "Must be January 1st of the desired year." }
+     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be within 1-12 months of startDate." }
+     * @response-200    { "description": "Line chart data." }
+     * @response-400    ~errors/400.json
+     * @response-401    ~errors/401.json
      */
     function lineChart(event, rc, prc) {
         prc.data = chartService.lineChart(
@@ -67,10 +90,17 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
     }
 
     /**
-     * Heatmap widget showing number of expenses per day
+     * Heatmap widget
      *
-     * @rc.startDate get data in range from start - end
-     * @rc.endDate   end
+     * @summary         Heatmap
+     * @tags            Widget
+     * @security        ApiKeyAuth
+     * @hint            Returns the number of expenses per day across the given date range, suitable for rendering a heatmap calendar.
+     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @response-200    { "description": "Heatmap data." }
+     * @response-400    ~errors/400.json
+     * @response-401    ~errors/401.json
      */
     function heatMap(event, rc, prc) {
         prc.data = chartService.heatMap(

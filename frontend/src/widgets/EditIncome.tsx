@@ -26,6 +26,7 @@ import useFormField from 'hooks/useFormField';
 import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
 import { type SubmitEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
+import { BASE_FORMAT } from 'utils/dates';
 import { validateMoney } from 'validators/validateMoney';
 
 interface EditIncomeProps {
@@ -76,7 +77,7 @@ export default function EditIncome({ date }: EditIncomeProps) {
     /**
      * Format the selected date for API
      */
-    const formattedDate = useMemo(() => selectedDate.format('YYYY-MM'), [selectedDate]);
+    const formattedDate = useMemo(() => selectedDate.format(BASE_FORMAT), [selectedDate]);
 
     /**
      * Only fetch data if dialog is open
@@ -140,7 +141,7 @@ export default function EditIncome({ date }: EditIncomeProps) {
 
         try {
             await updateIncomeMutation.mutateAsync({
-                date: selectedDate.format('YYYY-MM'),
+                date: selectedDate.format(BASE_FORMAT),
                 pay: payField.value,
                 extra: extraField.value,
             });

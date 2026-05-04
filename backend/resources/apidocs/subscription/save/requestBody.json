@@ -1,0 +1,31 @@
+{
+    "required": true,
+    "content": {
+        "multipart/form-data": {
+            "schema": {
+                "type": "object",
+                "required": ["date", "amount", "description", "interval"],
+                "properties": {
+                    "date": { "type": "string", "format": "date", "example": "2025-04-15" },
+                    "amount": { "type": "number", "minimum": 0, "maximum": 999999, "example": 14.99 },
+                    "description": { "type": "string", "minLength": 1, "maxLength": 500, "example": "Netflix" },
+                    "interval": { "type": "string", "enum": ["Y", "M"], "example": "M" },
+                    "categoryid": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 3,
+                        "description": "PK of existing category. Required if category not provided."
+                    },
+                    "category": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 30,
+                        "example": "Streaming",
+                        "description": "New category name. Required if categoryid not provided."
+                    },
+                    "receipt": { "type": "string", "format": "binary", "description": "Optional receipt image upload." }
+                }
+            }
+        }
+    }
+}

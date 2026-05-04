@@ -171,28 +171,19 @@ component {
         // Income Handler
         var incomeHandler = {
             'income.view': {
-                startDate: {
-                    required    : true,
-                    type        : 'date',
-                    regex       : '[0-9]{4}-[0-9]{2}-[0-9]{2}',
-                    regexMessage: 'The date must be in the format of YYYY-MM-DD'
-                },
-                endDate: {
-                    required    : true,
-                    type        : 'date',
-                    regex       : '[0-9]{4}-[0-9]{2}-[0-9]{2}',
-                    regexMessage: 'The date must be in the format of YYYY-MM-DD',
-                    dateRange   : {}
+                startDate: {required: true, type: 'date'},
+                endDate  : {
+                    required : true,
+                    type     : 'date',
+                    dateRange: {}
                 }
             },
             'income.save': {
                 date: {
-                    required    : true,
-                    type        : 'date',
-                    regex       : '[0-9]{4}-[0-9]{2}-[0-9]{2}',
-                    regexMessage: 'The date must be in the format of YYYY-MM-DD',
-                    after       : '01/01/2024',
-                    before      : '01/01/2075'
+                    required: true,
+                    type    : 'date',
+                    after   : '01/01/2024',
+                    before  : '01/01/2075'
                 },
                 pay: {
                     required: true,
@@ -623,7 +614,8 @@ component {
             'echo.onexception'      : {},
             'echo.unauthorized'     : {},
             'echo.missingtemplate'  : {},
-            'jwt.refreshtoken'      : {}
+            'jwt.refreshtoken'      : {},
+            'cbswagger:main.index'  : {}
         };
 
         var result = {};

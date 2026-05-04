@@ -1,0 +1,21 @@
+{
+    "description": "Unauthorized",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Invalid access."]
+                    }
+                }
+            }
+        }
+    }
+}

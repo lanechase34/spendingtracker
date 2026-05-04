@@ -50,7 +50,13 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     }
 
     /**
-     * Healthcheck status
+     * Healthcheck
+     *
+     * @summary      Healthcheck
+     * @tags         System
+     * @security     []
+     * @hint         Returns a simple Ok response. Used to verify the API is reachable.
+     * @response-200 { "description": "Ok!" }
      */
     function healthCheck(event, rc, prc) {
         if(!getSetting('healthCheck')) {
@@ -64,8 +70,13 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     }
 
     /**
-     * Returns current status of backend
-     * Shows environment and version
+     * API Status
+     *
+     * @summary      Status
+     * @tags         System
+     * @security     []
+     * @hint         Returns the current environment, version, and status of the API.
+     * @response-200 { "description": "Returns environment, version, and status." }
      */
     function status(event, rc, prc) {
         event
@@ -131,7 +142,13 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     }
 
     /**
-     * 401 Unauthorized endpoint
+     * Unauthorized
+     *
+     * @summary      Unauthorized
+     * @tags         System
+     * @security     []
+     * @hint         Returns a 401 Unauthorized response.
+     * @response-401 ~errors/401.json
      */
     function unauthorized(event, rc, prc) {
         event

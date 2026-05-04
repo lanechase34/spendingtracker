@@ -1,0 +1,18 @@
+{
+    "required": true,
+    "content": {
+        "multipart/form-data": {
+            "schema": {
+                "type": "object",
+                "required": ["expenseFile"],
+                "properties": {
+                    "expenseFile": {
+                        "type": "string",
+                        "format": "binary",
+                        "description": "CSV file in Date, Amount, Description format."
+                    }
+                }
+            }
+        }
+    }
+}

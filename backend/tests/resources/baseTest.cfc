@@ -33,6 +33,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
          */
         tempDir = '#uploadPath#/tests/#createUUID()#';
         directoryCreate(tempDir);
+        variables._originalUploadPath = uploadPath;
         application.cbController.setSetting('uploadPath', '#uploadPath#/tests/');
 
         /**
@@ -64,6 +65,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
             propertyName  = 'useRateLimiter',
             propertyValue = variables._originalUseRateLimiter
         );
+
+        /**
+         * Restore the upload dir
+         */
+        application.cbController.setSetting('uploadPath', '#uploadPath#');
     }
 
     /**

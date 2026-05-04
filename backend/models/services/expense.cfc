@@ -78,7 +78,7 @@ component singleton accessors="true" {
         var asyncFilteredSum = async.newFuture(() => {
             var curr = filtered.reduce((prev, record) => {
                 return prev + securityService.decryptValue(record.amount, 'numeric');
-            }, 0)
+            }, 0);
             return securityService.intToFloat(curr);
         });
         var asyncTotalInfo = async.newFuture(() => {
