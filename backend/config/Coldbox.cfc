@@ -150,7 +150,7 @@ component {
             root     : {levelmax: 'DEBUG', appenders: '*'},
             // Implicit Level Categories
             info     : ['coldbox.system'],
-            warn     : ['WebSocket', 'Email', 'Admin']
+            warn     : ['WebSocket', 'Email', 'Admin', 'Image']
         };
 
         /**

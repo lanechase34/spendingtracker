@@ -1,5 +1,6 @@
 component singleton accessors="true" hint="Service layer for interacting with imagemagick" {
 
+    property name="imageLog"    inject="logbox:logger:Image";
     property name="imageMagick" inject="coldbox:setting:imageMagick";
 
     /**
@@ -17,6 +18,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             );
         }
         catch(any e) {
+            imageLog.error('Error verifying imageMagick | #e.message#');
             return false;
         }
         return true;
@@ -38,6 +40,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             );
         }
         catch(any e) {
+            imageLog.error('Error validating identity of image | #e.message#');
             return false;
         }
         return true;
@@ -60,6 +63,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
             );
         }
         catch(any e) {
+            imageLog.error('Error converting image to webp | #e.message#');
             return false;
         }
         return true;

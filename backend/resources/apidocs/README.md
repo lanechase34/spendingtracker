@@ -135,3 +135,7 @@ The Bruno collection does not stay live-synced to `/cbswagger`. When endpoints c
 - `environments/local.json.example` is the template with empty values for new devs
 - The pre-request script only injects `x-csrf-token` on non-GET requests - GET requests receive only the `x-auth-token`
 - Public endpoints like `/login` and `/register` will have the headers set but the API will ignore them since no auth is required
+
+# SpendingTracker Swagger UI
+
+1. Visit `http://localhost:8082/cbswaggerUI` to view interactive UI of the swagger spec.
