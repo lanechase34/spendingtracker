@@ -16,7 +16,7 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * Paginated view for subscriptions
      *
      * @summary        List Subscriptions
-     * @tags           Subscriptions
+     * @tags           Subscription
      * @security       ApiKeyAuth
      * @hint           Returns a paginated list of subscriptions, optionally filtered by search, ordering, and billing interval.
      * @param-page     { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
@@ -54,7 +54,7 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * Save a new subscription
      *
      * @summary      Save Subscription
-     * @tags         Subscriptions
+     * @tags         Subscription
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Creates a new subscription record. Interval must be Y (Yearly) or M (Monthly). Provide either categoryid for an existing category or category name to create a new one. Optionally attach a receipt image.
      * @requestBody  ~subscription/save/requestBody.json
@@ -88,7 +88,7 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * Delete a subscription
      *
      * @summary      Delete Subscription
-     * @tags         Subscriptions
+     * @tags         Subscription
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Permanently deletes a subscription record by its ID.
      * @param-id     { "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1, "example": 7 } }
@@ -116,7 +116,7 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * Toggle a subscription's active status
      *
      * @summary      Toggle Subscription
-     * @tags         Subscriptions
+     * @tags         Subscription
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Activates or deactivates a subscription. Returns the next scheduled charge date when activating.
      * @requestBody  ~subscription/toggle/requestBody.json

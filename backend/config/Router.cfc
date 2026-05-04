@@ -74,9 +74,9 @@ component {
             route('/admin/logs').withAction({GET: 'viewLogs'}).toHandler('admin');
 
             // Generics
-            route('/healthcheck').to('echo.healthCheck');
-            route('/unauthorized').to('echo.unauthorized');
-            route('/status').to('echo.status');
+            route('/healthcheck').withAction({GET: 'healthCheck'}).toHandler('echo');
+            route('/unauthorized').withAction({GET: 'unauthorized'}).toHandler('echo');
+            route('/status').withAction({GET: 'status'}).toHandler('echo');
             route('{wildcard}').to('echo.healthCheck');
         });
 
