@@ -35,7 +35,17 @@ component {
                 version: '1.0.0'
             },
             // Tags
-            tags        : [],
+            tags: [
+                {name: 'System', description: 'Health, status, and diagnostic endpoints'},
+                {name: 'Auth', description: 'Authentication and JWT management'},
+                {name: 'User', description: 'User profile and 2FA management'},
+                {name: 'Expense', description: 'Expense tracking'},
+                {name: 'Subscription', description: 'Subscription tracking'},
+                {name: 'Income', description: 'Income tracking'},
+                {name: 'Category', description: 'Categories for expenses, subscriptions'},
+                {name: 'Widget', description: 'Dashboard widget data'},
+                {name: 'Admin', description: 'Admin-only endpoints'}
+            ],
             // https://swagger.io/specification/#externalDocumentationObject
             externalDocs: {description: '', url: ''},
             // https://swagger.io/specification/#serverObject

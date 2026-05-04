@@ -1,0 +1,23 @@
+{
+    "name": "local",
+    "variables": [
+        {
+            "name": "baseUrl",
+            "value": "http://localhost:8082",
+            "enabled": true,
+            "secret": false
+        },
+        {
+            "name": "apiKey",
+            "value": "",
+            "enabled": true,
+            "secret": true
+        },
+        {
+            "name": "csrf_token",
+            "value": "",
+            "enabled": true,
+            "secret": true
+        }
+    ]
+}

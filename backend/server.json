@@ -4,7 +4,9 @@
         "sessionCookieSecure":"true",
         "sessionCookieHTTPOnly":"true"
     },
-    "cfconfigfile":".cfconfig.json",
+    "cfconfig":{
+        "file":".cfconfig.json"
+    },
     "env":{
         "LUCEE_EXTENSIONS":"671B01B8-B3B3-42B9-AC055A356BED5281;version=${DB_BUNDLEVERSION},8D7FB0DF-08BB-1589-FE3975678F07DB17;version=2.0.0.3${OTHER_EXTENSIONS:''}",
         "LUCEE_APPLICATION_LISTENER":"modern",

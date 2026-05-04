@@ -21,7 +21,7 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
      * @response-200    { "description": "Stacked bar chart data." }
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
- */
+     */
     function stackedBarChart(event, rc, prc) {
         prc.data = chartService.stackedBarChart(
             startDate = rc.startDate,
