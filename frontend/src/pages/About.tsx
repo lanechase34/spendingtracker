@@ -364,7 +364,7 @@ export default function About() {
                         />
                         <TechBullet
                             title="Authentication & Authorization"
-                            text="JWT-based authentication with role-protected routes and conditional UI rendering."
+                            text="JWT-based authentication with role-protected routes and conditional UI rendering. Users can enable two-factor authentication (2FA) via a TOTP-compatible authenticator app for an added layer of account security."
                         />
                         <TechBullet
                             title="Backend"

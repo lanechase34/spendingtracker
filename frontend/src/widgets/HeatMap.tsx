@@ -149,7 +149,7 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
                 title="Expenses Heatmap"
                 slotProps={{
                     title: {
-                        fontSize: { xs: '1rem', sm: '1.25rem' },
+                        sx: { fontSize: { xs: '1rem', sm: '1.25rem' } },
                     },
                 }}
                 sx={{ mb: 0, pb: 0 }}

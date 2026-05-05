@@ -3,7 +3,7 @@
 A full-stack expense and subscription tracking platform designed to surface spending insights,
 trends, financial clarity.
 
-![Dashboard Preview](frontend/public/screenshots/dashboard.png)
+![Dashboard Preview](frontend/public/screenshots/dashboard.webp)
 
 ## Features
 
