@@ -43,15 +43,17 @@ component singleton accessors="true" {
         }
 
         var value = headers[headername];
-        // Collapse complex values (multi header struct) to comma separated lists
-        if(!isSimpleValue(value)) {
-            var items = [];
-            value.each((key, item) => {
-                items.append(item);
-            });
-            return items.toList(',').trim();
+
+        if(isSimpleValue(value)) {
+            return value.trim();
         }
-        return value.trim();
+
+        // Collapse complex values (multi header struct) to comma separated lists
+        return value
+            .reduce((acc, key, item) => {
+                return acc.listAppend(item);
+            }, '')
+            .trim();
     }
 
     /**

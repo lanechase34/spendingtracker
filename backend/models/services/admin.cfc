@@ -37,7 +37,7 @@ component singleton accessors="true" {
         // Garbage collection
         var gcBeans = createObject('java', 'java.lang.management.ManagementFactory').getGarbageCollectorMXBeans();
         var gcTime  = gcBeans.reduce((prev, b) => {
-            return prev + b.getCollectionTime()
+            return prev + b.getCollectionTime();
         }, 0);
         var gcDelta = gcTime - application.cbController.getSetting('gcTime');
         application.cbController.setSetting('gcTime', gcTime);

@@ -90,6 +90,8 @@ component {
     function callbackOnFailure(required struct task, struct exception = {}) {
         task.overviewStruct.detail = 'Task Error (Callback)';
         task.overviewStruct.stack  = exception;
+        task.overviewStruct.delta  = getTickCount() - task.overviewStruct.startTick;
+        auditService.audit(argumentCollection = task.overviewStruct);
         bugService.log(argumentCollection = task.overviewStruct);
     }
 

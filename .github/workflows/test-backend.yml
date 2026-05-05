@@ -36,8 +36,8 @@ jobs:
         ports:
           - 5436:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
+          --health-cmd pg_isready 
+          --health-interval 10s 
           --health-timeout 5s
           --health-retries 5
 
@@ -175,6 +175,73 @@ jobs:
           include_passed: false
           fail_on_failure: true
           detailed_summary: true
+
+      - name: TestBox Results Comment
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'backend/tests/results/test-results.json';
+
+            let body;
+
+            if (fs.existsSync(path)) {
+              const results = JSON.parse(fs.readFileSync(path, 'utf8'));
+
+              const total = results.totalSpecs ?? 0;
+              const passed = results.totalPass ?? 0;
+              const failed = results.totalFail ?? 0;
+              const errored = results.totalError ?? 0;
+              const skipped = results.totalSkipped ?? 0;
+
+              const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';
+
+              body = [
+                `## TestBox Backend Suite`,
+                '',
+                '| Metric | Value |',
+                '|--------|-------|',
+                `| Bundles | ${results.totalBundles ?? 0} |`,
+                `| Suites  | ${results.totalSuites ?? 0} |`,
+                `| Specs   | ${total} |`,
+                `| Passed  | ${passed} |`,
+                `| Failed  | ${failed} |`,
+                `| Errors  | ${errored} |`,
+                `| Skipped | ${skipped} |`,
+                `| Pass Rate | ${passRate}% |`,
+              ].join('\n');
+            } else {
+              body = '## TestBox Results\n\nNo test results file found at `tests/results/test-results.json`.';
+            }
+
+            // Find and update existing comment, or create a new one
+            const marker = '<!-- testbox-results -->';
+            const fullBody = `${marker}\n${body}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: fullBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: fullBody,
+              });
+            }
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
