@@ -78,7 +78,7 @@ component singleton accessors="true" {
                 .when(
                     orderCol.len() && orderDir.len(),
                     (q1) => {
-                        q1.orderBy('subscription.active desc, #orderCol# #orderDir#');
+                        q1.orderBy('subscription.active', 'desc').orderBy(orderCol, orderDir);
                     },
                     (q1) => {
                         q1.orderBy('subscription.active desc, subscription.next_charge_date asc');
@@ -117,7 +117,7 @@ component singleton accessors="true" {
         var data        = results[3];
 
         // If sorting by amount, sort the decrypted data
-        if(orderCol == 'subscription.amount' && orderDir.len()) {
+        if(orderCol == 'amount' && orderDir.len()) {
             data.sort((a, b) => {
                 if(a.active && !b.active) return 1;
                 if(!a.active && b.active) return -1;
@@ -199,12 +199,41 @@ component singleton accessors="true" {
             .returning('id')
             .insert(data);
 
-        // If the start date has passed for the current interval, charge for every month/year passed
+        // If the start date has passed for the current interval, charge for every period passed
         if(dateCompare(nextChargeDate, now(), 'd') <= 0) {
-            var datePart = getDatePartFromInterval(interval);
-            for(var i = 0; i <= dateDiff(datePart, nextChargeDate, now()); i++) {
-                charge(subscriptionid = newSubscription.result.id);
+            var datePart    = getDatePartFromInterval(interval);
+            var chargeCount = dateDiff(datePart, nextChargeDate, now());
+            var futures     = [];
+
+            // Closure factory captures chargeDate by value to avoid loop variable aliasing
+            var makeChargeFuture = (chargeDate) => async.newFuture(() => expenseService.save(
+                date           = chargeDate,
+                amount         = amount,
+                description    = description,
+                categoryid     = categoryid,
+                receipt        = receipt,
+                subscriptionid = newSubscription.result.id,
+                userid         = userid
+            ));
+
+            for(var i = 0; i <= chargeCount; i++) {
+                futures.append(makeChargeFuture(dateAdd(datePart, i, nextChargeDate)));
             }
+
+            // Wait for all parallel expense saves to complete before returning
+            async
+                .newFuture()
+                .all(argumentCollection = futures)
+                .get();
+
+            // Advance past all back-charged periods in a single update
+            q.from('subscription')
+                .where(
+                    'id',
+                    '=',
+                    {value: newSubscription.result.id, cfsqltype: 'numeric'}
+                )
+                .update({next_charge_date: {value: dateAdd(datePart, chargeCount + 1, nextChargeDate), cfsqltype: 'date'}});
         }
 
         cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|subscription');
@@ -300,7 +329,7 @@ component singleton accessors="true" {
                             .update({next_charge_date: dateAdd(datePart, 1, row.next_charge_date)});
                     }
                     catch(any e) {
-                        transactionRollback(e);
+                        transactionRollback();
                         auditService.audit(
                             ip      = 'localhost',
                             urlpath = 'subscriptionService.charge',

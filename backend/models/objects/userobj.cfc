@@ -21,6 +21,7 @@ component
     property name="dir"                  type="string";
     property name="verified"             type="boolean";
     property name="verificationSentDate" type="date";
+    property name="totp_enabled"         type="boolean";
 
     /**
      * Dervied
@@ -55,12 +56,13 @@ component
         variables.id                   = -1;
         variables.email                = '';
         variables.password             = '';
-        variables.security_level       = '';
+        variables.security_level       = -1;
         variables.permissions          = [];
         variables.dir                  = '';
         variables.verified             = false;
         variables.verificationSentDate = createDateTime(2000, 1, 1, 0, 0, 0);
         variables.initializedDate      = now();
+        variables.totp_enabled         = false;
         return this;
     }
 

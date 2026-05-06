@@ -4,63 +4,72 @@ This document covers developer workflows including dependency updates, formattin
 
 ## Updates
 
-### Box Updates
-
-1. Check for updates
-
-    ```
-    box update
-    ```
-
-2. Review and confirm updates to `box.json` when prompted
-
-3. Restart server
-    ```
-    server restart
-    ```
-
 ### NPM Updates
 
 1. Check for updates
 
-    ```
+    ```bash
     ncu
     ```
 
 2. Update `package.json` file
 
-    ```
+    ```bash
     ncu -u
     ```
 
 3. Install new packages
 
-    ```
+    ```bash
     npm install
     ```
 
 4. (Optional) Run audit on prod dependencies
 
-    ```
+    ```bash
     audit:prod
+    ```
+
+### Box Updates
+
+1. Check for updates
+
+    ```bash
+    box update
+    ```
+
+2. Review and confirm updates to `box.json` when prompted
+
+3. Restart the server
+
+    ```bash
+    server restart
     ```
 
 ## Code Formatting
 
 ### Frontend
 
-1. Format all ts, tsx files using Prettier by running
+1. Format `.ts`, `.tsx` files using Prettier by running
 
-    ```
+    ```bash
     npm run format
+
+    OR
+
+    Ctrl+Shift+P -> Run Task -> Format Frontend
     ```
 
 ### Backend
 
-1. Format all `*.cfc` files by running this in the box shell
+1. Format `.cfc` files by running this in the `box` shell
 
-    ```
+    ```bash
     run-script format
+
+    OR
+
+    Ctrl+Shift+P -> Run Task -> Format Backend
     ```
 
 ## Code Linting
@@ -69,17 +78,40 @@ This document covers developer workflows including dependency updates, formattin
 
 1. Make sure vscode can resolve `eslint.config.ts`
 
-2. Check for lint errors by running
+2. Lint `.ts`, `.tsx` files by running
 
-    ```
+    ```bash
     npm run lint
+
+    OR
+
+    Ctrl+Shift+P -> Run Task -> Lint Frontend
     ```
 
 ### Backend
 
-1. Lint cfc using CFLint by running this in the box shell
-    ```
+1. Lint `.cfc` files using CFLint by running this in the `box` shell
+
+    ```bash
     run-script lint
+
+    OR
+
+    Ctrl+Shift+P -> Run Task -> Lint Backend
+    ```
+
+## Typechecking
+
+### Frontend
+
+1. Typecheck `.ts`, `.tsx` files by running
+
+    ```bash
+    npm run typecheck
+
+    OR
+
+    Ctrl+Shift+P -> Run Task -> Typecheck Frontend
     ```
 
 ## Testing
@@ -105,6 +137,16 @@ This document covers developer workflows including dependency updates, formattin
     ```
     http://localhost:8082/tests/runner.cfm
     ```
+
+## GitHooks
+
+Formatting, linting, and typechecking occurs for both Frontend and Backend on every commit
+
+Test pre-commit GitHooks by running the following
+
+```bash
+lefthook run pre-commit
+```
 
 ## Dev Flags
 
@@ -164,14 +206,6 @@ act -W '.github/workflows/test-frontend.yml' -P ubuntu-24.04=ghcr.io/catthehacke
 ```
 
 Note: The `--pull=false` flag prevents `act` from re-pulling the runner image each run. If the container image is missing or outdated, remove this flag to pull a fresh copy.
-
-### GitHooks
-
-    Test pre-commit GitHooks by running the following
-
-    ```bash
-    lefthook run pre-commit
-    ```
 
 ## Dev Setup (No Docker)
 

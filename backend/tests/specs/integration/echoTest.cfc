@@ -232,7 +232,7 @@ component extends="tests.resources.baseTest" {
 
                     expect(response.getStatusCode()).toBe(500);
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toInclude('An exception ocurred please try again.');
+                    expect(response.getMessages()[1]).toInclude('An exception occurred please try again.');
                 });
             });
         });

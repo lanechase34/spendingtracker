@@ -74,9 +74,9 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for auditing ea
 
             lock name="slowRequestsLock" timeout="5" type="exclusive" throwOnTimeout=false {
                 // Delete requests older than 24 hours
-                var oneHourAgo           = dateAdd('h', -24, timestamp);
+                var twentyFourHoursAgo   = dateAdd('h', -24, timestamp);
                 concurrency.slowRequests = concurrency.slowRequests.filter((req) => {
-                    return req.time > oneHourAgo;
+                    return req.time > twentyFourHoursAgo;
                 });
 
                 // Add new request

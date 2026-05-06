@@ -37,8 +37,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 handler.$property(propertyName = 'userService', mock = mockUserService);
                 handler.$property(propertyName = 'verificationCooldown', mock = 5);
 
-                mockTotpService.$('isEnabled', false);
-
                 // Prepare request context
                 prepareMock(getRequestContext());
             });
@@ -89,6 +87,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     var mockUser = createEmptyMock(className = 'models.objects.userobj');
                     mockUser.$('getId', -1);
                     mockUserService.$('retrieveUserByUsername', mockUser);
+                    mockUser.$('getTotp_Enabled', false);
 
                     mockJwtService.$('attempt', mockToken);
                     mockJwtService.$('getSettings', mockSettings);
@@ -125,6 +124,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     var mockUser = createEmptyMock(className = 'models.objects.userobj');
                     mockUser.$('getId', -1);
+                    mockUser.$('getTotp_Enabled', false);
                     mockUserService.$('retrieveUserByUsername', mockUser);
 
                     mockJwtService.$('attempt', mockToken);
@@ -148,8 +148,9 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 });
 
                 it('Should handle VerificationException and return 403', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
+                    var event    = getRequestContext();
+                    var mockUser = createEmptyMock(className = 'models.objects.userobj');
+                    mockUser.$('getTotp_Enabled', false);
                     var mockToken = {access_token: 'pending-access-token'};
 
                     var rc  = {email: 'unverified@example.com', password: 'password123'};
@@ -239,6 +240,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     var mockUser = createEmptyMock(className = 'models.objects.userobj');
                     mockUser.$('getId', -1);
+                    mockUser.$('getTotp_Enabled', false);
                     mockUserService.$('retrieveUserByUsername', mockUser);
 
                     mockJwtService.$('attempt', mockToken);
@@ -269,7 +271,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     var prc   = {};
 
                     mockJwtService.$('logout');
-                    mockJwtService.$('refreshToken');
                     mockSecurityService.$('deleteTokenCookies');
 
                     var mockResponse = createStub();
@@ -281,7 +282,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     handler.logout(event, rc, prc);
 
                     expect(mockJwtService.$once('logout')).toBeTrue();
-                    expect(mockJwtService.$once('refreshToken')).toBeTrue();
                     expect(mockSecurityService.$once('deleteTokenCookies')).toBeTrue();
 
                     var messageCall = mockResponse.$callLog().addMessage[1];
@@ -294,7 +294,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     var prc   = {};
 
                     mockJwtService.$('logout').$throws(type = 'LogoutError');
-                    mockJwtService.$('refreshToken').$throws(type = 'RefreshError');
                     mockSecurityService.$('deleteTokenCookies').$throws(type = 'DeleteError');
 
                     var mockResponse = createStub();
@@ -318,7 +317,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     var prc   = {};
 
                     mockJwtService.$('logout');
-                    mockJwtService.$('refreshToken');
                     mockSecurityService.$('deleteTokenCookies');
 
                     var mockResponse = createStub();
@@ -330,7 +328,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     handler.logout(event, rc, prc);
 
                     expect(mockJwtService.$times(1, 'logout')).toBeTrue();
-                    expect(mockJwtService.$times(1, 'refreshToken')).toBeTrue();
                     expect(mockSecurityService.$times(1, 'deleteTokenCookies')).toBeTrue();
                 });
             });

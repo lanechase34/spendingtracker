@@ -81,7 +81,7 @@ component accessors="true" singleton hint="Validator for checking a date is insi
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)
-                    .setErrorMetadata({fileExistsCheck: arguments.validationData})
+                    .setErrorMetadata({dateRangeCheck: arguments.validationData})
             );
             return false;
         }
@@ -91,7 +91,7 @@ component accessors="true" singleton hint="Validator for checking a date is insi
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)
-                    .setErrorMetadata({fileExistsCheck: arguments.validationData})
+                    .setErrorMetadata({dateRangeCheck: arguments.validationData})
             );
             return false;
         }

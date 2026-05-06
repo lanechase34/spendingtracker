@@ -131,7 +131,7 @@ component singleton accessors="true" {
         var data        = results[3];
 
         // If sorting by amount, sort the decrypted data
-        if(orderCol == 'expense.amount' && orderDir.len()) {
+        if(orderCol == 'amount' && orderDir.len()) {
             data.sort((a, b) => {
                 return orderDir == 'asc' ? compare(a.amount, b.amount) : compare(b.amount, a.amount);
             });
@@ -251,7 +251,7 @@ component singleton accessors="true" {
             if(
                 qResult.result.keyExists('receipt')
                 && qResult.result.receipt.len()
-                && !qResult.result.keyExists('subscriptionid')
+                && isNull(qResult.result.subscriptionid)
             ) {
                 fileDelete(getReceiptPath(receipt = qResult.result.receipt, userDir = userDir));
             }
@@ -495,7 +495,9 @@ component singleton accessors="true" {
             ) {
                 expensesWithReceipt.each((expense) => {
                     var receiptPath = '#userdir#/#expense.receipt#.webp';
-                    var fileName    = '#dateFormat(expense.date, 'yyyy-mm-dd')#_#expense.description#.webp';
+
+                    var safeDesc = reReplace(expense.description, '[\\/:*?"<>|]', '_', 'all');
+                    var fileName = '#dateFormat(expense.date, 'yyyy-mm-dd')#_#left(safeDesc, 50)#.webp';
                     cfzipparam(source = receiptPath, entryPath = fileName);
                 });
             }

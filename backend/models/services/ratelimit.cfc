@@ -30,7 +30,11 @@ component singleton hint="Service layer for rate limiting specific actions" {
 
         // Update cache with the number of remaining minutes
         var remainingMinutes = dateDiff('n', now(), data.expiresAt);
-        cacheStorage.set(key, data, remainingMinutes);
+
+        if(remainingMinutes > 0) {
+            cacheStorage.set(key, data, remainingMinutes);
+        }
+
         return true;
     }
 

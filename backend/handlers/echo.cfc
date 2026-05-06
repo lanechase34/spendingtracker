@@ -19,7 +19,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
                 /**
                  * Data setup by forcing tasks to run
                  */
-                for(var i = 0; i <= 12; i++) {
+                for(var i = 0; i < 12; i++) {
                     getInstance('services.subscription').charge();
                     getInstance('services.income').payMonthly(
                         dateFormat(
@@ -137,7 +137,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
 
         event
             .getResponse()
-            .setErrorMessage('An exception ocurred please try again.')
+            .setErrorMessage('An exception occurred please try again.')
             .setStatusCode(500);
     }
 

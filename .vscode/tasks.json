@@ -26,7 +26,19 @@
             "detail": "Format Frontend code using Prettier"
         },
         {
-            "label": "Lint ts, tsx",
+            "label": "Lint Backend",
+            "type": "shell",
+            "command": "box run-script lint",
+            "group": {
+                "kind": "build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/backend"
+            },
+            "detail": "Lint Backend code using CFLint"
+        },
+        {
+            "label": "Lint Frontend",
             "type": "shell",
             "command": "npm run-script lint",
             "group": {
@@ -38,7 +50,7 @@
             "detail": "Lint *.ts and *.tsx files"
         },
         {
-            "label": "Typecheck ts, tsx",
+            "label": "Typecheck Frontend",
             "type": "shell",
             "command": "npm run typecheck",
             "group": {

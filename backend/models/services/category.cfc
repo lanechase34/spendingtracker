@@ -88,7 +88,7 @@ component singleton accessors="true" {
             .when(
                 condition = search.len(),
                 onTrue    = (q1) => {
-                    q1.whereLike(q.raw('lower(category.name)'), '%#lCase(search)#%');
+                    q1.whereLike(q.raw('lower(category.name)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'});
                 }
             )
             .select(['category.id', 'category.name'])

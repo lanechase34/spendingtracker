@@ -36,15 +36,31 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         }
 
         /**
+         * Handle scenario where requestAudit may not be properly instantiated
+         */
+        if(!prc.keyExists('requestAudit')) {
+            prc.requestAudit = {};
+        }
+
+        /**
          * Handle exceptions here. Including logging, audit, email, etc
          */
         prc.requestAudit.userid = prc?.userid ?: -1;
         prc.requestAudit.detail = 'onException';
         prc.requestAudit.stack  = interceptData;
-        async.newFuture(() => {
+
+        var sendBug = async.newFuture(() => {
             bugService.log(argumentCollection = prc.requestAudit);
+        });
+
+        var sendEmail = async.newFuture(() => {
             emailService.sendBug(bugInfo = prc.requestAudit);
         });
+
+        var results = async
+            .newFuture()
+            .all(sendBug, sendEmail)
+            .get();
 
         /**
          * Dump detail in development environment

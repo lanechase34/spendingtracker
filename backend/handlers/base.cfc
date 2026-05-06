@@ -284,7 +284,7 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
                     }
                 } : {}
             )
-            .addMessage('An exception ocurred please try again.')
+            .addMessage('An exception occurred please try again.')
             .setStatusCode(arguments.event.STATUS.INTERNAL_ERROR);
     }
 
@@ -402,7 +402,7 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
             .getResponse()
             .setError(true)
             .setData({})
-            .addMessage('An exception ocurred please try again.')
+            .addMessage('An exception occurred please try again.')
             .setStatusCode(arguments.event.STATUS.INTERNAL_ERROR);
 
         // Development additions Great for Testing

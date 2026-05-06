@@ -79,7 +79,7 @@ console.log('apiKey updated:', token);
 await bru.runRequest('Auth/Generate CSRF Token');
 ```
 
-### `Auth/Generate CSRF Token` — After Response
+### `Auth/Generate CSRF Token` - After Response
 
 Open the **Auth/Generate CSRF Token** request -> **Script** tab -> **Post Response**:
 

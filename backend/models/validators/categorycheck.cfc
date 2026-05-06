@@ -1,7 +1,8 @@
 component accessors="true" singleton hint="Validator for checking a category exists or name is unique" {
 
     property name="name";
-    property name="q" inject="provider:QueryBuilder@qb";
+    property name="q"              inject="provider:QueryBuilder@qb";
+    property name="requestService" inject="provider:coldbox:requestService";
 
     /**
      * Init validator
@@ -53,43 +54,49 @@ component accessors="true" singleton hint="Validator for checking a category exi
             return true;
         }
 
-        // Attempt to load this category by PK
-        if(arguments.validationData.pk) {
-            var category = q
-                .from('category')
-                .where(
+
+        var isPk   = arguments.validationData.pk;
+        var userid = val(requestService.getContext().getPrivateCollection()?.userid ?: -1);
+
+        // Attempt to load this category by PK or category name
+        var results = q
+            .from('category')
+            .when(
+                condition = isPk,
+                onTrue    = (q1) => q1.where(
                     'id',
                     '=',
-                    {value: arguments.targetValue, cfsqltype: 'numeric'}
-                )
-                .get();
-
-            if(category.len() == 1) {
-                return true;
-            }
-            errorStruct.message = 'Categoryid not valid.';
-        }
-        // Verify this is a unique field
-        else {
-            var category = q
-                .from('category')
-                .where(
+                    {value: targetValue, cfsqltype: 'numeric'}
+                ),
+                onFalse = (q1) => q1.where(
                     'name',
                     '=',
-                    {value: ucFirst(arguments.targetValue), cfsqltype: 'varchar'}
+                    {value: ucFirst(targetValue), cfsqltype: 'varchar'}
                 )
-                .get();
+            )
+            .andWhere((q1) => {
+                q1.whereNull('userid')
+                    .orWhere(
+                        'userid',
+                        '=',
+                        {value: userid, cfsqltype: 'numeric'}
+                    );
+            })
+            .get();
 
-            if(!category.len()) {
-                return true;
-            }
-            errorStruct.message = 'Category must be unique';
+        // PK check: category must exist; name check: name must NOT exist
+        if(isPk ? results.len() == 1 : !results.len()) {
+            return true;
         }
+
+        errorStruct.message = isPk
+         ? 'Categoryid not valid.'
+         : 'Category name already exists. Use the existing category or choose a different name.';
 
         validationResult.addError(
             validationResult
                 .newError(argumentCollection = errorStruct)
-                .setErrorMetadata({dateRangeCheck: arguments.validationData})
+                .setErrorMetadata({categoryCheck: arguments.validationData})
         );
         return false;
     }

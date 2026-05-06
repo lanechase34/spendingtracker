@@ -44,8 +44,17 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      */
     function updateProfile(event, rc, prc) {
         if(rc.keyExists('settings')) {
-            rc.settings         = deserializeJSON(rc.settings);
-            rc.settings.updated = true;
+            try {
+                rc.settings         = deserializeJSON(rc.settings);
+                rc.settings.updated = true;
+            }
+            catch(any e) {
+                event
+                    .getResponse()
+                    .setErrorMessage('Invalid Parameters.')
+                    .setStatusCode(400);
+                return;
+            }
         }
 
         userService.updateProfile(

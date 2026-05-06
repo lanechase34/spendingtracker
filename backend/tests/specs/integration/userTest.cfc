@@ -124,12 +124,176 @@ component extends="tests.resources.baseTest" {
                 it('Returns 200 when updating settings', () => {
                     var event = patch(
                         route   = '/api/v1/me',
-                        params  = {settings: serializeJSON({theme: 'dark', updated: true})},
+                        params  = {settings: serializeJSON({theme: 'dark'})},
                         headers = {'x-auth-token': jwt}
                     );
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getMessages()[1]).toInclude('Successfully updated');
+
+                    setup();
+                    var user = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+
+                    var userResponse = user.getResponse();
+                    expect(userResponse.getStatusCode()).toBe(200);
+
+                    var userRecord = userResponse.getData();
+                    expect(userRecord).toHaveKey('settings');
+                    expect(userRecord.settings).toHaveKey('theme');
+                    expect(userRecord.settings.theme).toBe('dark');
+                    expect(userRecord.settings).notToHaveKey('updated');
+                });
+
+                it('Persists multiple settings keys correctly', () => {
+                    patch(
+                        route  = '/api/v1/me',
+                        params = {
+                            settings: serializeJSON({
+                                theme   : 'light',
+                                fontSize: 'large',
+                                sidebar : true
+                            })
+                        },
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .settings;
+
+                    expect(settings.theme).toBe('light');
+                    expect(settings.fontSize).toBe('large');
+                    expect(settings.sidebar).toBeTrue();
+                    expect(settings).notToHaveKey('updated');
+                });
+
+                it('Replaces settings entirely on second update - does not merge', () => {
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: serializeJSON({theme: 'dark', fontSize: 'small'})},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: serializeJSON({theme: 'light'})},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .settings;
+
+                    expect(settings.theme).toBe('light');
+                    expect(settings).notToHaveKey('fontSize');
+                });
+
+                it('Does not update settings when settings param is omitted', () => {
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: serializeJSON({theme: 'dark'})},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {salary: 75000},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .settings;
+
+                    expect(settings.theme).toBe('dark');
+                });
+
+                it('Stores a value containing a single quote as a literal - not SQL injection', () => {
+                    var maliciousValue = 'O''Brien';
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: serializeJSON({name: maliciousValue})},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .settings;
+
+                    expect(settings.name).toBe(maliciousValue);
+                });
+
+                it('Stores a SQL DDL injection payload as a literal string - does not execute', () => {
+                    var maliciousValue = '''; DROP TABLE users; --';
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: serializeJSON({theme: maliciousValue})},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var meResponse = get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse();
+
+                    // Users table must still exist and the request must succeed
+                    expect(meResponse.getStatusCode()).toBe(200);
+                    expect(meResponse.getData().settings.theme).toBe(maliciousValue);
+                });
+
+                it('Stores a SQL UNION injection payload as a literal string', () => {
+                    var maliciousValue = 'dark'' UNION SELECT password FROM users--';
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: serializeJSON({theme: maliciousValue})},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .settings;
+
+                    expect(settings.theme).toBe(maliciousValue);
+                });
+
+                it('Stores JSON structural characters as a plain string - does not expand into JSONB object', () => {
+                    var maliciousValue = '{"injected":true}';
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: serializeJSON({theme: maliciousValue, updated: true})},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .settings;
+
+                    expect(settings.theme).toBe(maliciousValue);
+                    expect(settings).notToHaveKey('injected');
+                });
+
+                it('Returns an error when settings is not valid JSON', () => {
+                    var event = patch(
+                        route   = '/api/v1/me',
+                        params  = {settings: 'not-valid-json'},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    var response = event.getResponse();
+
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
                 });
 
                 it('Persists salary update - GET /me reflects new value', () => {
