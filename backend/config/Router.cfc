@@ -20,17 +20,17 @@ component {
             route('/expenses/bulk').withAction({POST: 'bulkSave'}).toHandler('expense');
             route('/expenses/:id-numeric/receipt').withAction({GET: 'receipt'}).toHandler('expense');
             route('/expenses/:id-numeric').withAction({DELETE: 'remove'}).toHandler('expense');
-            route('/expenses/').withAction({GET: 'view', POST: 'save'}).toHandler('expense');
+            route('/expenses').withAction({GET: 'view', POST: 'save'}).toHandler('expense');
             route('/receipts/export').withAction({POST: 'exportReceipts'}).toHandler('expense');
 
             // Subscription
             route('/subscriptions/:id-numeric')
                 .withAction({PATCH: 'toggle', DELETE: 'remove'})
                 .toHandler('subscription');
-            route('/subscriptions/').withAction({GET: 'view', POST: 'save'}).toHandler('subscription');
+            route('/subscriptions').withAction({GET: 'view', POST: 'save'}).toHandler('subscription');
 
             // Category
-            route('/categories/').withAction({GET: 'view'}).toHandler('category');
+            route('/categories').withAction({GET: 'view'}).toHandler('category');
 
             // Widget
             route('/widgets/stackedBarChart').withAction({GET: 'stackedBarChart'}).toHandler('widget');
@@ -39,7 +39,7 @@ component {
             route('/widgets/heatMap').withAction({GET: 'heatMap'}).toHandler('widget');
 
             // Income
-            route('/income/').withAction({GET: 'view', PUT: 'save'}).toHandler('income');
+            route('/income').withAction({GET: 'view', PUT: 'save'}).toHandler('income');
 
             // Authentication
             route('/login').withAction({POST: 'login'}).toHandler('auth');
@@ -74,9 +74,9 @@ component {
             route('/admin/logs').withAction({GET: 'viewLogs'}).toHandler('admin');
 
             // Generics
-            route('/healthcheck').withAction({GET: 'healthCheck'}).toHandler('echo');
+            route('/healthcheck').withAction({GET: 'healthCheck', HEAD: 'healthCheck'}).toHandler('echo');
             route('/unauthorized').withAction({GET: 'unauthorized'}).toHandler('echo');
-            route('/status').withAction({GET: 'status'}).toHandler('echo');
+            route('/status').withAction({GET: 'status', HEAD: 'status'}).toHandler('echo');
             route('{wildcard}').to('echo.healthCheck');
         });
 
