@@ -41,11 +41,16 @@ function reducer(state: BulkImportState, action: BulkImportAction): BulkImportSt
             return { ...state, showImportDialog: action.payload };
         case 'SET_ROWORDER':
             return { ...state, rowOrder: action.payload };
-        case 'DELETE_ROW':
+        case 'DELETE_ROW': {
+            const { [action.id]: _, ...remainingExpenses } = state.loadedExpenses;
+            const { [action.id]: _err, ...remainingErrors } = state.errors;
             return {
                 ...state,
                 rowOrder: state.rowOrder.filter((id: string) => id !== action.id),
+                loadedExpenses: remainingExpenses,
+                errors: remainingErrors,
             };
+        }
         case 'SET_IMPORTERRORS':
             return { ...state, importErrors: action.payload };
         case 'CLEAR_IMPORTERRORS':

@@ -1,29 +1,56 @@
 import type { SelectOptionType } from 'types/SelectOption.type';
 
-export type CategoryCache = Record<string, Record<number, SelectOptionType[]>>;
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_ENTRIES = 100; // max unique search+page combinations
+
+interface CacheEntry {
+    data: SelectOptionType[];
+    expiresAt: number;
+}
 
 /**
  * Shared cache reference for ALL instances of CategorySelect
  * Cache all combinations of search + page
  */
-const cache: CategoryCache = {};
+const cache = new Map<string, CacheEntry>();
+
+function makeKey(search: string, page: number): string {
+    return `${search}::${page}`;
+}
 
 /**
- * Get cache if exists, otherwise returns null
+ * Get cached result if it exists and hasn't expired
  */
-export const getCachedCategories = (search: string, page: number) => cache[search]?.[page] ?? null;
+export const getCachedCategories = (search: string, page: number): SelectOptionType[] | null => {
+    const entry = cache.get(makeKey(search, page));
+    if (!entry) return null;
 
-/**
- * Set the current options for search + page in cache
- */
-export const setCachedCategories = (search: string, page: number, data: SelectOptionType[]) => {
-    if (!cache[search]) cache[search] = {};
-    cache[search][page] = data;
+    if (Date.now() > entry.expiresAt) {
+        cache.delete(makeKey(search, page));
+        return null;
+    }
+
+    return entry.data;
 };
 
 /**
- * Force flush the cache
+ * Store a result. Evicts the oldest entry when the cap is reached.
  */
-export const clearCategoryCache = () => {
-    for (const key in cache) delete cache[key];
+export const setCachedCategories = (search: string, page: number, data: SelectOptionType[]): void => {
+    const key = makeKey(search, page);
+
+    if (cache.size >= MAX_ENTRIES && !cache.has(key)) {
+        // Map preserves insertion order - delete the first (oldest) entry
+        const firstKey = cache.keys().next().value;
+        if (firstKey !== undefined) cache.delete(firstKey);
+    }
+
+    cache.set(key, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+};
+
+/**
+ * Force flush the entire cache
+ */
+export const clearCategoryCache = (): void => {
+    cache.clear();
 };

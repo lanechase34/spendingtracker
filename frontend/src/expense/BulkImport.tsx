@@ -10,11 +10,15 @@ import { ImportResponseSchema } from 'types/BulkImport.type';
 import type { ExpenseDataRow } from 'types/Expense.type';
 import { clearCategoryCache } from 'utils/categoryCache';
 import { API_BASE_URL } from 'utils/constants';
+import { safeJson } from 'utils/safeJson';
 import type { ErrorField } from 'validators/validateExpenseRow';
 import { validateExpenseRow } from 'validators/validateExpenseRow';
 
 import BulkImportControls from './BulkImportControls';
 import BulkImportDialog from './BulkImportDialog';
+
+const CSV_MIME_TYPES = ['text/csv'];
+const CSV_MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 /**
  * Bulk Import widget to process CSV file upload
@@ -41,8 +45,8 @@ export default function BulkImport() {
      * CSV Upload Field
      */
     const csvUpload = useFileUpload({
-        validMimeTypes: ['text/csv'],
-        maxFileSize: 50 * 1024 * 1024,
+        validMimeTypes: CSV_MIME_TYPES,
+        maxFileSize: CSV_MAX_FILE_SIZE,
     });
 
     const { reset: resetUpload } = csvUpload;
@@ -50,7 +54,7 @@ export default function BulkImport() {
     /**
      * Submit CSV for processing
      */
-    const handleProcessCsv = async () => {
+    const handleProcessCsv = useCallback(async () => {
         if (state.loading || !csvUpload.value) return;
 
         dispatch({ type: 'SET_LOADING', payload: true });
@@ -67,10 +71,9 @@ export default function BulkImport() {
             });
             if (!response) return;
 
-            const rawJson: unknown = await response.json();
-
             // Validate response
-            const valid = ImportResponseSchema.safeParse(rawJson);
+            const json = await safeJson(response);
+            const valid = ImportResponseSchema.safeParse(json);
             if (!valid.success || valid.data.error) {
                 const messages = valid.data?.messages ?? ['Server Error. Please try again.'];
                 throw new Error(messages[0]);
@@ -109,7 +112,7 @@ export default function BulkImport() {
         } finally {
             dispatch({ type: 'SET_LOADING', payload: false });
         }
-    };
+    }, [authFetch, csvUpload.value, dispatch, showToast, state.loading]);
 
     /**
      * Clear all import errors
@@ -150,7 +153,7 @@ export default function BulkImport() {
     /**
      * Submit processed data to bulk endpoint
      */
-    const handleBulkSave = async () => {
+    const handleBulkSave = useCallback(async () => {
         if (state.saving || !Object.keys(editedExpensesRef.current).length) return;
 
         dispatch({ type: 'SET_SAVING', payload: true });
@@ -225,7 +228,7 @@ export default function BulkImport() {
             showToast('Server Error. Some records failed to save. Please try again.', 'error');
             dispatch({ type: 'SET_SAVING', payload: false });
         }
-    };
+    }, [authFetch, dispatch, invalidateWidgets, refetchExpenses, resetDialog, showToast, state.saving]);
 
     return (
         <>

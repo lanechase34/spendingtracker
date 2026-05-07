@@ -40,6 +40,12 @@ export default function useAuthFetch() {
             const useCsrf = method !== 'GET';
             const csrf = useCsrf ? await getCsrfToken(currentAuthToken) : null;
 
+            // If we need CSRF and we can't retrieve a valid CSRF token, logout
+            if (useCsrf && !csrf) {
+                logout();
+                return null;
+            }
+
             const doFetch = async (token: string, csrfToken: string) => {
                 const isFormData = body instanceof FormData;
                 return fetch(url, {
@@ -72,6 +78,10 @@ export default function useAuthFetch() {
                 let newCsrf: string | null = '';
                 if (useCsrf) {
                     newCsrf = await getCsrfToken(newToken, true);
+                    if (!newCsrf) {
+                        logout();
+                        return response;
+                    }
                 }
 
                 // Retry
@@ -121,7 +131,9 @@ export default function useAuthFetch() {
                 }
             }
 
-            // 502 - for logout
+            // 502 any server error
+            // Force logout the user - if the server restarted, the user's JWT would've became invalidated
+            // If the server is down, we want to log the user out
             else if (response.status === 502) {
                 logout();
                 return response;

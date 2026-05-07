@@ -4,12 +4,11 @@ import AdminSidebar from 'admin/Sidebar';
 import useAdminDrawerContext from 'hooks/useAdminDrawerContext';
 import useBreakpoint from 'hooks/useBreakpoint';
 import type { ReactNode } from 'react';
+import { DRAWER_WIDTH } from 'utils/layout';
 
 interface AdminLayoutProps {
     children: ReactNode;
 }
-
-export const DRAWER_WIDTH = 240;
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
     const { isMobile } = useBreakpoint();

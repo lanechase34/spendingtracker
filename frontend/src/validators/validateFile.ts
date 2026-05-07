@@ -11,8 +11,8 @@ export const validateFile = (
     // Check MIME Type
     if (!validMimeTypes.includes(file.type.toLowerCase())) {
         // Manually check if this is HEIC because not supported by browsers (rigorous check will happen in backend)
-        const extension = file.name.split('.')[1];
-        const isValidHEIC = validMimeTypes.includes('image/heic') && extension.toUpperCase() === 'HEIC';
+        const extension = file.name.split('.').pop() ?? '';
+        const isValidHEIC = validMimeTypes.includes('image/heic') && ['HEIC', 'HEIF'].includes(extension.toUpperCase());
         if (!isValidHEIC) {
             return { file: null, error: 'Invalid file type.' };
         }

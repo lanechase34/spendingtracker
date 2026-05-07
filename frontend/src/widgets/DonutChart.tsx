@@ -14,6 +14,7 @@ import { Doughnut } from 'react-chartjs-2';
 import { donutPlugins, pointerHover } from 'utils/chartPlugins';
 import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
+import { safeJson } from 'utils/safeJson';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -91,8 +92,8 @@ export default function DonutChart() {
         if (!response) throw new Error('No response');
         if (!response.ok) throw new Error('Invalid network response');
 
-        const result = (await response.json()) as DonutChartResponse;
-        if (result?.error ?? false) throw new Error('Bad Request');
+        const result = await safeJson<DonutChartResponse>(response);
+        if (!result || result.error) throw new Error('Bad Request');
 
         return {
             labels: result.data.labels,

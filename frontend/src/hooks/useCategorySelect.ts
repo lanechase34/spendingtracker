@@ -41,10 +41,10 @@ export default function useCategorySelect({ initialValue, validator }: CategoryS
         return errorMessage;
     }, [validator, value]);
 
-    const reset = () => {
+    const reset = useCallback(() => {
         setValue(initialValue);
         setError(null);
-    };
+    }, [initialValue]);
 
     return { value, error, handleChange, validateField, reset };
 }

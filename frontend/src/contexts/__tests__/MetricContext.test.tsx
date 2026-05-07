@@ -14,6 +14,14 @@ jest.mock('hooks/useAuthContext');
 const mockUseAuthContext = useAuthContext as jest.Mock;
 const mockCreateMetricsClient = createMetricsClient as jest.Mock;
 
+jest.mock('utils/constants', () => ({
+    API_BASE_URL: '/spendingtracker/api/v1',
+    get IS_DEV() {
+        return true;
+    },
+    WS_URL: 'wss://mockurl',
+}));
+
 // Constants
 
 const MOCK_METRIC: Metric = {

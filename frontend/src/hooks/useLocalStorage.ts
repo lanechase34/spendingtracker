@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface Transform<T, S = string> {
     toStorage: (value: T) => S;
@@ -34,6 +34,8 @@ export default function useLocalStorage<T>({ key, initialValue, transform }: Use
      */
     const toStorage = useMemo(() => transform?.toStorage ?? ((v: T) => JSON.stringify(v)), [transform]);
     const fromStorage = useMemo(() => transform?.fromStorage ?? ((v: string) => JSON.parse(v) as T), [transform]);
+
+    const initialValueRef = useRef(initialValue);
 
     /**
      * Attempt to load local storage value on mount
@@ -81,7 +83,7 @@ export default function useLocalStorage<T>({ key, initialValue, transform }: Use
                 if (e.newValue !== null) {
                     setStoredValue(fromStorage(e.newValue));
                 } else {
-                    setStoredValue(initialValue);
+                    setStoredValue(initialValueRef.current);
                 }
             } catch (error) {
                 console.error(`Error parsing storage event for key "${key}":`, error);
@@ -90,7 +92,7 @@ export default function useLocalStorage<T>({ key, initialValue, transform }: Use
 
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
-    }, [key, initialValue, fromStorage]);
+    }, [key, fromStorage]);
 
     /**
      * Match useState declaration

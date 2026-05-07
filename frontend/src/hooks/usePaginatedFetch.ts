@@ -102,49 +102,33 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     );
 
     /**
-     * Keep a single abortController reference to share between fetchData and refetch
-     */
-    const abortControllerRef = useRef<AbortController | null>(null);
-
-    /**
      * Fetch handler. Will call endpoint and aggregate mui data grid params + additional params passed in
      * If successful response, transform the result.data based on transform function
      */
     const fetchData = useCallback(
-        async (state: GridState, additionalParamsString: string, signal?: AbortSignal) => {
+        async (state: GridState, additionalParamsString: string, signal: AbortSignal) => {
             setLoading(true);
             setError(false);
-
-            const controller = new AbortController();
-            abortControllerRef.current = controller;
-            const fetchSignal = signal ?? controller.signal;
 
             try {
                 const fetchParams = getFetchParams(state);
                 const response = await authFetch({
                     url: `${endpoint}?${fetchParams}&${additionalParamsString}`,
                     method: 'GET',
-                    signal: fetchSignal,
+                    signal,
                 });
 
                 if (!response) return;
-                if (!response.ok) {
-                    throw new Error('Invalid network response');
-                }
+                if (!response.ok) throw new Error('Invalid network response');
 
-                // Validate the response data
+                // Validate the response
                 const json = await safeJson(response);
                 const parsed = APIResponseSchema.safeParse(json);
 
-                if (!parsed.success) {
-                    throw new Error('Invalid response');
-                }
+                if (!parsed.success) throw new Error('Invalid response');
 
                 const result = parsed.data;
-
-                if (result.error === true) {
-                    throw new Error('Bad Request');
-                }
+                if (result.error === true) throw new Error('Bad Request');
 
                 // @ts-expect-error We are guaranteed to have data matching TData because we passed zod validation
                 setData(result.data as TData);
@@ -160,10 +144,6 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
                     setError(true);
                     setLoading(false);
                 }
-            } finally {
-                if (abortControllerRef.current === controller) {
-                    abortControllerRef.current = null;
-                }
             }
         },
         [authFetch, endpoint, APIResponseSchema, getFetchParams]
@@ -174,18 +154,13 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
      * Aborts the previous fetch if re-triggered
      */
     useEffect(() => {
-        if (!authReady) return; // this is a problem because this depends on auth fetch, which it really shouldn't be retriggering when that updates
-        // this can be mitigated with useEffectEvent but the refetch function may get a little tricky.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        void fetchData(gridState, additionalParamsString);
+        if (!authReady) return;
 
-        return () => {
-            // Only abort if a fetch is currently active
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-                abortControllerRef.current = null;
-            }
-        };
+        const controller = new AbortController();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        void fetchData(gridState, additionalParamsString, controller.signal);
+
+        return () => controller.abort();
         // We are deliberately using the serialized version to control WHEN the effect runs.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [serializedGridState, additionalParamsString, authReady, fetchData]);
@@ -195,7 +170,8 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
      */
     const refetch = useCallback(
         async (signal?: AbortSignal) => {
-            await fetchData(gridState, additionalParamsString, signal);
+            const controller = new AbortController();
+            await fetchData(gridState, additionalParamsString, signal ?? controller.signal);
         },
         // We are deliberately using the serialized version to control WHEN the function updates
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,7 +196,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     /**
      * MUI Grid Actions
      */
-    const handlePaginationModelChange = (newPaginationModel: GridPaginationModel) => {
+    const handlePaginationModelChange = useCallback((newPaginationModel: GridPaginationModel) => {
         // Reset to first page if page size changes
         setGridState((prev) => ({
             ...prev,
@@ -229,37 +205,37 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
                 pageSize: newPaginationModel.pageSize,
             },
         }));
-    };
+    }, []);
 
-    const handleFilterModelChange = (newFilterModel: GridFilterModel) => {
+    const handleFilterModelChange = useCallback((newFilterModel: GridFilterModel) => {
         // Reset to the first page
         setGridState((prev) => ({
             ...prev,
             paginationModel: { ...prev.paginationModel, page: 0 },
             filterModel: newFilterModel,
         }));
-    };
+    }, []);
 
-    const handleSortModelChange = (newSortModel: GridSortModel) => {
+    const handleSortModelChange = useCallback((newSortModel: GridSortModel) => {
         // Reset to the first page
         setGridState((prev) => ({
             ...prev,
             paginationModel: { ...prev.paginationModel, page: 0 },
             sortModel: newSortModel,
         }));
-    };
+    }, []);
 
-    const setPaginationModel = (model: GridPaginationModel) => {
+    const setPaginationModel = useCallback((model: GridPaginationModel) => {
         setGridState((prev) => ({ ...prev, paginationModel: model }));
-    };
+    }, []);
 
-    const setSortModel = (model: GridSortModel) => {
+    const setSortModel = useCallback((model: GridSortModel) => {
         setGridState((prev) => ({ ...prev, sortModel: model }));
-    };
+    }, []);
 
-    const setFilterModel = (model: GridFilterModel) => {
+    const setFilterModel = useCallback((model: GridFilterModel) => {
         setGridState((prev) => ({ ...prev, filterModel: model }));
-    };
+    }, []);
 
     return {
         data,

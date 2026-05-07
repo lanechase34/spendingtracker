@@ -77,7 +77,7 @@ export default function ExpenseForm() {
         switch (dateErrorCode) {
             case 'maxDate':
             case 'minDate': {
-                return 'Please select a date in the first quarter of 2022';
+                return 'Please select a date within a 1-year range';
             }
 
             case 'invalidDate': {
@@ -242,7 +242,7 @@ export default function ExpenseForm() {
                     }}
                 >
                     Track Expense
-                    <IconButton disabled={loading} aria-label="close" onClick={() => setOpen(false)}>
+                    <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, '')}>
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -350,7 +350,7 @@ export default function ExpenseForm() {
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button disabled={loading} variant="outlined" onClick={() => setOpen(false)}>
+                    <Button disabled={loading} variant="outlined" onClick={() => handleClose({}, '')}>
                         Cancel
                     </Button>
                     <Button

@@ -143,7 +143,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
      * @returns the CSRF token generated
      */
     const getCsrfToken = useCallback(
-        async (token: string, forceNew = false) => {
+        async (token: string, forceNew = false): Promise<string | null> => {
             // If token already exists, return it
             if (!forceNew && csrfTokenRef.current) {
                 return csrfTokenRef.current;
