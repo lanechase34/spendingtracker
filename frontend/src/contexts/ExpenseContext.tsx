@@ -12,6 +12,7 @@ import type { ExpenseList } from 'types/ExpenseList.type';
 import { ExpenseListSchema } from 'types/ExpenseList.type';
 import type { UsePaginatedFetchReturn } from 'types/UsePaginatedFetchReturn.type';
 import { API_BASE_URL } from 'utils/constants';
+import { safeJson } from 'utils/safeJson';
 
 export interface ExpenseContextType extends Omit<UsePaginatedFetchReturn<ExpenseList>, 'data'> {
     expenses: Expense[];
@@ -98,8 +99,8 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
                 if (!response) return;
                 if (!response.ok) throw new Error('Invalid network response');
 
-                const result = (await response.json()) as APIResponseType<null>;
-                if (result.error) throw new Error('Bad Request');
+                const result = await safeJson<APIResponseType<null>>(response);
+                if (!result || result.error) throw new Error('Bad Request');
 
                 // Refetch the current page
                 // Check if we need to go back a page

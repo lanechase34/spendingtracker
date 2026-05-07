@@ -22,8 +22,7 @@ import Typography from '@mui/material/Typography';
 import useAdminDrawerContext from 'hooks/useAdminDrawerContext';
 import useBreakpoint from 'hooks/useBreakpoint';
 import { Link, useLocation } from 'react-router-dom';
-
-import { DRAWER_WIDTH } from './Layout';
+import { DRAWER_WIDTH } from 'utils/layout';
 
 interface NavItem {
     label: string;

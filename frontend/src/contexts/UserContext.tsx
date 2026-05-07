@@ -6,6 +6,7 @@ import type { UserRoles } from 'types/Roles.type';
 import type { User, UserContextType } from 'types/UserContext.type';
 import { UserResponseSchema } from 'types/UserContext.type';
 import { API_BASE_URL } from 'utils/constants';
+import { safeJson } from 'utils/safeJson';
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -46,10 +47,9 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
 
             if (!response) return;
 
-            const rawJson: unknown = await response.json();
-
             // Validate response
-            const valid = UserResponseSchema.safeParse(rawJson);
+            const json = await safeJson(response);
+            const valid = UserResponseSchema.safeParse(json);
             if (!valid.success) {
                 throw new Error('Invalid response');
             }

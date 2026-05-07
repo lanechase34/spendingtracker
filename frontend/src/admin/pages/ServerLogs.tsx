@@ -423,7 +423,7 @@ export default function ServerLogs() {
 
                     {!contentLoading && !contentError && lines.length === 0 && activeFile && (
                         <Typography color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                            No lines to display{appliedSearch ? ' — try a different search term' : ''}.
+                            No lines to display{appliedSearch ? ' - try a different search term' : ''}.
                         </Typography>
                     )}
 

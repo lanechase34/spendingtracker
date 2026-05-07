@@ -32,7 +32,8 @@ component extends="base" hint="Category Endpoints" secured="User,Admin" {
                 data          = prc.data,
                 resultsKey    = 'results',
                 paginationKey = 'pagination'
-            );
+            )
+            .setStatusCode(200);
     }
 
 }

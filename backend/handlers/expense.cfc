@@ -196,6 +196,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
                 .getResponse()
                 .setErrorMessage('Invalid Parameters.')
                 .setStatusCode(400);
+            return;
         }
 
         rc.expenses    = deserializeJSON(rc.expenses);
@@ -205,6 +206,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
                 .getResponse()
                 .setErrorMessage('Invalid Parameters. #prc.validation.getAllErrors().toList('; ')#')
                 .setStatusCode(400);
+            return;
         }
         else {
             var categoryMap = {};

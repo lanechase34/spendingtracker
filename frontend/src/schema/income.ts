@@ -80,8 +80,8 @@ export function incomeService(authFetch: ReturnType<typeof useAuthFetch>) {
             }
 
             if (!response.ok) {
-                const result = (await response.json()) as APIResponseType<null>;
-                if (result?.error ?? true) {
+                const result = await safeJson<APIResponseType<null>>(response);
+                if (!result || result.error) {
                     throw new Error('Error updating income. Please try again.');
                 }
             }

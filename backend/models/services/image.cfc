@@ -80,7 +80,7 @@ component singleton accessors="true" hint="Service layer for interacting with im
     public string function validateUpload(
         required string formField,
         required string uploadDirectory,
-        string extensions = 'png,jpg,jpeg,webp,heic'
+        string extensions = 'png,jpg,jpeg,webp,heic,heif'
     ) {
         var result = '';
 

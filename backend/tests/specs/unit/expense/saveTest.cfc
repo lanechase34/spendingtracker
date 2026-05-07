@@ -140,9 +140,83 @@ component extends="tests.resources.baseTest" {
                     expect(response.getFormat()).toBe('json');
                     expect(response.getStatusCode()).toBe(400); // bad request
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toBe('Invalid Parameters. Category must be unique');
+                    expect(response.getMessages()[1]).toInclude('Invalid Parameters. Category name already exists.');
 
                     // Verify no expense made
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount);
+                });
+            });
+
+            describe('Category ownership (categoryid)', () => {
+                it('Allows saving expense using own custom category', () => {
+                    var ownCategoryId = categoryService.save(
+                        name   = 'Own Category #left(createUUID(), 10)#',
+                        userid = user.getId()
+                    );
+
+                    var event = post(
+                        route   = '/api/v1/expenses',
+                        headers = {'x-auth-token': jwt},
+                        params  = {
+                            date       : now(),
+                            amount     : randRange(1, 100),
+                            description: 'Expense with own category #createUUID()#',
+                            categoryid : ownCategoryId,
+                            receipt    : ''
+                        }
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(200);
+                    expect(response.getError()).toBeFalse();
+                    expect(response.getMessages()[1]).toBe('Successfully saved expense.');
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
+                });
+
+                it('Allows saving expense using a system category (userid IS NULL)', () => {
+                    var event = post(
+                        route   = '/api/v1/expenses',
+                        headers = {'x-auth-token': jwt},
+                        params  = {
+                            date       : now(),
+                            amount     : randRange(1, 100),
+                            description: 'Expense with system category #createUUID()#',
+                            categoryid : 1,
+                            receipt    : ''
+                        }
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(200);
+                    expect(response.getError()).toBeFalse();
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
+                });
+
+                it('Prevents saving expense using another user''s private category', () => {
+                    // Create private category
+                    var otherUser       = mockUser.make();
+                    var otherCategoryId = categoryService.save(
+                        name   = 'Private #left(createUUID(), 10)#',
+                        userid = otherUser.getId()
+                    );
+
+                    // Attempt to use that category as a different user
+                    var event = post(
+                        route   = '/api/v1/expenses',
+                        headers = {'x-auth-token': jwt},
+                        params  = {
+                            date       : now(),
+                            amount     : randRange(1, 100),
+                            description: 'Expense with stolen categoryid #createUUID()#',
+                            categoryid : otherCategoryId,
+                            receipt    : ''
+                        }
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe('Invalid Parameters. Categoryid not valid.');
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount);
                 });
             });

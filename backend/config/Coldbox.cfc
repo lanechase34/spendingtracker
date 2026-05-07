@@ -107,14 +107,13 @@ component {
                 'expense.export'             : {limit: 1, window: 1, key: 'email'},
                 'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'},
                 'user.setup2fa'              : {limit: 5, window: 60, key: 'email'},
-                'user.conirm2fa'             : {limit: 5, window: 10, key: 'email'},
+                'user.confirm2fa'            : {limit: 5, window: 10, key: 'email'},
                 'user.disable2fa'            : {limit: 3, window: 10, key: 'email'},
                 'auth.verify2fa'             : {limit: 5, window: 10, key: 'ip'}
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
             recoveryCodeCount   : 8, // number of recovery codes to provide for TOTP
             refreshTokenTTL     : 2592000, // 30 days in seconds
-            slowRequest         : 1000, // 1000ms
             testEmailPath       : '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/_testemails',
             uploadPath          : '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads',
             useRateLimiter      : true,

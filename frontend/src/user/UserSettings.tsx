@@ -232,7 +232,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                             </FormControl>
 
                             <FormControl variant="outlined" error={!!monthlyTakeHomeField.error} fullWidth>
-                                <InputLabel htmlFor="outlined-adornment-salary">Monthly Take Home</InputLabel>
+                                <InputLabel htmlFor="outlined-adornment-takehome">Monthly Take Home</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-takehome"
                                     startAdornment={<InputAdornment position="start">$</InputAdornment>}

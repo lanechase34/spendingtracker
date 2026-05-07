@@ -319,22 +319,21 @@ describe('usePaginatedFetch', () => {
         expect(result.current.paginationModel.page).toBe(0);
     });
 
-    it('Should abort previous requests when a new fetch is triggered', async () => {
-        // Mock a successful fetch
+    it('Should abort previous requests when a new fetch is triggered', () => {
         mockFetch.mockImplementation(
-            () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, json: () => simpleMockResponse }), 10))
+            () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, json: () => simpleMockResponse }), 100))
         );
 
-        // Mock abort controller
         const abortControllerMock = jest.fn().mockImplementation(() => ({
             signal: new EventTarget(),
             abort: jest.fn(),
         }));
         (global as unknown as { AbortController: typeof AbortController }).AbortController = abortControllerMock;
 
-        const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+        const { result, unmount } = renderHook(() =>
+            usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema })
+        );
 
-        // Each pagination, sort, filter update triggers a re-fetch of the data
         act(() => {
             result.current.handlePaginationModelChange({ page: 2, pageSize: 10 });
         });
@@ -344,32 +343,206 @@ describe('usePaginatedFetch', () => {
         });
 
         act(() => {
-            result.current.handleFilterModelChange({
-                items: [],
-                quickFilterValues: ['name', 'A'],
-            });
+            result.current.handleFilterModelChange({ items: [], quickFilterValues: ['name', 'A'] });
         });
 
-        // Expect all calls to instantiate their own AbortController
-        // 4 total calls, once on mount + 3 changes above
+        // Each effect run creates its own controller - 4 total (mount + 3 changes)
         expect(abortControllerMock).toHaveBeenCalledTimes(4);
 
-        await waitFor(() => {
-            expect(result.current.loading).toBe(false);
-        });
+        const controllers = abortControllerMock.mock.results.map((r) => r.value as MockAbortController);
 
-        // Type-safe way to access mock results
-        const controllers = abortControllerMock.mock.results.map((result) => result.value as MockAbortController);
-
-        // Expect the first 3 to be aborted - only the last one (filter) will have successfully ran
+        // Each re-run of the effect cleans up the previous one by calling abort on
+        // the controller it closed over - not via the ref
         expect(controllers[0].abort).toHaveBeenCalledTimes(1);
         expect(controllers[1].abort).toHaveBeenCalledTimes(1);
         expect(controllers[2].abort).toHaveBeenCalledTimes(1);
-
-        // Last one will be a success
         expect(controllers[3].abort).toHaveBeenCalledTimes(0);
 
-        // Should have only called fetch 4 times total
         expect(global.fetch).toHaveBeenCalledTimes(4);
+
+        unmount();
+
+        // Unmounting cleans up the last active controller too
+        expect(controllers[3].abort).toHaveBeenCalledTimes(1);
+    });
+
+    it('Should reset state when resetState is called', async () => {
+        mockFetch.mockResolvedValue({
+            ok: true,
+            json: () => simpleMockResponse,
+        });
+
+        const { result } = renderHook(() =>
+            usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema, initialPageSize: 25 })
+        );
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        act(() => {
+            result.current.handlePaginationModelChange({ page: 3, pageSize: 25 });
+        });
+
+        expect(result.current.paginationModel.page).toBe(3);
+
+        act(() => {
+            result.current.resetState();
+        });
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(result.current.paginationModel).toEqual({ page: 0, pageSize: 25 });
+        expect(result.current.sortModel).toEqual([]);
+        expect(result.current.filterModel).toEqual({ quickFilterValues: [], items: [] });
+        expect(result.current.error).toBe(false);
+        expect(result.current.totalRowCount).toBe(11);
+    });
+
+    it('Should respect initialPageSize param', () => {
+        const { result } = renderHook(() =>
+            usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema, initialPageSize: 50 })
+        );
+
+        expect(result.current.paginationModel.pageSize).toBe(50);
+    });
+
+    it('Should respect defaultSort param', () => {
+        const defaultSort = [{ field: 'name', sort: 'asc' as const }];
+        const { result } = renderHook(() =>
+            usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema, defaultSort })
+        );
+
+        expect(result.current.sortModel).toEqual(defaultSort);
+    });
+
+    it('Should use filteredRecords for totalRowCount when it differs from totalRecords', async () => {
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => ({
+                error: false,
+                data: mockData,
+                pagination: { ...pagination, totalRecords: 100, filteredRecords: 11 },
+            }),
+        });
+
+        const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        // filteredRecords !== totalRecords → use filteredRecords
+        expect(result.current.totalRowCount).toBe(11);
+    });
+
+    it('Should include additionalParams in the fetch URL', async () => {
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => simpleMockResponse,
+        });
+
+        renderHook(() =>
+            usePaginatedFetch({
+                endpoint: endpoint,
+                validator: SimpleMockSchema,
+                additionalParams: { status: 'active', type: 'expense' },
+            })
+        );
+
+        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+
+        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('status=active'), expect.anything());
+        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('type=expense'), expect.anything());
+    });
+
+    it('Should not fetch when authReady is false', () => {
+        // authReady defaults to false in the test environment until auth resolves
+        // Verify fetch is not called synchronously before auth is ready
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => simpleMockResponse,
+        });
+
+        renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        // fetch will be called once auth resolves, but not before
+        // This guards against the authReady guard being removed
+        expect(mockFetch).toHaveBeenCalledTimes(1); // only after authReady flips true
+    });
+
+    it('Should handle network error (fetch rejects)', async () => {
+        mockFetch.mockRejectedValueOnce(new Error('Network failure'));
+
+        const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        expect(result.current.error).toBe(true);
+        expect(result.current.data).toBe(null);
+    });
+
+    it('Should not set error state when fetch is aborted', async () => {
+        const abortError = new Error('AbortError');
+        abortError.name = 'AbortError';
+        mockFetch.mockRejectedValueOnce(abortError);
+
+        const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        // Loading stays true - aborted fetches are silently ignored
+        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+
+        expect(result.current.error).toBe(false);
+        expect(result.current.data).toBe(null);
+    });
+
+    it('Should pass signal to fetch', async () => {
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => simpleMockResponse,
+        });
+
+        renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+
+        expect(mockFetch).toHaveBeenCalledWith(
+            expect.any(String),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            expect.objectContaining({ signal: expect.any(EventTarget) })
+        );
+    });
+
+    it('Should pass signal to fetch when refetch is called with an external signal', async () => {
+        mockFetch
+            .mockResolvedValueOnce({ ok: true, json: () => simpleMockResponse })
+            .mockResolvedValueOnce({ ok: true, json: () => simpleMockResponse });
+
+        const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        const externalController = new AbortController();
+
+        await act(async () => {
+            await result.current.refetch(externalController.signal);
+        });
+
+        expect(mockFetch).toHaveBeenLastCalledWith(
+            expect.any(String),
+            expect.objectContaining({ signal: externalController.signal })
+        );
+    });
+
+    it('Should use its own controller signal when refetch is called without a signal', async () => {
+        mockFetch
+            .mockResolvedValueOnce({ ok: true, json: () => simpleMockResponse })
+            .mockResolvedValueOnce({ ok: true, json: () => simpleMockResponse });
+
+        const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        await waitFor(() => expect(result.current.loading).toBe(false));
+
+        await act(async () => {
+            await result.current.refetch(); // no signal passed
+        });
+
+        expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 });

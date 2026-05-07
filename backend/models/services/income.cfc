@@ -64,12 +64,8 @@ component singleton accessors="true" {
      * Grab list of users that have entered a salary & monthly take home
      * that have not received an income record for this month and enter one for them
      */
-    public void function payMonthly(date month) {
-        var currMonth = arguments.keyExists('month') && !isNull(month) ? month : createDate(
-            year(now()),
-            month(now()),
-            1
-        );
+    public void function payMonthly(date month = createDate(year(now()), month(now()), 1)) {
+        var currMonth = arguments.month;
 
         var users = q
             .from('users')

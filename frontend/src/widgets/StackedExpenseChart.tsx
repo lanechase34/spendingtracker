@@ -14,6 +14,7 @@ import { Bar } from 'react-chartjs-2';
 import { barPlugins, pointerHover } from 'utils/chartPlugins';
 import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
+import { safeJson } from 'utils/safeJson';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -127,8 +128,8 @@ export default function StackedExpenseChart() {
         if (!response) throw new Error('No response');
         if (!response.ok) throw new Error('Invalid network response');
 
-        const result = (await response.json()) as StackedExpenseChartResponse;
-        if (result?.error ?? false) throw new Error('Bad Request');
+        const result = await safeJson<StackedExpenseChartResponse>(response);
+        if (!result || result.error) throw new Error('Bad Request');
 
         return {
             labels: result.data.labels,

@@ -370,7 +370,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 it('Should set refresh token cookie when all conditions are met', () => {
                     prc.newTokens = {access_token: 'new-access-token-xyz', refresh_token: 'new-refresh-token-abc'};
-                    rc.event      = 'cbsecurity:Jwt.refreshToken';
+                    mockRequestContext.$('getCurrentEvent', 'cbsecurity:Jwt.refreshToken');
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
 
@@ -380,7 +380,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 });
 
                 it('Should not set refresh token cookie when newTokens does not exist', () => {
-                    rc.event = 'cbsecurity:Jwt.refreshToken';
+                    mockRequestContext.$('getCurrentEvent', 'cbsecurity:Jwt.refreshToken');
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
 
@@ -389,7 +389,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 it('Should not set refresh token cookie when event is not refresh token endpoint', () => {
                     prc.newTokens = {access_token: 'new-access-token', refresh_token: 'new-refresh-token'};
-                    rc.event      = 'api.login';
+                    mockRequestContext.$('getCurrentEvent', 'auth.login');
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
 
@@ -398,7 +398,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 it('Should not set refresh token cookie when access_token is missing', () => {
                     prc.newTokens = {refresh_token: 'new-refresh-token'};
-                    rc.event      = 'cbsecurity:Jwt.refreshToken';
+                    mockRequestContext.$('getCurrentEvent', 'cbsecurity:Jwt.refreshToken');
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
 
@@ -407,7 +407,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 it('Should not set refresh token cookie when refresh_token is missing', () => {
                     prc.newTokens = {access_token: 'new-access-token'};
-                    rc.event      = 'cbsecurity:Jwt.refreshToken';
+                    mockRequestContext.$('getCurrentEvent', 'cbsecurity:Jwt.refreshToken');
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
 
@@ -416,14 +416,15 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 it('Should not set refresh token cookie when newTokens is empty struct', () => {
                     prc.newTokens = {};
-                    rc.event      = 'cbsecurity:Jwt.refreshToken';
+                    mockRequestContext.$('getCurrentEvent', 'cbsecurity:Jwt.refreshToken');
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
 
                     expect(mockSecurityService.$never('setRefreshTokenCookie')).toBeTrue();
                 });
 
-                it('Should not set refresh token cookie when rc.event is missing', () => {
+                it('Should not set refresh token cookie when currentEvent is missing', () => {
+                    mockRequestContext.$('getCurrentEvent');
                     prc.newTokens = {access_token: 'new-access-token', refresh_token: 'new-refresh-token'};
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
@@ -433,7 +434,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 it('Should handle case-insensitive event name matching', () => {
                     prc.newTokens = {access_token: 'new-access-token', refresh_token: 'new-refresh-token'};
-                    rc.event      = 'CBSECURITY:JWT.REFRESHTOKEN'; // Different case
+                    mockRequestContext.$('getCurrentEvent', 'CBSECURITY:JWT.REFRESHTOKEN');
 
                     interceptor.postProcess(event = mockRequestContext, rc = rc, prc = prc);
                     expect(mockSecurityService.$once('setRefreshTokenCookie')).toBeTrue();

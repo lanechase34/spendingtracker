@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { createContext, useEffect, useMemo, useRef, useState } from 'react';
 import { createMetricsClient } from 'sockets/createMetricsClient';
 import type { Metric } from 'types/MetricResponse.type';
-import { WS_URL } from 'utils/constants';
+import { IS_DEV, WS_URL } from 'utils/constants';
 
 export interface MetricContextType {
     metrics: Metric | null;
@@ -25,6 +25,7 @@ export const MetricContextProvider = ({ children }: { children: ReactNode }) => 
         if (!authToken) {
             void clientRef.current?.deactivate();
             clientRef.current = null;
+            failedRef.current = false;
             return;
         }
 
@@ -40,7 +41,9 @@ export const MetricContextProvider = ({ children }: { children: ReactNode }) => 
             brokerURL: WS_URL,
             token: authToken,
             onMetrics: setMetrics,
-            onError: (err) => console.error('Metrics socket error', err),
+            onError: (err) => {
+                if (IS_DEV) console.error('Metrics socket error', err);
+            },
             onFailed: () => {
                 failedRef.current = true;
             },

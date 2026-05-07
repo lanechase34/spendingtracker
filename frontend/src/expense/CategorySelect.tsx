@@ -11,10 +11,11 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useToastContext from 'hooks/useToastContext';
 import type { SyntheticEvent } from 'react';
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { APIResponseType } from 'types/APIResponse.type';
 import type { SelectOptionType } from 'types/SelectOption.type';
 import { getCachedCategories, setCachedCategories } from 'utils/categoryCache';
 import { API_BASE_URL } from 'utils/constants';
+import { safeJson } from 'utils/safeJson';
+import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
 
 // Minimum character length required for a user to add a new category
@@ -41,10 +42,7 @@ const CategorySchema = z.object({
 });
 
 // Zod schema for validating the full category list API response
-const CategoryAPISchema = z.object({
-    data: z.array(CategorySchema),
-    error: z.optional(z.boolean()),
-});
+const CategoryAPISchema = validateAPIResponse(z.array(CategorySchema));
 
 interface CategorySelectProps {
     /**
@@ -62,6 +60,8 @@ interface CategorySelectProps {
     /** Debounce delay in milliseconds for search input. Defaults to 500. */
     debounceDelay?: number;
 }
+
+const BOTTOM_THRESHOLD = 350; // px to bottom
 
 /**
  * Async category select dropdown with server-side search, infinite scroll pagination,
@@ -97,7 +97,6 @@ export default function CategorySelect({
     const authFetch = useAuthFetch();
     const { showToast } = useToastContext();
 
-    const BOTTOM_THRESHOLD = 350; // px to bottom
     const listboxRef = useRef<HTMLElement | null>(null);
     const isAppendingRef = useRef<boolean>(false);
     const savedScrollTopRef = useRef<number>(0);
@@ -152,7 +151,11 @@ export default function CategorySelect({
 
             try {
                 const response = await authFetch({
-                    url: `${API_BASE_URL}/categories?page=${page}&records=${records}&search=${search}`,
+                    url: `${API_BASE_URL}/categories?${new URLSearchParams({
+                        page: String(page),
+                        records: String(records),
+                        search,
+                    }).toString()}`,
                     method: 'GET',
                     signal: abortController.signal,
                 });
@@ -161,7 +164,8 @@ export default function CategorySelect({
                 if (!response.ok) throw new Error('Invalid network response');
 
                 // Validate the response data
-                const valid = z.safeParse(CategoryAPISchema, (await response.json()) as APIResponseType<Category>);
+                const json = await safeJson(response);
+                const valid = CategoryAPISchema.safeParse(json);
                 if (!valid.success) throw new Error('Invalid response');
 
                 const result = valid.data;
@@ -221,17 +225,17 @@ export default function CategorySelect({
         };
     }, [debouncedFetch]);
 
-    const handleOpen = () => {
+    const handleOpen = useCallback(() => {
         setOpen(true);
         // Intentionally loads all options on open before the user starts typing.
         if (options.length === 0) {
             void loadOptions('', 1, false);
         }
-    };
+    }, [options.length, loadOptions]);
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setOpen(false);
-    };
+    }, []);
 
     /**
      * Handles infinite scroll pagination within the listbox.

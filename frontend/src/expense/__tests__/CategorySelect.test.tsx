@@ -16,14 +16,14 @@ const mockSetCachedCategories = setCachedCategories as jest.Mock;
 function mockSuccessResponse(data: { id: number; name: string }[]) {
     return {
         ok: true,
-        json: () => Promise.resolve({ data }),
+        json: () => Promise.resolve({ error: false, data: data }),
     };
 }
 
 /** Returns a delayed fetch mock that resolves after `ms` milliseconds */
 function mockDelayedResponse(data: { id: number; name: string }[], ms = 5000) {
     return new Promise((resolve) => {
-        setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ data }) }), ms);
+        setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ error: false, data: data }) }), ms);
     });
 }
 

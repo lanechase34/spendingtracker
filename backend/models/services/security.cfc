@@ -79,7 +79,6 @@ component singleton accessors="true" {
      * Invalidate the cookies by setting maxAge to 0
      */
     public void function deleteTokenCookies() {
-        // setAuthTokenCookie(token = 'delete', maxAge = 0);
         setRefreshTokenCookie(token = 'delete', maxAge = 0);
     }
 

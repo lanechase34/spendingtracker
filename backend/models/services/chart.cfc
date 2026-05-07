@@ -146,11 +146,6 @@ component singleton accessors="true" {
         required numeric userid
     ) {
         var cacheKey = 'userid=#userid#|widget.rawData|startDate=#startDate#|endDate=#endDate#';
-        var result   = cacheStorage.get(cacheKey);
-        if(!isNull(result)) {
-            return result;
-        }
-
         return cacheStorage.getOrSet(cacheKey, () => {
             return queryExecute(
                 '

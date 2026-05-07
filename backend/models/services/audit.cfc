@@ -135,7 +135,7 @@ component singleton accessors="true" {
                 .get()
                 .map(
                     (value) => {
-                        value.created = dateTimeFormat(value.created, 'yyyy-mm-dd HH:mm:ss');
+                        value.created = dateTimeFormat(value.created, 'yyyy-mm-dd HH:nn:ss');
                         return value;
                     },
                     true,

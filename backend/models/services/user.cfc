@@ -67,7 +67,6 @@ component singleton accessors="true" {
         if(!user.getVerified()) {
             // throw special exception to be caught
             throw(message = 'User not verified', type = 'VerificationException');
-            return false;
         }
 
         updateLastLogin(userid = user.getId());
@@ -104,11 +103,10 @@ component singleton accessors="true" {
         }
 
         // Decrypt fields
-        userData.salary          = securityService.decryptValue(securityService.decryptValue(userData.salary, 'numeric'));
-        userData.monthlytakehome = securityService.decryptValue(
+        userData.salary          = securityService.intToFloat(securityService.decryptValue(userData.salary, 'numeric'));
+        userData.monthlytakehome = securityService.intToFloat(
             securityService.decryptValue(userData.monthlytakehome, 'numeric')
         );
-
         return userData;
     }
 
@@ -288,19 +286,20 @@ component singleton accessors="true" {
             .when(
                 condition = salary > 0,
                 onTrue    = (q) => {
-                    return q.addUpdate({'salary': {value: securityService.encryptValue(salary), cfsqltype: 'varchar'}})
+                    return q.addUpdate({'salary': {value: securityService.encryptValue(salary), cfsqltype: 'varchar'}});
                 }
             )
             .when(
                 condition = monthlyTakeHome > 0,
                 onTrue    = (q) => {
-                    return q.addUpdate({'monthlytakehome': {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}})
+                    return q.addUpdate({'monthlytakehome': {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}});
                 }
             )
             .when(
                 condition = settings.keyExists('updated'),
                 onTrue    = (q) => {
-                    return q.addUpdate({'settings': q.raw('cast(''#serializeJSON(settings)#'' as jsonb)')})
+                    settings.delete('updated');
+                    return q.addUpdate({'settings': {value: serializeJSON(settings), cfsqltype: 'other'}});
                 }
             )
             .update();
@@ -371,14 +370,12 @@ component singleton accessors="true" {
 
         // Invalid id
         if(!base.keyExists('id')) {
-            throw(nessage = 'User not found', type = 'UserNotFound');
-            return false;
+            throw(message = 'User not found', type = 'UserNotFound');
         }
 
         // Already verified
         if(base.verified) {
-            throw(nessage = 'User already verified', type = 'UserAlreadyVerified');
-            return false;
+            throw(message = 'User already verified', type = 'UserAlreadyVerified');
         }
 
         // Check the code
@@ -386,14 +383,12 @@ component singleton accessors="true" {
             !base.keyExists('verificationCode')
             || !bcrypt.checkPassword(candidate = code, bCryptHash = base.verificationCode)
         ) {
-            throw(nessage = 'User not found', type = 'UserNotFound');
-            return false;
+            throw(message = 'User not found', type = 'UserNotFound');
         }
 
         // Make sure code has not expired
         if(dateDiff('n', base.verificationSentDate, now()) > verificationLifespan) {
-            throw(nessage = 'Code has expired', type = 'UserNotFound');
-            return false;
+            throw(message = 'Code has expired', type = 'UserNotFound');
         }
 
         return true;
@@ -482,7 +477,7 @@ component singleton accessors="true" {
                         }
                         // Map security_level -> permission
                         value.security_level = this.roleMap[value.security_level];
-                        value.verified       = value.verified == 1;
+                        value.verified       = !!value.verified;
                         return value;
                     },
                     true,

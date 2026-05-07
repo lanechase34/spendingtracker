@@ -12,6 +12,6 @@ export const validateMoney = (value: string | null): string | null => {
     }
 
     const num = Number(trimmed);
-    if (num < 0) return 'Enter a positive amount';
+    if (num <= 0) return 'Enter a positive amount greater than zero';
     return null;
 };

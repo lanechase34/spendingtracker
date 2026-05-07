@@ -55,7 +55,7 @@ component extends="base" hint="Auth Endpoints" {
 
         // Check if user has 2FA enabled
         var user = userService.retrieveUserByUsername(rc.email);
-        if(totpService.isEnabled(user.getId())) {
+        if(user.getTotp_Enabled()) {
             // Issue a short lived Pending2FA token
             var pendingUser = getInstance('objects.userobj');
 
@@ -152,12 +152,6 @@ component extends="base" hint="Auth Endpoints" {
         }
 
         try {
-            jwtService.refreshToken();
-        }
-        catch(any e) {
-        }
-
-        try {
             securityService.deleteTokenCookies();
         }
         catch(any e) {
@@ -245,7 +239,7 @@ component extends="base" hint="Auth Endpoints" {
             .getResponse()
             .setData({access_token: token.access_token})
             .setStatusCode(200)
-            .addMessage('Succesfully verified!');
+            .addMessage('Successfully verified!');
     }
 
     /**

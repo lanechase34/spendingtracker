@@ -154,6 +154,9 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
             const response = await fetch(`${API_BASE_URL}/register`, {
                 method: 'POST',
                 body: JSON.stringify(body),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
 
             if (response.status === 429) {

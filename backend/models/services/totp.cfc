@@ -3,7 +3,6 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
     property name="appName"           inject="coldbox:setting:appName";
     property name="bcrypt"            inject="@BCrypt";
     property name="cacheStorage"      inject="cachebox:coldboxStorage";
-    property name="encryptionKey"     inject="coldbox:setting:encryptionKey";
     property name="q"                 inject="provider:QueryBuilder@qb";
     property name="recoveryCodeCount" inject="coldbox:setting:recoveryCodeCount";
     property name="securityService"   inject="services.security";
@@ -88,7 +87,7 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
             )
             .update({
                 totp_enabled       : {value: true, cfsqltype: 'boolean'},
-                totp_recovery_codes: q.raw('cast(''#serializeJSON(hashedCodes)#'' as jsonb)')
+                totp_recovery_codes: {value: serializeJSON(hashedCodes), cfsqltype: 'other'}
             });
 
         // Invalidate user cache
@@ -217,18 +216,6 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
     }
 
     /**
-     * Check if the incoming userid has totp enabled
-     *
-     * @userid The user's id (PK)
-     *
-     * @return T/F if enabled
-     */
-    public boolean function isEnabled(required numeric userid) {
-        var record = getUserTOTPRecord(userid);
-        return record.totp_enabled;
-    }
-
-    /**
      * Create a bcrypt hash for each recovery code
      *
      * @codes array of plan text recovery codes
@@ -269,23 +256,26 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         var hashedCodes = record.totp_recovery_codes;
         var matchIndex  = 0;
 
-        for(var i = 1; i <= hashedCodes.len(); i++) {
-            if(bcrypt.checkPassword(candidate = code, BCryptHash = hashedCodes[i])) {
-                matchIndex = i;
-                break;
+        // Lock because we are consuming the code here - code can only be used once
+        lock name="totp_recovery_#userid#" timeout="10" type="exclusive" throwOnTimeout=true {
+            for(var i = 1; i <= hashedCodes.len(); i++) {
+                if(bcrypt.checkPassword(candidate = code, BCryptHash = hashedCodes[i])) {
+                    matchIndex = i;
+                    break;
+                }
             }
+
+            if(!matchIndex) {
+                throw(type = 'TOTP.InvalidCode', message = 'Invalid recovery code.');
+            }
+
+            // Consume the code - remove it so it can never be used again
+            hashedCodes.deleteAt(matchIndex);
+
+            q.from('users')
+                .where('id', '=', {value: userid, cfsqltype: 'numeric'})
+                .update({totp_recovery_codes: {value: serializeJSON(hashedCodes), cfsqltype: 'other'}});
         }
-
-        if(!matchIndex) {
-            throw(type = 'TOTP.InvalidCode', message = 'Invalid recovery code.');
-        }
-
-        // Consume the code - remove it so it can never be used again
-        hashedCodes.deleteAt(matchIndex);
-
-        q.from('users')
-            .where('id', '=', {value: userid, cfsqltype: 'numeric'})
-            .update({totp_recovery_codes: q.raw('cast(''#serializeJSON(hashedCodes)#'' as jsonb)')});
 
         // Invalidate user cache
         cacheStorage.clearByKeySnippet(keySnippet = 'user_#userid#');
