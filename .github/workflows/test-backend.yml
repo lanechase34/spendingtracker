@@ -4,6 +4,7 @@ permissions:
   contents: read
   checks: write
   id-token: write
+  pull-requests: write
 
 on:
   push:
@@ -14,7 +15,8 @@ on:
     branches:
       - development
       - main
-  workflow_dispatch: # Allow manual triggering
+  workflow_dispatch:
+    # Allow manual triggering
 
 jobs:
   tests:
@@ -36,9 +38,7 @@ jobs:
         ports:
           - 5436:5432
         options: >-
-          --health-cmd pg_isready 
-          --health-interval 10s 
-          --health-timeout 5s
+          --health-cmd pg_isready  --health-interval 10s  --health-timeout 5s
           --health-retries 5
 
     steps:
@@ -93,7 +93,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          box install
+          box install --production
+          box install testbox@7.0.0+19
 
       - name: Verify Database Connection
         run: |
