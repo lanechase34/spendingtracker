@@ -286,8 +286,11 @@ component singleton accessors="true" {
 
         // Make sure record and file exists
         if(
-            !receiptRecord.keyExists('receipt') || !receiptRecord.receipt.len() || !fileExists(
-                getReceiptPath(receipt = receiptRecord.receipt, userDir = userDir)
+            !receiptRecord.keyExists('receipt') // Not a valid record
+            || isNull(receiptRecord.receipt) // Record never had a receipt
+            || !receiptRecord.receipt.len() // Invalid receipt
+            || !fileExists(
+                getReceiptPath(receipt = receiptRecord.receipt, userDir = userDir) // Check the receipt still exists
             )
         ) {
             return return404 ? '#application.cbController.getSetting('uploadPath')#/404.webp' : '';

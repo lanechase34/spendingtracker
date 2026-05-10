@@ -196,7 +196,7 @@ jobs:
               const errored = results.totalError ?? 0;
               const skipped = results.totalSkipped ?? 0;
 
-              const passRate = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';
+              const passRate = total > 0 ? ((passed / (total-skipped)) * 100).toFixed(1) : '0.0';
 
               body = [
                 `## TestBox Backend Suite`,

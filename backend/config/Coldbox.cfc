@@ -146,7 +146,7 @@ component {
             // Define Appenders
             appenders: {coldboxTracer: {class: 'coldbox.system.logging.appenders.ConsoleAppender'}},
             // Root Logger
-            root     : {levelmax: 'DEBUG', appenders: '*'},
+            root     : {levelmax: 'WARN', appenders: '*'},
             // Implicit Level Categories
             info     : ['coldbox.system'],
             warn     : ['WebSocket', 'Email', 'Admin', 'Image']
@@ -278,6 +278,8 @@ component {
 
         // Lower bcrypt workfactor for faster performance
         moduleSettings = {bcrypt: {workFactor: 4}};
+
+        logBox.root.levelmax = 'DEBUG';
     }
 
     /**

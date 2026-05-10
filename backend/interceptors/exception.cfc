@@ -49,12 +49,14 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         prc.requestAudit.detail = 'onException';
         prc.requestAudit.stack  = interceptData;
 
+        var bugSnapshot = duplicate(prc.requestAudit);
+
         var sendBug = async.newFuture(() => {
-            bugService.log(argumentCollection = prc.requestAudit);
+            bugService.log(argumentCollection = bugSnapshot);
         });
 
         var sendEmail = async.newFuture(() => {
-            emailService.sendBug(bugInfo = prc.requestAudit);
+            emailService.sendBug(bugInfo = bugSnapshot);
         });
 
         var results = async
