@@ -71,7 +71,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * Bypass front-end and insert subscription record straight to database
      * This avoids firing automatic expense inserts if the subscription was due
      */
-    numeric function insert(required struct data, boolean active = true) {
+    numeric function insert(
+        required struct data,
+        boolean active      = true,
+        boolean mockUpdated = false
+    ) {
         var userid = data.userid;
         var before = count(userid = userid);
 
@@ -85,6 +89,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
             receipt         : {value: data.receipt, cfsqltype: 'varchar'},
             userid          : {value: data.userid, cfsqltype: 'numeric'}
         };
+
+        // Force set the updated column to the past for testing
+        if(mockUpdated) {
+            insertData.updated = {value: dateAdd('d', -10, now()), cfsqltype: 'timestamp'};
+        }
 
         var newSubscription = q
             .from('subscription')

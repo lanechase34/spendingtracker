@@ -6,6 +6,7 @@ component extends="tests.resources.baseTest" {
         subscriptionService = getInstance('services.subscription');
         auditService        = getInstance('services.audit');
         mockUser            = getInstance('tests.resources.mockuser');
+        q                   = getInstance('provider:QueryBuilder@qb');
 
         /**
          * Setup user to be shared throughout the test suite
@@ -25,7 +26,6 @@ component extends="tests.resources.baseTest" {
         describe('subscription.charge', () => {
             beforeEach(() => {
                 setup();
-                subscriptionHelper.fresh();
             });
 
             describe('Monthly subscriptions', () => {
@@ -393,6 +393,16 @@ component extends="tests.resources.baseTest" {
                 });
 
                 it('Continues charging other due subscriptions when one transaction fails', () => {
+                    // Mark all existing subscriptions as inactive to isolate only these two subscriptions being tested
+                    var start = now();
+                    q.from('subscription')
+                        .where(
+                            'active',
+                            '=',
+                            {value: true, cfsqltype: 'boolean'}
+                        )
+                        .update({active: {value: false, cfsqltype: 'boolean'}});
+
                     var a = subscriptionHelper.mock(
                         date        = now(),
                         interval    = 'M',
@@ -425,6 +435,20 @@ component extends="tests.resources.baseTest" {
                     var badId       = subscriptionHelper.getExpenses(aId).len() == 1 ? bId : aId;
                     var badExpenses = subscriptionHelper.getExpenses(badId);
                     expect(badExpenses.len()).toBe(0, 'Failed subscription should not have an expense');
+
+                    // Restore the active state
+                    q.from('subscription')
+                        .where(
+                            'updated',
+                            '>=',
+                            {value: start, cfsqltype: 'timestamp'}
+                        )
+                        .andWhere(
+                            'active',
+                            '=',
+                            {value: false, cfsqltype: 'boolean'}
+                        )
+                        .update({active: {value: true, cfsqltype: 'boolean'}});
                 });
             });
 

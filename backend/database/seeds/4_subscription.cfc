@@ -1,4 +1,4 @@
-component extends="base" {
+component extends="../base" {
 
     function run(qb, mockdata) {
         var securityService = getSecurityService();

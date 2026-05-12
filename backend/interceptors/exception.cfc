@@ -52,18 +52,13 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         // Duplicate the audit struct to use safely
         var bugSnapshot = duplicate(prc.requestAudit);
 
-        var sendBug = async.newFuture(() => {
+        async.newFuture(() => {
             bugService.log(argumentCollection = bugSnapshot);
         });
 
-        var sendEmail = async.newFuture(() => {
+        async.newFuture(() => {
             emailService.sendBug(bugInfo = bugSnapshot);
         });
-
-        var results = async
-            .newFuture()
-            .all(sendBug, sendEmail)
-            .get();
 
         /**
          * Dump detail in development environment

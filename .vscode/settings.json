@@ -68,5 +68,6 @@
             "source": "backend/tests",
             "target": "tests"
         }
-    ]
+    ],
+    "workbench.browser.openLocalhostLinks": false
 }

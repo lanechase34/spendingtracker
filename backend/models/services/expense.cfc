@@ -159,7 +159,17 @@ component singleton accessors="true" {
                 });
 
                 // Slice the correct page from the fully sorted result
-                rows = rows.slice(offset + 1, min(rows.len() - offset, records));
+                var rowCount = rows.len();
+                if(rowCount && offset < rowCount) {
+                    var startPosition = offset + 1; // slice offset is 1-based
+                    var remaining     = rowCount - offset; // how many elements remaining after startPosition
+
+                    var length = min(remaining, records); // clamp the records returned to not go out of bounds
+                    rows       = rows.slice(startPosition, length);
+                }
+                else {
+                    rows = [];
+                }
 
                 // Clean up the temp field
                 rows = rows.map((value) => {

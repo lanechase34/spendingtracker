@@ -52,6 +52,32 @@ component extends="tests.resources.baseTest" {
                 expect(curr.active).toBeFalse();
             });
 
+            it('Updates the updated timestamp when a subscription is toggled', () => {
+                // Mock subscription, making the updated column to be far in the past
+                var currSubscriptionId = subscriptionHelper.insert(
+                    data = subscriptionHelper.mock(
+                        date     = dateAdd('d', randRange(-31, -2), dateAdd('m', -1, now())),
+                        interval = 'M',
+                        userid   = user.getId()
+                    ),
+                    active      = true,
+                    mockUpdated = true
+                );
+
+                var updatedAtInsert = subscriptionHelper.load(currSubscriptionId).updated;
+
+                patch(
+                    route   = '/api/v1/subscriptions/#currSubscriptionId#',
+                    headers = {'x-auth-token': jwt},
+                    params  = {active: false}
+                );
+
+                var curr = subscriptionHelper.load(currSubscriptionId);
+                expect(curr.updated > updatedAtInsert).toBeTrue(
+                    'updated timestamp should advance after toggle, expected > #updatedAtInsert# but got #curr.updated#'
+                );
+            });
+
             it('Can toggle a subscription active', () => {
                 var currSubscriptionId = subscriptionHelper.insert(
                     data = subscriptionHelper.mock(

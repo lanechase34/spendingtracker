@@ -85,6 +85,7 @@ component extends="tests.resources.baseTest" {
                     });
                 },
                 '',
+                false,
                 application.cbController.getSetting('environment') == 'test'
             );
         });

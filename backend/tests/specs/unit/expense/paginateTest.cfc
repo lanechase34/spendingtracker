@@ -418,6 +418,63 @@ component extends="tests.resources.baseTest" {
                     expect(descExpenses2[i].amount).toBeGTE(descExpenses2[i + 1].amount);
                 }
             });
+
+            it('Returns an empty result set when page outside the number of records for user', () => {
+                var pageSize = 10;
+
+                var event = get(
+                    route   = '/api/v1/expenses',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        startDate: dateAdd('d', -30, now()),
+                        endDate  : now(),
+                        page     : 100, // page far out of the last expense saved
+                        records  : pageSize,
+                        search   : '',
+                        orderCol : '', // no ordering
+                        orderDir : ''
+                    }
+                );
+
+                // Verify JSON response
+                expenseHelper.validateApiResponse(
+                    response        = event.getResponse(),
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = rollingTotalSum, // we aren't filtering here, so the filteredSum == totalSum
+                    recordsReturned = 0,
+                    totalRecords    = totalRecords,
+                    filteredRecords = totalRecords, // no filtering so totalRecords=filteredRecords
+                    pageSize        = pageSize,
+                    page            = 100
+                );
+
+                // Get another page ordering by amount (calls arraySlice)
+                event = get(
+                    route   = '/api/v1/expenses',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        startDate: dateAdd('d', -30, now()),
+                        endDate  : now(),
+                        page     : 100, // page far out of the last expense saved
+                        records  : pageSize,
+                        search   : '',
+                        orderCol : 'amount',
+                        orderDir : 'asc'
+                    }
+                );
+
+                // Verify JSON response
+                expenseHelper.validateApiResponse(
+                    response        = event.getResponse(),
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = rollingTotalSum,
+                    recordsReturned = 0,
+                    totalRecords    = totalRecords,
+                    filteredRecords = totalRecords,
+                    pageSize        = pageSize,
+                    page            = 100
+                );
+            });
         });
     }
 
