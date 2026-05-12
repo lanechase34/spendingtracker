@@ -16,19 +16,20 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required date date,
         required string description,
         required numeric categoryid,
-        string receipt = ''
+        string receipt = '',
+        numeric amount = -1
     ) {
         var result = {sum: 0, ids: []};
 
         for(var i = 1; i <= count; i++) {
-            var amount = round(randRange(1, 100) + (randRange(1, 99) / 100), 2);
+            var expenseAmount = amount < 0 ? round(randRange(1, 100) + (randRange(1, 99) / 100), 2) : amount;
 
             var curr = q
                 .from('expense')
                 .returning('id')
                 .insert({
                     date       : {value: date, cfsqltype: 'date'},
-                    amount     : {value: securityService.encryptValue(amount), cfsqltype: 'varchar'},
+                    amount     : {value: securityService.encryptValue(expenseAmount), cfsqltype: 'varchar'},
                     description: {value: description, cfsqltype: 'varchar'},
                     categoryid : {value: categoryid, cfsqltype: 'numeric'},
                     receipt    : {value: receipt, cfsqltype: 'varchar'},
@@ -38,7 +39,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 .id;
 
             result.ids.append(curr);
-            result.sum += amount;
+            result.sum += expenseAmount;
         }
 
         cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|expense');

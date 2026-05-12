@@ -265,6 +265,159 @@ component extends="tests.resources.baseTest" {
                     page            = 1
                 );
             });
+
+            it('Can sort results by amount correctly', () => {
+                // Mock expenses with known amounts so we can verify sort order
+                // Store the largest and smallest amounts
+                var amounts = [
+                    500,
+                    150,
+                    999,
+                    75,
+                    320,
+                    840,
+                    210,
+                    625,
+                    45,
+                    780,
+                    999.99,
+                    0.01,
+                    0.25,
+                    1000.01,
+                    999999.99
+                ];
+                var mockSum = 0;
+
+                amounts.each((amount) => {
+                    var mock = expenseHelper.mock(
+                        userid      = user.getId(),
+                        count       = 1,
+                        date        = now(),
+                        description = 'Sort Test #amount#',
+                        categoryid  = 1,
+                        amount      = amount
+                    );
+
+                    totalRecords += 1;
+                    rollingTotalSum += amount;
+                    mockSum += amount;
+                });
+
+                // Test ascending sort - all on single page
+                var ascPage = get(
+                    route   = '/api/v1/expenses',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        startDate: dateAdd('d', -30, now()),
+                        endDate  : now(),
+                        page     : 1,
+                        records  : 100,
+                        search   : 'Sort Test',
+                        orderCol : 'amount',
+                        orderDir : 'asc'
+                    }
+                );
+
+                var ascResponse = ascPage.getResponse();
+
+                // Verify JSON response
+                expenseHelper.validateApiResponse(
+                    response        = ascResponse,
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = mockSum,
+                    recordsReturned = amounts.len(),
+                    totalRecords    = totalRecords,
+                    filteredRecords = amounts.len(),
+                    pageSize        = 100,
+                    page            = 1
+                );
+
+                // Verify each record is <= the next (ascending order)
+                var ascExpenses = ascResponse.getData().expenses;
+                for(var i = 1; i < ascExpenses.len(); i++) {
+                    expect(ascExpenses[i].amount).toBeLTE(ascExpenses[i + 1].amount);
+                }
+
+                // The first record should be the smallest amount (0.01)
+                expect(ascExpenses[1].amount).toBe(0.01);
+
+                // Test descending sort - split across multiple pages
+                setup();
+                var descPage = get(
+                    route   = '/api/v1/expenses',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        startDate: dateAdd('d', -30, now()),
+                        endDate  : now(),
+                        page     : 1,
+                        records  : 10,
+                        search   : 'Sort Test',
+                        orderCol : 'amount',
+                        orderDir : 'desc'
+                    }
+                );
+
+                var descResponse = descPage.getResponse();
+
+                // Verify JSON response
+                expenseHelper.validateApiResponse(
+                    response        = descResponse,
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = mockSum,
+                    recordsReturned = 10, // amounts.len() > 10
+                    totalRecords    = totalRecords,
+                    filteredRecords = amounts.len(),
+                    pageSize        = 10,
+                    page            = 1
+                );
+
+                // Verify each record is >= the next (descending order)
+                var descExpenses = descResponse.getData().expenses;
+                for(var i = 1; i < descExpenses.len(); i++) {
+                    expect(descExpenses[i].amount).toBeGTE(descExpenses[i + 1].amount);
+                }
+
+                // The first record should be the largest amount (999999.99)
+                expect(descExpenses[1].amount).toBe(999999.99);
+
+                // Verify page 2 continues the descending sort correctly
+                setup();
+                var descPage2 = get(
+                    route   = '/api/v1/expenses',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        startDate: dateAdd('d', -30, now()),
+                        endDate  : now(),
+                        page     : 2,
+                        records  : 10,
+                        search   : 'Sort Test',
+                        orderCol : 'amount',
+                        orderDir : 'desc'
+                    }
+                );
+
+                var descResponse2 = descPage2.getResponse();
+
+                expenseHelper.validateApiResponse(
+                    response        = descResponse2,
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = mockSum,
+                    recordsReturned = amounts.len() - 10, // remaining records after page 1
+                    totalRecords    = totalRecords,
+                    filteredRecords = amounts.len(),
+                    pageSize        = 10,
+                    page            = 2
+                );
+
+                // Verify the first record of page 2 is less than the last record of page 1
+                var descExpenses2 = descResponse2.getData().expenses;
+                expect(descExpenses2[1].amount).toBeLT(descExpenses[descExpenses.len()].amount);
+
+                // Verify page 2 is also internally sorted descending
+                for(var i = 1; i < descExpenses2.len(); i++) {
+                    expect(descExpenses2[i].amount).toBeGTE(descExpenses2[i + 1].amount);
+                }
+            });
         });
     }
 

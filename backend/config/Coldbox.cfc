@@ -5,6 +5,8 @@ component {
 	 * https://coldbox.ortusbooks.com/getting-started/configuration
 	 */
     function configure() {
+        var logPath = getPageContext().getServletContext().getRealPath('/WEB-INF/');
+
         /**
 		 * --------------------------------------------------------------------------
 		 * ColdBox Directives
@@ -89,7 +91,7 @@ component {
             imageMagick    : getSystemSetting('IMAGEMAGICK'),
             impersonation  : false,
             jwt_secret     : getSystemSetting('JWT_SECRET'),
-            logPath        : getPageContext().getServletContext().getRealPath('/WEB-INF/'),
+            logPath        : logPath,
             logQueries     : false,
             logRequests    : true,
             maxThreads     : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
@@ -144,12 +146,53 @@ component {
 		 */
         logBox = {
             // Define Appenders
-            appenders: {coldboxTracer: {class: 'coldbox.system.logging.appenders.ConsoleAppender'}},
+            // Asynchronous rolling file logger
+            appenders: {
+                appLog: {
+                    class     : 'coldbox.system.logging.appenders.RollingFileAppender',
+                    properties: {
+                        filePath       : '#logPath#/../logs',
+                        filename       : 'app',
+                        autoExpand     : false,
+                        fileMaxSize    : 10000,
+                        fileMaxArchives: 10,
+                        async          : true
+                    }
+                }
+            },
             // Root Logger
-            root     : {levelmax: 'WARN', appenders: '*'},
-            // Implicit Level Categories
-            info     : ['coldbox.system'],
-            warn     : ['WebSocket', 'Email', 'Admin', 'Image']
+            root: {
+                levelMin : 'FATAL',
+                levelMax : 'WARN',
+                appenders: 'appLog'
+            },
+            categories: {
+                'coldbox.system': {
+                    levelMin : 'FATAL',
+                    levelMax : 'INFO',
+                    appenders: 'appLog'
+                },
+                'WebSocket': {
+                    levelMin : 'FATAL',
+                    levelMax : 'WARN',
+                    appenders: 'appLog'
+                },
+                'Email': {
+                    levelMin : 'FATAL',
+                    levelMax : 'WARN',
+                    appenders: 'appLog'
+                },
+                'Admin': {
+                    levelMin : 'FATAL',
+                    levelMax : 'WARN',
+                    appenders: 'appLog'
+                },
+                'Image': {
+                    levelMin : 'FATAL',
+                    levelMax : 'WARN',
+                    appenders: 'appLog'
+                }
+            }
         };
 
         /**

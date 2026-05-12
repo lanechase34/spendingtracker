@@ -35,19 +35,20 @@ component extends="coldbox.system.testing.BaseTestCase" {
         string description = createUUID(),
         numeric categoryid = 1,
         boolean active     = true,
-        numeric count      = 1
+        numeric count      = 1,
+        numeric amount     = -1
     ) {
         var result = {sum: 0, ids: []};
 
         for(var i = 1; i <= count; i++) {
-            var amount = round(randRange(1, 100) + (randRange(1, 99) / 100), 2);
+            var susbcriptionAmount = amount < 0 ? round(randRange(1, 100) + (randRange(1, 99) / 100), 2) : amount;
 
             var curr = q
                 .from('subscription')
                 .returning('id')
                 .insert({
                     next_charge_date: {value: date, cfsqltype: 'date'},
-                    amount          : {value: securityService.encryptValue(amount), cfsqltype: 'varchar'},
+                    amount          : {value: securityService.encryptValue(susbcriptionAmount), cfsqltype: 'varchar'},
                     description     : {value: description, cfsqltype: 'varchar'},
                     interval        : {value: interval, cfsqltype: 'varchar'},
                     active          : {value: active, cfsqltype: 'boolean'},
@@ -59,7 +60,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 .id;
 
             result.ids.append(curr);
-            result.sum += amount;
+            result.sum += susbcriptionAmount;
         }
 
         cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|subscription');

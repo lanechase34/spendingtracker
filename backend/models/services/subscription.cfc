@@ -70,41 +70,94 @@ component singleton accessors="true" {
             }, 0);
             return securityService.intToFloat(curr);
         });
+
         var asyncTotalInfo = async.newFuture(() => {
             return getTotalInfo(userid = userid)
         });
+
         var asyncData = async.newFuture(() => {
-            return base
-                .when(
-                    orderCol.len() && orderDir.len(),
-                    (q1) => {
-                        q1.orderBy('subscription.active', 'desc').orderBy(orderCol, orderDir);
-                    },
-                    (q1) => {
-                        q1.orderBy('subscription.active desc, subscription.next_charge_date asc');
-                    }
-                )
-                .limit(records)
-                .offset(offset)
-                .select([
-                    'subscription.id',
-                    'subscription.next_charge_date as nextChargeDate',
-                    'subscription.amount',
-                    'subscription.description',
-                    'category.name as category',
-                    'subscription.interval',
-                    'subscription.active'
-                ])
-                .get()
-                .map(
+            // Amount sorting must be performed after loading all rows into memory
+            var isAmountSort = orderCol == 'amount' && orderDir.len();
+            var cacheKey     = 'userid=#userid#|subscription.paginate|orderCol=amount|search=#search#';
+            var rows         = isAmountSort ? duplicate(cacheStorage.get(cacheKey)) : null;
+
+            if(isNull(rows)) {
+                var fullQuery = base
+                    .when(
+                        // Only apply DB-level ordering when NOT sorting by amount
+                        condition = !isAmountSort && orderCol.len() && orderDir.len(),
+                        onTrue    = (q1) => {
+                            q1.orderBy('subscription.active', 'desc').orderBy(orderCol, orderDir);
+                        },
+                        onFalse = (q1) => {
+                            if(!isAmountSort) {
+                                q1.orderBy('subscription.active desc, subscription.next_charge_date asc');
+                            }
+                        }
+                    )
+                    .select([
+                        'subscription.id',
+                        'subscription.next_charge_date as nextChargeDate',
+                        'subscription.amount',
+                        'subscription.description',
+                        'category.name as category',
+                        'subscription.interval',
+                        'subscription.active'
+                    ]);
+
+                // For amount sorting, fetch ALL filtered rows so we can perform sorting in memory
+                if(!isAmountSort) {
+                    fullQuery = fullQuery.limit(records).offset(offset);
+                }
+
+                rows = fullQuery.get();
+
+                rows = rows.map(
                     (value) => {
                         value.nextChargeDate = dateFormat(value.nextChargeDate, 'yyyy-mm-dd');
-                        value.amount         = securityService.intToFloat(securityService.decryptValue(value.amount, 'numeric'));
+                        var amountDecrypted  = securityService.decryptValue(value.amount, 'numeric'); // raw cents int
+                        value.amount         = securityService.intToFloat(amountDecrypted);
+
+                        // Need the int cents value to sort
+                        if(isAmountSort) {
+                            value.amountDecrypted = amountDecrypted;
+                        }
+
                         return value;
                     },
                     true,
                     maxThreads
                 );
+
+                if(isAmountSort) {
+                    cacheStorage.set(cacheKey, duplicate(rows));
+                    // Work on a deep copy so sort/delete never mutates the cached structs
+                    rows = duplicate(rows);
+                }
+            }
+
+            if(isAmountSort) {
+                // Perform amount sort using int cents
+                rows.sort((a, b) => {
+                    // Inactive subscriptions always sort to the end regardless of direction
+                    if(a.active && !b.active) return -1;
+                    if(!a.active && b.active) return 1;
+                    return orderDir == 'asc'
+                     ? a.amountDecrypted - b.amountDecrypted
+                     : b.amountDecrypted - a.amountDecrypted;
+                });
+
+                // Slice the correct page from the fully sorted result
+                rows = rows.slice(offset + 1, min(rows.len() - offset, records));
+
+                // Clean up the temp field
+                rows = rows.map((value) => {
+                    value.delete('amountDecrypted');
+                    return value;
+                });
+            }
+
+            return rows;
         });
 
         var results = async
@@ -115,15 +168,6 @@ component singleton accessors="true" {
         var filteredSum = results[1];
         var totalInfo   = results[2];
         var data        = results[3];
-
-        // If sorting by amount, sort the decrypted data
-        if(orderCol == 'amount' && orderDir.len()) {
-            data.sort((a, b) => {
-                if(a.active && !b.active) return 1;
-                if(!a.active && b.active) return -1;
-                return orderDir == 'asc' ? compare(a.amount, b.amount) : compare(b.amount, a.amount);
-            });
-        }
 
         return {
             pagination: {

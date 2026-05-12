@@ -49,6 +49,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         prc.requestAudit.detail = 'onException';
         prc.requestAudit.stack  = interceptData;
 
+        // Duplicate the audit struct to use safely
         var bugSnapshot = duplicate(prc.requestAudit);
 
         var sendBug = async.newFuture(() => {
@@ -74,7 +75,8 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
             cfsavecontent(variable = "variables.dump") {
                 writeDump(var = interceptData.exception);
             }
-            return event.renderData(type = 'HTML', data = dump);
+            event.renderData(type = 'HTML', data = dump);
+            return;
         }
     }
 

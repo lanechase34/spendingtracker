@@ -6,6 +6,20 @@ component extends="coldbox.system.Interceptor" hint="Block authenticated users f
     /**
      * Intercept incoming requests and block authenticated users
      * from accessing routes that are intended for unauthenticated users only
+     * (e.g. login, register, forgot password)
+     *
+     * WHY WE MANUALLY CALL jwtService.authenticate() HERE:
+     * cbsecurity only decodes the JWT and populates prc.authUser when the target
+     * handler/action has a cbsecurity annotation (e.g. secured, secured="").
+     * Guest-only routes are intentionally unannotated and unsecured, so cbsecurity's
+     * firewall never runs its authentication pipeline for these events - meaning
+     * prc.authUser is never populated by the time preProcess fires.
+     *
+     * To check whether the incoming request carries a valid JWT token on these
+     * unannotated routes, we must manually call jwtService.authenticate() ourselves.
+     * If it succeeds and returns a loaded user, the requester is already authenticated
+     * and should be rejected with a 400. If it throws (invalid/missing/expired token),
+     * we allow the request through - the user is genuinely a guest.
      */
     function preProcess(event, data, buffer, rc, prc) {
         var currentEvent = lCase(event.getCurrentEvent());

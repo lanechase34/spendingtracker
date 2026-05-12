@@ -81,6 +81,7 @@ component singleton accessors="true" {
             }, 0);
             return securityService.intToFloat(curr);
         });
+
         var asyncTotalInfo = async.newFuture(() => {
             return getTotalInfo(
                 startDate = startDate,
@@ -88,37 +89,86 @@ component singleton accessors="true" {
                 userid    = userid
             );
         });
+
         var asyncData = async.newFuture(() => {
-            return base
-                .when(
-                    orderCol.len() && orderDir.len(),
-                    (q1) => {
-                        q1.orderBy(orderCol, orderDir);
-                    },
-                    (q1) => {
-                        q1.orderBy('expense.date', 'desc');
-                    }
-                )
-                .limit(records)
-                .offset(offset)
-                .select([
-                    'expense.id',
-                    'expense.date',
-                    'expense.amount',
-                    'expense.description',
-                    'category.name as category'
-                ])
-                .selectRaw('expense.receipt is not null as receipt')
-                .get()
-                .map(
+            // Amount sorting must be performed after loading all rows into memory
+            var isAmountSort = orderCol == 'amount' && orderDir.len();
+            var cacheKey     = 'userid=#userid#|expense.paginate|orderCol=amount|startDate=#startDate#|endDate=#endDate#|search=#search#';
+            var rows         = isAmountSort ? duplicate(cacheStorage.get(cacheKey)) : null;
+
+            if(isNull(rows)) {
+                var fullQuery = base
+                    .when(
+                        // Only apply DB-level ordering when NOT sorting by amount
+                        condition = !isAmountSort && orderCol.len() && orderDir.len(),
+                        onTrue    = (q1) => {
+                            q1.orderBy(orderCol, orderDir);
+                        },
+                        onFalse = (q1) => {
+                            if(!isAmountSort) {
+                                q1.orderBy('expense.date', 'desc');
+                            }
+                        }
+                    )
+                    .select([
+                        'expense.id',
+                        'expense.date',
+                        'expense.amount',
+                        'expense.description',
+                        'category.name as category'
+                    ])
+                    .selectRaw('expense.receipt is not null as receipt');
+
+                // For amount sorting, fetch ALL filtered rows so we can perform sorting in memory
+                if(!isAmountSort) {
+                    fullQuery = fullQuery.limit(records).offset(offset);
+                }
+
+                rows = fullQuery.get();
+
+                rows = rows.map(
                     (value) => {
-                        value.date   = dateFormat(value.date, 'yyyy-mm-dd');
-                        value.amount = securityService.intToFloat(securityService.decryptValue(value.amount, 'numeric'));
+                        value.date          = dateFormat(value.date, 'yyyy-mm-dd');
+                        var amountDecrypted = securityService.decryptValue(value.amount, 'numeric'); // raw cents int
+                        value.amount        = securityService.intToFloat(amountDecrypted);
+
+                        // Need the int cents value to sort
+                        if(isAmountSort) {
+                            value.amountDecrypted = amountDecrypted;
+                        }
+
                         return value;
                     },
                     true,
                     maxThreads
                 );
+
+                if(isAmountSort) {
+                    cacheStorage.set(cacheKey, rows);
+                    // Work on a deep copy so sort/delete never mutates the cached structs
+                    rows = duplicate(rows);
+                }
+            }
+
+            if(isAmountSort) {
+                // Perform amount sort using int cents
+                rows.sort((a, b) => {
+                    return orderDir == 'asc'
+                     ? a.amountDecrypted - b.amountDecrypted
+                     : b.amountDecrypted - a.amountDecrypted;
+                });
+
+                // Slice the correct page from the fully sorted result
+                rows = rows.slice(offset + 1, min(rows.len() - offset, records));
+
+                // Clean up the temp field
+                rows = rows.map((value) => {
+                    value.delete('amountDecrypted');
+                    return value;
+                });
+            }
+
+            return rows;
         });
 
         var results = async
@@ -129,13 +179,6 @@ component singleton accessors="true" {
         var filteredSum = results[1];
         var totalInfo   = results[2];
         var data        = results[3];
-
-        // If sorting by amount, sort the decrypted data
-        if(orderCol == 'amount' && orderDir.len()) {
-            data.sort((a, b) => {
-                return orderDir == 'asc' ? compare(a.amount, b.amount) : compare(b.amount, a.amount);
-            });
-        }
 
         return {
             pagination: {

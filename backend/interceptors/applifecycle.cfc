@@ -33,19 +33,27 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
             throw('Cannot connect to database');
         }
 
+        // Verify ImageMagick
         if(environment == 'production' && !imageService.verifyImageMagick()) {
             throw('Imagemagick is not running');
         }
 
+        // Verify mail server
         if(environment == 'production' && !emailService.verifyConnection()) {
             throw('Cannot connect to email server');
         }
 
-        if(environment == 'development' && fileExists(this.queryLogPath)) {
+        // Create query log file in development
+        if(environment == 'development') {
+            // Clear existing file
             try {
                 fileDelete(this.queryLogPath);
             }
             catch(any e) {
+            }
+            finally {
+                // Create new file
+                fileWrite(this.queryLogPath, '');
             }
         }
 
@@ -73,11 +81,13 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
             && getSetting('logQueries')
         ) {
             async.newFuture(() => {
-                writeDump(
-                    var    = {sql: interceptData?.sql ?: '', result: interceptData?.result ?: ''},
-                    format = 'html',
-                    output = this.queryLogPath
-                );
+                lock name="queryLogLock" timeout="10" type="exclusive" throwOnTimeout=false {
+                    writeDump(
+                        var    = {sql: interceptData?.sql ?: '', result: interceptData?.result ?: ''},
+                        format = 'html',
+                        output = this.queryLogPath
+                    );
+                }
             });
         }
     }

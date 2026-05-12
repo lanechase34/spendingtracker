@@ -268,6 +268,155 @@ component extends="tests.resources.baseTest" {
                     page            = 1
                 );
             });
+
+            it('Can sort results by amount correctly', () => {
+                // Mock subscriptions with known amounts so we can verify sort order
+                // Store the largest and smallest amounts
+                var amounts = [
+                    500,
+                    150,
+                    999,
+                    75,
+                    320,
+                    840,
+                    210,
+                    625,
+                    45,
+                    780,
+                    999.99,
+                    0.01,
+                    0.25,
+                    1000.01,
+                    999999.99
+                ];
+                var mockSum = 0;
+
+                amounts.each((amount) => {
+                    var mock = subscriptionHelper.mockMany(
+                        date        = now(),
+                        userid      = user.getId(),
+                        count       = 1,
+                        description = 'Sort Test #amount#',
+                        categoryid  = 1,
+                        interval    = 'M',
+                        active      = 1,
+                        amount      = amount
+                    );
+
+                    totalRecords += 1;
+                    rollingTotalSum += amount;
+                    mockSum += amount;
+                });
+
+                // Test ascending sort - all on single page
+                var ascPage = get(
+                    route   = '/api/v1/subscriptions',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        page    : 1,
+                        records : 100,
+                        search  : 'Sort Test',
+                        orderCol: 'amount',
+                        orderDir: 'asc'
+                    }
+                );
+
+                var ascResponse = ascPage.getResponse();
+
+                // Verify JSON response
+                subscriptionHelper.validateApiResponse(
+                    response        = ascResponse,
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = mockSum,
+                    recordsReturned = amounts.len(),
+                    totalRecords    = totalRecords,
+                    filteredRecords = amounts.len(),
+                    pageSize        = 100,
+                    page            = 1
+                );
+
+                // Verify each record is <= the next (ascending order)
+                var ascSubscriptions = ascResponse.getData().subscriptions;
+                for(var i = 1; i < ascSubscriptions.len(); i++) {
+                    expect(ascSubscriptions[i].amount).toBeLTE(ascSubscriptions[i + 1].amount);
+                }
+
+                // The first record should be the smallest amount (0.01)
+                expect(ascSubscriptions[1].amount).toBe(0.01);
+
+                // Test descending sort - split across multiple pages
+                setup();
+                var descPage = get(
+                    route   = '/api/v1/subscriptions',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        page    : 1,
+                        records : 10,
+                        search  : 'Sort Test',
+                        orderCol: 'amount',
+                        orderDir: 'desc'
+                    }
+                );
+
+                var descResponse = descPage.getResponse();
+
+                // Verify JSON response
+                subscriptionHelper.validateApiResponse(
+                    response        = descResponse,
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = mockSum,
+                    recordsReturned = 10,
+                    totalRecords    = totalRecords,
+                    filteredRecords = amounts.len(),
+                    pageSize        = 10,
+                    page            = 1
+                );
+
+                // Verify each record is >= the next (descending order)
+                var descSubscriptions = descResponse.getData().subscriptions;
+                for(var i = 1; i < descSubscriptions.len(); i++) {
+                    expect(descSubscriptions[i].amount).toBeGTE(descSubscriptions[i + 1].amount);
+                }
+
+                // The first record should be the largest amount (999999.99)
+                expect(descSubscriptions[1].amount).toBe(999999.99);
+
+                // Verify page 2 continues the descending sort correctly
+                setup();
+                var descPage2 = get(
+                    route   = '/api/v1/subscriptions',
+                    headers = {'x-auth-token': jwt},
+                    params  = {
+                        page    : 2,
+                        records : 10,
+                        search  : 'Sort Test',
+                        orderCol: 'amount',
+                        orderDir: 'desc'
+                    }
+                );
+
+                var descResponse2 = descPage2.getResponse();
+
+                subscriptionHelper.validateApiResponse(
+                    response        = descResponse2,
+                    totalSum        = rollingTotalSum,
+                    filteredSum     = mockSum,
+                    recordsReturned = amounts.len() - 10, // remaining records after page 1
+                    totalRecords    = totalRecords,
+                    filteredRecords = amounts.len(),
+                    pageSize        = 10,
+                    page            = 2
+                );
+
+                // Verify the first record of page 2 is less than the last record of page 1
+                var descSubscriptions2 = descResponse2.getData().subscriptions;
+                expect(descSubscriptions2[1].amount).toBeLT(descSubscriptions[descSubscriptions.len()].amount);
+
+                // Verify page 2 is also internally sorted descending
+                for(var i = 1; i < descSubscriptions2.len(); i++) {
+                    expect(descSubscriptions2[i].amount).toBeGTE(descSubscriptions2[i + 1].amount);
+                }
+            });
         });
     }
 

@@ -239,17 +239,23 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
                     if(expense.keyExists('categoryid') && isNumeric(expense.categoryid)) {
                         currCategoryId = parseNumber(expense.categoryid);
                     }
-                    // New Category, but already created
-                    else if(categoryMap.keyExists('#ucFirst(expense.category)#')) {
-                        currCategoryId = categoryMap['#ucFirst(expense.category)#'];
-                    }
                     // New Category
                     else {
-                        // Create the new category
-                        currCategoryId = categoryService.save(name = ucFirst(expense.category), userid = prc.userid);
+                        // Lock so we don't double create the category
+                        var safeCategory = ucFirst(lCase(expense.category));
 
-                        // Add to the map
-                        categoryMap['#ucFirst(expense.category)#'] = currCategoryId;
+                        lock name="categoryMap_#safeCategory#_#prc.userid#" type="exclusive" timeout="10" {
+                            // Not yet created
+                            if(!categoryMap.keyExists(safeCategory)) {
+                                // Create the new category
+                                currCategoryId            = categoryService.save(name = safeCategory, userid = prc.userid);
+                                categoryMap[safeCategory] = currCategoryId;
+                            }
+                            // Already created
+                            else {
+                                currCategoryId = categoryMap[safeCategory];
+                            }
+                        }
                     }
 
                     // Save
@@ -270,7 +276,8 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
                 .getResponse()
                 .setData(errors)
                 .setMessages([errors.count() ? 'Error saving expenses' : 'Successfully saved expenses'])
-                .setStatusCode(errors.count() ? 400 : 200);
+                .setStatusCode(errors.count() ? 400 : 200)
+                .setError(errors.count());
         }
     }
 
