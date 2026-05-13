@@ -5,15 +5,19 @@ on:
 
 jobs:
   deploy:
-    if: github.actor == github.repository_owner
+    if: ${{ github.actor == github.repository_owner }}
     runs-on: ubuntu-24.04
     environment: Production
+    permissions:
+      contents: read
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
-      - name: Update Backend Code
-        uses: burnett01/rsync-deployments@v8
+      - name: Update backend code
+        uses: burnett01/rsync-deployments@70ff22f5b4c2bb0e08d0bf20de693389e5552047 #v8
         # a - archive preserve permissions, ownership, and symbolic links, v - verbose, z - compress
         with:
           switches: -avz --delete --rsync-path="sudo rsync"
@@ -31,7 +35,7 @@ jobs:
           remote_key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
 
       - name: Restart, update backend db, and dependencies
-        uses: appleboy/ssh-action@v1.2.2
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.LIGHTSAIL_IP }}
           username: ${{ secrets.LIGHTSAIL_USERNAME }}

@@ -1,6 +1,7 @@
 component singleton accessors="true" {
 
     property name="async"              inject="asyncManager@coldbox";
+    property name="basePath"           inject="coldbox:setting:basePath";
     property name="cacheStorage"       inject="cachebox:coldboxStorage";
     property name="q"                  inject="provider:QueryBuilder@qb";
     property name="maxThreads"         inject="coldbox:setting:maxThreads";
@@ -346,7 +347,7 @@ component singleton accessors="true" {
                 getReceiptPath(receipt = receiptRecord.receipt, userDir = userDir) // Check the receipt still exists
             )
         ) {
-            return return404 ? '#application.cbController.getSetting('uploadPath')#/404.webp' : '';
+            return return404 ? '#getBasePath()#/views/404.webp' : '';
         }
 
         return getReceiptPath(receipt = receiptRecord.receipt, userDir = userDir);

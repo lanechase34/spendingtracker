@@ -2,8 +2,6 @@ name: Format, Lint, and Type Check
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 on:
   pull_request:
@@ -17,25 +15,33 @@ jobs:
     runs-on: ubuntu-24.04
     environment: Test
     timeout-minutes: 10
+    permissions:
+      contents: read
+
     outputs:
       format_result: ${{ steps.export.outputs.format_result }}
       lint_result: ${{ steps.export.outputs.lint_result }}
+
     defaults:
       run:
         working-directory: backend
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
         with:
           distribution: "temurin"
           java-version: "21"
 
       - name: Setup CommandBox CLI
-        uses: Ortus-Solutions/setup-commandbox@v2.0.1
+        uses: Ortus-Solutions/setup-commandbox@7be599028dcf77743854b2f6c720b15316f39be2 # v2.0.1
+        with:
+          version: latest
 
       - name: Configure CommandBox JSON Line Endings
         run: echo 'config set JSON.lineEnding=`#chr 10`' | box
@@ -55,30 +61,39 @@ jobs:
       - name: Export Step Results
         id: export
         if: always()
+        env:
+          FORMAT_OUTCOME: ${{ steps.format.outcome }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
         run: |
-          echo "format_result=${{ steps.format.outcome }}" >> $GITHUB_OUTPUT
-          echo "lint_result=${{ steps.lint.outcome }}" >> $GITHUB_OUTPUT
+          echo "format_result=$FORMAT_OUTCOME" >> $GITHUB_OUTPUT
+          echo "lint_result=$LINT_OUTCOME" >> $GITHUB_OUTPUT
 
   frontend-checks:
     name: Frontend Checks
     runs-on: ubuntu-24.04
     environment: Test
     timeout-minutes: 10
+    permissions:
+      contents: read
+
     outputs:
       format_result: ${{ steps.export.outputs.format_result }}
       lint_result: ${{ steps.export.outputs.lint_result }}
       typecheck_result: ${{ steps.export.outputs.typecheck_result }}
       audit_result: ${{ steps.export.outputs.audit_result }}
+
     defaults:
       run:
         working-directory: frontend
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24"
           cache: "npm"
@@ -109,29 +124,40 @@ jobs:
       - name: Export Step Results
         id: export
         if: always()
+        env:
+          FORMAT_OUTCOME: ${{ steps.format.outcome }}
+          LINT_OUTCOME: ${{ steps.lint.outcome }}
+          TYPECHECK_OUTCOME: ${{ steps.typecheck.outcome }}
+          AUDIT_OUTCOME: ${{ steps.audit.outcome }}
         run: |
-          echo "format_result=${{ steps.format.outcome }}" >> $GITHUB_OUTPUT
-          echo "lint_result=${{ steps.lint.outcome }}" >> $GITHUB_OUTPUT
-          echo "typecheck_result=${{ steps.typecheck.outcome }}" >> $GITHUB_OUTPUT
-          echo "audit_result=${{ steps.audit.outcome }}" >> $GITHUB_OUTPUT
+          echo "format_result=$FORMAT_OUTCOME" >> $GITHUB_OUTPUT
+          echo "lint_result=$LINT_OUTCOME" >> $GITHUB_OUTPUT
+          echo "typecheck_result=$TYPECHECK_OUTCOME" >> $GITHUB_OUTPUT
+          echo "audit_result=$AUDIT_OUTCOME" >> $GITHUB_OUTPUT
 
   report:
     name: Housekeeping Report
     runs-on: ubuntu-24.04
     needs: [backend-checks, frontend-checks]
     if: always()
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
 
     steps:
       - name: Evaluate Job Results
         id: results
+        env:
+          BACKEND_FMT: ${{ needs.backend-checks.outputs.format_result }}
+          BACKEND_LINT: ${{ needs.backend-checks.outputs.lint_result }}
+          FRONTEND_FMT: ${{ needs.frontend-checks.outputs.format_result }}
+          FRONTEND_LINT: ${{ needs.frontend-checks.outputs.lint_result }}
+          FRONTEND_TYPE: ${{ needs.frontend-checks.outputs.typecheck_result }}
+          FRONTEND_AUDIT: ${{ needs.frontend-checks.outputs.audit_result }}
+          BACKEND_RESULT: ${{ needs.backend-checks.result }}
+          FRONTEND_RESULT: ${{ needs.frontend-checks.result }}
         run: |
-          backend_fmt="${{ needs.backend-checks.outputs.format_result }}"
-          backend_lint="${{ needs.backend-checks.outputs.lint_result }}"
-          frontend_fmt="${{ needs.frontend-checks.outputs.format_result }}"
-          frontend_lint="${{ needs.frontend-checks.outputs.lint_result }}"
-          frontend_type="${{ needs.frontend-checks.outputs.typecheck_result }}"
-          frontend_audit="${{ needs.frontend-checks.outputs.audit_result }}"
-
           to_emoji() {
             if [ "$1" = "success" ]; then echo "✅"
             elif [ "$1" = "skipped" ]; then echo "⏭️"
@@ -139,17 +165,14 @@ jobs:
             fi
           }
 
-          backend_fmt_icon=$(to_emoji "$backend_fmt")
-          backend_lint_icon=$(to_emoji "$backend_lint")
-          frontend_fmt_icon=$(to_emoji "$frontend_fmt")
-          frontend_lint_icon=$(to_emoji "$frontend_lint")
-          frontend_type_icon=$(to_emoji "$frontend_type")
-          frontend_audit_icon=$(to_emoji "$frontend_audit")
+          backend_fmt_icon=$(to_emoji "$BACKEND_FMT")
+          backend_lint_icon=$(to_emoji "$BACKEND_LINT")
+          frontend_fmt_icon=$(to_emoji "$FRONTEND_FMT")
+          frontend_lint_icon=$(to_emoji "$FRONTEND_LINT")
+          frontend_type_icon=$(to_emoji "$FRONTEND_TYPE")
+          frontend_audit_icon=$(to_emoji "$FRONTEND_AUDIT")
 
-          backend="${{ needs.backend-checks.result }}"
-          frontend="${{ needs.frontend-checks.result }}"
-
-          if [ "$backend" = "success" ] && [ "$frontend" = "success" ]; then
+          if [ "$BACKEND_RESULT" = "success" ] && [ "$FRONTEND_RESULT" = "success" ]; then
             overall="✅ All checks passed"
             conclusion="success"
           else
@@ -167,7 +190,21 @@ jobs:
           echo "conclusion=$conclusion" >> $GITHUB_OUTPUT
 
       - name: Post PR Comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          BACKEND_FMT_ICON: ${{ steps.results.outputs.backend_fmt_icon }}
+          BACKEND_FMT: ${{ needs.backend-checks.outputs.format_result }}
+          BACKEND_LINT_ICON: ${{ steps.results.outputs.backend_lint_icon }}
+          BACKEND_LINT: ${{ needs.backend-checks.outputs.lint_result }}
+          FRONTEND_FMT_ICON: ${{ steps.results.outputs.frontend_fmt_icon }}
+          FRONTEND_FMT: ${{ needs.frontend-checks.outputs.format_result }}
+          FRONTEND_LINT_ICON: ${{ steps.results.outputs.frontend_lint_icon }}
+          FRONTEND_LINT: ${{ needs.frontend-checks.outputs.lint_result }}
+          FRONTEND_TYPE_ICON: ${{ steps.results.outputs.frontend_type_icon }}
+          FRONTEND_TYPE: ${{ needs.frontend-checks.outputs.typecheck_result }}
+          FRONTEND_AUDIT_ICON: ${{ steps.results.outputs.frontend_audit_icon }}
+          FRONTEND_AUDIT: ${{ needs.frontend-checks.outputs.audit_result }}
+          OVERALL: ${{ steps.results.outputs.overall }}
         with:
           script: |
             const body = [
@@ -176,18 +213,18 @@ jobs:
               '### Backend',
               '| Check | Status |',
               '|-------|--------|',
-              `| Format | ${{ steps.results.outputs.backend_fmt_icon }} ${{ needs.backend-checks.outputs.format_result }} |`,
-              `| Lint | ${{ steps.results.outputs.backend_lint_icon }} ${{ needs.backend-checks.outputs.lint_result }} |`,
+              `| Format | ${process.env.BACKEND_FMT_ICON} ${process.env.BACKEND_FMT} |`,
+              `| Lint | ${process.env.BACKEND_LINT_ICON} ${process.env.BACKEND_LINT} |`,
               '',
               '### Frontend',
               '| Check | Status |',
               '|-------|--------|',
-              `| Format | ${{ steps.results.outputs.frontend_fmt_icon }} ${{ needs.frontend-checks.outputs.format_result }} |`,
-              `| Lint | ${{ steps.results.outputs.frontend_lint_icon }} ${{ needs.frontend-checks.outputs.lint_result }} |`,
-              `| Typecheck | ${{ steps.results.outputs.frontend_type_icon }} ${{ needs.frontend-checks.outputs.typecheck_result }} |`,
-              `| Security Audit | ${{ steps.results.outputs.frontend_audit_icon }} ${{ needs.frontend-checks.outputs.audit_result }} |`,
+              `| Format | ${process.env.FRONTEND_FMT_ICON} ${process.env.FRONTEND_FMT} |`,
+              `| Lint | ${process.env.FRONTEND_LINT_ICON} ${process.env.FRONTEND_LINT} |`,
+              `| Typecheck | ${process.env.FRONTEND_TYPE_ICON} ${process.env.FRONTEND_TYPE} |`,
+              `| Security Audit | ${process.env.FRONTEND_AUDIT_ICON} ${process.env.FRONTEND_AUDIT} |`,
               '',
-              `**${{ steps.results.outputs.overall }}**`,
+              `**${process.env.OVERALL}**`,
               '',
               '_If failing, run `lefthook run pre-commit` locally to fix before pushing._'
             ].join('\n');

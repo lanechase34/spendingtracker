@@ -22,16 +22,19 @@ jobs:
     runs-on: ubuntu-24.04
     environment: Test
     timeout-minutes: 15
+
     defaults:
       run:
         working-directory: frontend
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           node-version: "24"
           cache: "npm"
@@ -61,7 +64,7 @@ jobs:
           fi
 
       - name: Jest Coverage Comment
-        uses: MishaKav/jest-coverage-comment@v1.0.23
+        uses: MishaKav/jest-coverage-comment@a3e9823fbde02ccc79cf8a75efe2998e1da023ea # v1.0.23
         if: github.event_name == 'pull_request'
         with:
           coverage-summary-path: frontend/coverage/coverage-summary.json
@@ -72,7 +75,7 @@ jobs:
           hide-summary: false
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: frontend-test-results
@@ -81,3 +84,4 @@ jobs:
             frontend/coverage/lcov.info
             frontend/coverage/coverage-summary.json
           retention-days: 30
+        continue-on-error: true
