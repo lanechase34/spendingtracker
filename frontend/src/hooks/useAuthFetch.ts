@@ -10,7 +10,7 @@ interface AuthFetchParams {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     signal?: AbortSignal;
     additionalHeaders?: Record<string, string>;
-    body?: object;
+    body?: Record<string, unknown> | FormData;
 }
 
 /**

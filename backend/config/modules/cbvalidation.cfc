@@ -479,7 +479,8 @@ component {
                     }
                 }
             },
-            'widget.heatMap': widgetBase
+            'widget.heatMap'        : widgetBase,
+            'widget.incomeWaterfall': widgetBase
         };
 
         // Admin handler

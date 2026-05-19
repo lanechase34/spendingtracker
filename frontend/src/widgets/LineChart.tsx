@@ -23,6 +23,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
+import { linePlugins } from 'utils/chartPlugins';
 import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
 import { safeJson } from 'utils/safeJson';
@@ -117,7 +118,6 @@ export default function LineChart() {
         const sum = validData.reduce((acc, val) => acc + val, 0);
         return sum / validData.length;
     }, [chartData]);
-
     /**
      * ChartJS options
      */
@@ -128,8 +128,8 @@ export default function LineChart() {
             color: '#E0E0E0',
             layout: {
                 padding: {
-                    right: 40,
-                    top: 40,
+                    right: 35,
+                    top: 25,
                 },
             },
             scales: {
@@ -164,18 +164,9 @@ export default function LineChart() {
                 },
                 tooltip: { enabled: false },
                 datalabels: {
+                    ...linePlugins.datalabels,
                     align: 'top',
                     anchor: 'end',
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    borderColor: '#666',
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    padding: 6,
-                    color: '#fff',
-                    font: {
-                        size: 11,
-                        weight: 'bold',
-                    },
                     formatter: (value: number) => {
                         return (
                             '$' +

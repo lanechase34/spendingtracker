@@ -200,8 +200,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
                 body: body,
             });
 
-            if (!response) return;
-            if (!response.ok) {
+            if (!response?.ok) {
                 throw new Error('Invalid network response');
             }
             return;
@@ -223,7 +222,9 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
                 method: 'GET',
             });
 
-            if (!response) return;
+            if (!response) {
+                throw new Error('Invalid network response');
+            }
 
             const json = await safeJson(response);
             const parsed = validateAPIResponse(z.null().optional()).safeParse(json);

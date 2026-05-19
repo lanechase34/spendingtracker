@@ -8,6 +8,7 @@ import DonutChart from 'widgets/DonutChart';
 import Export from 'widgets/Export';
 import HeatMap from 'widgets/HeatMap';
 import IncomeViewer from 'widgets/IncomeViewer';
+import IncomeWaterfallChart from 'widgets/IncomeWaterfallChart';
 import LineChart from 'widgets/LineChart';
 import StackedExpenseChart from 'widgets/StackedExpenseChart';
 import SubscriptionList from 'widgets/SubscriptionList';
@@ -39,6 +40,7 @@ export default function Dashboard() {
         return [
             ...BASE_WIDGETS.slice(0, bulkImportIndex),
             { key: 'expenseLineChart', Component: LineChart },
+            { key: 'incomeWaterfallChart', Component: IncomeWaterfallChart },
             ...BASE_WIDGETS.slice(bulkImportIndex),
         ];
     }, [rangeType]);

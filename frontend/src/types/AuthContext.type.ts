@@ -1,7 +1,7 @@
 export interface AuthContextType {
     authToken: string | null;
     getLatestAuthToken: () => string | null;
-    login: (token: string | null) => Promise<void>;
+    login: (token: string) => Promise<void>;
     logout: () => void;
     refreshToken: () => Promise<string | null>;
     csrfToken: string | null;

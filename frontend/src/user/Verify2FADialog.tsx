@@ -15,7 +15,7 @@ import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useFormField from 'hooks/useFormField';
 import { usePending2FAFetch } from 'hooks/usePendingFetch';
 import { type SubmitEvent } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
@@ -37,13 +37,6 @@ export default function Verify2FADialog() {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string[] | null>(null);
 
-    const handleExited = () => {
-        // Reset fields when modal finishes closing - only happens when this abruptly closes to invalid state
-        codeField.reset();
-        setError(null);
-        setLoading(false);
-    };
-
     /**
      * Pending 2FA fetch to use pending2fa token
      */
@@ -57,6 +50,13 @@ export default function Verify2FADialog() {
         initialValue: '',
         validator: validate2FACode,
     });
+
+    const handleExited = useCallback(() => {
+        // Reset fields when modal finishes closing - only happens when this abruptly closes to invalid state
+        codeField.reset();
+        setError(null);
+        setLoading(false);
+    }, [codeField]);
 
     /**
      * If verify 2fa dialog open and pending 2fa token gets set to null (invalid state),

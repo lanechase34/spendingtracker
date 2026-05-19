@@ -96,7 +96,7 @@ describe('Setup2FADialog', () => {
             expect(screen.getByRole('progressbar')).toBeInTheDocument();
         });
 
-        it('Does not show close button during loading step', () => {
+        it('Close button disabled during loading step', () => {
             mockSetup2fa.mockImplementation(
                 () =>
                     new Promise<never>(() => {
@@ -105,8 +105,7 @@ describe('Setup2FADialog', () => {
             );
             renderComponent();
 
-            // Loading step shows no close button
-            expect(screen.queryByRole('button', { name: /close/i })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /close/i })).toBeDisabled();
         });
 
         it('Does not render when closed', () => {
@@ -452,10 +451,10 @@ describe('Setup2FADialog', () => {
             expect(screen.getByText(/will not be shown again/i)).toBeInTheDocument();
         });
 
-        it('Does not show close button on recovery step', async () => {
+        it('Close button disabled during recovery step', async () => {
             await advanceToRecovery();
 
-            expect(screen.queryByRole('button', { name: /close/i })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /close/i })).toBeDisabled();
         });
 
         it('Does not close on escape key on recovery step', async () => {

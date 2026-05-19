@@ -1,6 +1,8 @@
 component singleton accessors="true" {
 
+    property name="async"           inject="asyncManager@coldbox";
     property name="cacheStorage"    inject="cachebox:coldboxStorage";
+    property name="incomeService"   inject="services.income";
     property name="securityService" inject="services.security";
 
     /**
@@ -68,7 +70,9 @@ component singleton accessors="true" {
                 labels.append('#currStart# - #currEnd#');
 
                 // Map the week to the label range
-                labelMap[i] = i - startDateWeek + 1;
+                // The week can go over 52 here, in that case start over at 1
+                var weekIdentifier       = i > 52 ? i - 52 : i;
+                labelMap[weekIdentifier] = i - startDateWeek + 1;
             }
         }
 
@@ -76,11 +80,6 @@ component singleton accessors="true" {
         expenseData.each((row) => {
             // Get position in dataset.data array
             var identifier = isWeekView ? dateFormat(row.date, 'short') : dateFormat(row.date, dateFormat);
-
-            // Edge case for the '53rd' week of the year, this identifier rolled over to the next year as 1
-            if(!isWeekView && month(row.date) == 12 && identifier == 1) {
-                identifier = 53;
-            }
 
             var labelIndex = labelMap[identifier];
 
@@ -292,6 +291,12 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
+        var cacheKey = 'userid=#userid#|widget.heatMap|startDate=#startDate#|endDate=#endDate#';
+        var result   = cacheStorage.get(cacheKey);
+        if(!isNull(result)) {
+            return result;
+        }
+
         var expenseData = getWidgetData(
             startDate = arguments.startDate,
             endDate   = arguments.endDate,
@@ -311,7 +316,82 @@ component singleton accessors="true" {
             heatMap[curr] += 1;
         });
 
+        cacheStorage.set(cacheKey, heatMap);
         return heatMap;
+    }
+
+    /**
+     * Builds the waterfall income, expense chart data
+     * Returns total income, total expenses per month
+     */
+    public struct function waterfallChart(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var cacheKey = 'userid=#userid#|widget.waterfallChart|startDate=#startDate#|endDate=#endDate#';
+        var result   = cacheStorage.get(cacheKey);
+        if(!isNull(result)) {
+            return result;
+        }
+
+        // Get the total expenses and income per month
+        var asyncData = async
+            .all(() => getWidgetData(
+                startDate = startDate,
+                endDate   = endDate,
+                userid    = userid
+            ).reduce((acc, row) => {
+                    // Group expenses by month
+                    var bucket = dateFormat(row.date, 'yyyy-mm');
+                    if(!acc.keyExists(bucket)) {
+                        acc[bucket] = {expenses: 0, savings: 0}
+                    }
+
+                    // Count savings separately
+                    if(row.category == 'Savings') {
+                        acc[bucket].savings += securityService.decryptValue(row.amount, 'numeric');
+                    }
+                    else {
+                        acc[bucket].expenses += securityService.decryptValue(row.amount, 'numeric');
+                    }
+
+                    return acc;
+                }, {})
+                .map((date, expenseStruct) => {
+                    return {
+                        savings : securityService.intToFloat(expenseStruct.savings),
+                        expenses: securityService.intToFloat(expenseStruct.expenses)
+                    };
+                }),
+            () => incomeService.getMonthlyTotals(
+                startDate = startDate,
+                endDate   = endDate,
+                userid    = userid
+            ))
+            .get();
+
+        var expenseMonthlyTotals = asyncData[1];
+        var incomeMonthlyTotals  = asyncData[2];
+
+        result = {labels: [], values: []};
+
+        // Combine data
+        var loopCount = dateDiff('m', startDate, endDate);
+        for(var i = 0; i <= loopCount; i++) {
+            var curr   = dateAdd('m', i, startDate);
+            var bucket = dateFormat(curr, 'yyyy-mm');
+            result.labels.append(dateFormat(curr, 'mmm yyyy'));
+
+            var currIncome   = incomeMonthlyTotals[bucket] ?: {pay: 0, extra: 0};
+            var currExpenses = expenseMonthlyTotals[bucket] ?: {savings: 0, expenses: 0};
+
+            // Total positive includes savings as this is money set aside not spent
+            result.values.append((currIncome.pay + currIncome.extra + currExpenses.savings) - currExpenses.expenses);
+        }
+
+        cacheStorage.set(cacheKey, result);
+        return result;
     }
 
 }

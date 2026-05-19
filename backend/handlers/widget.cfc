@@ -115,4 +115,30 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
             .setStatusCode(200);
     }
 
+    /**
+     * Income waterfall showing net income per month
+     *
+     * @summary         Income Waterfall
+     * @tags            Widget
+     * @security        ApiKeyAuth
+     * @hint            Returns the net income per month across the given date range, suitable for rendering a waterfall +/- net income by month.
+     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @response-200    { "description": "Income waterfall data." }
+     * @response-400    ~errors/400.json
+     * @response-401    ~errors/401.json
+     */
+    function incomeWaterfall(event, rc, prc) {
+        prc.data = chartService.waterfallChart(
+            startDate = rc.startDate,
+            endDate   = rc.endDate,
+            userid    = prc.userid
+        );
+
+        event
+            .getResponse()
+            .setData(prc.data)
+            .setStatusCode(200);
+    }
+
 }

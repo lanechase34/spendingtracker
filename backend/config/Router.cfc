@@ -37,6 +37,7 @@ component {
             route('/widgets/donutChart').withAction({GET: 'donutChart'}).toHandler('widget');
             route('/widgets/lineChart').withAction({GET: 'lineChart'}).toHandler('widget');
             route('/widgets/heatMap').withAction({GET: 'heatMap'}).toHandler('widget');
+            route('/widgets/incomeWaterfall').withAction({GET: 'incomeWaterFall'}).toHandler('widget');
 
             // Income
             route('/income').withAction({GET: 'view', PUT: 'save'}).toHandler('income');

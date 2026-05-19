@@ -16,7 +16,7 @@ import useAuthContext from 'hooks/useAuthContext';
 import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useFormField from 'hooks/useFormField';
 import { type SubmitEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { IS_DEV } from 'utils/constants';
@@ -37,19 +37,13 @@ export default function LoginDialog() {
     const { login: setToken, setPending2FAToken, setPendingToken } = useAuthContext();
     const userAPI = useMemo(() => userService({}), []);
 
-    const handleClose = (_event: object, reason: string) => {
-        if (loading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
-        closeLoginDialog();
-    };
-
-    const handleExited = () => {
-        // Reset fields when modal finishes closing
-        emailField.reset();
-        passwordField.reset();
-        setRememberMe(false);
-        setError(null);
-        setLoading(false);
-    };
+    const handleClose = useCallback(
+        (_event: object, reason: string) => {
+            if (loading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
+            closeLoginDialog();
+        },
+        [loading, closeLoginDialog]
+    );
 
     const emailField = useFormField({
         initialValue: '',
@@ -60,6 +54,15 @@ export default function LoginDialog() {
         initialValue: '',
         validator: validatePassword,
     });
+
+    const handleExited = useCallback(() => {
+        // Reset fields when modal finishes closing
+        emailField.reset();
+        passwordField.reset();
+        setRememberMe(false);
+        setError(null);
+        setLoading(false);
+    }, [emailField, passwordField]);
 
     const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
@@ -74,7 +77,7 @@ export default function LoginDialog() {
         };
 
         // Don't submit if error(s) exist
-        const hasErrors = Object.values(newErrors).some((err) => err && err !== null && err !== '');
+        const hasErrors = Object.values(newErrors).some(Boolean);
         if (hasErrors) {
             setLoading(false);
             return;
@@ -119,102 +122,101 @@ export default function LoginDialog() {
     };
 
     return (
-        <>
-            <Dialog
-                open={loginDialogOpen}
-                onClose={handleClose}
-                fullWidth={true}
-                maxWidth={'sm'}
-                slotProps={{
-                    transition: {
-                        onExited: handleExited,
-                    },
+        <Dialog
+            open={loginDialogOpen}
+            onClose={handleClose}
+            fullWidth={true}
+            maxWidth={'sm'}
+            slotProps={{
+                transition: {
+                    onExited: handleExited,
+                },
+            }}
+        >
+            <DialogTitle
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                 }}
             >
-                <DialogTitle
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
-                >
-                    Login
-                    <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, 'button')}>
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Box
-                        component="form"
-                        id="loginForm"
-                        onSubmit={(event) => void handleSubmit(event)}
-                        sx={{}}
-                        noValidate
+                Login
+                <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, 'button')}>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+            <Divider />
+            <DialogContent>
+                <Box component="form" id="loginForm" onSubmit={(event) => void handleSubmit(event)} sx={{}} noValidate>
+                    <Stack spacing={3} sx={{ width: '100%' }}>
+                        {error && (
+                            <ErrorAlert
+                                messages={error}
+                                onClose={() => {
+                                    setError(null);
+                                }}
+                            />
+                        )}
+
+                        <TextField
+                            required
+                            id="inputEmailLogin"
+                            label="Email"
+                            name="email"
+                            value={emailField.value}
+                            onChange={emailField.handleChange}
+                            onBlur={emailField.handleBlur}
+                            error={!!emailField.error}
+                            helperText={emailField.error}
+                        />
+
+                        <TextField
+                            required
+                            id="inputPasswordLogin"
+                            label="Password"
+                            name="password"
+                            type="password"
+                            value={passwordField.value}
+                            onChange={passwordField.handleChange}
+                            onBlur={passwordField.handleBlur}
+                            error={!!passwordField.error}
+                            helperText={passwordField.error}
+                        />
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    name="rememberMe"
+                                    color="primary"
+                                    sx={{ pl: 0 }}
+                                />
+                            }
+                            label="Remember me"
+                            sx={{ m: 0, p: 0 }}
+                        />
+                    </Stack>
+                </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 1 }}>
+                {IS_DEV && (
+                    <Button
+                        variant="outlined"
+                        color="secondary"
+                        disabled={loading}
+                        onClick={() => {
+                            emailField.setValue('test1@gmail.com');
+                            passwordField.setValue('asdfasdfasfsdf');
+                        }}
                     >
-                        <Stack spacing={3} sx={{ width: '100%' }}>
-                            {error && <ErrorAlert messages={error} onClose={() => setError(null)} />}
-
-                            <TextField
-                                required
-                                id="inputEmailLogin"
-                                label="Email"
-                                name="email"
-                                value={emailField.value}
-                                onChange={emailField.handleChange}
-                                onBlur={emailField.handleBlur}
-                                error={!!emailField.error}
-                                helperText={emailField.error}
-                            />
-
-                            <TextField
-                                required
-                                id="inputPasswordLogin"
-                                label="Password"
-                                name="password"
-                                type="password"
-                                value={passwordField.value}
-                                onChange={passwordField.handleChange}
-                                onBlur={passwordField.handleBlur}
-                                error={!!passwordField.error}
-                                helperText={passwordField.error}
-                            />
-
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={rememberMe}
-                                        onChange={(e) => setRememberMe(e.target.checked)}
-                                        name="rememberMe"
-                                        color="primary"
-                                        sx={{ pl: 0 }}
-                                    />
-                                }
-                                label="Remember me"
-                                sx={{ m: 0, p: 0 }}
-                            />
-                        </Stack>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 1 }}>
-                    {IS_DEV && (
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            disabled={loading}
-                            onClick={() => {
-                                emailField.setValue('test1@gmail.com');
-                                passwordField.setValue('asdfasdfasfsdf');
-                            }}
-                        >
-                            Dev Login
-                        </Button>
-                    )}
-                    <Button loading={loading} loadingPosition="start" variant="outlined" type="submit" form="loginForm">
-                        Log In
+                        Dev Login
                     </Button>
-                </DialogActions>
-            </Dialog>
-        </>
+                )}
+                <Button loading={loading} loadingPosition="start" variant="outlined" type="submit" form="loginForm">
+                    Log In
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }

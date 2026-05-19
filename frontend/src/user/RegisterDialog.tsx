@@ -20,7 +20,7 @@ import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
 import { type SubmitEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
@@ -41,20 +41,13 @@ export default function RegisterDialog() {
     const { showToast } = useToastContext();
     const userAPI = useMemo(() => userService({}), []);
 
-    const handleClose = (_event: object, reason: string) => {
-        if (loading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
-        closeRegisterDialog();
-    };
-
-    const handleExited = () => {
-        // Reset fields when modal finishes closing
-        emailField.reset();
-        passwordField.reset();
-        salaryField.reset();
-        monthlyTakeHomeField.reset();
-        setError(null);
-        setLoading(false);
-    };
+    const handleClose = useCallback(
+        (_event: object, reason: string) => {
+            if (loading || reason === 'backdropClick' || reason === 'escapeKeyDown') return;
+            closeRegisterDialog();
+        },
+        [loading, closeRegisterDialog]
+    );
 
     const emailField = useFormField({
         initialValue: '',
@@ -76,6 +69,16 @@ export default function RegisterDialog() {
         validator: validateMoney,
     });
 
+    const handleExited = useCallback(() => {
+        // Reset fields when modal finishes closing
+        emailField.reset();
+        passwordField.reset();
+        salaryField.reset();
+        monthlyTakeHomeField.reset();
+        setError(null);
+        setLoading(false);
+    }, [emailField, passwordField, salaryField, monthlyTakeHomeField]);
+
     const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
 
@@ -91,7 +94,7 @@ export default function RegisterDialog() {
         };
 
         // Don't submit if error(s) exist
-        const hasErrors = Object.values(newErrors).some((err) => err && err !== null && err !== '');
+        const hasErrors = Object.values(newErrors).some(Boolean);
         if (hasErrors) {
             setLoading(false);
             return;
@@ -121,115 +124,116 @@ export default function RegisterDialog() {
     };
 
     return (
-        <>
-            <Dialog
-                open={registerDialogOpen}
-                onClose={handleClose}
-                fullWidth={true}
-                maxWidth={'sm'}
-                slotProps={{
-                    transition: {
-                        onExited: handleExited,
-                    },
+        <Dialog
+            open={registerDialogOpen}
+            onClose={handleClose}
+            fullWidth={true}
+            maxWidth={'sm'}
+            slotProps={{
+                transition: {
+                    onExited: handleExited,
+                },
+            }}
+        >
+            <DialogTitle
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                 }}
             >
-                <DialogTitle
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                    }}
+                Register
+                <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, 'button')}>
+                    <CloseIcon />
+                </IconButton>
+            </DialogTitle>
+            <Divider />
+            <DialogContent>
+                <Box
+                    component="form"
+                    id="registrationForm"
+                    onSubmit={(event) => void handleSubmit(event)}
+                    sx={{}}
+                    noValidate
+                >
+                    <Stack spacing={3} sx={{ width: '100%' }}>
+                        {error && (
+                            <ErrorAlert
+                                messages={error}
+                                onClose={() => {
+                                    setError(null);
+                                }}
+                            />
+                        )}
+
+                        <TextField
+                            required
+                            id="inputEmailRegister"
+                            label="Email"
+                            name="email"
+                            value={emailField.value}
+                            onChange={emailField.handleChange}
+                            onBlur={emailField.handleBlur}
+                            error={!!emailField.error}
+                            helperText={emailField.error}
+                        />
+
+                        <TextField
+                            required
+                            id="inputPasswordRegister"
+                            label="Password"
+                            name="password"
+                            type="password"
+                            value={passwordField.value}
+                            onChange={passwordField.handleChange}
+                            onBlur={passwordField.handleBlur}
+                            error={!!passwordField.error}
+                            helperText={passwordField.error}
+                        />
+
+                        <FormControl variant="outlined" error={!!salaryField.error} fullWidth>
+                            <InputLabel htmlFor="outlined-adornment-salary">Salary</InputLabel>
+                            <OutlinedInput
+                                id="outlined-adornment-salary"
+                                startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                label="Salary"
+                                required
+                                value={salaryField.value}
+                                onChange={salaryField.handleChange}
+                                onBlur={salaryField.handleBlur}
+                            />
+                            {salaryField.error && <FormHelperText>{salaryField.error}</FormHelperText>}
+                        </FormControl>
+
+                        <FormControl variant="outlined" error={!!monthlyTakeHomeField.error} fullWidth>
+                            <InputLabel htmlFor="outlined-adornment-takehome">Monthly Take Home</InputLabel>
+                            <OutlinedInput
+                                id="outlined-adornment-takehome"
+                                startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                                label="Monthly Take Home"
+                                required
+                                value={monthlyTakeHomeField.value}
+                                onChange={monthlyTakeHomeField.handleChange}
+                                onBlur={monthlyTakeHomeField.handleBlur}
+                            />
+                            {monthlyTakeHomeField.error && (
+                                <FormHelperText>{monthlyTakeHomeField.error}</FormHelperText>
+                            )}
+                        </FormControl>
+                    </Stack>
+                </Box>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 1 }}>
+                <Button
+                    loading={loading}
+                    loadingPosition="start"
+                    variant="outlined"
+                    type="submit"
+                    form="registrationForm"
                 >
                     Register
-                    <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, 'button')}>
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <Divider />
-                <DialogContent>
-                    <Box
-                        component="form"
-                        id="registrationForm"
-                        onSubmit={(event) => void handleSubmit(event)}
-                        sx={{}}
-                        noValidate
-                    >
-                        <Stack spacing={3} sx={{ width: '100%' }}>
-                            {error && <ErrorAlert messages={error} onClose={() => setError(null)} />}
-
-                            <FormControl>
-                                <TextField
-                                    required
-                                    id="inputEmailRegister"
-                                    label="Email"
-                                    name="email"
-                                    value={emailField.value}
-                                    onChange={emailField.handleChange}
-                                    onBlur={emailField.handleBlur}
-                                    error={!!emailField.error}
-                                    helperText={emailField.error}
-                                />
-                            </FormControl>
-
-                            <FormControl>
-                                <TextField
-                                    required
-                                    id="inputPasswordRegister"
-                                    label="Password"
-                                    name="password"
-                                    type="password"
-                                    value={passwordField.value}
-                                    onChange={passwordField.handleChange}
-                                    onBlur={passwordField.handleBlur}
-                                    error={!!passwordField.error}
-                                    helperText={passwordField.error}
-                                />
-                            </FormControl>
-
-                            <FormControl variant="outlined" error={!!salaryField.error} fullWidth>
-                                <InputLabel htmlFor="outlined-adornment-salary">Salary</InputLabel>
-                                <OutlinedInput
-                                    id="outlined-adornment-salary"
-                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                                    label="Salary"
-                                    required
-                                    value={salaryField.value}
-                                    onChange={salaryField.handleChange}
-                                    onBlur={salaryField.handleBlur}
-                                />
-                                {salaryField.error && <FormHelperText>{salaryField.error}</FormHelperText>}
-                            </FormControl>
-
-                            <FormControl variant="outlined" error={!!monthlyTakeHomeField.error} fullWidth>
-                                <InputLabel htmlFor="outlined-adornment-takehome">Monthly Take Home</InputLabel>
-                                <OutlinedInput
-                                    id="outlined-adornment-takehome"
-                                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                                    label="Monthly Take Home"
-                                    required
-                                    value={monthlyTakeHomeField.value}
-                                    onChange={monthlyTakeHomeField.handleChange}
-                                    onBlur={monthlyTakeHomeField.handleBlur}
-                                />
-                                {monthlyTakeHomeField.error && (
-                                    <FormHelperText>{monthlyTakeHomeField.error}</FormHelperText>
-                                )}
-                            </FormControl>
-                        </Stack>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button
-                        loading={loading}
-                        loadingPosition="start"
-                        variant="outlined"
-                        type="submit"
-                        form="registrationForm"
-                    >
-                        Register
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </>
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }

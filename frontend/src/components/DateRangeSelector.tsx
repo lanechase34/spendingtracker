@@ -11,6 +11,7 @@ import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import { alpha, styled } from '@mui/material/styles';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -111,8 +112,8 @@ export default function DateRangeSelector() {
     const { startDate, endDate, setPresetRange, setCustomRange } = useDateRangeContext();
 
     // Keep track of temp start and end date, only update context when user confirms date range
-    const [tempStartDate, setTempStartDate] = useState<Dayjs>(startDate);
-    const [tempEndDate, setTempEndDate] = useState<Dayjs>(endDate);
+    const [tempStartDate, setTempStartDate] = useState<Dayjs | null>(startDate);
+    const [tempEndDate, setTempEndDate] = useState<Dayjs | null>(endDate);
 
     // Handler for one of the preset date range buttons, sets context immediately
     const applyPresetRange = (type: Exclude<DateRangeType, 'custom'>) => {
@@ -120,9 +121,10 @@ export default function DateRangeSelector() {
         handleClose();
     };
 
+    // Update the temporary date selections as the user clicks
     const handleSelect = (range: DateRange | undefined) => {
-        if (range?.from) setTempStartDate(dayjs(range.from));
-        if (range?.to) setTempEndDate(dayjs(range.to));
+        setTempStartDate(range?.from ? dayjs(range.from) : null);
+        setTempEndDate(range?.to ? dayjs(range.to) : null);
     };
 
     // Anchors where the picker should be
@@ -140,6 +142,7 @@ export default function DateRangeSelector() {
     };
 
     const handleDone = () => {
+        if (!tempStartDate || !tempEndDate) return;
         setCustomRange(tempStartDate, tempEndDate);
         handleClose();
     };
@@ -164,8 +167,16 @@ export default function DateRangeSelector() {
                     to: tempEndDate?.toDate(),
                 }}
                 onSelect={handleSelect}
-                defaultMonth={tempStartDate.toDate()}
+                defaultMonth={tempStartDate?.toDate() ?? new Date()}
                 max={365}
+                disabled={
+                    tempStartDate
+                        ? [
+                              { before: tempStartDate.subtract(365, 'day').toDate() },
+                              { after: tempStartDate.add(365, 'day').toDate() },
+                          ]
+                        : undefined
+                }
             />
         </StyledDayPickerWrapper>
     );
@@ -192,10 +203,20 @@ export default function DateRangeSelector() {
         </Box>
     );
 
+    // Disable the done btn if the range exceeds the limit, 365 days
+    const rangeExceedsMax = !!(tempStartDate && tempEndDate && tempEndDate.diff(tempStartDate, 'day') > 365);
     const doneBtn = (
-        <Button variant="contained" disabled={!tempStartDate || !tempEndDate} onClick={handleDone}>
-            Done
-        </Button>
+        <Tooltip title={rangeExceedsMax ? 'Range cannot exceed 365 days' : ''}>
+            <span>
+                <Button
+                    variant="contained"
+                    disabled={!tempStartDate || !tempEndDate || rangeExceedsMax}
+                    onClick={handleDone}
+                >
+                    Done
+                </Button>
+            </span>
+        </Tooltip>
     );
 
     // Build the output using pieces above

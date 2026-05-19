@@ -21,7 +21,7 @@ import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
 import useUserContext from 'hooks/useUserContext';
 import { type SubmitEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { validateMoney } from 'validators/validateMoney';
 
@@ -75,12 +75,12 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         validator: validateMoney,
     });
 
-    const handleExited = () => {
+    const handleExited = useCallback(() => {
         passwordField.reset();
         confirmPasswordField.reset();
         salaryField.reset();
         monthlyTakeHomeField.reset();
-    };
+    }, [passwordField, confirmPasswordField, salaryField, monthlyTakeHomeField]);
 
     /**
      * Whether the user has made any changes worth saving
@@ -121,7 +121,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         }
 
         // Don't submit if error(s) exist
-        const hasErrors = Object.values(newErrors).some((err) => err && err !== null && err !== '');
+        const hasErrors = Object.values(newErrors).some(Boolean);
         if (hasErrors) {
             setSaving(false);
             return;
@@ -149,6 +149,23 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         }
     };
 
+    /**
+     * 2FA options
+     */
+    const handleCloseSetup2FA = useCallback(() => {
+        setSetup2FAOpen(false);
+    }, []);
+    const handle2FAEnabled = useCallback(() => {
+        updateUser({ totpEnabled: true });
+    }, [updateUser]);
+
+    const handleCloseDisable2FA = useCallback(() => {
+        setDisable2FAOpen(false);
+    }, []);
+    const handle2FADisabled = useCallback(() => {
+        updateUser({ totpEnabled: false });
+    }, [updateUser]);
+
     return (
         <>
             <Dialog
@@ -170,7 +187,13 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                     }}
                 >
                     Settings
-                    <IconButton disabled={saving} aria-label="close" onClick={() => onClose({}, 'button')}>
+                    <IconButton
+                        disabled={saving}
+                        aria-label="close"
+                        onClick={() => {
+                            onClose({}, 'button');
+                        }}
+                    >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -293,7 +316,13 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button disabled={saving} variant="outlined" onClick={() => onClose({}, 'button')}>
+                    <Button
+                        disabled={saving}
+                        variant="outlined"
+                        onClick={() => {
+                            onClose({}, 'button');
+                        }}
+                    >
                         Close
                     </Button>
                     <Button
@@ -309,17 +338,9 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                 </DialogActions>
             </Dialog>
 
-            <Setup2FADialog
-                open={setup2FAOpen}
-                onClose={() => setSetup2FAOpen(false)}
-                onEnabled={() => updateUser({ totpEnabled: true })}
-            />
+            <Setup2FADialog open={setup2FAOpen} onClose={handleCloseSetup2FA} onEnabled={handle2FAEnabled} />
 
-            <Disable2FADialog
-                open={disable2FAOpen}
-                onClose={() => setDisable2FAOpen(false)}
-                onDisabled={() => updateUser({ totpEnabled: false })}
-            />
+            <Disable2FADialog open={disable2FAOpen} onClose={handleCloseDisable2FA} onDisabled={handle2FADisabled} />
         </>
     );
 }

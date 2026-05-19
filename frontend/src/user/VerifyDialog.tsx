@@ -15,7 +15,7 @@ import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useCooldownAction from 'hooks/useCooldownAction';
 import useFormField from 'hooks/useFormField';
 import usePendingFetch from 'hooks/usePendingFetch';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { type SubmitEvent } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
@@ -34,14 +34,6 @@ export default function VerifyDialog() {
     const { verifyDialogOpen, closeVerifyDialog } = useAuthDialogContext();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string[] | null>(null);
-
-    const handleExited = () => {
-        // Reset fields when modal finishes closing - only happens when this abruptly closes to invalid state
-        verificationField.reset();
-        setError(null);
-        setLoading(false);
-    };
-
     const { login: setToken, pendingToken, logout } = useAuthContext();
 
     /**
@@ -108,6 +100,13 @@ export default function VerifyDialog() {
         },
     });
 
+    const handleExited = useCallback(() => {
+        // Reset fields when modal finishes closing - only happens when this abruptly closes to invalid state
+        verificationField.reset();
+        setError(null);
+        setLoading(false);
+    }, [verificationField]);
+
     /**
      * Submit the verification code
      */
@@ -123,7 +122,7 @@ export default function VerifyDialog() {
         };
 
         // Don't submit if error(s) exist
-        const hasErrors = Object.values(newErrors).some((err) => err && err !== null && err !== '');
+        const hasErrors = Object.values(newErrors).some(Boolean);
         if (hasErrors) {
             setLoading(false);
             return;
@@ -216,7 +215,7 @@ export default function VerifyDialog() {
 
                         <TextField
                             required
-                            id="inputVerificatoinCode"
+                            id="inputVerificationCode"
                             label="Verification Code"
                             name="verificationcode"
                             value={verificationField.value}

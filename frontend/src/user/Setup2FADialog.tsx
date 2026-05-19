@@ -21,7 +21,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
 import type { SubmitEvent } from 'react';
-import { useEffect, useEffectEvent, useMemo, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { validateTOTPCode } from 'validators/validateTOTP';
@@ -75,13 +75,15 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
         validator: validateTOTPCode,
     });
 
-    const handleExited = () => {
+    const handleExited = useCallback(() => {
         setStep('loading');
         setError(null);
         setAcknowledged(false);
         setCopied(false);
+        setQrCode('');
+        setSecret('');
         codeField.reset();
-    };
+    }, [codeField]);
 
     const fetchSetup = useEffectEvent(async () => {
         try {
@@ -111,64 +113,77 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
     /**
      * Submit the auth code generated after entering qr code / secret
      */
-    const handleSubmit = async (event: SubmitEvent) => {
-        event.preventDefault();
-        if (loading) return;
+    const handleSubmit = useCallback(
+        async (event: SubmitEvent) => {
+            event.preventDefault();
+            if (loading) return;
 
-        const codeError = codeField.validateField();
-        if (codeError) return;
+            const codeError = codeField.validateField();
+            if (codeError) return;
 
-        setLoading(true);
-        setError(null);
+            setLoading(true);
+            setError(null);
 
-        try {
-            const result = await userAPI.confirm2fa(codeField.value);
-            setRecoveryCodes(result.recoveryCodes);
-            setStep('recovery');
-        } catch (err) {
-            if (err instanceof APIError) {
-                setError([err.message]);
-            } else {
-                setError(['Server error. Please try again.']);
+            try {
+                const result = await userAPI.confirm2fa(codeField.value);
+                setRecoveryCodes(result.recoveryCodes);
+                setStep('recovery');
+            } catch (err) {
+                if (err instanceof APIError) {
+                    setError([err.message]);
+                } else {
+                    setError(['Server error. Please try again.']);
+                }
+                codeField.reset();
+            } finally {
+                setLoading(false);
             }
-            codeField.reset();
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+        [codeField, loading, userAPI]
+    );
 
     /**
      * Copy recovery codes to clipboard
      */
-    const handleCopyCodes = async () => {
+    const handleCopyCodes = useCallback(async () => {
         await navigator.clipboard.writeText(recoveryCodes.join('\n'));
         setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+        setTimeout(() => {
+            setCopied(false);
+        }, 2000);
+    }, [recoveryCodes]);
 
     /**
      * Finish the set up
      */
-    const handleFinish = () => {
+    const handleFinish = useCallback(() => {
         onEnabled(); // notify parent to refresh user state
         showToast('Two-factor authentication enabled.', 'success');
         onClose();
-    };
+    }, [onClose, onEnabled, showToast]);
 
-    const handleClose = () => {
-        if (loading || step === 'recovery') return;
+    const canClose = useMemo(() => !loading && step !== 'recovery' && step !== 'loading', [loading, step]);
+
+    const handleDialogClose = useCallback(
+        (_event: object, reason: string) => {
+            if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
+            if (!canClose) return;
+            onClose();
+        },
+        [canClose, onClose]
+    );
+
+    const handleCloseClick = useCallback(() => {
+        if (!canClose) return;
         onClose();
-    };
+    }, [canClose, onClose]);
 
     const title = step === 'recovery' ? 'Save Your Recovery Codes' : 'Set Up Two-Factor Authentication';
 
     return (
         <Dialog
             open={open}
-            onClose={(_e, reason) => {
-                if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
-                handleClose();
-            }}
+            onClose={handleDialogClose}
             fullWidth
             maxWidth="sm"
             slotProps={{
@@ -179,11 +194,9 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
         >
             <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 {title}
-                {step !== 'recovery' && step !== 'loading' && (
-                    <IconButton disabled={loading} aria-label="close" onClick={handleClose}>
-                        <CloseIcon />
-                    </IconButton>
-                )}
+                <IconButton disabled={!canClose} aria-label="close" onClick={handleCloseClick}>
+                    <CloseIcon />
+                </IconButton>
             </DialogTitle>
             <Divider />
             <DialogContent>
@@ -331,7 +344,7 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
             <DialogActions sx={{ px: 3, pb: 1 }}>
                 {step === 'setup' && (
                     <>
-                        <Button disabled={loading} variant="outlined" onClick={handleClose}>
+                        <Button disabled={loading} variant="outlined" onClick={handleCloseClick}>
                             Cancel
                         </Button>
                         <Button

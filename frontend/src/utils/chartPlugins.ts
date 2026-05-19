@@ -1,4 +1,14 @@
-import type { ActiveElement, Chart, ChartEvent, LegendElement, LegendItem, Plugin, TooltipItem } from 'chart.js';
+import type {
+    ActiveElement,
+    Chart,
+    ChartEvent,
+    LegendElement,
+    LegendItem,
+    Plugin,
+    TooltipItem,
+    TooltipOptions,
+} from 'chart.js';
+import type { Options as DataLabelsOptions } from 'chartjs-plugin-datalabels/types/options';
 
 /**
  * Utility functions
@@ -349,5 +359,21 @@ export const linePlugins = {
         borderColor: '#666',
         borderWidth: 1,
         displayColors: true,
-    },
+    } satisfies Partial<TooltipOptions<'line'>>,
+
+    /**
+     * Pre-configured data label options
+     */
+    datalabels: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        borderColor: '#666',
+        borderWidth: 1,
+        borderRadius: 4,
+        padding: 6,
+        color: '#fff',
+        font: {
+            size: 11,
+            weight: 'bold',
+        },
+    } satisfies Partial<DataLabelsOptions>,
 };

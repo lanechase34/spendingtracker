@@ -159,4 +159,52 @@ component singleton accessors="true" {
         return;
     }
 
+    /**
+     * Get monthly income totals (pay + extra) bucketed by year-month
+     *
+     * @return struct keyed by 'yyyy-mm' => {pay: numeric, extra: numeric}
+     */
+    public struct function getMonthlyTotals(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var formattedStartDate = formatIncomeDate(startDate);
+        var formattedEndDate   = formatIncomeDate(endDate);
+
+        var cacheKey = 'userid=#userid#|income.getMonthlyTotals|startDate=#formattedStartDate#|endDate=#formattedEndDate#';
+        var totals   = cacheStorage.get(cacheKey);
+        if(isNull(totals)) {
+            var result = queryExecute(
+                '
+                SELECT
+                    date,
+                    pay,
+                    extra
+                FROM income
+                WHERE userid = :userid
+                AND date BETWEEN :startDate AND :endDate
+                ',
+                {
+                    userid   : {value: userid, cfsqltype: 'numeric'},
+                    startDate: {value: formattedStartDate, cfsqltype: 'date'},
+                    endDate  : {value: formattedEndDate, cfsqltype: 'date'}
+                }
+            );
+
+            totals = result.reduce((acc, row) => {
+                var bucket  = dateFormat(row.date, 'yyyy-mm');
+                acc[bucket] = {
+                    pay  : securityService.intToFloat(securityService.decryptValue(row.pay, 'numeric')),
+                    extra: securityService.intToFloat(securityService.decryptValue(row.extra, 'numeric'))
+                };
+                return acc;
+            }, {});
+
+            cacheStorage.set(cacheKey, totals);
+        }
+
+        return totals;
+    }
+
 }

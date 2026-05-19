@@ -242,24 +242,6 @@ describe('AuthContext', () => {
             expect(result.current.userJustLoggedIn).toBe(true);
             expect(mockSetWasAuthenticated).toHaveBeenCalledWith(true);
         });
-
-        it('Should handle login with null token', async () => {
-            const { result } = renderHook(() => useAuthContext(), {
-                wrapper: createWrapper(),
-            });
-
-            await waitFor(() => {
-                expect(result.current.isInitializing()).toBe(false);
-            });
-
-            await act(async () => {
-                await result.current.login(null);
-            });
-
-            expect(result.current.authToken).toBeNull();
-            expect(mockFetch).not.toHaveBeenCalled();
-            expect(result.current.userJustLoggedIn).toBe(true);
-        });
     });
 
     describe('logout()', () => {

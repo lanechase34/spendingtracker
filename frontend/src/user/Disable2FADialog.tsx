@@ -16,7 +16,7 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
 import type { SubmitEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { validate2FACode } from 'validators/validateTOTP';
@@ -50,53 +50,61 @@ export default function Disable2FADialog({ open, onClose, onDisabled }: Disable2
         validator: validate2FACode,
     });
 
-    const handleExited = () => {
+    const handleExited = useCallback(() => {
         codeField.reset();
         setError(null);
         setLoading(false);
-    };
+    }, [codeField]);
 
-    const handleClose = () => {
+    const handleDialogClose = useCallback(
+        (_event: object, reason: string) => {
+            if (reason === 'backdropClick' || reason === 'escapeKeyDown' || loading) return;
+            onClose();
+        },
+        [loading, onClose]
+    );
+
+    const handleCloseClick = useCallback(() => {
         if (loading) return;
         onClose();
-    };
+    }, [loading, onClose]);
 
     /**
      * Submit the code
      */
-    const handleSubmit = async (event: SubmitEvent) => {
-        event.preventDefault();
-        if (loading) return;
+    const handleSubmit = useCallback(
+        async (event: SubmitEvent) => {
+            event.preventDefault();
+            if (loading) return;
 
-        const codeError = codeField.validateField();
-        if (codeError) return;
+            const codeError = codeField.validateField();
+            if (codeError) return;
 
-        setLoading(true);
-        setError(null);
+            setLoading(true);
+            setError(null);
 
-        try {
-            await userAPI.disable2fa(codeField.value);
-            onDisabled();
-            showToast('Two-factor authentication has been disabled.', 'success');
-            onClose();
-        } catch (err) {
-            if (err instanceof APIError) {
-                setError([err.message]);
-            } else {
-                setError(['Server error. Please try again.']);
+            try {
+                await userAPI.disable2fa(codeField.value);
+                onDisabled();
+                showToast('Two-factor authentication has been disabled.', 'success');
+                onClose();
+            } catch (err) {
+                if (err instanceof APIError) {
+                    setError([err.message]);
+                } else {
+                    setError(['Server error. Please try again.']);
+                }
+                codeField.reset();
+                setLoading(false);
             }
-            codeField.reset();
-            setLoading(false);
-        }
-    };
+        },
+        [codeField, userAPI, showToast, loading, onClose, onDisabled]
+    );
 
     return (
         <Dialog
             open={open}
-            onClose={(_e, reason) => {
-                if (reason === 'backdropClick' || reason === 'escapeKeyDown') return;
-                handleClose();
-            }}
+            onClose={handleDialogClose}
             fullWidth
             maxWidth="sm"
             slotProps={{
@@ -107,7 +115,7 @@ export default function Disable2FADialog({ open, onClose, onDisabled }: Disable2
         >
             <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 Disable Two-Factor Authentication
-                <IconButton disabled={loading} aria-label="close" onClick={handleClose}>
+                <IconButton disabled={loading} aria-label="close" onClick={handleCloseClick}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -143,7 +151,7 @@ export default function Disable2FADialog({ open, onClose, onDisabled }: Disable2
             </DialogContent>
 
             <DialogActions sx={{ px: 3, py: 1.5 }}>
-                <Button disabled={loading} variant="outlined" onClick={handleClose}>
+                <Button disabled={loading} variant="outlined" onClick={handleCloseClick}>
                     Cancel
                 </Button>
 

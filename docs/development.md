@@ -232,7 +232,7 @@ Note: The `--pull=false` flag prevents `act` from re-pulling the runner image ea
 3. Install dependencies
 
     ```
-    npm install
+    npm ci
     ```
 
 4. Start the Vite dev server

@@ -10,6 +10,9 @@ export const queryKeys = {
 
     heatMap: (params?: { startDate: string; endDate: string }) => ['heatMap', params] as const,
 
+    incomeWaterfallChart: (params?: { startDate: string; endDate: string }) =>
+        ['incomeWaterfallChart', params] as const,
+
     income: (params?: { startDate: string; endDate: string }) => ['income', params] as const,
 } as const;
 
