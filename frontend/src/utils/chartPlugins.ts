@@ -376,4 +376,11 @@ export const linePlugins = {
             weight: 'bold',
         },
     } satisfies Partial<DataLabelsOptions>,
+
+    layout: {
+        padding: {
+            right: 35,
+            top: 25,
+        },
+    },
 };

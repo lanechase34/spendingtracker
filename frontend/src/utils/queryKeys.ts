@@ -16,4 +16,10 @@ export const queryKeys = {
     income: (params?: { startDate: string; endDate: string }) => ['income', params] as const,
 } as const;
 
-export const WIDGET_KEYS = ['donutChart', 'stackedExpenseChart', 'expenseLineChart', 'heatMap'] as const;
+export const WIDGET_KEYS = [
+    'donutChart',
+    'stackedExpenseChart',
+    'expenseLineChart',
+    'heatMap',
+    'incomeWaterfallChart',
+] as const;

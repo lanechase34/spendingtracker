@@ -1,3 +1,5 @@
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
@@ -5,6 +7,7 @@ import { useTheme } from '@mui/material/styles';
 import { useQuery } from '@tanstack/react-query';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js';
+import type { AnnotationOptions } from 'chartjs-plugin-annotation';
 import annotationPlugin from 'chartjs-plugin-annotation';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import EmptyCard from 'components/EmptyCard';
@@ -27,11 +30,19 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
  * Waterfall chart showing monthly net income (income - expenses).
  * Each bar floats from the previous month's running total, so the chart
  * shows both each month's change and the overall position over time.
+ *
+ * Each bar is stacked into two segments:
+ *   - Spendable Net: net income minus the portion set aside as savings
+ *   - Savings: the portion of net income transferred to savings
  */
 export default function IncomeWaterfallChart() {
     const { formattedStartDate, formattedEndDate } = useDateRangeContext();
     const authFetch = useAuthFetch();
     const theme = useTheme();
+
+    const successColor = theme.palette.success.main;
+    const errorColor = theme.palette.error.main;
+    const infoColor = theme.palette.info.main;
 
     /**
      * Additional params used by API
@@ -45,8 +56,7 @@ export default function IncomeWaterfallChart() {
     );
 
     /**
-     * Fetch function for TanStack Query - returns the raw response so we
-     * can transform into floating-bar pairs inside a useMemo below.
+     * Fetch function for TanStack Query
      */
     const fetchWaterfallData = async ({ signal }: { signal: AbortSignal }): Promise<IncomeWaterfallChart> => {
         const urlParams = new URLSearchParams(additionalParams);
@@ -62,7 +72,12 @@ export default function IncomeWaterfallChart() {
         const json = await safeJson(response);
         const parsed = IncomeWaterfallChartResponseSchema.safeParse(json);
 
-        if (!parsed.success || parsed.data.error) throw new Error('Bad Request');
+        if (!parsed.success) {
+            console.error('IncomeWaterfallChart schema mismatch', parsed.error);
+            throw new Error('Bad Request');
+        }
+
+        if (parsed.data.error) throw new Error('Bad Request');
 
         return parsed.data.data;
     };
@@ -80,52 +95,72 @@ export default function IncomeWaterfallChart() {
     });
 
     /**
-     * Build the chart data by converting each value into a [start, end] pair
-     * where start = previous running total and end = new running total
+     * Build the stacked floating-bar data.
      */
     const chartData: ChartData<'bar'> | null = useMemo(() => {
-        if (!rawData?.values?.length) return null;
+        if (!rawData?.segments?.length) return null;
 
-        let running = 0;
-        const floatingBars: [number, number][] = rawData.values.map((v) => {
-            const start = running;
-            running += v;
-            return [start, running];
+        // Each bar is the full [start, end] range; we'll draw savings as an overlay below
+        const ranges: [number, number][] = rawData.segments.map((s) => {
+            const start = s.runningTotal - s.net;
+            const end = s.runningTotal;
+            return [start, end];
         });
 
-        // Color each bar by the sign of its delta
-        const backgroundColors = rawData.values.map((v) =>
-            v >= 0 ? theme.palette.success.main : theme.palette.error.main
-        );
+        const colors = rawData.segments.map((s) => (s.net >= 0 ? successColor : errorColor));
 
         return {
             labels: rawData.labels,
             datasets: [
                 {
                     label: 'Net Change',
-                    data: floatingBars as unknown as number[],
-                    backgroundColor: backgroundColors,
-                    borderColor: backgroundColors,
-                    borderWidth: 1,
-                    borderRadius: 4,
+                    data: ranges as unknown as number[],
+                    backgroundColor: colors,
+                    borderColor: colors,
+                    borderWidth: 0,
+                    borderRadius: 0,
                 },
             ],
         };
-    }, [rawData, theme]);
+    }, [rawData, successColor, errorColor]);
+
+    const savingsAnnotations = useMemo(() => {
+        if (!rawData?.segments?.length) return {};
+
+        const annotations: Record<string, AnnotationOptions> = {};
+        rawData.segments.forEach((segment, idx) => {
+            if (segment.net <= 0 || segment.savings <= 0) return;
+
+            const end = segment.runningTotal;
+            const savingsBottom = Math.max(end - segment.savings, segment.runningTotal - segment.net);
+
+            annotations[`savings_${idx}`] = {
+                type: 'box',
+                xMin: idx - 0.355,
+                xMax: idx + 0.355,
+                yMin: savingsBottom,
+                yMax: end,
+                backgroundColor: infoColor,
+                borderColor: infoColor,
+                borderWidth: 0,
+                borderRadius: 0,
+            };
+        });
+
+        return annotations;
+    }, [rawData, infoColor]);
 
     /**
-     * Y-axis bounds padded by 15% of the data range (leaves room for data label)
+     * Y-axis bounds padded by 5% of the running-total range
      */
     const yAxisBounds = useMemo(() => {
-        if (!rawData?.values?.length) return { min: undefined, max: undefined };
+        if (!rawData?.segments?.length) return { min: undefined, max: undefined };
 
-        let running = 0;
         let min = 0;
         let max = 0;
-        rawData.values.forEach((v) => {
-            running += v;
-            if (running < min) min = running;
-            if (running > max) max = running;
+        rawData.segments.forEach((segment) => {
+            if (segment.runningTotal < min) min = segment.runningTotal;
+            if (segment.runningTotal > max) max = segment.runningTotal;
         });
 
         const padding = (max - min) * 0.05;
@@ -139,11 +174,12 @@ export default function IncomeWaterfallChart() {
         () => ({
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             layout: {
-                padding: {
-                    right: 15,
-                    top: 15,
-                },
+                ...linePlugins.layout,
             },
             color: '#E0E0E0',
             scales: {
@@ -184,59 +220,60 @@ export default function IncomeWaterfallChart() {
                 tooltip: {
                     ...linePlugins.tooltip,
                     enabled: true,
+                    mode: 'index',
+                    intersect: false,
+                    displayColors: false,
                     callbacks: {
+                        // One tooltip body per dataset hovered, but we want the same
+                        // summary regardless of which segment the user is over
                         label: (ctx) => {
-                            const idx = ctx.dataIndex;
-                            const delta = rawData?.values[idx] ?? 0;
-                            const [, end] = ctx.raw as [number, number];
-                            const sign = delta >= 0 ? '+' : '-';
-                            const deltaStr = Math.abs(delta).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            });
-                            const totalSign = end >= 0 ? '+' : '-';
-                            const totalStr = Math.abs(end).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            });
-                            return [`Change: ${sign}$${deltaStr}`, `Running: ${totalSign}$${totalStr}`];
+                            const segment = rawData?.segments[ctx.dataIndex];
+                            if (!segment) return '';
+
+                            const fmt = (n: number) =>
+                                n.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                });
+
+                            const netSign = segment.net >= 0 ? '+' : '-';
+                            const totalSign = segment.runningTotal >= 0 ? '+' : '-';
+
+                            return [
+                                `Net: ${netSign}$${fmt(Math.abs(segment.net))}`,
+                                `Of which savings: $${fmt(segment.savings)}`,
+                                `Running: ${totalSign}$${fmt(Math.abs(segment.runningTotal))}`,
+                            ];
                         },
                     },
                 },
                 datalabels: {
                     ...linePlugins.datalabels,
-                    display: (ctx) => {
-                        const v = rawData?.values[ctx.dataIndex] ?? 0;
-                        return v !== 0;
-                    },
-                    // Show the delta above/below each bar depending on direction
-                    align: (ctx) => {
-                        const v = rawData?.values[ctx.dataIndex] ?? 0;
-                        return v >= 0 ? 'end' : 'start';
-                    },
-                    anchor: (ctx) => {
-                        const v = rawData?.values[ctx.dataIndex] ?? 0;
-                        return v >= 0 ? 'end' : 'start';
-                    },
-
+                    display: (ctx) => (rawData?.segments[ctx.dataIndex]?.net ?? 0) !== 0,
+                    align: (ctx) => ((rawData?.segments[ctx.dataIndex]?.net ?? 0) >= 0 ? 'end' : 'start'),
+                    anchor: (ctx) => ((rawData?.segments[ctx.dataIndex]?.net ?? 0) >= 0 ? 'end' : 'start'),
                     formatter: (_value, ctx) => {
-                        const delta = rawData?.values[ctx.dataIndex] ?? 0;
-                        const sign = delta >= 0 ? '+' : '-';
+                        const segment = rawData?.segments[ctx.dataIndex];
+                        if (!segment) return '';
+                        const sign = segment.net >= 0 ? '+' : '-';
                         return (
                             sign +
                             '$' +
-                            Math.abs(delta).toLocaleString(undefined, {
+                            Math.abs(segment.net).toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                             })
                         );
                     },
                 },
+                annotation: {
+                    annotations: savingsAnnotations,
+                },
             },
             backgroundColor: 'transparent',
             devicePixelRatio: window.devicePixelRatio || 2,
         }),
-        [rawData, yAxisBounds]
+        [rawData, yAxisBounds, savingsAnnotations]
     );
 
     if (isLoading) {
@@ -255,16 +292,61 @@ export default function IncomeWaterfallChart() {
         <Card>
             <CardHeader
                 title="Net Income By Month"
+                subheader={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <InfoOutlinedIcon fontSize="inherit" />
+                        <span>Includes net income + savings</span>
+                    </Box>
+                }
                 slotProps={{
                     title: {
                         sx: { fontSize: { xs: '1rem', sm: '1.25rem' } },
+                    },
+                    subheader: {
+                        sx: { fontSize: { xs: '0.75rem', sm: '0.875rem' } },
                     },
                 }}
                 sx={{ mb: 0, pb: 0 }}
             />
 
             <CardContent sx={{ height: 500 }}>
-                <Bar key="incomeWaterfallChart" data={chartData} options={options} plugins={[ChartDataLabels]} />
+                <Box
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: 2,
+                        mb: 1,
+                        color: '#E0E0E0',
+                        fontSize: '0.875rem',
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box
+                            sx={{
+                                width: 30,
+                                height: 12,
+                                background: `linear-gradient(to right, ${successColor} 50%, ${errorColor} 50%)`,
+                                borderRadius: 0.5,
+                            }}
+                        />
+                        <span>Net Change</span>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box
+                            sx={{
+                                width: 30,
+                                height: 12,
+                                backgroundColor: infoColor,
+                                borderRadius: 0.5,
+                            }}
+                        />
+                        <span>Savings</span>
+                    </Box>
+                </Box>
+
+                <Box sx={{ height: 'calc(100% - 28px)' }}>
+                    <Bar key="incomeWaterfallChart" data={chartData} options={options} plugins={[ChartDataLabels]} />
+                </Box>
             </CardContent>
         </Card>
     );

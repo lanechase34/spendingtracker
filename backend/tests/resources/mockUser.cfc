@@ -54,7 +54,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * Login the user and return a valid JWT
      */
     public string function login(required component userObj) {
-        expect(cbauth.isLoggedIn()).toBeFalse();
+        expect(cbauth.isLoggedIn()).toBeFalse('Cannot call login() when a user is already logged in currently.');
         setup();
 
         var event = post(

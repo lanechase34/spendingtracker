@@ -374,10 +374,11 @@ component singleton accessors="true" {
         var expenseMonthlyTotals = asyncData[1];
         var incomeMonthlyTotals  = asyncData[2];
 
-        result = {labels: [], values: []};
+        result = {labels: [], segments: []};
 
         // Combine data
-        var loopCount = dateDiff('m', startDate, endDate);
+        var loopCount    = dateDiff('m', startDate, endDate);
+        var runningTotal = 0;
         for(var i = 0; i <= loopCount; i++) {
             var curr   = dateAdd('m', i, startDate);
             var bucket = dateFormat(curr, 'yyyy-mm');
@@ -386,8 +387,15 @@ component singleton accessors="true" {
             var currIncome   = incomeMonthlyTotals[bucket] ?: {pay: 0, extra: 0};
             var currExpenses = expenseMonthlyTotals[bucket] ?: {savings: 0, expenses: 0};
 
-            // Total positive includes savings as this is money set aside not spent
-            result.values.append((currIncome.pay + currIncome.extra + currExpenses.savings) - currExpenses.expenses);
+            var currNet = (currIncome.pay + currIncome.extra) - currExpenses.expenses;
+            runningTotal += currNet;
+
+            // Track net income, the savings amount, and the running total for each month
+            result.segments.append({
+                net         : currNet,
+                savings     : currExpenses.savings,
+                runningTotal: runningTotal
+            });
         }
 
         cacheStorage.set(cacheKey, result);

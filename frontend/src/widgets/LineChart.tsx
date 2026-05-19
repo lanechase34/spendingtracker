@@ -127,10 +127,7 @@ export default function LineChart() {
             maintainAspectRatio: false,
             color: '#E0E0E0',
             layout: {
-                padding: {
-                    right: 35,
-                    top: 25,
-                },
+                ...linePlugins.layout,
             },
             scales: {
                 x: {
