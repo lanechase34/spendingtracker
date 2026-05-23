@@ -32,6 +32,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Update sitemap lastmod
+        run: |
+          DEPLOY_DATE=$(date -u +%Y-%m-%d)
+          sed -i "s|<lastmod>.*</lastmod>|<lastmod>${DEPLOY_DATE}</lastmod>|" build/sitemap.xml
+          echo "Set sitemap lastmod to ${DEPLOY_DATE}"
+
       - name: Create Version File
         env:
           RUN_ID: ${{ github.run_id }}

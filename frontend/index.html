@@ -9,10 +9,41 @@
             content="SpendingTracker is a full-stack expense and subscription tracking platform. Track spending habits, visualize category breakdowns, manage recurring subscriptions, and import transactions via CSV."
         />
         <meta name="theme-color" content="#121212" />
+
+        <!-- Canonical -->
+        <link rel="canonical" href="https://chaselane.dev/spendingtracker/" />
+
+        <!-- Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://chaselane.dev/spendingtracker/" />
+        <meta property="og:title" content="SpendingTracker" />
+        <meta property="og:description" content="A full-stack expense and subscription tracking platform. Track spending habits, visualize category breakdowns, manage recurring subscriptions, and import transactions via CSV." />
+        <meta property="og:image" content="https://chaselane.dev/spendingtracker/icons/logo512.png" />
+
+        <!-- Icons / PWA -->
         <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
         <link rel="icon" type="image/svg+xml" href="/icons/logo64.svg" />
         <link rel="apple-touch-icon" href="/icons/logo192.png" />
         <link rel="manifest" href="/manifest.json" />
+
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "SpendingTracker",
+            "url": "https://chaselane.dev/spendingtracker/",
+            "description": "A full-stack expense and subscription tracking platform built with React, TypeScript, and ColdBox.",
+            "applicationCategory": "FinanceApplication",
+            "operatingSystem": "Web",
+            "author": {
+                "@type": "Person",
+                "name": "Chase Lane",
+                "url": "https://chaselane.dev"
+            },
+            "codeRepository": "https://github.com/lanechase34/spendingtracker"
+        }
+        </script>
     </head>
     <body>
         <div id="root"></div>
