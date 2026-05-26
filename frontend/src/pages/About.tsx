@@ -81,7 +81,7 @@ function FeatureCard({ icon, title, description }: FeatureCardProps) {
             >
                 <CardContent>
                     <Box sx={{ mb: 2, color: 'primary.main' }}>{icon}</Box>
-                    <Typography variant="h6" gutterBottom>
+                    <Typography variant="h6" component="h3" gutterBottom>
                         {title}
                     </Typography>
                     <Typography
@@ -123,6 +123,7 @@ function FeatureShowcase({ title, description, media, reverse = false }: Feature
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Typography
                         variant="h5"
+                        component="h3"
                         gutterBottom
                         sx={{
                             fontWeight: 600,
@@ -143,7 +144,7 @@ function FeatureShowcase({ title, description, media, reverse = false }: Feature
                     <Box
                         component="img"
                         src={media}
-                        alt={title}
+                        alt={`SpendingTracker ${title} screenshot`}
                         loading="lazy"
                         sx={{
                             width: '100%',
@@ -179,6 +180,7 @@ function TechBullet({ title, text }: TechBulletProps) {
             >
                 <Typography
                     variant="subtitle1"
+                    component="h3"
                     gutterBottom
                     sx={{
                         fontWeight: 600,
@@ -211,12 +213,13 @@ export default function About() {
             <Container maxWidth="lg">
                 {/* Hero */}
                 <Box sx={{ py: 10, textAlign: 'center' }}>
-                    <Typography variant="h3" gutterBottom>
+                    <Typography variant="h3" component="h1" gutterBottom>
                         SpendingTracker
                     </Typography>
 
                     <Typography
                         variant="h6"
+                        component="p"
                         sx={{
                             color: 'text.secondary',
                             lineHeight: 1.8,
@@ -267,7 +270,7 @@ export default function About() {
 
                 {/* Feature Cards */}
                 <Box sx={{ py: boxPadding }}>
-                    <Typography variant="h4" align="center" gutterBottom>
+                    <Typography variant="h4" component="h2" align="center" gutterBottom>
                         Key Features
                     </Typography>
                     <Divider />
@@ -308,7 +311,7 @@ export default function About() {
 
                 {/* Feature Showcases */}
                 <Box sx={{ py: boxPadding }}>
-                    <Typography variant="h4" align="center" gutterBottom>
+                    <Typography variant="h4" component="h2" align="center" gutterBottom>
                         Feature Highlights
                     </Typography>
                     <Divider />
@@ -348,7 +351,7 @@ export default function About() {
 
                 {/* Technical Overview */}
                 <Box sx={{ py: boxPadding }}>
-                    <Typography variant="h4" align="center" gutterBottom>
+                    <Typography variant="h4" component="h2" align="center" gutterBottom>
                         Technical Overview
                     </Typography>
                     <Divider />
@@ -403,7 +406,7 @@ export default function About() {
 
                 {/* Links */}
                 <Box sx={{ py: boxPadding, textAlign: 'center' }}>
-                    <Typography variant="h4" gutterBottom>
+                    <Typography variant="h4" component="h2" gutterBottom>
                         Code & Documentation
                     </Typography>
                     <Divider />
