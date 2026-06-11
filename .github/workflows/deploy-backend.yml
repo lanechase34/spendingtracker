@@ -51,6 +51,7 @@ jobs:
             --exclude='/tests'
             --exclude='.env'
             --exclude='.cfformat.json'
+            --exclude='/resources'
           path: backend/
           remote_path: /var/www/wwwroot/spendingtracker_backend/
           remote_host: ${{ secrets.LIGHTSAIL_IP }}

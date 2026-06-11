@@ -1,11 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { readFileSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({ mode }) => ({
     build: {
@@ -39,17 +34,6 @@ export default defineConfig(({ mode }) => ({
         visualizer({
             open: true,
         }),
-        {
-            name: 'update-sitemap',
-            buildStart() {
-                if (mode !== 'production') return;
-                const sitemapPath = join(__dirname, 'public/sitemap.xml');
-                const today = new Date().toISOString().split('T')[0];
-                const xml = readFileSync(sitemapPath, 'utf-8');
-                const updated = xml.replace(/<lastmod>.*?<\/lastmod>/, `<lastmod>${today}</lastmod>`);
-                writeFileSync(sitemapPath, updated, 'utf-8');
-            },
-        },
         {
             name: 'html-inject-env',
             transformIndexHtml(html) {
