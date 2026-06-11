@@ -96,24 +96,9 @@ jobs:
           ENCRYPTIONKEY=cLNRlWJU/Jc6qNy6Wnvhyaf/uuALDQsCmjIly4+V1BM=
           EOL
 
-      - name: Install Dependencies
-        run: |
-          box install --production
-          box install testbox@7.0.0+19
-
-      - name: Run Database Migrations
-        run: |
-          box migrate install --verbose
-          box migrate up --verbose
-
-      - name: Seed Database
-        run: |
-          box migrate seed run --verbose
-
-      - name: Start CommandBox Server
-        run: |
-          box server start --verbose
-        timeout-minutes: 2
+      - name: Install, Migrate, Seed, and Start Server
+        run: box recipe scripts/test-setup.boxr
+        timeout-minutes: 10
 
       - name: Wait for Server to be Ready
         run: |

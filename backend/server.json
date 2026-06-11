@@ -1,6 +1,6 @@
 {
     "app":{
-        "cfengine":"lucee-light@7.0.3+43",
+        "cfengine":"lucee-light@7.0.4+34",
         "sessionCookieSecure":"true",
         "sessionCookieHTTPOnly":"true"
     },
@@ -44,7 +44,7 @@
             "warm-up-server(urls={'/warmup'}, requestStrategy=queue, async=false, timeoutSeconds=300)",
             "path-prefix-nocase(/lucee/) -> ip-access-control[default-allow=false, acl={'127.0.0.* allow', '::1 allow'}, failure-status=404]",
             "path(/WebSocket.cfc) -> done",
-            "regex-nocase('.*(box\\.json|Dockerfile|cfconfig\\.json|server\\.json)') or path-suffix-nocase(.env) or path-suffix-nocase(.md) or path-suffix-nocase(.cfc) or path-prefix-nocase(/.well-known/) -> set-error(404)",
+            "regex-nocase('.*(box\\.json|Dockerfile|cfconfig\\.json|server\\.json)') or path-suffix-nocase(.env) or path-suffix-nocase(.md) or path-suffix-nocase(.cfc) or path-prefix-nocase(/.well-known/) or path-prefix-nocase(/scripts/)-> set-error(404)",
             "regex-nocase('.*\\.(webp|css|js|ico|woff|woff2|ttf|svg)$') or regex-nocase('.*\\?v=[a-zA-Z0-9]{10}$') -> set(attribute='%{o,Cache-Control}', value='public, max-age=25552000')"
         ],
         "maxRequests":"50",

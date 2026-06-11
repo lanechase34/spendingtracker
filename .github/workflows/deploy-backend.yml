@@ -16,6 +16,29 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Deploy nginx config
+        uses: burnett01/rsync-deployments@70ff22f5b4c2bb0e08d0bf20de693389e5552047 #v8
+        with:
+          switches: -avz
+          path: ./config/
+          remote_path: /tmp/nginx-deploy/
+          remote_host: ${{ secrets.LIGHTSAIL_IP }}
+          remote_user: ${{ secrets.LIGHTSAIL_USERNAME }}
+          remote_key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+
+      - name: Apply nginx config and reload
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
+        with:
+          host: ${{ secrets.LIGHTSAIL_IP }}
+          username: ${{ secrets.LIGHTSAIL_USERNAME }}
+          key: "${{ secrets.LIGHTSAIL_SSH_KEY }}"
+          script: |
+            sudo cp /tmp/nginx-deploy/nginx.conf /etc/nginx/nginx.conf
+            sudo cp /tmp/nginx-deploy/site.conf /etc/nginx/sites-available/chaselane.dev
+            sudo cp /tmp/nginx-deploy/security_headers_backend.conf /etc/nginx/snippets/security_headers_backend.conf
+            sudo cp /tmp/nginx-deploy/security_headers_frontend.conf /etc/nginx/snippets/security_headers_frontend.conf
+            sudo nginx -t && sudo systemctl reload nginx
+
       - name: Update backend code
         uses: burnett01/rsync-deployments@70ff22f5b4c2bb0e08d0bf20de693389e5552047 #v8
         # a - archive preserve permissions, ownership, and symbolic links, v - verbose, z - compress
@@ -35,6 +58,7 @@ jobs:
           remote_key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
 
       - name: Restart, update backend db, and dependencies
+        timeout-minutes: 10
         uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.LIGHTSAIL_IP }}
@@ -42,8 +66,5 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_SSH_KEY }}
           script: |
             cd /var/www/wwwroot/spendingtracker_backend
-            sudo box server stop
-            sudo box update --force
-            sudo box install --production
-            sudo box migrate up
-            sudo box server start
+            sudo box recipe scripts/deploy.boxr
+          timeout: 10m

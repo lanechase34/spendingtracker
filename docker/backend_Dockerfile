@@ -57,10 +57,12 @@ RUN ldconfig /usr/local/lib
 RUN magick -version && \
     magick -list format | grep -i heic
 
-RUN box config set JSON.lineEnding=`#chr 10`
+# Copy files needed for build
+COPY scripts/ scripts/
+COPY box.json box.json
 
-# Make sure dependencies are installed
-RUN box install
+# Run commandbox build
+RUN box recipe scripts/docker-build.boxr
 
 ENV HEALTHCHECK_URI="http://localhost:8082/healthcheck"
 

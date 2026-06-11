@@ -1,0 +1,6 @@
+install --production
+install testbox@7.0.0+19
+migrate install --verbose
+migrate up --verbose
+migrate seed run --verbose
+server start --verbose

@@ -16,8 +16,7 @@ if echo "$INSTALL_OUTPUT" | grep -q "Migration table already installed"; then
   echo "Database already initialized - skipping seeders"
 else
   echo "First run detected - running migrations..."
-  box migrate up
-  box migrate seed run
+  box recipe scripts/docker-firstrun.boxr
   echo "Database setup complete!"
 fi
 

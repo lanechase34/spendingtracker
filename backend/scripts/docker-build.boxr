@@ -1,0 +1,2 @@
+config set JSON.lineEnding=`#chr 10`
+install
