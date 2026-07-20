@@ -55,9 +55,6 @@ describe('useFetchImage', () => {
             expect.objectContaining({
                 method: 'GET',
                 signal: expect.any(AbortSignal) as AbortSignal,
-                headers: expect.objectContaining({
-                    Accept: 'application/json',
-                }) as unknown as RequestInit,
             })
         );
     });

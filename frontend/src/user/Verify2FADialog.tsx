@@ -65,7 +65,7 @@ export default function Verify2FADialog() {
     useEffect(() => {
         if (verify2FADialogOpen && pending2FAToken == null) {
             // Reset modal state
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect
             setError(null);
             logout();
             closeVerify2FADialog();

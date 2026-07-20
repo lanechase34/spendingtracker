@@ -98,7 +98,7 @@ export default function EditIncome({ date }: EditIncomeProps) {
             payField.setValue(incomeData.pay?.toString() ?? '0');
             extraField.setValue(incomeData.extra?.toString() ?? '0');
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
     }, [incomeData]);
 
     /**

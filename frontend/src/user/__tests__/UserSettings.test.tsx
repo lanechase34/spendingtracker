@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import useAuthFetch_ from 'hooks/useAuthFetch';
 import useToastContext_ from 'hooks/useToastContext';
 import useUserContext_ from 'hooks/useUserContext';
-import type { UserContextType } from 'types/UserContext.type';
 import UserSettings from 'user/UserSettings';
 
 configure({ asyncUtilTimeout: 200 });
@@ -101,7 +100,7 @@ function renderComponent(
     mockUseUserContext.mockReturnValue({
         user: buildUser({ totpEnabled: props.totpEnabled ?? false, ...props.userOverrides }),
         updateUser: mockUpdateUser,
-    } as Partial<UserContextType>);
+    });
 
     return render(<UserSettings open={props.open ?? true} onClose={props.onClose ?? mockOnClose} />);
 }

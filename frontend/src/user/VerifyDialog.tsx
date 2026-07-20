@@ -54,8 +54,9 @@ export default function VerifyDialog() {
     useEffect(() => {
         if (verifyDialogOpen && pendingToken == null) {
             // Reset modal state
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect
             setResendAlert(null);
+            // eslint-disable-next-line @eslint-react/set-state-in-effect
             setError(null);
             logout();
             closeVerifyDialog();

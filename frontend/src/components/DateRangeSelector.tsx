@@ -157,6 +157,8 @@ export default function DateRangeSelector() {
         </Stack>
     );
 
+    const [today] = useState(() => new Date());
+
     const pickerContent = (
         <StyledDayPickerWrapper>
             <DayPicker
@@ -167,7 +169,7 @@ export default function DateRangeSelector() {
                     to: tempEndDate?.toDate(),
                 }}
                 onSelect={handleSelect}
-                defaultMonth={tempStartDate?.toDate() ?? new Date()}
+                defaultMonth={tempStartDate?.toDate() ?? today}
                 max={365}
                 disabled={
                     tempStartDate

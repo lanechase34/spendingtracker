@@ -363,7 +363,7 @@ describe('DateRangeContext', () => {
 
             const TestComponent = () => {
                 const context = useContext(DateRangeContext);
-                const [, forceUpdate] = useState(0);
+                const [_forceUpdate, setForceUpdate] = useState(0);
 
                 if (!context) throw new Error('Context not found');
 
@@ -375,7 +375,7 @@ describe('DateRangeContext', () => {
                 });
 
                 return (
-                    <button onClick={() => forceUpdate((n) => n + 1)} data-testid="trigger">
+                    <button onClick={() => setForceUpdate((n) => n + 1)} data-testid="trigger">
                         Trigger
                     </button>
                 );

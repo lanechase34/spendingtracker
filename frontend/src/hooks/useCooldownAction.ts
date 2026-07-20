@@ -49,6 +49,7 @@ export default function useCooldownAction<T = void>({
                 return prev;
             });
         }
+        // eslint-disable-next-line @eslint-react/exhaustive-deps
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Tick now every second while cooldown is active
@@ -57,9 +58,9 @@ export default function useCooldownAction<T = void>({
     useEffect(() => {
         if (!cooldownUntil) return;
 
-        // Reset now immediately so remainingSeconds is accurate from the start of a new cooldown
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setNow(Date.now());
+        // Reset now on the next tick (not synchronously) so remainingSeconds is accurate
+        // from the start of a new cooldown
+        const resetTimeout = setTimeout(() => setNow(Date.now()), 0);
 
         const interval = setInterval(() => {
             const currentNow = Date.now();
@@ -70,7 +71,10 @@ export default function useCooldownAction<T = void>({
             }
         }, 1000);
 
-        return () => clearInterval(interval);
+        return () => {
+            clearTimeout(resetTimeout);
+            clearInterval(interval);
+        };
     }, [cooldownUntil, setCooldownUntil]);
 
     const remainingSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0;

@@ -25,9 +25,7 @@ import { useCallback, useMemo, useState } from 'react';
 import type { Subscription } from 'types/Subscription.type';
 
 type SubscriptionAction =
-    | { type: 'toggle'; id: number }
-    | { type: 'delete'; id: number; status?: 'confirming' | 'processing' }
-    | null;
+    { type: 'toggle'; id: number } | { type: 'delete'; id: number; status?: 'confirming' | 'processing' } | null;
 
 /**
  * Data grid slots

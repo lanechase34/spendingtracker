@@ -162,7 +162,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
 
         return () => controller.abort();
         // We are deliberately using the serialized version to control WHEN the effect runs.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
     }, [serializedGridState, additionalParamsString, authReady, fetchData]);
 
     /**
@@ -174,7 +174,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
             await fetchData(gridState, additionalParamsString, signal ?? controller.signal);
         },
         // We are deliberately using the serialized version to control WHEN the function updates
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
         [serializedGridState, additionalParamsString, fetchData]
     );
 

@@ -77,7 +77,9 @@ export default function RequestMetrics() {
      * This listens for when metrics is updated and will update the state used here
      */
     const updateChartData = useEffectEvent((activeRequests: number) => {
+        // eslint-disable-next-line @eslint-react/set-state-in-effect
         setHistory((prev) => [...prev.slice(-MAX_POINTS), activeRequests]);
+        // eslint-disable-next-line @eslint-react/set-state-in-effect
         setLabels((prev) => [...prev.slice(-MAX_POINTS), new Date().toLocaleTimeString()]);
     });
 
