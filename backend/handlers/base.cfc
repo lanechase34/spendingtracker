@@ -1,6 +1,6 @@
 component extends="coldbox.system.RestHandler" hint="Base handler. All handlers should extend this." {
 
-    property name="imageService" inject="services.image";
+    property name="imageService" inject="Helpers@ImageMagick";
 
     property name="receiptUploads" inject="coldbox:setting:receiptUploads";
 
@@ -70,8 +70,14 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
 
                 // User attempting to upload receipt
                 if(rc.keyExists('receipt') && rc.receipt.len()) {
-                    prc.receipt = imageService.validateUpload(formField = 'receipt', uploadDirectory = prc.userDir);
-                    if(!prc.receipt.len()) {
+                    try {
+                        prc.receipt = expenseService.receiptUpload(formField = 'receipt', userDir = prc.userDir);
+
+                        if(!prc.receipt.len()) {
+                            throw(type = 'ReceiptValidationError', message = '#prc.currEvent# | #now()#');
+                        }
+                    }
+                    catch(any e) {
                         // Validation failed
                         throw(type = 'ReceiptValidationError', message = '#prc.currEvent# | #now()#');
                     }

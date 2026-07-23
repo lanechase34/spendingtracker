@@ -9,7 +9,6 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
 
     property name="categoryService"     inject="services.category";
     property name="expenseService"      inject="services.expense";
-    property name="imageService"        inject="services.image";
     property name="subscriptionService" inject="services.subscription";
 
     /**

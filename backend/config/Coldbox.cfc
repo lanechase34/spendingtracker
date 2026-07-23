@@ -88,7 +88,7 @@ component {
             guestOnlyRoutes: ['auth.login', 'auth.register'],
             healthCheck    : true,
             imageExtension : '.webp',
-            imageMagick    : getSystemSetting('IMAGEMAGICK'),
+            imageMagickPath: getSystemSetting('IMAGEMAGICKPATH'),
             impersonation  : false,
             jwt_secret     : getSystemSetting('JWT_SECRET'),
             logPath        : logPath,

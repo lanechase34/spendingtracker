@@ -3,6 +3,7 @@ component singleton accessors="true" {
     property name="async"              inject="asyncManager@coldbox";
     property name="basePath"           inject="coldbox:setting:basePath";
     property name="cacheStorage"       inject="cachebox:coldboxStorage";
+    property name="imageService"       inject="Helpers@ImageMagick";
     property name="q"                  inject="provider:QueryBuilder@qb";
     property name="maxThreads"         inject="coldbox:setting:maxThreads";
     property name="securityService"    inject="services.security";
@@ -564,6 +565,28 @@ component singleton accessors="true" {
         }
 
         return filePath;
+    }
+
+    /**
+     * Upload a multi-part for containing a receipt image in the form field
+     * Validates the image, converts to webp, and resizes
+     *
+     * @formField The multipart form field
+     * @userDir   The user's upload directory
+     *
+     * @return The UUID of the converted image
+     */
+    public string function receiptUpload(required string formField, required string userDir) {
+        var receipt = imageService.validateUpload(formField = 'receipt', outputs = [{uploadDir: userDir, type: 'webp'}]);
+
+        imageService.convert(
+            path       = '#userDir#/#receipt#.webp',
+            outputPath = '#userDir#/#receipt#.webp',
+            quality    = 50,
+            resize     = 750
+        );
+
+        return receipt;
     }
 
 }

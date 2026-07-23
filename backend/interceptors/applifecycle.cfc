@@ -7,7 +7,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
     property name="queryLogPath" type="string";
 
     property name="emailService" inject="provider:services.email";
-    property name="imageService" inject="provider:services.image";
+    property name="imageService" inject="provider:Helpers@ImageMagick";
 
     /**
      * Configuration
@@ -34,8 +34,8 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
         }
 
         // Verify ImageMagick
-        if(environment == 'production' && !imageService.verifyImageMagick()) {
-            throw('Imagemagick is not running');
+        if(environment == 'production') {
+            imageService.verifyImageMagick();
         }
 
         // Verify mail server

@@ -23,7 +23,8 @@
         "cbjavaloader":"modules/cbjavaloader/",
         "totp":"modules/totp/",
         "cbSwaggerUI":"modules/cbSwaggerUI/",
-        "cors":"modules/cors/"
+        "cors":"modules/cors/",
+        "ImageMagickHelpers":"modules/ImageMagickHelpers/"
     },
     "devDependencies":{
         "testbox":"7.0.0+19",
@@ -55,7 +56,8 @@
         "spreadsheet-cfml":"5.4.0",
         "socketbox":"2.1.1",
         "cbjavaloader":"2.6.0+5",
-        "totp":"1.0.11"
+        "totp":"1.0.11",
+        "ImageMagickHelpers":"1.0.0"
     },
     "scripts":{
         "format":"cfformat run Application.cfc,WebSocket.cfc,config/,handlers/,interceptors/,models/,tests/,database/ ./.cfformat.json --overwrite",

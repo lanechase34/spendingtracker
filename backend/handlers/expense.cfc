@@ -13,7 +13,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
 
     property name="categoryService" inject="services.category";
     property name="expenseService"  inject="services.expense";
-    property name="imageService"    inject="services.image";
+    property name="imageService"    inject="Helpers@ImageMagick";
 
     /**
      * Paginated view for expenses
@@ -225,10 +225,16 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
 
                     // Check if receipt exists
                     if(rc.keyExists('receipt_#expense.id#')) {
-                        currReceipt = imageService.validateUpload(
-                            formField       = 'receipt_#expense.id#', // dynamic form field generated
-                            uploadDirectory = prc.userDir
-                        );
+                        try {
+                            currReceipt = expenseService.receiptUpload(
+                                formField = 'receipt_#expense.id#', // dynamic form field generated
+                                userDir   = prc.userDir
+                            );
+                        }
+                        catch(any e) {
+                            // silence any errors
+                        }
+
                         if(!currReceipt.len()) {
                             errors['expense_#expense.id#'] = 'Invalid receipt upload.';
                             continue;

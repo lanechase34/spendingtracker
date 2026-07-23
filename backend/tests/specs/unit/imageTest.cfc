@@ -4,7 +4,7 @@ component extends="tests.resources.baseTest" {
 
     function beforeAll() {
         super.beforeAll();
-        imageService = getInstance('services.image');
+        imageService = getInstance('Helpers@ImageMagick');
     }
 
     function afterAll() {
@@ -28,8 +28,9 @@ component extends="tests.resources.baseTest" {
                 'Verify imagemagick functionality',
                 () => {
                     it('Can verify image magick is functioning', () => {
-                        var verify = imageService.verifyImageMagick();
-                        expect(verify).toBe(true);
+                        expect(() => {
+                            imageService.verifyImageMagick()
+                        }).notToThrow();
                     });
 
                     it('Validate identity of .jpg image', () => {
@@ -38,7 +39,7 @@ component extends="tests.resources.baseTest" {
                         /**
                          * Validate identity of this image
                          */
-                        expect(imageService.validIdentify(path = path)).toBeTrue();
+                        expect(imageService.identify(path = path)).toBe('JPEG');
                     });
 
                     it('Can convert a .jpeg to .webp', () => {
@@ -47,12 +48,18 @@ component extends="tests.resources.baseTest" {
                         /**
                          * Validate identity of this image
                          */
-                        expect(imageService.validIdentify(path = path)).toBeTrue();
+                        expect(imageService.identify(path = path)).toBe('JPEG');
 
                         /**
                          * Convert to webp
                          */
-                        expect(imageService.convertToWebp(path = path, quality = 10)).toBeTrue();
+                        expect(() => {
+                            imageService.convert(
+                                path       = '#path#',
+                                outputPath = '#left(path, path.len() - 4)#webp',
+                                quality    = 10
+                            )
+                        }).notToThrow();
 
                         /**
                          * Both JPEG and WEBP will now exist
@@ -70,12 +77,18 @@ component extends="tests.resources.baseTest" {
                         /**
                          * Validate identity of this image
                          */
-                        expect(imageService.validIdentify(path = path)).toBeTrue();
+                        expect(imageService.identify(path = path)).toBe('HEIC');
 
                         /**
                          * Convert to webp
                          */
-                        expect(imageService.convertToWebp(path = path, quality = 10)).toBeTrue();
+                        expect(() => {
+                            imageService.convert(
+                                path       = '#path#',
+                                outputPath = '#left(path, path.len() - 4)#webp',
+                                quality    = 10
+                            )
+                        }).notToThrow();
 
                         /**
                          * Both JPEG and WEBP will now exist
