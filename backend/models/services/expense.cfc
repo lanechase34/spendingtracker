@@ -104,11 +104,11 @@ component singleton accessors="true" {
                         // Only apply DB-level ordering when NOT sorting by amount
                         condition = !isAmountSort && orderCol.len() && orderDir.len(),
                         onTrue    = (q1) => {
-                            q1.orderBy(orderCol, orderDir);
+                            q1.orderBy(orderCol, orderDir).orderBy('expense.id', orderDir);
                         },
                         onFalse = (q1) => {
                             if(!isAmountSort) {
-                                q1.orderBy('expense.date', 'desc');
+                                q1.orderBy('expense.date', 'desc').orderBy('expense.id', 'desc');
                             }
                         }
                     )

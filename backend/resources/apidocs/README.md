@@ -98,8 +98,6 @@ console.log('csrf_token updated:', token);
 
 ---
 
-f
-
 ## 6. Authenticate
 
 Run the **login** request once with your credentials. It will automatically:

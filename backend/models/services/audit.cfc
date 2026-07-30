@@ -112,10 +112,10 @@ component singleton accessors="true" {
                 .when(
                     orderCol.len() && orderDir.len(),
                     (q1) => {
-                        q1.orderBy(orderCol, orderDir);
+                        q1.orderBy(orderCol, orderDir).orderBy('audit.id', orderDir);
                     },
                     (q1) => {
-                        q1.orderBy('audit.created', 'desc');
+                        q1.orderBy('audit.created', 'desc').orderBy('audit.id', 'desc');
                     }
                 )
                 .limit(records)

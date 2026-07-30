@@ -87,11 +87,13 @@ component singleton accessors="true" {
                         // Only apply DB-level ordering when NOT sorting by amount
                         condition = !isAmountSort && orderCol.len() && orderDir.len(),
                         onTrue    = (q1) => {
-                            q1.orderBy('subscription.active', 'desc').orderBy(orderCol, orderDir);
+                            q1.orderBy('subscription.active', 'desc')
+                                .orderBy(orderCol, orderDir)
+                                .orderBy('subscription.id', orderDir);
                         },
                         onFalse = (q1) => {
                             if(!isAmountSort) {
-                                q1.orderBy('subscription.active desc, subscription.next_charge_date asc');
+                                q1.orderBy('subscription.active desc, subscription.next_charge_date asc, subscription.id asc');
                             }
                         }
                     )
