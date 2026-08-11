@@ -13,7 +13,6 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
 
     property name="categoryService" inject="services.category";
     property name="expenseService"  inject="services.expense";
-    property name="imageService"    inject="Helpers@ImageMagick";
 
     /**
      * Paginated view for expenses

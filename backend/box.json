@@ -57,7 +57,7 @@
         "socketbox":"2.1.1",
         "cbjavaloader":"2.6.0+5",
         "totp":"1.0.11",
-        "ImageMagickHelpers":"1.0.0"
+        "ImageMagickHelpers":"1.0.1"
     },
     "scripts":{
         "format":"cfformat run Application.cfc,WebSocket.cfc,config/,handlers/,interceptors/,models/,tests/,database/ ./.cfformat.json --overwrite",

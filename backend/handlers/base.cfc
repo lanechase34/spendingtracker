@@ -1,7 +1,5 @@
 component extends="coldbox.system.RestHandler" hint="Base handler. All handlers should extend this." {
 
-    property name="imageService" inject="Helpers@ImageMagick";
-
     property name="receiptUploads" inject="coldbox:setting:receiptUploads";
 
     /**
