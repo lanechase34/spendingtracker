@@ -1,0 +1,5 @@
+{
+    "$schema": "./node_modules/knip/schema.json",
+    "tags": ["-lintignore"],
+    "ignoreDependencies": ["npm-check-updates"]
+}

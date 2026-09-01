@@ -47,7 +47,6 @@ const LogListResponseSchema = validateAPIResponse(z.array(LogFileSchema));
 const LogContentResponseSchema = validateAPIResponse(LogContentSchema);
 
 export type LogFile = z.infer<typeof LogFileSchema>;
-export type LogContent = z.infer<typeof LogContentSchema>;
 
 const DEFAULT_LINES = 200;
 const LINE_OPTIONS = [100, 200, 500, 1000, 2000];

@@ -35,7 +35,7 @@ interface NavSection {
     items: NavItem[];
 }
 
-export const adminNav: NavSection[] = [
+const adminNav: NavSection[] = [
     {
         section: 'Overview',
         items: [

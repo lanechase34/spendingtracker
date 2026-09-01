@@ -1,7 +1,7 @@
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
 
-export const TaskRecordSchema = z.object({
+const TaskRecordSchema = z.object({
     name: z.string(),
     created: z.string(),
     module: z.string(),
@@ -20,4 +20,3 @@ export const TaskRecordSchema = z.object({
 export const TaskResponseSchema = validateAPIResponse(z.array(TaskRecordSchema));
 
 export type TaskRecord = z.infer<typeof TaskRecordSchema>;
-export type TaskResponse = z.infer<typeof TaskResponseSchema>;

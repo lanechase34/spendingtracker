@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const UserRecordSchema = z.object({
+const UserRecordSchema = z.object({
     id: z.number(),
     email: z.string(),
     security_level: z.string(),
@@ -16,4 +16,3 @@ export const UserListSchema = z.object({
  * TypeScript types derived from schemas
  */
 export type UserRecord = z.infer<typeof UserRecordSchema>;
-export type UserList = z.infer<typeof UserListSchema>;

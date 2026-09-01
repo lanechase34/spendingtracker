@@ -13,7 +13,7 @@ const CacheKeySchema = z.object({
     storage: z.string(),
 });
 
-export const CacheSchema = z.object({
+const CacheSchema = z.object({
     lastReapDateTime: z.string(),
     hits: z.number().nonnegative(),
     misses: z.number().nonnegative(),
@@ -27,4 +27,3 @@ export const CacheResponseSchema = validateAPIResponse(CacheSchema);
 
 export type CacheKey = z.infer<typeof CacheKeySchema>;
 export type CacheData = z.infer<typeof CacheSchema>;
-export type CacheResponse = z.infer<typeof CacheResponseSchema>;

@@ -10,7 +10,7 @@ const SlowRequestSchema = z.object({
     uuid: z.string(),
 });
 
-export const MetricSchema = z.object({
+const MetricSchema = z.object({
     cpu: z.object({
         cores: z.number(),
         processPercent: z.number(),
@@ -31,5 +31,4 @@ export const MetricSchema = z.object({
 export const MetricResponseSchema = validateAPIResponse(MetricSchema);
 
 export type Metric = z.infer<typeof MetricSchema>;
-export type MetricResponse = z.infer<typeof MetricResponseSchema>;
 export type SlowRequest = z.infer<typeof SlowRequestSchema>;

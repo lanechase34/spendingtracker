@@ -3,7 +3,7 @@ import type { ErroredExpense } from 'types/BulkImport.type';
 import type { ExpenseDataRow } from 'types/Expense.type';
 import type { ErrorField } from 'validators/validateExpenseRow';
 
-export interface BulkImportState {
+interface BulkImportState {
     loading: boolean; // loading CSV data
     saving: boolean; // saving refined data
     loadedExpenses: Record<string, ExpenseDataRow>; // loaded expenses from CSV
@@ -13,7 +13,7 @@ export interface BulkImportState {
     importErrors: ErroredExpense[];
 }
 
-export type BulkImportAction =
+type BulkImportAction =
     | { type: 'SET_LOADING'; payload: boolean }
     | { type: 'SET_SAVING'; payload: boolean }
     | { type: 'SET_SHOWIMPORTDIALOG'; payload: boolean }
