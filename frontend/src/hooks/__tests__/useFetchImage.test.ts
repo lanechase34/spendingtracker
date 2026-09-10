@@ -8,7 +8,7 @@ describe('useFetchImage', () => {
 
         expect(result.current.imageSrc).toBe('');
         expect(result.current.loading).toBe(false);
-        expect(result.current.error).toBe(null);
+        expect(result.current.error).toBeNull();
     });
 
     it('Should fetch and load image successfully', async () => {
@@ -32,7 +32,7 @@ describe('useFetchImage', () => {
         // Check initial state
         expect(result.current.imageSrc).toBe('');
         expect(result.current.loading).toBe(false);
-        expect(result.current.error).toBe(null);
+        expect(result.current.error).toBeNull();
 
         // Call fetchImage
         act(() => {
@@ -49,7 +49,7 @@ describe('useFetchImage', () => {
 
         // Should have image src
         expect(result.current.imageSrc).toBe(mockObjectUrl);
-        expect(result.current.error).toBe(null);
+        expect(result.current.error).toBeNull();
         expect(global.fetch).toHaveBeenCalledWith(
             '/test.jpg',
             expect.objectContaining({
@@ -72,7 +72,7 @@ describe('useFetchImage', () => {
         // Check initial state
         expect(result.current.imageSrc).toBe('');
         expect(result.current.loading).toBe(false);
-        expect(result.current.error).toBe(null);
+        expect(result.current.error).toBeNull();
 
         // Call fetchImage
         act(() => {

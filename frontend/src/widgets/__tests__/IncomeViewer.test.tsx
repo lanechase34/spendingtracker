@@ -369,11 +369,8 @@ describe('IncomeViewer Component', () => {
                 expect(mockFormatCurrency).toHaveBeenCalledWith(expectedNet);
 
                 // Verify correct display based on positive/negative/zero
-                if (isPositive) {
-                    expect(screen.queryByText(`$${expectedNet}.00`)).toBeInTheDocument();
-                } else {
-                    expect(screen.getByText(`-$${expectedNet}.00`)).toBeInTheDocument();
-                }
+                const expectedText = isPositive ? `$${expectedNet}.00` : `-$${expectedNet}.00`;
+                expect(screen.getByText(expectedText)).toBeInTheDocument();
 
                 unmount();
             });

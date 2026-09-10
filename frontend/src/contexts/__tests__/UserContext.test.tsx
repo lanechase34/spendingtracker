@@ -373,6 +373,10 @@ describe('UserContextProvider - network errors', () => {
 
 describe('UserContextProvider - abort / cleanup', () => {
     it('Does not update state when the request is aborted', () => {
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+            // empty
+        });
+
         let resolveRequest!: (v: unknown) => void;
         mockAuthFetch.mockReturnValue(
             new Promise((res) => {
@@ -390,7 +394,9 @@ describe('UserContextProvider - abort / cleanup', () => {
             resolveRequest(buildMockResponse(buildValidApiResponse()));
         });
 
-        // No assertion on DOM (unmounted), but no "can't update unmounted component" error
+        // No "can't update unmounted component" error
+        expect(consoleErrorSpy).not.toHaveBeenCalled();
+        consoleErrorSpy.mockRestore();
     });
 
     it('Aborts the in-flight request when the component unmounts', async () => {

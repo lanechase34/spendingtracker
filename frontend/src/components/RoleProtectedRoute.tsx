@@ -1,3 +1,4 @@
+import PageLoader from 'components/PageLoader';
 import useAuthContext from 'hooks/useAuthContext';
 import useUserContext from 'hooks/useUserContext';
 import { Navigate, Outlet } from 'react-router-dom';
@@ -12,10 +13,10 @@ export default function RoleProtectedRoute({ allowedRoles }: RoleProtectedRouteP
     const { user, loading } = useUserContext();
 
     /**
-     * Initial load
+     * Initial load / profile still fetching
      */
     if (loading && !user) {
-        return null;
+        return <PageLoader />;
     }
 
     /**

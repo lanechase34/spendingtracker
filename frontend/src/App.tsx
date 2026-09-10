@@ -4,13 +4,12 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
-import Box from '@mui/material/Box';
-import CircularProgress from '@mui/material/CircularProgress';
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AdminLayout from 'admin/Layout';
 import Navbar from 'components/Navbar';
+import PageLoader from 'components/PageLoader';
 import PostLoginRedirect from 'components/PostLoginRedirect';
 import RoleProtectedRoute from 'components/RoleProtectedRoute';
 import { AdminDrawerContextProvider } from 'contexts/AdminDrawerContext';
@@ -87,21 +86,6 @@ function Providers({ children }: { children: ReactNode }) {
             <CssBaseline enableColorScheme />
             {wrapped}
         </ThemeProvider>
-    );
-}
-
-function PageLoader() {
-    return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '75vh',
-            }}
-        >
-            <CircularProgress />
-        </Box>
     );
 }
 

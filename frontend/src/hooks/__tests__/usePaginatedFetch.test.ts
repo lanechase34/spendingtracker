@@ -77,7 +77,7 @@ describe('usePaginatedFetch', () => {
             })
         );
 
-        expect(result.current.data).toBe(null);
+        expect(result.current.data).toBeNull();
         expect(result.current.loading).toBe(true); // loading is fired off when component mounts
         expect(result.current.error).toBe(false);
         expect(result.current.totalRowCount).toBe(0);
@@ -134,33 +134,6 @@ describe('usePaginatedFetch', () => {
         expect(result.current.totalRowCount).toBe(11);
     });
 
-    // it('Should use transform function if provided', async () => {
-    //     // Mock a successful fetch
-    //     mockFetch.mockResolvedValueOnce({
-    //         ok: true,
-    //         json: async () => mockResponse,
-    //     });
-
-    //     // Add transformed to each entry
-    //     const transform = jest.fn((data) => data.map((d: any) => ({ ...d, transformed: true })));
-
-    //     const { result } = renderHook(() =>
-    //         usePaginatedFetch<{ id: number; name: string; transformed: boolean }>({
-    //             endpoint,
-    //             transform,
-    //         })
-    //     );
-
-    //     // Wait for the fetch to complete
-    //     await waitFor(() => {
-    //         expect(result.current.loading).toBe(false);
-    //     });
-
-    //     expect(transform).toHaveBeenCalledWith(mockData);
-    //
-    //     expect(result.current.data?.[0].transformed).toBe(true);
-    // });
-
     it('Should handle fetch errors', async () => {
         // Mock a failed fetch
         mockFetch.mockResolvedValueOnce({
@@ -176,7 +149,7 @@ describe('usePaginatedFetch', () => {
 
         expect(result.current.error).toBe(true);
         expect(result.current.loading).toBe(false);
-        expect(result.current.data).toBe(null); // no data
+        expect(result.current.data).toBeNull(); // no data
     });
 
     it('Should handle API error field', async () => {
@@ -195,7 +168,7 @@ describe('usePaginatedFetch', () => {
 
         expect(result.current.error).toBe(true);
         expect(result.current.loading).toBe(false);
-        expect(result.current.data).toBe(null);
+        expect(result.current.data).toBeNull();
     });
 
     it('Should handle API validation error', async () => {
@@ -214,7 +187,7 @@ describe('usePaginatedFetch', () => {
 
         expect(result.current.error).toBe(true);
         expect(result.current.loading).toBe(false);
-        expect(result.current.data).toBe(null);
+        expect(result.current.data).toBeNull();
     });
 
     it('Should refetch data when refetch is called', async () => {
@@ -475,7 +448,7 @@ describe('usePaginatedFetch', () => {
         await waitFor(() => expect(result.current.loading).toBe(false));
 
         expect(result.current.error).toBe(true);
-        expect(result.current.data).toBe(null);
+        expect(result.current.data).toBeNull();
     });
 
     it('Should not set error state when fetch is aborted', async () => {
@@ -489,7 +462,7 @@ describe('usePaginatedFetch', () => {
         await waitFor(() => expect(mockFetch).toHaveBeenCalled());
 
         expect(result.current.error).toBe(false);
-        expect(result.current.data).toBe(null);
+        expect(result.current.data).toBeNull();
     });
 
     it('Should pass signal to fetch', async () => {

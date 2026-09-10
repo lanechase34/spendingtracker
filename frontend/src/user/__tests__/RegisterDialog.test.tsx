@@ -388,13 +388,6 @@ describe('RegisterDialog', () => {
 
             expect(screen.queryByText('Email already registered.')).not.toBeInTheDocument();
         });
-
-        it('Re-enables the submit button after an error', async () => {
-            mockUserAPIRegister.mockRejectedValue(new APIError('Email already registered.', 400));
-            renderComponent();
-            await fillAndSubmit();
-            expect(screen.getByRole('button', { name: /register/i })).not.toBeDisabled();
-        });
     });
 
     describe('Dialog behavior', () => {

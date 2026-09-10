@@ -39,6 +39,10 @@ backend/tests/results/*
 frontend/src/mock/**
 frontend/coverage/**
 frontend/coverage/
+frontend/playwright-report/**
+frontend/playwright-report/
+frontend/test-results/**
+frontend/test-results/
 
 temp/
 temp/**

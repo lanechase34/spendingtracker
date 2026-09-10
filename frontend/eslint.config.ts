@@ -4,8 +4,17 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
+import jest from 'eslint-plugin-jest';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import playwright from 'eslint-plugin-playwright';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+
+const IMPORT_RESOLVER_PROJECTS = [
+    './tsconfig.app.json',
+    './tsconfig.test.json',
+    './e2e/tsconfig.json',
+    './tsconfig.node.json',
+];
 
 export default defineConfig([
     {
@@ -16,6 +25,8 @@ export default defineConfig([
             '**/dist/**',
             '**/coverage/**',
             '**/.vite/**',
+            'playwright-report/**',
+            'test-results/**',
             'eslint.config.ts',
             'jest.config.cjs',
             'vite.config.ts',
@@ -46,7 +57,7 @@ export default defineConfig([
         languageOptions: {
             parser: tseslint.parser,
             parserOptions: {
-                project: './tsconfig.json',
+                projectService: true,
                 tsconfigRootDir: import.meta.dirname,
                 ecmaVersion: 'latest',
                 sourceType: 'module',
@@ -56,7 +67,8 @@ export default defineConfig([
             'import/resolver': {
                 typescript: {
                     alwaysTryTypes: true,
-                    project: './tsconfig.json',
+                    project: IMPORT_RESOLVER_PROJECTS,
+                    noWarnOnMultipleProjects: true,
                 },
             },
             react: {
@@ -88,6 +100,29 @@ export default defineConfig([
             eqeqeq: ['error', 'always', { null: 'ignore' }],
             '@eslint-react/no-leaked-conditional-rendering': 'error',
             'import/no-cycle': 'error',
+        },
+    },
+
+    // Playwright e2e tests + config
+    {
+        files: ['e2e/**/*.ts', 'playwright.config.ts'],
+        ...playwright.configs['flat/recommended'],
+    },
+
+    // Jest tests
+    {
+        files: [
+            'src/**/__tests__/**/*.{ts,tsx}',
+            'src/**/*.test.{ts,tsx}',
+            'src/**/*.spec.{ts,tsx}',
+            'src/setupTests.ts',
+            'src/test-utils.tsx',
+        ],
+        plugins: jest.configs['flat/recommended'].plugins,
+        languageOptions: jest.configs['flat/recommended'].languageOptions,
+        rules: {
+            ...jest.configs['flat/recommended'].rules,
+            ...jest.configs['flat/style'].rules,
         },
     },
 ]);
