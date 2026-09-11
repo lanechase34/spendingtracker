@@ -1,8 +1,49 @@
 import process from 'node:process';
 
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type Project } from '@playwright/test';
 
 const isWindows = process.platform === 'win32';
+
+// Run tests in this order, one browser at a time
+const browserProjects: (Omit<Project, 'dependencies'> & { name: string })[] = [
+    {
+        name: 'chromium',
+        use: {
+            ...devices['Desktop Chrome'],
+        },
+    },
+    {
+        name: 'firefox',
+        use: {
+            ...devices['Desktop Firefox'],
+            launchOptions: {
+                timeout: 60000,
+            },
+        },
+    },
+    ...(!isWindows
+        ? [
+              {
+                  name: 'webkit',
+                  use: { ...devices['Desktop Safari'] },
+              },
+          ]
+        : []),
+
+    {
+        name: 'Mobile Chrome',
+        use: { ...devices['Pixel 5'] },
+    },
+
+    ...(!isWindows
+        ? [
+              {
+                  name: 'Mobile Safari',
+                  use: { ...devices['iPhone 12'] },
+              },
+          ]
+        : []),
+];
 
 export default defineConfig({
     testDir: './e2e',
@@ -21,43 +62,9 @@ export default defineConfig({
         trace: 'on-first-retry',
         headless: true,
     },
-    projects: [
-        {
-            name: 'chromium',
-            use: {
-                ...devices['Desktop Chrome'],
-            },
-        },
-        {
-            name: 'firefox',
-            use: {
-                ...devices['Desktop Firefox'],
-                launchOptions: {
-                    timeout: 60000,
-                },
-            },
-        },
-        ...(!isWindows
-            ? [
-                  {
-                      name: 'webkit',
-                      use: { ...devices['Desktop Safari'] },
-                  },
-              ]
-            : []),
-
-        {
-            name: 'Mobile Chrome',
-            use: { ...devices['Pixel 5'] },
-        },
-
-        ...(!isWindows
-            ? [
-                  {
-                      name: 'Mobile Safari',
-                      use: { ...devices['iPhone 12'] },
-                  },
-              ]
-            : []),
-    ],
+    // Chain each project onto the previous one so they run sequentially
+    projects: browserProjects.map((project, index) => ({
+        ...project,
+        dependencies: index > 0 ? [browserProjects[index - 1].name] : undefined,
+    })),
 });

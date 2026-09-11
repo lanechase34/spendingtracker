@@ -25,7 +25,7 @@ import dayjs from 'dayjs';
 import useFormField from 'hooks/useFormField';
 import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
 import { type SubmitEvent } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BASE_FORMAT } from 'utils/dates';
 import { validateMoney } from 'validators/validateMoney';
 
@@ -92,11 +92,19 @@ export default function EditIncome({ date }: EditIncomeProps) {
         enabled: open, // Only fetch when dialog is open
     });
 
-    // Update form fields when income data changes
+    /**
+     * Tracks which month's data has already been used to pre-fill the fields, so a
+     * background refetch while the dialog stays open (e.g. after React Query revalidates)
+     * doesn't stomp whatever the user has typed since. Cleared on close so reopening always
+     * pre-fills fresh, and re-fires on its own if the user changes the month mid-dialog.
+     */
+    const prefilledDateRef = useRef<string | null>(null);
+
     useEffect(() => {
-        if (incomeData) {
+        if (incomeData && prefilledDateRef.current !== formattedDate) {
             payField.setValue(incomeData.pay?.toString() ?? '0');
             extraField.setValue(incomeData.extra?.toString() ?? '0');
+            prefilledDateRef.current = formattedDate;
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
     }, [incomeData]);
@@ -117,6 +125,7 @@ export default function EditIncome({ date }: EditIncomeProps) {
 
     const handleExited = () => {
         setFormLoading(false);
+        prefilledDateRef.current = null;
     };
 
     const handleSubmit = async (event: SubmitEvent) => {

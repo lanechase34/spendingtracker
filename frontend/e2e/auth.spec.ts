@@ -1,38 +1,6 @@
 import { expect, type Page, test } from '@playwright/test';
 
-import { ADMIN_USER, BASE_PATH, HOME_URL, NORMAL_USER, UNKNOWN_USER } from './helpers';
-
-async function openLoginDialog(page: Page) {
-    await page.goto(`${BASE_PATH}/`);
-    // The navbar and the hero section both render a "Log In" button - scope to the navbar
-    await page.getByRole('banner').getByRole('button', { name: 'Log In', exact: true }).click();
-    await expect(page.getByRole('dialog')).toBeVisible();
-}
-
-/**
- * Fills out and submits the login dialog, checking "Remember me" so the
- * refresh token cookie is set and the session survives a page reload/navigation.
- * Does not wait for the outcome - use `login` for the happy path, or this
- * directly when asserting on a failed login attempt.
- */
-async function submitLogin(page: Page, email: string, password: string) {
-    await openLoginDialog(page);
-
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Email').fill(email);
-    await dialog.getByLabel('Password').fill(password);
-    await dialog.getByRole('checkbox', { name: 'Remember me' }).check();
-    await dialog.getByRole('button', { name: 'Log In' }).click();
-}
-
-/**
- * Logs in via the login dialog and waits for the app to redirect to the
- * dashboard, so the session is fully established before the caller continues.
- */
-async function login(page: Page, email: string, password: string) {
-    await submitLogin(page, email, password);
-    await expect(page).toHaveURL(`${BASE_PATH}/dashboard`);
-}
+import { ADMIN_USER, BASE_PATH, HOME_URL, login, NORMAL_USER, submitLogin, UNKNOWN_USER } from './helpers';
 
 async function logout(page: Page) {
     await page.getByRole('button', { name: 'Account menu' }).click();
@@ -41,12 +9,12 @@ async function logout(page: Page) {
 }
 
 test.describe('Unauthenticated access', () => {
-    test('redirects away from the dashboard', async ({ page }) => {
+    test('Redirects away from the dashboard', async ({ page }) => {
         await page.goto(`${BASE_PATH}/dashboard`);
         await expect(page).toHaveURL(HOME_URL);
     });
 
-    test('redirects away from the admin area', async ({ page }) => {
+    test('Redirects away from the admin area', async ({ page }) => {
         await page.goto(`${BASE_PATH}/admin`);
         await expect(page).toHaveURL(HOME_URL);
     });

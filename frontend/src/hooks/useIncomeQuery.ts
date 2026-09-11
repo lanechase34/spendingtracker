@@ -43,7 +43,7 @@ export function useUpdateIncome() {
         mutationFn: (body: { date: string; pay: string; extra: string }) => service.updateIncome(body),
         onSuccess: () => {
             // Invalidate all income queries
-            void queryClient.invalidateQueries({ queryKey: ['income'] });
+            return queryClient.invalidateQueries({ queryKey: ['income'] });
         },
     });
 }
