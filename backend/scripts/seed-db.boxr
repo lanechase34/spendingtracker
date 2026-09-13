@@ -1,0 +1,3 @@
+migrate down
+migrate up
+migrate seed run

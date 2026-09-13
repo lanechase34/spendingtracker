@@ -31,57 +31,52 @@ component singleton accessors="true" {
             endDate   = arguments.endDate,
             userid    = arguments.userid
         );
+
+        // Determine if we are looking at a single week or longer than a week
         var daysDiff   = dateDiff('d', startDate, endDate) + 1;
-        var isWeekView = daysDiff == 7;
-        var dateFormat = isWeekView ? 'd' : 'w';
+        var isWeekView = daysDiff <= 7;
 
         // Week views are grouped by day
         if(isWeekView) {
             for(var i = 1; i <= daysDiff; i++) {
-                var curr = dateFormat(dateAdd(dateFormat, i - 1, startDate), 'short');
+                var curr = dateFormat(dateAdd('d', i - 1, startDate), 'short');
                 labels.append(curr);
                 labelMap[curr] = i;
             }
         }
         // Month and year views are grouped by week
+        // Bucketed by day-offset from the first day of startDate's week
         else {
-            var weekDiff      = dateDiff('w', startDate, endDate);
-            var startDateWeek = dateFormat(startDate, dateFormat);
-            var endDateWeek   = dateFormat(endDate, dateFormat);
+            var firstDayOfStartWeek = getFirstDayOfWeek(week(startDate), year(startDate));
+            var totalWeeks          = int(dateDiff('d', firstDayOfStartWeek, endDate) / 7) + 1;
 
-            // Account for edge case where startdate might be at start of week and enddate at start of week as well
-            var diff                = endDateWeek - startDateWeek > weekDiff ? endDateWeek - startDateWeek : weekDiff;
-            var firstDayOfStartWeek = getFirstDayOfWeek(startDateWeek, year(startDate));
-
-            for(var i = startDateWeek; i <= startDateWeek + diff; i++) {
-                var currStart = dateFormat(dateAdd('ww', i - startDateWeek, firstDayOfStartWeek), 'short');
-                var currEnd   = dateFormat(dateAdd('d', -1, dateAdd('ww', 1, currStart)), 'short');
+            for(var i = 1; i <= totalWeeks; i++) {
+                var bucketStart = dateAdd('d', (i - 1) * 7, firstDayOfStartWeek);
+                var currStart   = dateFormat(bucketStart, 'short');
+                var currEnd     = dateFormat(dateAdd('d', 6, bucketStart), 'short');
 
                 // Make sure the date range is INCLUSIVE to the current range
                 // Edge case for first day
-                if(i == startDateWeek && dateCompare(currStart, startDate, 'd') < 0) {
+                if(i == 1 && dateCompare(currStart, startDate, 'd') < 0) {
                     currStart = dateFormat(startDate, 'short');
                 }
                 // Edge case for last day
-                if(i == startDateWeek + diff && dateCompare(currEnd, endDate, 'd') > 0) {
+                if(i == totalWeeks && dateCompare(currEnd, endDate, 'd') > 0) {
                     currEnd = dateFormat(endDate, 'short');
                 }
 
                 labels.append('#currStart# - #currEnd#');
-
-                // Map the week to the label range
-                // The week can go over 52 here, in that case start over at 1
-                var weekIdentifier       = i > 52 ? i - 52 : i;
-                labelMap[weekIdentifier] = i - startDateWeek + 1;
             }
         }
 
         // Each label has its own entry for each category
         expenseData.each((row) => {
             // Get position in dataset.data array
-            var identifier = isWeekView ? dateFormat(row.date, 'short') : dateFormat(row.date, dateFormat);
+            var identifier = isWeekView
+             ? dateFormat(row.date, 'short')
+             : int(dateDiff('d', firstDayOfStartWeek, row.date) / 7) + 1;
 
-            var labelIndex = labelMap[identifier];
+            var labelIndex = isWeekView ? labelMap[identifier] : identifier;
 
             // Add category if not added yet
             if(!categoryMap.keyExists(row.category)) {
