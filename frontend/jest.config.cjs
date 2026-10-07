@@ -2,8 +2,9 @@ module.exports = {
     testEnvironment: 'jest-environment-jsdom',
     preset: 'ts-jest', // Use ts-jest for TypeScript support
     modulePaths: ['<rootDir>/src'],
+    testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/e2e/'],
     transform: {
-        '^.+\\.(ts|tsx)$': 'ts-jest',
+        '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
     },
     moduleNameMapper: {
         '\\.(css|less|sass|scss)$': 'identity-obj-proxy', // Handle CSS modules

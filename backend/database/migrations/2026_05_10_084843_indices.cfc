@@ -43,8 +43,8 @@ component {
         });
 
         schema.alter('expense', (table) => {
-            table.addConstraint(table.index('id'));
-            table.addConstraint(table.index('date'));
+            table.addIndex('id');
+            table.addIndex('date');
         });
 
         schema.alter('subscription', (table) => {
@@ -53,11 +53,11 @@ component {
         });
 
         schema.alter('audit', (table) => {
-            table.addConstraint(table.index('id'));
+            table.addIndex('id');
         });
 
         schema.alter('bug', (table) => {
-            table.addConstraint(table.index('id'));
+            table.addIndex('id');
         });
     }
 

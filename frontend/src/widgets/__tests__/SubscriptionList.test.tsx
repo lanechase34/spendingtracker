@@ -133,7 +133,7 @@ describe('Subscription List Component', () => {
             render(<SubscriptionList />, { subscriptionContextValue });
 
             const rows = screen.getAllByRole('row');
-            expect(rows.length).toBe(1); // only header row when loading
+            expect(rows).toHaveLength(1); // only header row when loading
         });
 
         it('Shows "No Subscriptions Found" when no data', () => {

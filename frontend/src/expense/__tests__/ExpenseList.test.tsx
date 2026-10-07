@@ -92,7 +92,7 @@ describe('ExpenseList', () => {
                 expenseContextValue: createExpenseContext({ loading: true, expenses: [] }),
             });
             const rows = screen.getAllByRole('row');
-            expect(rows.length).toBe(1); // only header row
+            expect(rows).toHaveLength(1); // only header row
         });
 
         it('Shows "No Expenses Found" when expenses array is empty', () => {

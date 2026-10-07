@@ -103,7 +103,6 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
 
     /**
      * Fetch handler. Will call endpoint and aggregate mui data grid params + additional params passed in
-     * If successful response, transform the result.data based on transform function
      */
     const fetchData = useCallback(
         async (state: GridState, additionalParamsString: string, signal: AbortSignal) => {

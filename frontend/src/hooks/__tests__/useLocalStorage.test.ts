@@ -378,7 +378,7 @@ describe('useLocalStorage', () => {
             });
 
             // toStorage should not be called again (just initial write)
-            expect(transform.toStorage.mock.calls.length).toBe(initialToStorageCalls);
+            expect(transform.toStorage.mock.calls).toHaveLength(initialToStorageCalls);
         });
 
         it('Should handle transform changing between renders', () => {

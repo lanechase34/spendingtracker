@@ -336,13 +336,13 @@ describe('DateRangeSelector Component', () => {
          * react-day-picker reports range selections in three phases. Rather than
          * trying to drive the real picker's internal state machine through DOM
          * clicks (which depends on which date is clicked relative to the current
-         * selection — e.g. clicking inside the range shortens it rather than
+         * selection - e.g. clicking inside the range shortens it rather than
          * starting fresh), we mock DayPicker and invoke its onSelect prop
          * directly with each phase's payload shape. This isolates our
          * handleSelect logic from react-day-picker's behavior.
          *
          * The mock is scoped to this describe by toggling a flag at the top of
-         * the file — see jest.mock('react-day-picker', ...) below. Outside this
+         * the file - see jest.mock('react-day-picker', ...) below. Outside this
          * describe, the real picker renders.
          */
 
