@@ -8,6 +8,8 @@ component extends="coldbox.system.Bootstrap" hint="SpendingTracker" {
     COLDBOX_APP_KEY       = '';
     COLDBOX_FAIL_FAST     = true;
 
+    appHash = hash(getBaseTemplatePath() & this.name);
+
     this.mappings['/']             = COLDBOX_APP_ROOT_PATH;
     this.mappings['/coldbox']      = COLDBOX_APP_ROOT_PATH & 'coldbox';
     this.mappings['/includes']     = COLDBOX_APP_ROOT_PATH & 'includes';

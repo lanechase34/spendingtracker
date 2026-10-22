@@ -50,6 +50,7 @@ export default defineConfig(({ mode }) => ({
         watch: {
             usePolling: true,
             interval: 1000,
+            ignored: ['**/test-results/**', '**/playwright-report/**', '**/blob-report/**', '**/coverage/**'],
         },
         proxy: {
             '/spendingtracker/api/v1': {

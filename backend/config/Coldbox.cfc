@@ -24,6 +24,7 @@ component {
             reinitPassword          : getSystemSetting('REINITKEY'),
             reinitKey               : 'fwreinit',
             handlersIndexAutoReload : false,
+            implicitViews           : true,
             // Implicit Events
             defaultEvent            : 'echo.healthcheck',
             requestStartHandler     : '',
