@@ -600,7 +600,8 @@ component {
                     min     : 1,
                     max     : 2000
                 },
-                search: {required: false, type: 'string'}
+                search: {required: false, type: 'string'},
+                all   : {required: false, type: 'boolean'}
             }
         };
 

@@ -40,6 +40,8 @@ const LogContentSchema = z.object({
     filename: z.string(),
     lines: z.array(z.string()),
     count: z.number(),
+    total: z.number(),
+    truncated: z.boolean(),
     filtered: z.boolean(),
 });
 
@@ -48,8 +50,10 @@ const LogContentResponseSchema = validateAPIResponse(LogContentSchema);
 
 export type LogFile = z.infer<typeof LogFileSchema>;
 
-const DEFAULT_LINES = 200;
-const LINE_OPTIONS = [100, 200, 500, 1000, 2000];
+type LineOption = number | 'all';
+
+const DEFAULT_LINES: LineOption = 200;
+const LINE_OPTIONS: LineOption[] = [100, 200, 500, 1000, 2000, 'all'];
 
 export default function ServerLogs() {
     const theme = useTheme();
@@ -64,7 +68,9 @@ export default function ServerLogs() {
     // Log content state
     const [activeFile, setActiveFile] = useState<string | null>(null);
     const [lines, setLines] = useState<string[]>([]);
-    const [linesToLoad, setLinesToLoad] = useState(DEFAULT_LINES);
+    const [linesToLoad, setLinesToLoad] = useState<LineOption>(DEFAULT_LINES);
+    const [total, setTotal] = useState(0);
+    const [truncated, setTruncated] = useState(false);
     const [contentLoading, setContentLoading] = useState(false);
     const [contentError, setContentError] = useState<string | null>(null);
     const [filtered, setFiltered] = useState(false);
@@ -75,12 +81,14 @@ export default function ServerLogs() {
 
     // Fetch log content
     const fetchContent = useCallback(
-        async (filename: string, linesToLoad: number, search: string, signal?: AbortSignal) => {
+        async (filename: string, linesToLoad: LineOption, search: string, signal?: AbortSignal) => {
             setContentLoading(true);
             setContentError(null);
 
             try {
-                const params = new URLSearchParams({ lines: String(linesToLoad) });
+                const params = new URLSearchParams(
+                    linesToLoad === 'all' ? { all: 'true' } : { lines: String(linesToLoad) }
+                );
                 if (search) params.set('search', search);
 
                 const response = await authFetch({
@@ -104,10 +112,12 @@ export default function ServerLogs() {
                     throw new APIError('Failed to load log content', response?.status ?? 0);
                 }
 
-                const { lines, filtered } = parsed.data.data;
+                const { lines, filtered, total, truncated } = parsed.data.data;
 
                 setLines(lines);
                 setFiltered(filtered);
+                setTotal(total);
+                setTruncated(truncated);
             } catch (e: unknown) {
                 if (signal?.aborted) return;
                 setContentError(e instanceof APIError ? e.message : 'Failed to load log content');
@@ -157,6 +167,8 @@ export default function ServerLogs() {
             setActiveFile(null);
             setLines([]);
             setFiltered(false);
+            setTotal(0);
+            setTruncated(false);
             setSearchInput('');
             setAppliedSearch('');
             setContentError(null);
@@ -302,11 +314,16 @@ export default function ServerLogs() {
                                 <Chip label={formatBytes(activeMeta.size)} size="small" variant="outlined" />
                             )}
                             <Chip
-                                label={filtered ? `${lines.length} matched` : `${lines.length} lines`}
+                                label={`${lines.length.toLocaleString()} of ${total.toLocaleString()} ${filtered ? 'matched' : 'lines'}`}
                                 size="small"
                                 color={filtered ? 'warning' : 'default'}
                                 variant={filtered ? 'filled' : 'outlined'}
                             />
+                            {truncated && linesToLoad === 'all' && (
+                                <Tooltip title="File exceeds the server-side cap for a full read; showing the most recent lines. Use search to narrow it down.">
+                                    <Chip label="Truncated" size="small" color="error" variant="outlined" />
+                                </Tooltip>
+                            )}
                         </>
                     ) : (
                         <Typography variant="subtitle2" color="text.secondary">
@@ -359,7 +376,7 @@ export default function ServerLogs() {
                         value={linesToLoad}
                         disabled={!activeFile}
                         onChange={(e) => {
-                            const next = Number(e.target.value);
+                            const next: LineOption = e.target.value === 'all' ? 'all' : Number(e.target.value);
                             setLinesToLoad(next);
                             if (activeFile) void fetchContent(activeFile, next, appliedSearch);
                         }}
@@ -380,7 +397,7 @@ export default function ServerLogs() {
                     >
                         {LINE_OPTIONS.map((n) => (
                             <MenuItem key={n} value={n}>
-                                {n}
+                                {n === 'all' ? 'All' : n}
                             </MenuItem>
                         ))}
                     </TextField>

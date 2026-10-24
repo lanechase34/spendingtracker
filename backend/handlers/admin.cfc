@@ -176,10 +176,11 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @summary        Read Log File
      * @tags           Admin
      * @security       ApiKeyAuth
-     * @hint           Returns the last N lines of a specific log file, optionally filtered by a search string.
+     * @hint           Returns the last N lines (or the entire file when all=true) of a specific log file, optionally filtered by a search string.
      * @param-filename { "in": "path",  "required": true,  "schema": { "type": "string", "example": "coldbox.log" } }
      * @param-lines    { "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 2000, "example": 200 } }
      * @param-search   { "in": "query", "required": false, "schema": { "type": "string", "example": "ERROR" } }
+     * @param-all      { "in": "query", "required": false, "schema": { "type": "boolean", "example": false }, "description": "Read the entire file (capped server-side); overrides lines" }
      * @response-200   { "description": "Log file tail content" }
      * @response-400   ~errors/400.json
      * @response-401   ~errors/401.json
@@ -188,7 +189,8 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
         prc.data = adminService.readLog(
             filename = rc.filename,
             lines    = val(rc?.lines ?: 200),
-            search   = rc?.search ?: ''
+            search   = rc?.search ?: '',
+            all      = rc?.all ?: false
         );
 
         event

@@ -8,6 +8,9 @@ component singleton accessors="true" {
     property name="concurrency"      inject="coldbox:setting:concurrency";
     property name="schedulerService" inject="coldbox:schedulerService";
 
+    // Hard cap for load entire file
+    variables.MAX_FULL_READ_LINES = 50000;
+
     /**
      * Return struct containing server metric information
      */
@@ -228,11 +231,13 @@ component singleton accessors="true" {
      * @filename name of the log file
      * @lines    number of lines to tail
      * @search   optional string to filter lines by
+     * @all      read the entire file (capped at MAX_FULL_READ_LINES), ignores lines
      */
     public struct function readLog(
         required string  filename,
         numeric          lines  = 200,
-        string           search = ''
+        string           search = '',
+        boolean          all    = false
     ) {
         // Derive directory from discovered logs by matching filename
         var logs  = getLogs();
@@ -251,13 +256,19 @@ component singleton accessors="true" {
             throw(type = 'LogViewer.FileNotFound', message = 'Log file could not be found on disk: #fullPath#');
         }
 
-        var readLines = tailFile(fullPath, lines, lCase(search));
+        var result = tailFile(
+            fullPath,
+            all ? MAX_FULL_READ_LINES : lines,
+            lCase(search)
+        );
 
         return {
-            'filename': filename,
-            'lines'   : readLines,
-            'count'   : readLines.len(),
-            'filtered': search.len() > 0
+            'filename' : filename,
+            'lines'    : result.lines,
+            'count'    : result.lines.len(),
+            'total'    : result.total,
+            'truncated': result.total > result.lines.len(),
+            'filtered' : search.len() > 0
         };
     }
 
@@ -268,13 +279,16 @@ component singleton accessors="true" {
      * @path     absolute path to log file
      * @maxLines maximum lines to return
      * @search   lowercase search term, empty string means no filter
+     *
+     * @return { lines: last N matching lines, total: number of matching lines in the file }
      */
-    private array function tailFile(
+    private struct function tailFile(
         required string  path,
         required numeric maxLines,
         string           search = ''
     ) {
         var result = [];
+        var total  = 0;
         var buffer = createObject('java', 'java.util.ArrayDeque');
         var reader = createObject('java', 'java.io.BufferedReader').init(
             createObject('java', 'java.io.FileReader').init(path)
@@ -285,6 +299,7 @@ component singleton accessors="true" {
 
             while(!isNull(line)) {
                 if(!search.len() || lCase(line).find(search)) {
+                    total++;
                     buffer.addLast(line);
                     if(buffer.size() > maxLines) {
                         buffer.removeFirst();
@@ -302,7 +317,7 @@ component singleton accessors="true" {
             result.append(iter.next());
         }
 
-        return result;
+        return {lines: result, total: total};
     }
 
 }
