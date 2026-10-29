@@ -3,9 +3,13 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useAuthReady from 'hooks/useAuthReady';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { UsePaginatedFetchReturn } from 'types/UsePaginatedFetchReturn.type';
+import { getErrorInfo } from 'utils/errorInfo';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
-import type { z } from 'zod';
+import { z } from 'zod';
+
+// The envelope is validated here; the data payload is validated by the caller's validator
+const APIResponseSchema = validateAPIResponse(z.unknown());
 
 // Generic Hook Arguments
 interface PaginatedFetch<TValidator extends z.ZodType> {
@@ -46,7 +50,6 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     const [error, setError] = useState<boolean>(false);
     const [totalRowCount, setTotalRowCount] = useState<number>(0);
 
-    const APIResponseSchema = useMemo(() => validateAPIResponse(validator), [validator]);
     const authFetch = useAuthFetch();
     const authReady = useAuthReady();
 
@@ -77,7 +80,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
      * Helper to get the full filter from the filter modal, returns '' if no filter present
      */
     const getFilter = useCallback((state: GridState) => {
-        return state.filterModel?.quickFilterValues?.join(' ') ?? '';
+        return state.filterModel.quickFilterValues?.join(' ') ?? '';
     }, []);
 
     /**
@@ -86,17 +89,17 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     const getFetchParams = useCallback(
         (state: GridState) => {
             const quickFilter = getFilter(state);
-            const sortStruct = state.sortModel.length ? state.sortModel[0] : { field: '', sort: '' };
+            const sortStruct = state.sortModel[0];
 
             const urlParams = new URLSearchParams({
                 page: (state.paginationModel.page + 1).toString(), // api first page is 1, data grid starts at 0
                 records: state.paginationModel.pageSize.toString(),
-                orderCol: sortStruct.field,
-                orderDir: sortStruct?.sort ?? 'asc',
+                orderCol: sortStruct?.field ?? '',
+                orderDir: sortStruct ? (sortStruct.sort ?? 'asc') : '',
                 search: quickFilter,
             });
 
-            return `${urlParams.toString()}`;
+            return urlParams.toString();
         },
         [getFilter]
     );
@@ -127,17 +130,18 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
                 if (!parsed.success) throw new Error('Invalid response');
 
                 const result = parsed.data;
-                if (result.error === true) throw new Error('Bad Request');
+                if (result.error) throw new Error('Bad Request');
 
-                // @ts-expect-error We are guaranteed to have data matching TData because we passed zod validation
-                setData(result.data as TData);
+                const dataParsed = validator.safeParse(result.data);
+                if (!dataParsed.success) throw new Error('Invalid response');
+                setData(dataParsed.data);
 
                 const filtered = result.pagination?.filteredRecords ?? 0;
                 const total = result.pagination?.totalRecords ?? 0;
                 setTotalRowCount(filtered !== total ? filtered : total);
                 setLoading(false);
             } catch (err: unknown) {
-                const errorInfo = err as { name?: string; message?: string };
+                const errorInfo = getErrorInfo(err);
                 if (errorInfo.name !== 'AbortError') {
                     console.error(`Error fetching data from ${endpoint}:`, err);
                     setError(true);
@@ -145,7 +149,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
                 }
             }
         },
-        [authFetch, endpoint, APIResponseSchema, getFetchParams]
+        [authFetch, endpoint, validator, getFetchParams]
     );
 
     /**
@@ -156,12 +160,13 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
         if (!authReady) return;
 
         const controller = new AbortController();
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetching is the external sync this effect exists for
         void fetchData(gridState, additionalParamsString, controller.signal);
 
-        return () => controller.abort();
-        // We are deliberately using the serialized version to control WHEN the effect runs.
-        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
+        return () => {
+            controller.abort();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- serialized grid state controls WHEN the effect runs
     }, [serializedGridState, additionalParamsString, authReady, fetchData]);
 
     /**
@@ -172,8 +177,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
             const controller = new AbortController();
             await fetchData(gridState, additionalParamsString, signal ?? controller.signal);
         },
-        // We are deliberately using the serialized version to control WHEN the function updates
-        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- serialized grid state controls WHEN the function updates
         [serializedGridState, additionalParamsString, fetchData]
     );
 

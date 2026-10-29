@@ -45,8 +45,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 sx={{
                     flexGrow: 1,
                     p: 2,
-                    ml: { xs: 0, md: `${DRAWER_WIDTH}px` },
-                    width: { xs: '100%', md: `calc(100% - ${DRAWER_WIDTH}px)` },
+                    ml: { xs: 0, md: `${String(DRAWER_WIDTH)}px` },
+                    width: { xs: '100%', md: `calc(100% - ${String(DRAWER_WIDTH)}px)` },
                 }}
             >
                 {children}

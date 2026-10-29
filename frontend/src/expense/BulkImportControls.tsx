@@ -57,7 +57,7 @@ export default function BulkImportControls({ csvFile, onCsvChange, onProcess }: 
                                         variant="outlined"
                                         component="a"
                                         fullWidth
-                                        href={`${BASE_URL}/templates/bulk_import_template.csv`}
+                                        href={`${BASE_URL}templates/bulk_import_template.csv`}
                                         download
                                     >
                                         Download Template

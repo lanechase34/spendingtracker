@@ -16,10 +16,8 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import type { DateValidationError } from '@mui/x-date-pickers/models';
+import LazyDatePicker from 'components/LazyDatePicker';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useAuthFetch from 'hooks/useAuthFetch';
@@ -32,10 +30,11 @@ import useSubscriptionContext from 'hooks/useSubscriptionContext';
 import useSubscriptionInterval from 'hooks/useSubscriptionInterval';
 import { type SubmitEvent } from 'react';
 import { useMemo, useState } from 'react';
-import type { APIResponseType } from 'types/APIResponse.type';
 import { clearCategoryCache } from 'utils/categoryCache';
 import { API_BASE_URL } from 'utils/constants';
 import { maxFileSize, validExtensions, validMimeTypes } from 'utils/receiptDefaults';
+import { safeJson } from 'utils/safeJson';
+import { NoDataAPIResponseSchema } from 'validators/validateAPIResponse';
 import { validateMoney } from 'validators/validateMoney';
 
 import CategorySelect from './CategorySelect';
@@ -84,7 +83,12 @@ export default function ExpenseForm() {
                 return 'Your date is not valid';
             }
 
-            default: {
+            case 'disableFuture':
+            case 'disablePast':
+            case 'shouldDisableDate':
+            case 'shouldDisableMonth':
+            case 'shouldDisableYear':
+            case null: {
                 return '';
             }
         }
@@ -143,7 +147,7 @@ export default function ExpenseForm() {
         };
 
         // Don't submit if error(s) exist
-        const hasErrors = Object.values(newErrors).some((err) => err && err !== null && err !== '');
+        const hasErrors = Object.values(newErrors).some((err) => Boolean(err));
         if (hasErrors) {
             return;
         }
@@ -158,7 +162,7 @@ export default function ExpenseForm() {
         formData.append('amount', amountField.value);
         formData.append(
             typeof categorySelect.value === 'number' ? 'categoryid' : 'category',
-            `${categorySelect.value}`
+            String(categorySelect.value ?? '')
         );
 
         // If we are saving a subscription
@@ -178,9 +182,10 @@ export default function ExpenseForm() {
                 body: formData,
             });
 
-            if (!response?.ok) {
-                const errorMessages = (await response?.json()) as APIResponseType<null>;
-                setServerError(errorMessages?.messages?.toString() ?? 'Server Error. Please try again.');
+            if (response?.ok !== true) {
+                const parsed = NoDataAPIResponseSchema.safeParse(response ? await safeJson(response) : null);
+                const messages = parsed.success ? parsed.data.messages : undefined;
+                setServerError(messages?.toString() ?? 'Server Error. Please try again.');
                 return;
             }
 
@@ -242,7 +247,13 @@ export default function ExpenseForm() {
                     }}
                 >
                     Track Expense
-                    <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, '')}>
+                    <IconButton
+                        disabled={loading}
+                        aria-label="close"
+                        onClick={() => {
+                            handleClose({}, '');
+                        }}
+                    >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -262,7 +273,7 @@ export default function ExpenseForm() {
                         autoComplete="off"
                     >
                         <Stack spacing={3} sx={{ width: '100%' }}>
-                            {serverError && (
+                            {serverError != null && (
                                 <Alert
                                     sx={{ mb: 2 }}
                                     severity="error"
@@ -274,24 +285,22 @@ export default function ExpenseForm() {
                                 </Alert>
                             )}
                             <FormControl error={!!dateError}>
-                                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker
-                                        label="Date"
-                                        value={selectedDate}
-                                        onChange={(newValue: Dayjs | null) => {
-                                            if (newValue === null) return;
-                                            setSelectedDate(newValue);
-                                        }}
-                                        slotProps={{
-                                            textField: {
-                                                helperText: dateError,
-                                            },
-                                        }}
-                                        minDate={dayjs().subtract(1, 'year')}
-                                        maxDate={dayjs().add(1, 'year')}
-                                        onError={setDateErrorCode}
-                                    />
-                                </LocalizationProvider>
+                                <LazyDatePicker
+                                    label="Date"
+                                    value={selectedDate}
+                                    onChange={(newValue: Dayjs | null) => {
+                                        if (newValue === null) return;
+                                        setSelectedDate(newValue);
+                                    }}
+                                    slotProps={{
+                                        textField: {
+                                            helperText: dateError,
+                                        },
+                                    }}
+                                    minDate={dayjs().subtract(1, 'year')}
+                                    maxDate={dayjs().add(1, 'year')}
+                                    onError={setDateErrorCode}
+                                />
                             </FormControl>
 
                             <FormControl>
@@ -306,12 +315,12 @@ export default function ExpenseForm() {
                                     value={descriptionField.value}
                                     onChange={descriptionField.handleChange}
                                     onBlur={descriptionField.handleBlur}
-                                    error={!!descriptionField.error}
+                                    error={!(descriptionField.error == null)}
                                     helperText={descriptionField.error}
                                 />
                             </FormControl>
 
-                            <FormControl variant="outlined" error={!!amountField.error} fullWidth>
+                            <FormControl variant="outlined" error={!(amountField.error == null)} fullWidth>
                                 <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-amount"
@@ -322,12 +331,12 @@ export default function ExpenseForm() {
                                     onChange={amountField.handleChange}
                                     onBlur={amountField.handleBlur}
                                 />
-                                {amountField.error && <FormHelperText>{amountField.error}</FormHelperText>}
+                                {amountField.error != null && <FormHelperText>{amountField.error}</FormHelperText>}
                             </FormControl>
 
                             <CategorySelect
                                 handleCategorySelectChange={categorySelect.handleChange}
-                                error={!!categorySelect.error}
+                                error={!(categorySelect.error == null)}
                                 helperText={categorySelect.error}
                             />
 
@@ -336,7 +345,7 @@ export default function ExpenseForm() {
                                 handleIsSubscriptionChange={subscriptionInterval.handleSubscriptionChange}
                                 subscriptionInterval={subscriptionInterval.interval}
                                 handleSubscriptionIntervalChange={subscriptionInterval.handleIntervalChange}
-                                error={!!subscriptionInterval.error}
+                                error={!(subscriptionInterval.error == null)}
                                 helperText={subscriptionInterval.error}
                             />
 
@@ -350,7 +359,13 @@ export default function ExpenseForm() {
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button disabled={loading} variant="outlined" onClick={() => handleClose({}, '')}>
+                    <Button
+                        disabled={loading}
+                        variant="outlined"
+                        onClick={() => {
+                            handleClose({}, '');
+                        }}
+                    >
                         Cancel
                     </Button>
                     <Button

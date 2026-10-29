@@ -15,7 +15,7 @@ interface CacheEntry {
 const cache = new Map<string, CacheEntry>();
 
 function makeKey(search: string, page: number): string {
-    return `${search}::${page}`;
+    return `${search}::${String(page)}`;
 }
 
 /**

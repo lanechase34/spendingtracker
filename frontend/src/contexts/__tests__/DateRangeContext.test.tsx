@@ -1,3 +1,4 @@
+import { at } from '@test-utils';
 import { act, render, screen } from '@testing-library/react';
 import { DateRangeContext, DateRangeContextProvider } from 'contexts/DateRangeContext';
 import type { Dayjs } from 'dayjs';
@@ -167,7 +168,16 @@ describe('DateRangeContext', () => {
                 const context = useContext(DateRangeContext);
                 if (!context) throw new Error('Context not found');
 
-                return <button onClick={() => context.setPresetRange('last-week')}>Set Last Week</button>;
+                return (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            context.setPresetRange('last-week');
+                        }}
+                    >
+                        Set Last Week
+                    </button>
+                );
             };
 
             render(
@@ -260,7 +270,16 @@ describe('DateRangeContext', () => {
                 const context = useContext(DateRangeContext);
                 if (!context) throw new Error('Context not found');
 
-                return <button onClick={() => context.setCustomRange(newStart, newEnd)}>Set Custom Range</button>;
+                return (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            context.setCustomRange(newStart, newEnd);
+                        }}
+                    >
+                        Set Custom Range
+                    </button>
+                );
             };
 
             render(
@@ -356,8 +375,8 @@ describe('DateRangeContext', () => {
             });
 
             const results: {
-                setPresetRange: (type: Exclude<DateRangeType, 'custom'>) => void | undefined;
-                setCustomRange: (start: Dayjs, end: Dayjs) => void | undefined;
+                setPresetRange: (type: Exclude<DateRangeType, 'custom'>) => void;
+                setCustomRange: (start: Dayjs, end: Dayjs) => void;
                 dateFormat: (date: Dayjs, format?: string) => string | undefined;
             }[] = [];
 
@@ -375,7 +394,13 @@ describe('DateRangeContext', () => {
                 });
 
                 return (
-                    <button onClick={() => setForceUpdate((n) => n + 1)} data-testid="trigger">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setForceUpdate((n) => n + 1);
+                        }}
+                        data-testid="trigger"
+                    >
                         Trigger
                     </button>
                 );
@@ -388,17 +413,21 @@ describe('DateRangeContext', () => {
             );
 
             // Trigger re-renders
-            act(() => screen.getByTestId('trigger').click());
-            act(() => screen.getByTestId('trigger').click());
+            act(() => {
+                screen.getByTestId('trigger').click();
+            });
+            act(() => {
+                screen.getByTestId('trigger').click();
+            });
 
             // All renders should have the same function references
             expect(results).toHaveLength(3);
-            expect(results[0].setPresetRange).toBe(results[1].setPresetRange);
-            expect(results[0].setPresetRange).toBe(results[2].setPresetRange);
-            expect(results[0].setCustomRange).toBe(results[1].setCustomRange);
-            expect(results[0].setCustomRange).toBe(results[2].setCustomRange);
-            expect(results[0].dateFormat).toBe(results[1].dateFormat);
-            expect(results[0].dateFormat).toBe(results[2].dateFormat);
+            expect(at(results, 0).setPresetRange).toBe(at(results, 1).setPresetRange);
+            expect(at(results, 0).setPresetRange).toBe(at(results, 2).setPresetRange);
+            expect(at(results, 0).setCustomRange).toBe(at(results, 1).setCustomRange);
+            expect(at(results, 0).setCustomRange).toBe(at(results, 2).setCustomRange);
+            expect(at(results, 0).dateFormat).toBe(at(results, 1).dateFormat);
+            expect(at(results, 0).dateFormat).toBe(at(results, 2).dateFormat);
         });
 
         it('Does not recompute dates when unrelated state changes', () => {
@@ -493,10 +522,22 @@ describe('DateRangeContext', () => {
                 return (
                     <div>
                         <span data-testid="rangeType">{context.rangeType}</span>
-                        <button onClick={() => context.setCustomRange(dayjs('2026-01-10'), dayjs('2026-01-15'))}>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                context.setCustomRange(dayjs('2026-01-10'), dayjs('2026-01-15'));
+                            }}
+                        >
                             Set Custom
                         </button>
-                        <button onClick={() => context.setPresetRange('last-month')}>Set Last Month</button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                context.setPresetRange('last-month');
+                            }}
+                        >
+                            Set Last Month
+                        </button>
                     </div>
                 );
             };

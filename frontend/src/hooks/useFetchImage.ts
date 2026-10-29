@@ -1,5 +1,6 @@
 import useAuthFetch from 'hooks/useAuthFetch';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { getErrorInfo } from 'utils/errorInfo';
 
 interface FetchImage {
     url: string;
@@ -59,7 +60,7 @@ export default function useFetchImage({ url }: FetchImage): UseFetchImageReturn 
 
             setLoading(false);
         } catch (err: unknown) {
-            const errorInfo = err as { name?: string; message?: string };
+            const errorInfo = getErrorInfo(err);
             if (errorInfo.name !== 'AbortError') {
                 setError(errorInfo.message ?? 'Failed to load image');
                 setLoading(false);

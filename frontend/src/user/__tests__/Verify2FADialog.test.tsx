@@ -1,3 +1,4 @@
+import { at } from '@test-utils';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import useAuthContext from 'hooks/useAuthContext';
@@ -197,8 +198,8 @@ describe('Verify2FADialog', () => {
 
             await waitFor(() => {
                 expect(mockVerify2fa).toHaveBeenCalledTimes(1);
-                const calls = mockVerify2fa.mock.calls as FormData[][];
-                const formData = calls[0][0];
+                const calls = mockVerify2fa.mock.calls as [FormData][];
+                const formData = at(calls, 0)[0];
                 expect(formData.get('code')).toBe('123456');
             });
         });
@@ -227,7 +228,14 @@ describe('Verify2FADialog', () => {
         });
 
         it('Shows loading state while submitting', async () => {
-            mockVerify2fa.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve('token'), 100)));
+            mockVerify2fa.mockImplementation(
+                () =>
+                    new Promise((resolve) =>
+                        setTimeout(() => {
+                            resolve('token');
+                        }, 100)
+                    )
+            );
             renderComponent();
 
             await userEvent.type(screen.getByLabelText(/Authentication Code/i), '123456');
@@ -237,7 +245,14 @@ describe('Verify2FADialog', () => {
         });
 
         it('Does not submit again while loading', async () => {
-            mockVerify2fa.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve('token'), 100)));
+            mockVerify2fa.mockImplementation(
+                () =>
+                    new Promise((resolve) =>
+                        setTimeout(() => {
+                            resolve('token');
+                        }, 100)
+                    )
+            );
             renderComponent();
 
             await userEvent.type(screen.getByLabelText(/Authentication Code/i), '123456');
@@ -261,8 +276,8 @@ describe('Verify2FADialog', () => {
 
             await waitFor(() => {
                 expect(mockVerify2fa).toHaveBeenCalledTimes(1);
-                const calls = mockVerify2fa.mock.calls as FormData[][];
-                const formData = calls[0][0];
+                const calls = mockVerify2fa.mock.calls as [FormData][];
+                const formData = at(calls, 0)[0];
                 expect(formData.get('code')).toBe('abcd-1234-ef56-7890');
             });
         });

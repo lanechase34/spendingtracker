@@ -150,7 +150,14 @@ export default function DateRangeSelector() {
     const presetRanges = (
         <Stack spacing={1}>
             {PRESETS.map(({ label, type }) => (
-                <Button key={type} size="small" variant="outlined" onClick={() => applyPresetRange(type)}>
+                <Button
+                    key={type}
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                        applyPresetRange(type);
+                    }}
+                >
                     {label}
                 </Button>
             ))}
@@ -236,7 +243,7 @@ export default function DateRangeSelector() {
             >
                 <Button variant="outlined" onClick={handleOpen} aria-label="Select date range">
                     <DateRangeIcon sx={{ mr: 1 }} />
-                    {startDate?.format('MM/DD/YYYY') ?? ''} - {endDate?.format('MM/DD/YYYY') ?? ''}
+                    {startDate.format('MM/DD/YYYY')} - {endDate.format('MM/DD/YYYY')}
                 </Button>
             </Box>
             {isMobile ? (

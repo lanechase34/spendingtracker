@@ -1,8 +1,5 @@
 import 'App.css';
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
+import '@fontsource-variable/roboto';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -48,6 +45,9 @@ const Unauthorized = lazy(() => import('pages/Unauthorized'));
 const darkTheme = createTheme({
     palette: {
         mode: 'dark',
+    },
+    typography: {
+        fontFamily: '"Roboto Variable", "Roboto", "Helvetica", "Arial", sans-serif',
     },
 });
 
@@ -131,12 +131,10 @@ function AppRouter() {
 }
 
 export default function App() {
-    // All routes are prefixed with /spendingtracker
-    const basename = '/spendingtracker';
     return (
         <QueryClientProvider client={queryClient}>
             <Providers>
-                <Router basename={basename}>
+                <Router basename={import.meta.env.BASE_URL}>
                     <Navbar />
                     <PostLoginRedirect />
                     <Suspense fallback={<PageLoader />}>

@@ -7,10 +7,8 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import TextField from '@mui/material/TextField';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import DeleteButton from 'components/DeleteButton';
+import LazyDatePicker from 'components/LazyDatePicker';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { ChangeEvent } from 'react';
@@ -47,25 +45,23 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
         setLocalRow((prev: ExpenseDataRow) => {
             const updatedRow = { ...prev, [field]: value };
 
-            onRowChange(row.id!, updatedRow);
+            onRowChange(rowId, updatedRow);
             return updatedRow;
         });
     };
 
     const updateCategory = (value: string | number | null) => {
-        const key = typeof value === 'number' ? 'categoryid' : 'category';
-
         setLocalRow((prev: ExpenseDataRow) => {
             const updatedRow = { ...prev };
-            if (key === 'categoryid') {
-                updatedRow.categoryid = value as number | null;
+            if (typeof value === 'number') {
+                updatedRow.categoryid = value;
                 updatedRow.category = null;
             } else {
-                updatedRow.category = value as string | null;
+                updatedRow.category = value;
                 updatedRow.categoryid = null;
             }
 
-            onRowChange(row.id!, updatedRow);
+            onRowChange(rowId, updatedRow);
             return updatedRow;
         });
     };
@@ -79,7 +75,7 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
             // Create new row object with updated receipt and error status
             const updatedRow = { ...prev, receipt: validated, receiptError: error };
 
-            onRowChange(row.id!, updatedRow);
+            onRowChange(rowId, updatedRow);
             return updatedRow;
         });
     };
@@ -90,18 +86,16 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
     return (
         <TableRow key={`expense_${rowId}`} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
             <TableCell>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker
-                        label=""
-                        value={dayjs(localRow.date).isValid() ? dayjs(localRow.date) : null}
-                        onChange={(newValue: Dayjs | null) => {
-                            if (!newValue) return;
-                            updateCell('date', newValue.format('MM/DD/YYYY'));
-                        }}
-                        minDate={dayjs().subtract(1, 'year')}
-                        maxDate={dayjs().add(1, 'year')}
-                    />
-                </LocalizationProvider>
+                <LazyDatePicker
+                    label=""
+                    value={dayjs(localRow.date).isValid() ? dayjs(localRow.date) : null}
+                    onChange={(newValue: Dayjs | null) => {
+                        if (!newValue) return;
+                        updateCell('date', newValue.format('MM/DD/YYYY'));
+                    }}
+                    minDate={dayjs().subtract(1, 'year')}
+                    maxDate={dayjs().add(1, 'year')}
+                />
             </TableCell>
             <TableCell>
                 <FormControl variant="outlined" error={Boolean(amountError)} fullWidth>
@@ -110,8 +104,12 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
                         startAdornment={<InputAdornment position="start">$</InputAdornment>}
                         fullWidth
                         required
-                        value={localRow.amount}
-                        onChange={(e) => updateCell('amount', parseFloat(e.target.value) || null)}
+                        value={localRow.amount ?? ''}
+                        onChange={(e) => {
+                            // Keep 0 so it fails as non-positive rather than as missing
+                            const amount = parseFloat(e.target.value);
+                            updateCell('amount', Number.isNaN(amount) ? null : amount);
+                        }}
                         error={Boolean(amountError)}
                     />
                     {amountError && <FormHelperText>{amountError}</FormHelperText>}
@@ -124,16 +122,18 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
                     required
                     fullWidth
                     value={localRow.description}
-                    onChange={(e) => updateCell('description', e.target.value)}
+                    onChange={(e) => {
+                        updateCell('description', e.target.value);
+                    }}
                     error={Boolean(descriptionError)}
                     helperText={descriptionError}
                 />
             </TableCell>
             <TableCell>
                 <CategorySelect
-                    handleCategorySelectChange={(_event, option: SelectOptionType | null) =>
-                        updateCategory(option?.value ?? null)
-                    }
+                    handleCategorySelectChange={(_event, option: SelectOptionType | null) => {
+                        updateCategory(option?.value ?? null);
+                    }}
                     error={Boolean(categoryError)}
                     helperText={categoryError}
                 />
@@ -145,7 +145,9 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
                             selectedReceipt={localRow.receipt ?? null}
                             error={localRow.receiptError ?? null}
                             validExtensions={validExtensions}
-                            handleReceiptChange={(e: ChangeEvent<HTMLInputElement>) => updateReceipt(e)}
+                            handleReceiptChange={(e: ChangeEvent<HTMLInputElement>) => {
+                                updateReceipt(e);
+                            }}
                             variant="outlined"
                             textInline={true}
                         />

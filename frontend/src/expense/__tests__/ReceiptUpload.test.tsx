@@ -1,3 +1,4 @@
+import { at } from '@test-utils';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ReceiptUpload from 'expense/ReceiptUpload';
@@ -23,7 +24,7 @@ function Wrapper() {
 }
 
 describe('ReceiptUpload', () => {
-    const handleReceiptChangeMock = jest.fn<void, [ChangeEvent<HTMLInputElement>]>();
+    const handleReceiptChangeMock = jest.fn<undefined, [ChangeEvent<HTMLInputElement>]>();
 
     beforeEach(() => {
         handleReceiptChangeMock.mockClear();
@@ -113,9 +114,9 @@ describe('ReceiptUpload', () => {
         });
 
         // Check that the event contains the file
-        const event = handleReceiptChangeMock.mock.calls[0][0];
+        const event = at(handleReceiptChangeMock.mock.calls, 0)[0];
         expect(event.target.files).toHaveLength(1);
-        expect(event.target.files![0]).toStrictEqual(file);
+        expect(event.target.files?.[0]).toStrictEqual(file);
     });
 
     it('Will upload button text based on file selected in state', async () => {

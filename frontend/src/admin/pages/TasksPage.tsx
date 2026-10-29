@@ -29,7 +29,7 @@ export default function TasksPage() {
             signal: signal,
         });
 
-        if (!response?.ok) {
+        if (response?.ok !== true) {
             throw new Error('Invalid network response');
         }
 
@@ -43,7 +43,7 @@ export default function TasksPage() {
         const result = parsed.data;
 
         if (result.error) {
-            throw new Error(result.messages?.[0] ?? 'Server error');
+            throw new Error(result.messages[0] ?? 'Server error');
         }
 
         return result.data;
@@ -152,7 +152,7 @@ export default function TasksPage() {
                 headerName: 'Last Exec Time',
                 minWidth: 150,
                 type: 'number',
-                valueFormatter: (value: number) => (value > 0 ? `${value}ms` : 'N/A'),
+                valueFormatter: (value: number) => (value > 0 ? `${String(value)}ms` : 'N/A'),
                 cellClassName: 'centered-col',
             },
             {
@@ -160,7 +160,7 @@ export default function TasksPage() {
                 headerName: 'Error',
                 minWidth: 80,
                 type: 'boolean',
-                renderCell: (params) => (params.value ? <CheckIcon color="error" fontSize="small" /> : null),
+                renderCell: (params) => (params.row.error ? <CheckIcon color="error" fontSize="small" /> : null),
                 cellClassName: 'centered-col',
             },
             {
@@ -175,7 +175,7 @@ export default function TasksPage() {
                 headerName: 'Scheduled',
                 minWidth: 100,
                 type: 'boolean',
-                renderCell: (params) => (params.value ? <CheckIcon color="success" fontSize="small" /> : null),
+                renderCell: (params) => (params.row.scheduled ? <CheckIcon color="success" fontSize="small" /> : null),
                 cellClassName: 'centered-col',
             },
         ],

@@ -53,7 +53,7 @@ export default function BulkImportErrors({ errors, onClose }: BulkImportErrorPro
             <Stack spacing={1} sx={{ mt: 1.5 }}>
                 {errors.map((error) => (
                     <Paper
-                        key={`error-row-${error.row}`}
+                        key={`error-row-${String(error.row)}`}
                         elevation={0}
                         sx={{
                             p: 1.5,
@@ -72,7 +72,7 @@ export default function BulkImportErrors({ errors, onClose }: BulkImportErrorPro
                             }}
                         >
                             <Chip
-                                label={`Row ${error.row}`}
+                                label={`Row ${String(error.row)}`}
                                 size="small"
                                 variant="outlined"
                                 color="error"

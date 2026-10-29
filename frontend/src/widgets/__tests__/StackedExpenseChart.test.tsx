@@ -31,7 +31,7 @@ jest.mock('components/EmptyCard', () => ({
 // Mock Chart.js and react-chartjs-2 Bar component
 jest.mock('react-chartjs-2', () => ({
     Bar: (props: React.ComponentProps<typeof Bar>) => (
-        <div data-testid="stackedexpense-chart">Bar Chart Mock - labels: {props.data?.labels?.join(', ')}</div>
+        <div data-testid="stackedexpense-chart">Bar Chart Mock - labels: {props.data.labels?.join(', ')}</div>
     ),
 }));
 
@@ -109,6 +109,7 @@ describe('StackedExpenseChart Component', () => {
             ok: true,
             json: () => ({
                 error: true,
+                messages: ['Bad Request'],
             }),
         });
 
@@ -120,6 +121,7 @@ describe('StackedExpenseChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: { labels: ['A', 'B'], datasets: [] },
             }),
         });
@@ -132,6 +134,7 @@ describe('StackedExpenseChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['A', 'B', 'C'],
                     datasets: [
@@ -172,7 +175,11 @@ describe('StackedExpenseChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () =>
-                new Promise((res) => setTimeout(() => res({ data: { labels: [], dataset: { data: [] } } }), 100)),
+                new Promise((res) =>
+                    setTimeout(() => {
+                        res({ error: false, data: { labels: [], datasets: [] } });
+                    }, 100)
+                ),
         });
 
         const { unmount } = render(<StackedExpenseChart />, { queryClient });
@@ -193,6 +200,7 @@ describe('StackedExpenseChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Test'],
                     datasets: [{ label: 'Test', data: [100], backgroundColor: '#ff0000' }],

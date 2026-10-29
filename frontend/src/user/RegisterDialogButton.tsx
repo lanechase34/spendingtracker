@@ -20,7 +20,14 @@ export default function RegisterDialogButton({
     const { openRegisterDialog } = useAuthDialogContext();
 
     return (
-        <Button disabled={disabled} size={size} variant={variant} onClick={() => openRegisterDialog()}>
+        <Button
+            disabled={disabled}
+            size={size}
+            variant={variant}
+            onClick={() => {
+                openRegisterDialog();
+            }}
+        >
             {icon}
             {text}
         </Button>

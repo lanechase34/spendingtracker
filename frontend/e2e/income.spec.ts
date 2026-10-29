@@ -97,7 +97,7 @@ test.describe('Net Income card', () => {
         // sides of zero, regardless of whatever expenses already exist this month
         const expenseDialog = await openExpenseForm(page);
         await fillDate(expenseDialog, page, toDatePickerDigits(new Date()));
-        await expenseDialog.getByLabel('Description').fill(`Net income test ${Date.now()}`);
+        await expenseDialog.getByLabel('Description').fill(`Net income test ${String(Date.now())}`);
         await expenseDialog.getByLabel('Amount').fill('100.00');
         await selectCategory(expenseDialog, page, 'Entertainment');
         await submitExpenseForm(expenseDialog);

@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useLocalStorage, { dayjsTransform } from 'hooks/useLocalStorage';
+import { z } from 'zod';
 
 describe('useLocalStorage', () => {
     const KEY = 'test-key';
@@ -20,7 +21,9 @@ describe('useLocalStorage', () => {
 
     describe('Initialization', () => {
         it('Should initialize with initialValue when localStorage is empty', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'default' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'default', schema: z.string() })
+            );
 
             expect(result.current[0]).toBe('default');
             expect(localStorage.getItem(KEY)).toBe(JSON.stringify('default'));
@@ -29,23 +32,31 @@ describe('useLocalStorage', () => {
         it('Should initialize from existing localStorage value', () => {
             localStorage.setItem(KEY, JSON.stringify('stored-value'));
 
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'default' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'default', schema: z.string() })
+            );
 
             expect(result.current[0]).toBe('stored-value');
         });
 
         it('Should handle various data types', () => {
             const testCases = [
-                { value: true, expected: true },
-                { value: 42, expected: 42 },
-                { value: { nested: 'object' }, expected: { nested: 'object' } },
-                { value: ['array', 'items'], expected: ['array', 'items'] },
-                { value: null, expected: null },
+                { value: true, expected: true, schema: z.boolean() },
+                { value: 42, expected: 42, schema: z.number() },
+                {
+                    value: { nested: 'object' },
+                    expected: { nested: 'object' },
+                    schema: z.object({ nested: z.string() }),
+                },
+                { value: ['array', 'items'], expected: ['array', 'items'], schema: z.array(z.string()) },
+                { value: null, expected: null, schema: z.null() },
             ];
 
-            testCases.forEach(({ value, expected }, index) => {
-                const testKey = `${KEY}-${index}`;
-                const { result } = renderHook(() => useLocalStorage({ key: testKey, initialValue: value }));
+            testCases.forEach(({ value, expected, schema }, index) => {
+                const testKey = `${KEY}-${String(index)}`;
+                const { result } = renderHook(() =>
+                    useLocalStorage<unknown>({ key: testKey, initialValue: value, schema })
+                );
 
                 expect(result.current[0]).toEqual(expected);
             });
@@ -54,7 +65,9 @@ describe('useLocalStorage', () => {
         it('Should handle corrupted localStorage data gracefully', () => {
             localStorage.setItem(KEY, '{invalid json}');
 
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'fallback' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'fallback', schema: z.string() })
+            );
 
             expect(result.current[0]).toBe('fallback');
             expect(console.error).toHaveBeenCalledWith(
@@ -68,7 +81,9 @@ describe('useLocalStorage', () => {
                 throw new Error('Storage quota exceeded');
             });
 
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'fallback' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'fallback', schema: z.string() })
+            );
 
             expect(result.current[0]).toBe('fallback');
             expect(console.error).toHaveBeenCalled();
@@ -77,7 +92,7 @@ describe('useLocalStorage', () => {
 
     describe('State updates', () => {
         it('Should update localStorage when value changes', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 0 }));
+            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 0, schema: z.number() }));
 
             act(() => {
                 result.current[1](42);
@@ -88,7 +103,7 @@ describe('useLocalStorage', () => {
         });
 
         it('Should handle multiple rapid updates', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 0 }));
+            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 0, schema: z.number() }));
 
             act(() => {
                 result.current[1](1);
@@ -101,7 +116,7 @@ describe('useLocalStorage', () => {
         });
 
         it('Should handle functional updates', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 10 }));
+            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 10, schema: z.number() }));
 
             act(() => {
                 result.current[1]((prev) => prev + 5);
@@ -112,7 +127,9 @@ describe('useLocalStorage', () => {
         });
 
         it('Should handle localStorage.setItem throwing error', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'initial' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'initial', schema: z.string() })
+            );
 
             jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
                 throw new Error('Storage quota exceeded');
@@ -133,7 +150,9 @@ describe('useLocalStorage', () => {
 
     describe('Cross-tab synchronization', () => {
         it('Should sync state when storage event occurs for same key', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'initial' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'initial', schema: z.string() })
+            );
 
             act(() => {
                 window.dispatchEvent(
@@ -148,7 +167,9 @@ describe('useLocalStorage', () => {
         });
 
         it('Should reset to initialValue when storage key is deleted', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'initial' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'initial', schema: z.string() })
+            );
 
             act(() => {
                 window.dispatchEvent(
@@ -163,7 +184,9 @@ describe('useLocalStorage', () => {
         });
 
         it('Should ignore storage events for different keys', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'initial' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'initial', schema: z.string() })
+            );
 
             const initialValue = result.current[0];
 
@@ -180,7 +203,9 @@ describe('useLocalStorage', () => {
         });
 
         it('Should handle corrupted data in storage events gracefully', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'initial' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'initial', schema: z.string() })
+            );
 
             act(() => {
                 window.dispatchEvent(
@@ -202,7 +227,9 @@ describe('useLocalStorage', () => {
         it('Should clean up event listener on unmount', () => {
             const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
 
-            const { unmount } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 'test' }));
+            const { unmount } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'test', schema: z.string() })
+            );
 
             unmount();
 
@@ -417,7 +444,7 @@ describe('useLocalStorage', () => {
             localStorage.setItem(KEY, JSON.stringify('existing'));
             const setItemSpy = jest.spyOn(Storage.prototype, 'setItem');
 
-            renderHook(() => useLocalStorage({ key: KEY, initialValue: 'default' }));
+            renderHook(() => useLocalStorage({ key: KEY, initialValue: 'default', schema: z.string() }));
 
             // Should write once in the effect after mount
             expect(setItemSpy).toHaveBeenCalledTimes(1);
@@ -428,6 +455,7 @@ describe('useLocalStorage', () => {
                 initialProps: {
                     key: 'key1',
                     initialValue: 'value1',
+                    schema: z.string(),
                 },
             });
 
@@ -437,6 +465,7 @@ describe('useLocalStorage', () => {
             rerender({
                 key: 'key2',
                 initialValue: 'value2',
+                schema: z.string(),
             });
 
             // Should write to new key
@@ -446,7 +475,7 @@ describe('useLocalStorage', () => {
 
     describe('Edge cases', () => {
         it('Should handle empty string as valid value', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: '' }));
+            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: '', schema: z.string() }));
 
             expect(result.current[0]).toBe('');
             expect(localStorage.getItem(KEY)).toBe(JSON.stringify(''));
@@ -471,7 +500,13 @@ describe('useLocalStorage', () => {
                 // undefined will be lost in JSON.stringify
             };
 
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: complexObject }));
+            const { result } = renderHook(() =>
+                useLocalStorage({
+                    key: KEY,
+                    initialValue: complexObject,
+                    schema: z.object({ defined: z.string(), nullValue: z.null() }),
+                })
+            );
 
             expect(result.current[0]).toEqual(complexObject);
         });
@@ -479,10 +514,16 @@ describe('useLocalStorage', () => {
         it('Should handle very large data', () => {
             const largeArray = Array.from({ length: 1000 }, (_, i) => ({
                 id: i,
-                data: `item-${i}`,
+                data: `item-${String(i)}`,
             }));
 
-            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: largeArray }));
+            const { result } = renderHook(() =>
+                useLocalStorage({
+                    key: KEY,
+                    initialValue: largeArray,
+                    schema: z.array(z.object({ id: z.number(), data: z.string() })),
+                })
+            );
 
             expect(result.current[0]).toEqual(largeArray);
         });
@@ -490,7 +531,9 @@ describe('useLocalStorage', () => {
         it('Should handle special characters in key', () => {
             const specialKey = 'key-with-special-chars-!@#$%^&*()';
 
-            const { result } = renderHook(() => useLocalStorage({ key: specialKey, initialValue: 'test' }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: specialKey, initialValue: 'test', schema: z.string() })
+            );
 
             expect(result.current[0]).toBe('test');
             expect(localStorage.getItem(specialKey)).toBe(JSON.stringify('test'));
@@ -516,7 +559,9 @@ describe('useLocalStorage', () => {
 
     describe('Real-world scenarios', () => {
         it('Should work in authentication flow', () => {
-            const { result } = renderHook(() => useLocalStorage({ key: 'isAuthenticated', initialValue: false }));
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: 'isAuthenticated', initialValue: false, schema: z.boolean() })
+            );
 
             expect(result.current[0]).toBe(false);
 
@@ -546,6 +591,7 @@ describe('useLocalStorage', () => {
                 useLocalStorage<'this-month' | 'last-month' | 'custom'>({
                     key: 'rangeType',
                     initialValue: 'this-month',
+                    schema: z.enum(['this-month', 'last-month', 'custom']),
                 })
             );
 
@@ -569,6 +615,85 @@ describe('useLocalStorage', () => {
             // Verify persistence
             expect(localStorage.getItem('rangeType')).toBe(JSON.stringify('custom'));
             expect(localStorage.getItem('customStartDate')).toBe(dayjs('2026-01-10').toISOString());
+        });
+    });
+
+    describe('Schema validation', () => {
+        it('Should fall back to initialValue when stored JSON does not match the schema', () => {
+            localStorage.setItem(KEY, JSON.stringify('not a number'));
+
+            const { result } = renderHook(() => useLocalStorage({ key: KEY, initialValue: 5, schema: z.number() }));
+
+            expect(result.current[0]).toBe(5);
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(`Error reading localStorage key "${KEY}"`),
+                expect.any(Error)
+            );
+        });
+
+        it('Should overwrite a stored value that does not match the schema', () => {
+            localStorage.setItem(KEY, JSON.stringify({ unexpected: true }));
+
+            renderHook(() => useLocalStorage({ key: KEY, initialValue: 'safe', schema: z.string() }));
+
+            expect(localStorage.getItem(KEY)).toBe(JSON.stringify('safe'));
+        });
+
+        it('Should reject a stored enum value that is no longer valid', () => {
+            localStorage.setItem(KEY, JSON.stringify('removed-option'));
+
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'a', schema: z.enum(['a', 'b']) })
+            );
+
+            expect(result.current[0]).toBe('a');
+        });
+
+        it('Should ignore storage events whose value does not match the schema', () => {
+            const { result } = renderHook(() =>
+                useLocalStorage({ key: KEY, initialValue: 'initial', schema: z.string() })
+            );
+
+            act(() => {
+                window.dispatchEvent(new StorageEvent('storage', { key: KEY, newValue: JSON.stringify(123) }));
+            });
+
+            expect(result.current[0]).toBe('initial');
+            expect(console.error).toHaveBeenCalledWith(
+                expect.stringContaining(`Error parsing storage event for key "${KEY}"`),
+                expect.any(Error)
+            );
+        });
+
+        it('Should use the transform instead of JSON parsing when one is supplied', () => {
+            const fromStorage = jest.fn((v: string) => v.toUpperCase());
+            localStorage.setItem(KEY, 'raw text');
+
+            const { result } = renderHook(() =>
+                useLocalStorage({
+                    key: KEY,
+                    initialValue: '',
+                    transform: { toStorage: (v: string) => v, fromStorage },
+                })
+            );
+
+            expect(fromStorage).toHaveBeenCalledWith('raw text');
+            expect(result.current[0]).toBe('RAW TEXT');
+        });
+    });
+
+    describe('dayjsTransform', () => {
+        it('Should round trip a date through ISO strings', () => {
+            const date = dayjs('2026-03-27T10:00:00.000Z');
+            const stored = dayjsTransform.toStorage(date);
+
+            expect(stored).toBe('2026-03-27T10:00:00.000Z');
+            expect(dayjsTransform.fromStorage(stored)?.toISOString()).toBe(date.toISOString());
+        });
+
+        it('Should store null as an empty string and read it back as null', () => {
+            expect(dayjsTransform.toStorage(null)).toBe('');
+            expect(dayjsTransform.fromStorage('')).toBeNull();
         });
     });
 });

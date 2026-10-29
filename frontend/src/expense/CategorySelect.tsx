@@ -14,6 +14,7 @@ import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, use
 import type { SelectOptionType } from 'types/SelectOption.type';
 import { getCachedCategories, setCachedCategories } from 'utils/categoryCache';
 import { API_BASE_URL } from 'utils/constants';
+import { getErrorInfo } from 'utils/errorInfo';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
@@ -50,7 +51,7 @@ interface CategorySelectProps {
      * - Existing category: `option.value` is the numeric category ID.
      * - New category: `option.value` is the raw input string (no ID yet).
      */
-    handleCategorySelectChange: (event: SyntheticEvent<Element, Event>, option: SelectOptionType | null) => void;
+    handleCategorySelectChange: (event: SyntheticEvent, option: SelectOptionType | null) => void;
     /** Whether the input should display in an error state. */
     error?: boolean;
     /** Helper text displayed below the input, typically for validation messages. */
@@ -185,7 +186,7 @@ export default function CategorySelect({
                 setHasMore(result.data.length >= records);
                 setLoading(false);
             } catch (err: unknown) {
-                const errorInfo = err as { name?: string; message?: string };
+                const errorInfo = getErrorInfo(err);
                 if (errorInfo.name !== 'AbortError') {
                     console.error('Failed to load categories:', err);
                     showToast('Server Error. Please try again.', 'error');
@@ -202,7 +203,7 @@ export default function CategorySelect({
      */
     const debouncedFetch = useMemo(
         () =>
-            // eslint-disable-next-line react-hooks/refs
+            // eslint-disable-next-line react-hooks/refs -- refs are read when the debounced call fires, not during render
             debounce((input: string) => {
                 void loadOptions(input, 1, false);
             }, debounceDelay),
@@ -243,8 +244,8 @@ export default function CategorySelect({
      * provided more results are available and no request is currently in flight.
      */
     const handleScroll = useCallback(
-        (event: SyntheticEvent) => {
-            const listboxNode = event.currentTarget as HTMLElement;
+        (event: SyntheticEvent<HTMLElement>) => {
+            const listboxNode = event.currentTarget;
             listboxRef.current = listboxNode;
 
             // Track current position in the select
@@ -280,11 +281,11 @@ export default function CategorySelect({
                         slotProps={{
                             ...params.slotProps,
                             input: {
-                                ...params.slotProps?.input,
+                                ...params.slotProps.input,
                                 endAdornment: (
                                     <Fragment>
                                         {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                        {params.slotProps?.input?.endAdornment}
+                                        {params.slotProps.input.endAdornment}
                                     </Fragment>
                                 ),
                             },
@@ -314,11 +315,7 @@ export default function CategorySelect({
                     }
                     return options;
                 }}
-                onInputChange={(
-                    _event: SyntheticEvent<Element, Event>,
-                    newValue: string,
-                    reason: AutocompleteInputChangeReason
-                ) => {
+                onInputChange={(_event: SyntheticEvent, newValue: string, reason: AutocompleteInputChangeReason) => {
                     if (reason === 'clear') {
                         setCurrPage(1);
                         setHasMore(true);

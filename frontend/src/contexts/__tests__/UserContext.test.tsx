@@ -67,10 +67,22 @@ function TestConsumer() {
             <span data-testid="has-role-admin">{String(context.hasRole('ADMIN'))}</span>
             <span data-testid="has-role-user">{String(context.hasRole('USER'))}</span>
             <span data-testid="totp-enabled">{String(context.user?.totpEnabled ?? false)}</span>
-            <button data-testid="update-totp" onClick={() => context.updateUser({ totpEnabled: true })}>
+            <button
+                type="button"
+                data-testid="update-totp"
+                onClick={() => {
+                    context.updateUser({ totpEnabled: true });
+                }}
+            >
                 Enable TOTP
             </button>
-            <button data-testid="disable-totp" onClick={() => context.updateUser({ totpEnabled: false })}>
+            <button
+                type="button"
+                data-testid="disable-totp"
+                onClick={() => {
+                    context.updateUser({ totpEnabled: false });
+                }}
+            >
                 Disable TOTP
             </button>
         </div>
@@ -204,7 +216,7 @@ describe('UserContextProvider - successful profile load', () => {
         renderWithProvider();
 
         await waitFor(() => {
-            const user = JSON.parse(screen.getByTestId('user').textContent ?? 'null') as User;
+            const user = JSON.parse(screen.getByTestId('user').textContent) as User;
 
             expect(user).toEqual({
                 salary: 80000,
@@ -222,7 +234,7 @@ describe('UserContextProvider - successful profile load', () => {
         renderWithProvider();
 
         await waitFor(() => {
-            const user = JSON.parse(screen.getByTestId('user').textContent ?? 'null') as User;
+            const user = JSON.parse(screen.getByTestId('user').textContent) as User;
 
             expect(user.monthlyTakeHome).toBe(3500);
         });
@@ -410,7 +422,9 @@ describe('UserContextProvider - abort / cleanup', () => {
 
         const { unmount } = renderWithProvider();
 
-        await waitFor(() => expect(capturedSignal).toBeDefined());
+        await waitFor(() => {
+            expect(capturedSignal).toBeDefined();
+        });
 
         unmount();
 
@@ -557,7 +571,7 @@ describe('UserContextProvider - updateUser', () => {
             screen.getByTestId('update-totp').click();
         });
 
-        const user = JSON.parse(screen.getByTestId('user').textContent ?? 'null') as User;
+        const user = JSON.parse(screen.getByTestId('user').textContent) as User;
 
         expect(user.salary).toBe(80000);
         expect(user.monthlyTakeHome).toBe(5000);

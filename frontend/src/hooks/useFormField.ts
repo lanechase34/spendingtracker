@@ -57,7 +57,7 @@ export default function useFormField({ initialValue, validator, debounceDelay = 
      */
     const debounceValidate = useMemo(
         () =>
-            // eslint-disable-next-line react-hooks/refs
+            // eslint-disable-next-line react-hooks/refs -- validatorRef is read when the debounced call fires, not during render
             debounce((value: string) => {
                 setError(validatorRef.current(value));
             }, debounceDelay),

@@ -143,7 +143,13 @@ export default function RegisterDialog() {
                 }}
             >
                 Register
-                <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, 'button')}>
+                <IconButton
+                    disabled={loading}
+                    aria-label="close"
+                    onClick={() => {
+                        handleClose({}, 'button');
+                    }}
+                >
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -174,7 +180,7 @@ export default function RegisterDialog() {
                             value={emailField.value}
                             onChange={emailField.handleChange}
                             onBlur={emailField.handleBlur}
-                            error={!!emailField.error}
+                            error={!(emailField.error == null)}
                             helperText={emailField.error}
                         />
 
@@ -187,11 +193,11 @@ export default function RegisterDialog() {
                             value={passwordField.value}
                             onChange={passwordField.handleChange}
                             onBlur={passwordField.handleBlur}
-                            error={!!passwordField.error}
+                            error={!(passwordField.error == null)}
                             helperText={passwordField.error}
                         />
 
-                        <FormControl variant="outlined" error={!!salaryField.error} fullWidth>
+                        <FormControl variant="outlined" error={!(salaryField.error == null)} fullWidth>
                             <InputLabel htmlFor="outlined-adornment-salary">Salary</InputLabel>
                             <OutlinedInput
                                 id="outlined-adornment-salary"
@@ -202,10 +208,10 @@ export default function RegisterDialog() {
                                 onChange={salaryField.handleChange}
                                 onBlur={salaryField.handleBlur}
                             />
-                            {salaryField.error && <FormHelperText>{salaryField.error}</FormHelperText>}
+                            {salaryField.error != null && <FormHelperText>{salaryField.error}</FormHelperText>}
                         </FormControl>
 
-                        <FormControl variant="outlined" error={!!monthlyTakeHomeField.error} fullWidth>
+                        <FormControl variant="outlined" error={!(monthlyTakeHomeField.error == null)} fullWidth>
                             <InputLabel htmlFor="outlined-adornment-takehome">Monthly Take Home</InputLabel>
                             <OutlinedInput
                                 id="outlined-adornment-takehome"
@@ -216,7 +222,7 @@ export default function RegisterDialog() {
                                 onChange={monthlyTakeHomeField.handleChange}
                                 onBlur={monthlyTakeHomeField.handleBlur}
                             />
-                            {monthlyTakeHomeField.error && (
+                            {monthlyTakeHomeField.error != null && (
                                 <FormHelperText>{monthlyTakeHomeField.error}</FormHelperText>
                             )}
                         </FormControl>

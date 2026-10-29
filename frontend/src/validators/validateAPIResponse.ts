@@ -28,3 +28,8 @@ export const validateAPIResponse = <T extends z.ZodType>(schema: T) => {
         }),
     ]);
 };
+
+/**
+ * Validator for API responses that carry no data payload
+ */
+export const NoDataAPIResponseSchema = validateAPIResponse(z.null().optional());

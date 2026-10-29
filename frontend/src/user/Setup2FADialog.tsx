@@ -106,7 +106,7 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
      */
     useEffect(() => {
         if (!open) return;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fetches the QR code and secret each time the dialog opens
         void fetchSetup();
     }, [open]);
 
@@ -119,7 +119,7 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
             if (loading) return;
 
             const codeError = codeField.validateField();
-            if (codeError) return;
+            if (codeError != null) return;
 
             setLoading(true);
             setError(null);
@@ -201,7 +201,14 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
             <Divider />
             <DialogContent>
                 <Stack spacing={3} sx={{ width: '100%' }}>
-                    {error && <ErrorAlert messages={error} onClose={() => setError(null)} />}
+                    {error && (
+                        <ErrorAlert
+                            messages={error}
+                            onClose={() => {
+                                setError(null);
+                            }}
+                        />
+                    )}
 
                     {/* Step 1: Loading */}
                     {step === 'loading' && (
@@ -276,7 +283,7 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
                                         value={codeField.value}
                                         onChange={codeField.handleChange}
                                         onBlur={codeField.handleBlur}
-                                        error={!!codeField.error}
+                                        error={!(codeField.error == null)}
                                         helperText={codeField.error ?? ' '}
                                         disabled={loading}
                                     />
@@ -329,7 +336,9 @@ export default function Setup2FADialog({ open, onClose, onEnabled }: Setup2FADia
                                 control={
                                     <Checkbox
                                         checked={acknowledged}
-                                        onChange={(e) => setAcknowledged(e.target.checked)}
+                                        onChange={(e) => {
+                                            setAcknowledged(e.target.checked);
+                                        }}
                                         color="primary"
                                         sx={{ pl: 0 }}
                                     />

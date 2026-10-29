@@ -3,6 +3,7 @@ import process from 'node:process';
 import { defineConfig, devices, type Project } from '@playwright/test';
 
 const isWindows = process.platform === 'win32';
+const isCI = Boolean(process.env['CI']);
 
 // Run tests in this order, one browser at a time
 const browserProjects: (Omit<Project, 'dependencies'> & { name: string })[] = [
@@ -52,9 +53,9 @@ export default defineConfig({
         timeout: 12000,
     },
     fullyParallel: true,
-    forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 1 : 2,
+    forbidOnly: isCI,
+    retries: isCI ? 2 : 0,
+    workers: isCI ? 1 : 2,
     reporter: 'html',
     use: {
         actionTimeout: 0,
@@ -63,8 +64,8 @@ export default defineConfig({
         headless: true,
     },
     // Chain each project onto the previous one so they run sequentially
-    projects: browserProjects.map((project, index) => ({
-        ...project,
-        dependencies: index > 0 ? [browserProjects[index - 1].name] : undefined,
-    })),
+    projects: browserProjects.map((project, index) => {
+        const previous = browserProjects[index - 1];
+        return previous ? { ...project, dependencies: [previous.name] } : project;
+    }),
 });

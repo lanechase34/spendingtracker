@@ -1,6 +1,6 @@
 import { Alert, Snackbar } from '@mui/material';
 import type { ReactNode, SyntheticEvent } from 'react';
-import { createContext, useCallback, useReducer, useRef } from 'react';
+import { createContext, useCallback, useMemo, useReducer, useRef } from 'react';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -29,7 +29,7 @@ function toastReducer(state: ToastState, action: ToastAction): ToastState {
             return { ...state, open: false };
         case 'EXITED':
             if (state.queue.length > 0) {
-                return { queue: state.queue.slice(1), current: state.queue[0], open: true };
+                return { queue: state.queue.slice(1), current: state.queue[0] ?? null, open: true };
             }
             return { ...state, current: null };
     }
@@ -63,8 +63,10 @@ export const ToastContextProvider = ({ children }: { children: ReactNode }) => {
         dispatch({ type: 'EXITED' });
     }, []);
 
+    const contextValue = useMemo(() => ({ showToast }), [showToast]);
+
     return (
-        <ToastContext value={{ showToast }}>
+        <ToastContext value={contextValue}>
             {children}
             <Snackbar
                 key={current?.id}

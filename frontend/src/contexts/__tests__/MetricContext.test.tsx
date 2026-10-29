@@ -1,3 +1,4 @@
+import { defined } from '@test-utils';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { MetricContext, MetricContextProvider } from 'contexts/MetricContext';
 import useAuthContext from 'hooks/useAuthContext';
@@ -84,7 +85,7 @@ function renderMetricContext() {
         }
     );
 
-    const utils = renderHook(() => useContext(MetricContext)!, {
+    const utils = renderHook(() => defined(useContext(MetricContext)), {
         wrapper: ({ children }: { children: ReactNode }) => <MetricContextProvider>{children}</MetricContextProvider>,
     });
 
@@ -217,7 +218,9 @@ describe('MetricContextProvider', () => {
             mockUseAuthContext.mockReturnValue({ authToken: null });
             rerender();
 
-            await waitFor(() => expect(mockClient.deactivate).toHaveBeenCalled());
+            await waitFor(() => {
+                expect(mockClient.deactivate).toHaveBeenCalled();
+            });
 
             // A subsequent re-render with a new token should create a fresh client
             const newMockClient = createMockClient();
@@ -226,7 +229,9 @@ describe('MetricContextProvider', () => {
             mockUseAuthContext.mockReturnValue({ authToken: MOCK_AUTH_TOKEN });
             rerender();
 
-            await waitFor(() => expect(newMockClient.activate).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(newMockClient.activate).toHaveBeenCalledTimes(1);
+            });
         });
     });
 
@@ -245,7 +250,7 @@ describe('MetricContextProvider', () => {
             simulateMetric(MOCK_METRIC);
             simulateMetric({ ...MOCK_METRIC, concurrency: { activeRequests: 99, maxRequests: 99, slowRequests: [] } });
 
-            expect(result.current.metrics?.concurrency?.activeRequests).toBe(99);
+            expect(result.current.metrics?.concurrency.activeRequests).toBe(99);
         });
 
         it('Handles multiple sequential metric updates correctly', () => {
@@ -258,7 +263,7 @@ describe('MetricContextProvider', () => {
                 });
             }
 
-            expect(result.current.metrics?.concurrency?.activeRequests).toBe(50);
+            expect(result.current.metrics?.concurrency.activeRequests).toBe(50);
         });
     });
 
@@ -295,7 +300,9 @@ describe('MetricContextProvider', () => {
 
             unmount();
 
-            await waitFor(() => expect(mockClient.deactivate).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockClient.deactivate).toHaveBeenCalledTimes(1);
+            });
         });
 
         it('Does not attempt to deactivate when no client exists on unmount', () => {
@@ -319,7 +326,9 @@ describe('MetricContextProvider', () => {
             mockUseAuthContext.mockReturnValue({ authToken: MOCK_AUTH_TOKEN });
             rerender();
 
-            await waitFor(() => expect(mockCreateMetricsClient).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockCreateMetricsClient).toHaveBeenCalledTimes(1);
+            });
         });
 
         it('Activates a new client when authToken transitions from null to a value', async () => {
@@ -333,7 +342,9 @@ describe('MetricContextProvider', () => {
             mockUseAuthContext.mockReturnValue({ authToken: MOCK_AUTH_TOKEN });
             rerender();
 
-            await waitFor(() => expect(newMockClient.activate).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(newMockClient.activate).toHaveBeenCalledTimes(1);
+            });
         });
 
         it('Deactivates the old client and creates a new one when authToken changes value', async () => {
@@ -346,12 +357,16 @@ describe('MetricContextProvider', () => {
             mockUseAuthContext.mockReturnValue({ authToken: null });
             rerender();
 
-            await waitFor(() => expect(mockClient.deactivate).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockClient.deactivate).toHaveBeenCalledTimes(1);
+            });
 
             mockUseAuthContext.mockReturnValue({ authToken: 'new-token' });
             rerender();
 
-            await waitFor(() => expect(newMockClient.activate).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(newMockClient.activate).toHaveBeenCalledTimes(1);
+            });
         });
     });
 

@@ -14,7 +14,7 @@ export type Expense = z.infer<typeof ExpenseSchema>;
 export interface ExpenseDataRow {
     id?: string;
     date: Date | string;
-    amount: number;
+    amount: number | null;
     description: string;
     category?: string | null;
     categoryid?: number | null;

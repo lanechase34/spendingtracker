@@ -63,7 +63,7 @@ export function createMetricsClient({
     };
 
     client.onStompError = (frame: IFrame) => {
-        onError?.(new Error(frame.headers.message || 'STOMP broker error'));
+        onError?.(new Error(frame.headers['message'] ?? 'STOMP broker error'));
         onFailed?.();
         void client.deactivate();
     };
@@ -72,8 +72,8 @@ export function createMetricsClient({
         onError?.(new Error('WebSocket closed'));
     };
 
-    client.onWebSocketError = (event) => {
-        onError?.(new Error(`WebSocket error: ${event}`));
+    client.onWebSocketError = (event: Event) => {
+        onError?.(new Error(`WebSocket error: ${event.type}`));
         onFailed?.();
         void client.deactivate();
     };

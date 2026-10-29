@@ -2,7 +2,7 @@
  * Validate the textField is valid money
  */
 export const validateMoney = (value: string | null): string | null => {
-    if (!value) return 'Field is required';
+    if (value === null || value === '') return 'Field is required';
 
     const trimmed = value.trim();
 

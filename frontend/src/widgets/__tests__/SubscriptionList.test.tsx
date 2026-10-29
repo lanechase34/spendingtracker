@@ -1,4 +1,4 @@
-import { createSubscriptionContext, render } from '@test-utils';
+import { at, createSubscriptionContext, defined, render } from '@test-utils';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { PointerEventsCheckLevel } from '@testing-library/user-event';
 import SubscriptionList from 'widgets/SubscriptionList';
@@ -74,11 +74,11 @@ describe('Subscription List Component', () => {
         const rows = screen.getAllByRole('row');
 
         // Inactive rows become '---'
-        const inactiveRow = rows.find((row) => row.textContent?.includes('Adobe CC'));
+        const inactiveRow = rows.find((row) => row.textContent.includes('Adobe CC'));
         expect(inactiveRow).toHaveTextContent('---');
 
         // Active rows become MM/DD/YYYY
-        const activeRow = rows.find((row) => row.textContent?.includes('Netflix'));
+        const activeRow = rows.find((row) => row.textContent.includes('Netflix'));
         expect(activeRow).toHaveTextContent(/12\/01\/2025/);
     });
 
@@ -162,7 +162,7 @@ describe('Subscription List Component', () => {
             /**
              * Select the active row's pause button
              */
-            const row1 = screen.getByText('Netflix').closest('[role="row"]')!;
+            const row1 = defined(screen.getByText('Netflix').closest('[role="row"]'));
             const pauseButton = within(row1 as HTMLElement).getByLabelText('Pause subscription');
             await user.click(pauseButton);
 
@@ -198,7 +198,7 @@ describe('Subscription List Component', () => {
             /**
              * Select the inactive row's resume button
              */
-            const row1 = screen.getByText('Adobe CC').closest('[role="row"]')!;
+            const row1 = defined(screen.getByText('Adobe CC').closest('[role="row"]'));
             const resumeButton = within(row1 as HTMLElement).getByLabelText('Resume subscription');
             await user.click(resumeButton);
 
@@ -233,10 +233,10 @@ describe('Subscription List Component', () => {
             });
             render(<SubscriptionList />, { subscriptionContextValue });
 
-            const row1 = screen.getByText('Netflix').closest('[role="row"]')!;
+            const row1 = defined(screen.getByText('Netflix').closest('[role="row"]'));
             const pauseBtn = within(row1 as HTMLElement).getByLabelText('Pause subscription');
 
-            const row2 = screen.getByText('Adobe CC').closest('[role="row"]')!;
+            const row2 = defined(screen.getByText('Adobe CC').closest('[role="row"]'));
             const resumeBtn = within(row2 as HTMLElement).getByLabelText('Resume subscription');
 
             // Trigger buttons rapidly
@@ -265,7 +265,7 @@ describe('Subscription List Component', () => {
             });
             render(<SubscriptionList />, { subscriptionContextValue });
 
-            const pauseButton = screen.getAllByLabelText('Pause subscription')[0];
+            const pauseButton = at(screen.getAllByLabelText('Pause subscription'), 0);
             await user.click(pauseButton);
 
             // Check all buttons are disabled
@@ -273,14 +273,17 @@ describe('Subscription List Component', () => {
             const actionButtons = allButtons.filter(
                 (btn) =>
                     btn.getAttribute('aria-label')?.includes('subscription') ??
-                    btn.getAttribute('aria-label')?.includes('delete')
+                    btn.getAttribute('aria-label')?.includes('delete') ??
+                    false
             );
 
             actionButtons.forEach((button) => {
                 expect(button).toBeDisabled();
             });
 
-            await waitFor(() => expect(mockToggle).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockToggle).toHaveBeenCalledTimes(1);
+            });
         });
     });
 
@@ -296,7 +299,7 @@ describe('Subscription List Component', () => {
             render(<SubscriptionList />, { subscriptionContextValue });
 
             const deleteButtons = screen.getAllByLabelText(/delete/i);
-            await user.click(deleteButtons[0]);
+            await user.click(at(deleteButtons, 0));
             expect(screen.getByText(/permanently delete/i)).toBeInTheDocument();
         });
 
@@ -314,7 +317,7 @@ describe('Subscription List Component', () => {
 
             // Click first delete
             const deleteButtons = screen.getAllByLabelText(/delete/i);
-            await user.click(deleteButtons[0]);
+            await user.click(at(deleteButtons, 0));
             const confirmButton = screen.getByRole('button', { name: /confirm/i });
 
             await user.click(confirmButton);
@@ -337,7 +340,7 @@ describe('Subscription List Component', () => {
             render(<SubscriptionList />, { subscriptionContextValue });
 
             const deleteButtons = screen.getAllByLabelText(/delete/i);
-            await user.click(deleteButtons[0]);
+            await user.click(at(deleteButtons, 0));
             expect(screen.getByText(/permanently delete/i)).toBeInTheDocument();
 
             const cancelButton = screen.getByRole('button', { name: /cancel/i });
@@ -369,7 +372,7 @@ describe('Subscription List Component', () => {
             render(<SubscriptionList />, { subscriptionContextValue });
 
             const deleteButtons = screen.getAllByLabelText(/delete/i);
-            await user.click(deleteButtons[0]);
+            await user.click(at(deleteButtons, 0));
             const confirmButton = screen.getByRole('button', { name: /confirm/i });
 
             // Click confirm multiple times rapidly
@@ -474,7 +477,9 @@ describe('Subscription List Component', () => {
             fireEvent.change(searchInput, { target: { value: 'net' } });
 
             // Wait for input debounce
-            await waitFor(() => expect(mockHandleFilterChange).toHaveBeenCalled());
+            await waitFor(() => {
+                expect(mockHandleFilterChange).toHaveBeenCalled();
+            });
         });
     });
 });

@@ -37,12 +37,13 @@ export default function useFileUpload({ validMimeTypes, maxFileSize }: FileUploa
             // Clear any previous error
             setError(null);
 
-            const files = event?.target?.files;
-            if (files?.length !== 1) return;
+            const files = event.target.files;
+            const selected = files?.[0];
+            if (files?.length !== 1 || !selected) return;
 
-            const { file, error } = validateFile(files[0]);
+            const { file, error } = validateFile(selected);
             // If error, show error and blank input
-            if (error) {
+            if (error != null) {
                 setError(error);
                 setValue(null);
                 event.target.value = '';

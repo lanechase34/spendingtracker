@@ -1,13 +1,14 @@
 import eslint from '@eslint/js';
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import eslintReact from '@eslint-react/eslint-plugin';
-import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
-import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import jest from 'eslint-plugin-jest';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import playwright from 'eslint-plugin-playwright';
+import reactHooks from 'eslint-plugin-react-hooks';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
+import { configs as tseslintConfigs } from 'typescript-eslint';
 
 const IMPORT_RESOLVER_PROJECTS = [
     './tsconfig.app.json',
@@ -27,26 +28,33 @@ export default defineConfig([
             '**/.vite/**',
             'playwright-report/**',
             'test-results/**',
-            'eslint.config.ts',
-            'jest.config.cjs',
-            'vite.config.ts',
-            'vite.config.js',
+            'examples/**',
+            'src/mock/**',
         ],
     },
 
     // Base configurations
     eslint.configs.recommended,
-    ...tseslint.configs.recommendedTypeChecked,
-    ...tseslint.configs.stylisticTypeChecked,
-    jsxA11y.flatConfigs.recommended,
+    ...tseslintConfigs.strictTypeChecked,
+    ...tseslintConfigs.stylisticTypeChecked,
+    jsxA11y.flatConfigs.strict,
 
     // React configurations
-    eslintReact.configs['recommended-typescript'],
+    eslintReact.configs['strict-type-checked'],
     reactHooks.configs.flat.recommended,
 
     // Import/Export organization
     importPlugin.flatConfigs.recommended,
     importPlugin.flatConfigs.typescript,
+
+    // Disable directives must explain why
+    eslintComments.recommended,
+    {
+        rules: {
+            '@eslint-community/eslint-comments/require-description': 'error',
+            '@eslint-community/eslint-comments/no-unused-disable': 'error',
+        },
+    },
 
     // Project-specific configurations
     {
@@ -55,12 +63,9 @@ export default defineConfig([
             'simple-import-sort': simpleImportSort,
         },
         languageOptions: {
-            parser: tseslint.parser,
             parserOptions: {
                 projectService: true,
                 tsconfigRootDir: import.meta.dirname,
-                ecmaVersion: 'latest',
-                sourceType: 'module',
             },
         },
         settings: {
@@ -70,9 +75,6 @@ export default defineConfig([
                     project: IMPORT_RESOLVER_PROJECTS,
                     noWarnOnMultipleProjects: true,
                 },
-            },
-            react: {
-                version: 'detect',
             },
         },
         rules: {
@@ -100,17 +102,41 @@ export default defineConfig([
             eqeqeq: ['error', 'always', { null: 'ignore' }],
             '@eslint-react/no-leaked-conditional-rendering': 'error',
             'import/no-cycle': 'error',
+            '@typescript-eslint/strict-boolean-expressions': 'error',
+            '@typescript-eslint/switch-exhaustiveness-check': ['error', { requireDefaultForNonUnion: true }],
+            '@typescript-eslint/no-unsafe-type-assertion': 'error',
+        },
+    },
+
+    // CommonJS config files (not part of any tsconfig project)
+    {
+        ...tseslintConfigs.disableTypeChecked,
+        ...eslintReact.configs['disable-type-checked'],
+        files: ['**/*.cjs'],
+        rules: {
+            ...tseslintConfigs.disableTypeChecked.rules,
+            ...eslintReact.configs['disable-type-checked'].rules,
+        },
+        languageOptions: {
+            sourceType: 'commonjs',
+            globals: { module: 'writable', require: 'readonly', process: 'readonly' },
         },
     },
 
     // Playwright e2e tests + config
     {
-        files: ['e2e/**/*.ts', 'playwright.config.ts'],
         ...playwright.configs['flat/recommended'],
+        files: ['e2e/**/*.ts', 'playwright.config.ts'],
+        rules: {
+            ...playwright.configs['flat/recommended'].rules,
+            // Test fixtures routinely narrow types with assertions
+            '@typescript-eslint/no-unsafe-type-assertion': 'off',
+        },
     },
 
     // Jest tests
     {
+        ...jest.configs['flat/recommended'],
         files: [
             'src/**/__tests__/**/*.{ts,tsx}',
             'src/**/*.test.{ts,tsx}',
@@ -118,11 +144,14 @@ export default defineConfig([
             'src/setupTests.ts',
             'src/test-utils.tsx',
         ],
-        plugins: jest.configs['flat/recommended'].plugins,
-        languageOptions: jest.configs['flat/recommended'].languageOptions,
         rules: {
             ...jest.configs['flat/recommended'].rules,
             ...jest.configs['flat/style'].rules,
+            // Jest-aware version understands mocked methods
+            '@typescript-eslint/unbound-method': 'off',
+            'jest/unbound-method': 'error',
+            // Mocks and fixtures routinely narrow types with assertions
+            '@typescript-eslint/no-unsafe-type-assertion': 'off',
         },
     },
 ]);

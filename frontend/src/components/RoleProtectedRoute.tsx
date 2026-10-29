@@ -22,7 +22,7 @@ export default function RoleProtectedRoute({ allowedRoles }: RoleProtectedRouteP
     /**
      * Auth failed -> not logged in
      */
-    if (!authToken) {
+    if (authToken == null) {
         return <Navigate to="/" replace />;
     }
 

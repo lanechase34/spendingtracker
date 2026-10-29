@@ -11,7 +11,9 @@ function TestConsumer() {
     return (
         <div>
             <span data-testid="mobile-open">{String(context.mobileOpen)}</span>
-            <button onClick={context.toggleDrawer}>Toggle</button>
+            <button type="button" onClick={context.toggleDrawer}>
+                Toggle
+            </button>
         </div>
     );
 }
@@ -122,7 +124,11 @@ describe('AdminDrawerContext', () => {
                 const context = useContext(AdminDrawerContext);
                 if (!context) return null;
                 toggleRefs.add(context.toggleDrawer);
-                return <button onClick={context.toggleDrawer}>Toggle</button>;
+                return (
+                    <button type="button" onClick={context.toggleDrawer}>
+                        Toggle
+                    </button>
+                );
             }
 
             render(
@@ -146,7 +152,11 @@ describe('AdminDrawerContext', () => {
                 const context = useContext(AdminDrawerContext);
                 if (!context) return null;
                 contextValues.push(context);
-                return <button onClick={context.toggleDrawer}>Toggle</button>;
+                return (
+                    <button type="button" onClick={context.toggleDrawer}>
+                        Toggle
+                    </button>
+                );
             }
 
             render(
@@ -184,7 +194,7 @@ describe('AdminDrawerContext', () => {
             function ConsumerB() {
                 const ctx = useContext(AdminDrawerContext);
                 return (
-                    <button onClick={ctx?.toggleDrawer} data-testid="btn-b">
+                    <button type="button" onClick={ctx?.toggleDrawer} data-testid="btn-b">
                         Toggle B
                     </button>
                 );

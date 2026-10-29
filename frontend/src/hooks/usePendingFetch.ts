@@ -5,9 +5,9 @@ import useAuthContext from './useAuthContext';
 interface PendingFetchParams {
     url: string;
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-    signal?: AbortSignal;
+    signal?: AbortSignal | undefined;
     additionalHeaders?: Record<string, string>;
-    body?: object;
+    body?: object | undefined;
 }
 
 /**
@@ -31,7 +31,7 @@ function usePendingTokenFetch(
      */
     return useCallback(
         async ({ url, method = 'GET', signal, additionalHeaders = {}, body }: PendingFetchParams) => {
-            if (!token) return null;
+            if (token == null) return null;
 
             // For non-GET: ensure we have a CSRF token
             const useCsrf = method !== 'GET';
@@ -41,15 +41,15 @@ function usePendingTokenFetch(
                 const isFormData = body instanceof FormData;
                 return fetch(url, {
                     method: method,
-                    signal: signal,
+                    signal: signal ?? null,
                     headers: {
                         ...additionalHeaders,
                         Accept: 'application/json',
                         'x-auth-token': token,
                         ...(isFormData ? {} : { 'Content-Type': 'application/json' }), // Don't set content-type when sending formData
-                        ...(useCsrf ? { 'x-csrf-token': csrfToken ?? '' } : {}), // add csrf token for non-get request
+                        ...(useCsrf ? { 'x-csrf-token': csrfToken } : {}), // add csrf token for non-get request
                     },
-                    body: isFormData ? body : body ? JSON.stringify(body) : undefined, // try formData first, then json body, else nothing
+                    body: isFormData ? body : body ? JSON.stringify(body) : null, // try formData first, then json body, else nothing
                 });
             };
 
@@ -74,7 +74,9 @@ function usePendingTokenFetch(
 export default function usePendingFetch() {
     const { pendingToken, getCsrfToken, setPendingToken } = useAuthContext();
 
-    const clearToken = useCallback(() => setPendingToken(null), [setPendingToken]);
+    const clearToken = useCallback(() => {
+        setPendingToken(null);
+    }, [setPendingToken]);
 
     return usePendingTokenFetch(pendingToken, clearToken, getCsrfToken);
 }
@@ -86,7 +88,9 @@ export default function usePendingFetch() {
 export function usePending2FAFetch() {
     const { pending2FAToken, getCsrfToken, setPending2FAToken } = useAuthContext();
 
-    const clearToken = useCallback(() => setPending2FAToken(null), [setPending2FAToken]);
+    const clearToken = useCallback(() => {
+        setPending2FAToken(null);
+    }, [setPending2FAToken]);
 
     return usePendingTokenFetch(pending2FAToken, clearToken, getCsrfToken);
 }

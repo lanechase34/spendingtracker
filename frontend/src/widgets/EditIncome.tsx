@@ -15,11 +15,9 @@ import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import type { DateValidationError } from '@mui/x-date-pickers/models';
 import EndAdornmentLoading from 'components/EndAdornmentLoading';
+import LazyDatePicker from 'components/LazyDatePicker';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useFormField from 'hooks/useFormField';
@@ -27,6 +25,7 @@ import { useFetchIncome, useUpdateIncome } from 'hooks/useIncomeQuery';
 import { type SubmitEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BASE_FORMAT } from 'utils/dates';
+import { getErrorInfo } from 'utils/errorInfo';
 import { validateMoney } from 'validators/validateMoney';
 
 interface EditIncomeProps {
@@ -59,7 +58,12 @@ export default function EditIncome({ date }: EditIncomeProps) {
                 return 'Please select a date within one year of today';
             case 'invalidDate':
                 return 'Your date is not valid';
-            default:
+            case 'disableFuture':
+            case 'disablePast':
+            case 'shouldDisableDate':
+            case 'shouldDisableMonth':
+            case 'shouldDisableYear':
+            case null:
                 return '';
         }
     }, [dateErrorCode]);
@@ -102,11 +106,11 @@ export default function EditIncome({ date }: EditIncomeProps) {
 
     useEffect(() => {
         if (incomeData && prefilledDateRef.current !== formattedDate) {
-            payField.setValue(incomeData.pay?.toString() ?? '0');
-            extraField.setValue(incomeData.extra?.toString() ?? '0');
+            payField.setValue(incomeData.pay.toString());
+            extraField.setValue(incomeData.extra.toString());
             prefilledDateRef.current = formattedDate;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- pre-fill only when new income data arrives (see prefilledDateRef)
     }, [incomeData]);
 
     /**
@@ -157,9 +161,9 @@ export default function EditIncome({ date }: EditIncomeProps) {
             setFormLoading(false);
             handleClose({}, '');
         } catch (err: unknown) {
-            const errorInfo = err as { name?: string; message?: string };
+            const errorInfo = getErrorInfo(err);
             console.error('Network error:', err);
-            setFormError(errorInfo?.message ?? 'Error. Please try again.');
+            setFormError(errorInfo.message ?? 'Error. Please try again.');
             setFormLoading(false);
         }
     };
@@ -189,7 +193,13 @@ export default function EditIncome({ date }: EditIncomeProps) {
                     }}
                 >
                     Edit Income
-                    <IconButton disabled={formLoading} aria-label="close" onClick={() => handleClose({}, 'click')}>
+                    <IconButton
+                        disabled={formLoading}
+                        aria-label="close"
+                        onClick={() => {
+                            handleClose({}, 'click');
+                        }}
+                    >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -209,36 +219,40 @@ export default function EditIncome({ date }: EditIncomeProps) {
                         autoComplete="off"
                     >
                         <Stack spacing={3} sx={{ width: '100%' }}>
-                            {(isError || formError) && (
-                                <Alert sx={{ mb: 2 }} severity="error" onClose={() => setFormError(null)}>
+                            {(isError || formError != null) && (
+                                <Alert
+                                    sx={{ mb: 2 }}
+                                    severity="error"
+                                    onClose={() => {
+                                        setFormError(null);
+                                    }}
+                                >
                                     {formError ?? 'Failed to load income data'}
                                 </Alert>
                             )}
                             <FormControl error={!!dateError}>
-                                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker
-                                        views={['year', 'month']}
-                                        openTo="month"
-                                        label="Date"
-                                        value={selectedDate}
-                                        onChange={(newValue: Dayjs | null) => {
-                                            if (newValue === null) return;
-                                            setSelectedDate(newValue);
-                                        }}
-                                        slotProps={{
-                                            textField: {
-                                                error: !!dateError,
-                                                helperText: dateError,
-                                            },
-                                        }}
-                                        minDate={dayjs().subtract(2, 'year')}
-                                        maxDate={dayjs().add(1, 'year')}
-                                        onError={setDateErrorCode}
-                                    />
-                                </LocalizationProvider>
+                                <LazyDatePicker
+                                    views={['year', 'month']}
+                                    openTo="month"
+                                    label="Date"
+                                    value={selectedDate}
+                                    onChange={(newValue: Dayjs | null) => {
+                                        if (newValue === null) return;
+                                        setSelectedDate(newValue);
+                                    }}
+                                    slotProps={{
+                                        textField: {
+                                            error: !!dateError,
+                                            helperText: dateError,
+                                        },
+                                    }}
+                                    minDate={dayjs().subtract(2, 'year')}
+                                    maxDate={dayjs().add(1, 'year')}
+                                    onError={setDateErrorCode}
+                                />
                             </FormControl>
 
-                            <FormControl variant="outlined" error={!!payField.error} fullWidth>
+                            <FormControl variant="outlined" error={!(payField.error == null)} fullWidth>
                                 <InputLabel htmlFor="outlined-adornment-pay">Pay</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-pay"
@@ -251,10 +265,10 @@ export default function EditIncome({ date }: EditIncomeProps) {
                                     onChange={payField.handleChange}
                                     onBlur={payField.handleBlur}
                                 />
-                                {payField.error && <FormHelperText>{payField.error}</FormHelperText>}
+                                {payField.error != null && <FormHelperText>{payField.error}</FormHelperText>}
                             </FormControl>
 
-                            <FormControl variant="outlined" error={!!extraField.error} fullWidth>
+                            <FormControl variant="outlined" error={!(extraField.error == null)} fullWidth>
                                 <InputLabel htmlFor="outlined-adornment-extra">Extra</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-extra"
@@ -267,13 +281,19 @@ export default function EditIncome({ date }: EditIncomeProps) {
                                     onChange={extraField.handleChange}
                                     onBlur={extraField.handleBlur}
                                 />
-                                {extraField.error && <FormHelperText>{extraField.error}</FormHelperText>}
+                                {extraField.error != null && <FormHelperText>{extraField.error}</FormHelperText>}
                             </FormControl>
                         </Stack>
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button disabled={formLoading} variant="outlined" onClick={() => handleClose({}, 'click')}>
+                    <Button
+                        disabled={formLoading}
+                        variant="outlined"
+                        onClick={() => {
+                            handleClose({}, 'click');
+                        }}
+                    >
                         Close
                     </Button>
                     <Button

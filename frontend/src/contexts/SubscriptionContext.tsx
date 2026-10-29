@@ -95,7 +95,7 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
      * Reset state on logout
      */
     useEffect(() => {
-        if (!authToken) {
+        if (authToken == null) {
             resetState();
         }
     }, [authToken, resetState]);
@@ -119,7 +119,7 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
         [subscriptionAPI, refetch, showToast]
     );
 
-    const currentPageItemCount = data?.subscriptions?.length ?? 0;
+    const currentPageItemCount = data?.subscriptions.length ?? 0;
 
     /**
      * Deleting subscription

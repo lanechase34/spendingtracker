@@ -107,7 +107,13 @@ export default function ExceptionDetail({ blob }: { blob: string }) {
                     <Divider />
 
                     {/* Tabs */}
-                    <Tabs value={tab} onChange={(_, newValue: number) => setTab(newValue)} sx={{ minHeight: 36 }}>
+                    <Tabs
+                        value={tab}
+                        onChange={(_, newValue: number) => {
+                            setTab(newValue);
+                        }}
+                        sx={{ minHeight: 36 }}
+                    >
                         <Tab label="Stack Trace" />
                         <Tab label="Code Context" />
                         <Tab label="Raw" />
@@ -120,7 +126,10 @@ export default function ExceptionDetail({ blob }: { blob: string }) {
                     {tab === 1 && (
                         <Stack spacing={1}>
                             {parsedException.exception.TagContext?.map((ctx: TagContext) => (
-                                <Accordion key={`tag_error_detail_${ctx.line}_${ctx.template}`} variant="outlined">
+                                <Accordion
+                                    key={`tag_error_detail_${String(ctx.line)}_${ctx.template}`}
+                                    variant="outlined"
+                                >
                                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                         <Typography variant="body2">
                                             {ctx.template} - line {ctx.line}

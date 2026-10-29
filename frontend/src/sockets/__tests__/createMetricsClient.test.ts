@@ -2,7 +2,6 @@ import type { IFrame, IMessage } from '@stomp/stompjs';
 import { Client } from '@stomp/stompjs';
 import { createMetricsClient } from 'sockets/createMetricsClient';
 import type { Metric } from 'types/MetricResponse.type';
-import { MetricResponseSchema } from 'types/MetricResponse.type';
 
 // Mock STOMP JS client
 jest.mock('@stomp/stompjs', () => ({
@@ -14,9 +13,10 @@ jest.mock('@stomp/stompjs', () => ({
 }));
 
 // Mock the MetricResponseSchema
+const mockSafeParse = jest.fn<unknown, [unknown]>();
 jest.mock('types/MetricResponse.type', () => ({
     MetricResponseSchema: {
-        safeParse: jest.fn(),
+        safeParse: (data: unknown) => mockSafeParse(data),
     },
 }));
 
@@ -78,8 +78,6 @@ describe('createMetricsClient', () => {
             data: mockMetricResponse,
         };
 
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        const mockSafeParse = MetricResponseSchema.safeParse as jest.Mock;
         mockSafeParse.mockReturnValue({
             success: true,
             data: mockResponse,
@@ -175,8 +173,6 @@ describe('createMetricsClient', () => {
         client.onConnect({} as IFrame);
 
         // Mock failed validation
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        const mockSafeParse = MetricResponseSchema.safeParse as jest.Mock;
         mockSafeParse.mockReturnValue({
             success: false,
             error: { issues: [] },
@@ -215,8 +211,6 @@ describe('createMetricsClient', () => {
         client.onConnect({} as IFrame);
 
         // Mock successful parse but with error flag
-        // eslint-disable-next-line @typescript-eslint/unbound-method
-        const mockSafeParse = MetricResponseSchema.safeParse as jest.Mock;
         mockSafeParse.mockReturnValue({
             success: true,
             data: { error: true },
@@ -292,7 +286,9 @@ describe('createMetricsClient', () => {
                 binaryBody: new Uint8Array(),
             };
 
-            expect(() => client.onStompError(mockFrame)).not.toThrow();
+            expect(() => {
+                client.onStompError(mockFrame);
+            }).not.toThrow();
         });
     });
 
@@ -312,7 +308,9 @@ describe('createMetricsClient', () => {
                 onMetrics: jest.fn(),
             });
 
-            expect(() => client.onWebSocketClose({})).not.toThrow();
+            expect(() => {
+                client.onWebSocketClose({});
+            }).not.toThrow();
         });
     });
 

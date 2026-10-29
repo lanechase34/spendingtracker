@@ -65,7 +65,7 @@ export default function Verify2FADialog() {
     useEffect(() => {
         if (verify2FADialogOpen && pending2FAToken == null) {
             // Reset modal state
-            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect
+            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect -- resets the dialog when its pending token disappears
             setError(null);
             logout();
             closeVerify2FADialog();
@@ -81,11 +81,11 @@ export default function Verify2FADialog() {
         if (loading) return;
 
         const codeError = codeField.validateField();
-        if (codeError) {
+        if (codeError != null) {
             return;
         }
 
-        if (!pending2FAToken) {
+        if (pending2FAToken == null) {
             setError(['Invalid session. Please log in again.']);
             return;
         }
@@ -142,7 +142,14 @@ export default function Verify2FADialog() {
             <DialogContent>
                 <Box component="form" id="verify2FAForm" onSubmit={(event) => void handleSubmit(event)} noValidate>
                     <Stack spacing={3} sx={{ width: '100%' }}>
-                        {error && <ErrorAlert messages={error} onClose={() => setError(null)} />}
+                        {error && (
+                            <ErrorAlert
+                                messages={error}
+                                onClose={() => {
+                                    setError(null);
+                                }}
+                            />
+                        )}
 
                         <Typography variant="body2" color="text.secondary">
                             Enter the 6-digit code from your authenticator app. If you no longer have access to your
@@ -162,7 +169,7 @@ export default function Verify2FADialog() {
                                 value={codeField.value}
                                 onChange={codeField.handleChange}
                                 onBlur={codeField.handleBlur}
-                                error={!!codeField.error}
+                                error={!(codeField.error == null)}
                                 helperText={codeField.error ?? ' '}
                             />
                         </FormControl>

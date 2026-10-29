@@ -24,7 +24,7 @@ describe('useCategorySelect', () => {
         const { result } = renderHook(() => useCategorySelect({ initialValue: 'cat1', validator: mockValidator }));
 
         act(() => {
-            result.current.handleChange({} as SyntheticEvent<Element, Event>, mockOption);
+            result.current.handleChange({} as SyntheticEvent, mockOption);
         });
 
         expect(result.current.value).toBe('cat2');
@@ -38,7 +38,7 @@ describe('useCategorySelect', () => {
         const { result } = renderHook(() => useCategorySelect({ initialValue: 'cat1', validator: mockValidator }));
 
         act(() => {
-            result.current.handleChange({} as SyntheticEvent<Element, Event>, null);
+            result.current.handleChange({} as SyntheticEvent, null);
         });
 
         expect(result.current.value).toBeNull();
@@ -50,13 +50,13 @@ describe('useCategorySelect', () => {
 
         const { result } = renderHook(() => useCategorySelect({ initialValue: '', validator: mockValidator }));
 
-        let error: string | null;
+        let error: string | null = null;
         act(() => {
             error = result.current.validateField();
         });
 
         expect(mockValidator).toHaveBeenCalledWith('');
-        expect(error!).toBe('Required');
+        expect(error).toBe('Required');
         expect(result.current.error).toBe('Required');
     });
 
@@ -64,7 +64,7 @@ describe('useCategorySelect', () => {
         const { result } = renderHook(() => useCategorySelect({ initialValue: 'initial', validator: mockValidator }));
 
         act(() => {
-            result.current.handleChange({} as SyntheticEvent<Element, Event>, {
+            result.current.handleChange({} as SyntheticEvent, {
                 label: 'New',
                 value: 'new',
             });

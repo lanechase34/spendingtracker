@@ -18,7 +18,14 @@ export default function LoginDialogButton({
     const { openLoginDialog } = useAuthDialogContext();
 
     return (
-        <Button disabled={disabled} size={size} variant={variant} onClick={() => openLoginDialog()}>
+        <Button
+            disabled={disabled}
+            size={size}
+            variant={variant}
+            onClick={() => {
+                openLoginDialog();
+            }}
+        >
             {icon}
             Log In
         </Button>

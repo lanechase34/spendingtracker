@@ -17,11 +17,11 @@ const mockUseFetchImage = useFetchImage as jest.Mock;
 /** Sets up useFetchImage mock with given state */
 function setupHook({
     loading = false,
-    error = false,
+    error = null,
     imageSrc = '',
 }: {
     loading?: boolean;
-    error?: boolean;
+    error?: string | null;
     imageSrc?: string;
 }) {
     mockUseFetchImage.mockReturnValue({
@@ -64,25 +64,25 @@ describe('ReceiptImg', () => {
 
     describe('Error state', () => {
         it('Renders the error message when error is true', () => {
-            setupHook({ error: true });
+            setupHook({ error: 'Failed to load image' });
             render(<ReceiptImg alt="Groceries" url="/api/receipt/1" />);
             expect(screen.getByText('Failed to load receipt.')).toBeInTheDocument();
         });
 
         it('Does not render the image when error is true', () => {
-            setupHook({ error: true });
+            setupHook({ error: 'Failed to load image' });
             render(<ReceiptImg alt="Groceries" url="/api/receipt/1" />);
             expect(screen.queryByRole('img')).not.toBeInTheDocument();
         });
 
         it('Does not render the loading spinner when error is true', () => {
-            setupHook({ error: true });
+            setupHook({ error: 'Failed to load image' });
             render(<ReceiptImg alt="Groceries" url="/api/receipt/1" />);
             expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
         });
 
         it('Renders the error Typography with error color', () => {
-            setupHook({ error: true });
+            setupHook({ error: 'Failed to load image' });
             render(<ReceiptImg alt="Groceries" url="/api/receipt/1" />);
             const errorText = screen.getByText('Failed to load receipt.');
             expect(errorText).toBeInTheDocument();
@@ -174,7 +174,7 @@ describe('ReceiptImg', () => {
             const newFetchImage = jest.fn().mockResolvedValue(undefined);
             mockUseFetchImage.mockReturnValue({
                 loading: false,
-                error: false,
+                error: null,
                 imageSrc: 'blob:http://localhost/receipt-123',
                 fetchImage: newFetchImage,
             });
@@ -218,14 +218,16 @@ describe('ReceiptImg', () => {
 
             mockUseFetchImage.mockReturnValue({
                 loading: false,
-                error: false,
+                error: null,
                 imageSrc: 'blob:http://localhost/receipt-123',
                 fetchImage: mockFetchImage,
             });
 
             rerender(<ReceiptImg alt="Groceries" url="/api/receipt/1" />);
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
             expect(screen.getByRole('img')).toBeInTheDocument();
         });
 
@@ -236,14 +238,16 @@ describe('ReceiptImg', () => {
 
             mockUseFetchImage.mockReturnValue({
                 loading: false,
-                error: true,
+                error: 'Failed to load image',
                 imageSrc: '',
                 fetchImage: mockFetchImage,
             });
 
             rerender(<ReceiptImg alt="Groceries" url="/api/receipt/1" />);
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
             expect(screen.getByText('Failed to load receipt.')).toBeInTheDocument();
         });
 
@@ -253,7 +257,7 @@ describe('ReceiptImg', () => {
 
             mockUseFetchImage.mockReturnValue({
                 loading: false,
-                error: false,
+                error: null,
                 imageSrc: firstBlob,
                 fetchImage: mockFetchImage,
             });
@@ -263,13 +267,15 @@ describe('ReceiptImg', () => {
 
             mockUseFetchImage.mockReturnValue({
                 loading: false,
-                error: false,
+                error: null,
                 imageSrc: secondBlob,
                 fetchImage: mockFetchImage,
             });
 
             rerender(<ReceiptImg alt="Groceries" url="/api/receipt/2" />);
-            await waitFor(() => expect(screen.getByRole('img')).toHaveAttribute('src', secondBlob));
+            await waitFor(() => {
+                expect(screen.getByRole('img')).toHaveAttribute('src', secondBlob);
+            });
         });
     });
 });

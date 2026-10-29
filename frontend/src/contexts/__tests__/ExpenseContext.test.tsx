@@ -46,7 +46,7 @@ function makeDeleteResponse(overrides: Partial<{ ok: boolean; error: string | nu
     const { ok = true, error = null } = overrides;
     return {
         ok,
-        json: jest.fn().mockResolvedValue({ error }),
+        json: jest.fn().mockResolvedValue(error === null ? { error: false } : { error: true, messages: [error] }),
     } as unknown as Response;
 }
 

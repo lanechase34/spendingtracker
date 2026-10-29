@@ -27,13 +27,13 @@ export const validateExpenseRow = (row: ExpenseDataRow): ErrorField[] => {
         });
     }
 
-    const amountValidate = validateMoney(`${row?.amount ?? null}`);
+    const amountValidate = validateMoney(row.amount == null ? null : String(row.amount));
     if (amountValidate !== null) {
         errors.push({ field: 'amount', error: amountValidate });
     }
 
     const noCategoryId = row.categoryid == null;
-    const noCategoryText = !row.category || row.category.trim() === '';
+    const noCategoryText = row.category == null || row.category.trim() === '';
     if (noCategoryId && noCategoryText) {
         errors.push({ field: 'category', error: 'Category is required' });
     }

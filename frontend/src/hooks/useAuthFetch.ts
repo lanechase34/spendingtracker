@@ -1,16 +1,15 @@
 import { useCallback } from 'react';
 import { safeJson } from 'utils/safeJson';
-import { validateAPIResponse } from 'validators/validateAPIResponse';
-import { z } from 'zod';
+import { NoDataAPIResponseSchema } from 'validators/validateAPIResponse';
 
 import useAuthContext from './useAuthContext';
 
 interface AuthFetchParams {
     url: string;
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-    signal?: AbortSignal;
+    signal?: AbortSignal | undefined;
     additionalHeaders?: Record<string, string>;
-    body?: Record<string, unknown> | FormData;
+    body?: Record<string, unknown> | FormData | undefined;
 }
 
 /**
@@ -34,14 +33,14 @@ export default function useAuthFetch() {
     const authFetch = useCallback(
         async ({ url, method = 'GET', signal, additionalHeaders = {}, body }: AuthFetchParams) => {
             const currentAuthToken = getLatestAuthToken();
-            if (!currentAuthToken) return null;
+            if (currentAuthToken == null) return null;
 
             // For non-GET: ensure we have a CSRF token
             const useCsrf = method !== 'GET';
             const csrf = useCsrf ? await getCsrfToken(currentAuthToken) : null;
 
             // If we need CSRF and we can't retrieve a valid CSRF token, logout
-            if (useCsrf && !csrf) {
+            if (useCsrf && csrf == null) {
                 logout();
                 return null;
             }
@@ -50,15 +49,15 @@ export default function useAuthFetch() {
                 const isFormData = body instanceof FormData;
                 return fetch(url, {
                     method: method,
-                    signal: signal,
+                    signal: signal ?? null,
                     headers: {
                         ...additionalHeaders,
                         Accept: 'application/json',
                         'x-auth-token': token,
                         ...(isFormData ? {} : { 'Content-Type': 'application/json' }), // Don't set content-type when sending formData
-                        ...(useCsrf ? { 'x-csrf-token': csrfToken ?? '' } : {}), // add csrf token for non-get request
+                        ...(useCsrf ? { 'x-csrf-token': csrfToken } : {}), // add csrf token for non-get request
                     },
-                    body: isFormData ? body : body ? JSON.stringify(body) : undefined, // try formData first, then json body, else nothing
+                    body: isFormData ? body : body ? JSON.stringify(body) : null, // try formData first, then json body, else nothing
                 });
             };
 
@@ -69,7 +68,7 @@ export default function useAuthFetch() {
                 const newToken = await refreshToken();
 
                 // Refresh failed
-                if (!newToken) {
+                if (newToken == null) {
                     logout();
                     return response;
                 }
@@ -78,14 +77,14 @@ export default function useAuthFetch() {
                 let newCsrf: string | null = '';
                 if (useCsrf) {
                     newCsrf = await getCsrfToken(newToken, true);
-                    if (!newCsrf) {
+                    if (newCsrf == null) {
                         logout();
                         return response;
                     }
                 }
 
                 // Retry
-                response = await doFetch(newToken, newCsrf ?? '');
+                response = await doFetch(newToken, newCsrf);
 
                 // If still 401, log user out
                 if (response.status === 401) {
@@ -98,16 +97,16 @@ export default function useAuthFetch() {
             else if (response.status === 403 && useCsrf) {
                 // If CSRF error, retry the CSRF token
                 const json = await safeJson(response);
-                const parsed = validateAPIResponse(z.null().optional()).safeParse(json);
+                const parsed = NoDataAPIResponseSchema.safeParse(json);
 
                 // Invalid response or not csrf error
-                if (!parsed.success || !parsed.data?.messages?.some((m) => m.toLowerCase().includes('csrf'))) {
+                if (!parsed.success || parsed.data.messages?.some((m) => m.toLowerCase().includes('csrf')) !== true) {
                     return response;
                 }
 
                 // Get the latest token again in case it changed
                 const latestToken = getLatestAuthToken();
-                if (!latestToken) {
+                if (latestToken == null) {
                     logout();
                     return response;
                 }
@@ -116,7 +115,7 @@ export default function useAuthFetch() {
                 const newCsrf = await getCsrfToken(latestToken, true);
 
                 // CSRF token fetch failed
-                if (!newCsrf) {
+                if (newCsrf == null) {
                     logout();
                     return response;
                 }

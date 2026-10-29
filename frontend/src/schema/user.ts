@@ -4,7 +4,7 @@ import type { usePending2FAFetch } from 'hooks/usePendingFetch';
 import { APIError } from 'utils/apiError';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
-import { validateAPIResponse } from 'validators/validateAPIResponse';
+import { NoDataAPIResponseSchema, validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
 
 /**
@@ -57,7 +57,7 @@ const Disable2FAResponseSchema = validateAPIResponse(z.undefined().optional());
 
 interface LoginResult {
     access_token: string;
-    mfa_required?: boolean;
+    mfa_required?: boolean | undefined;
 }
 
 interface UserServiceParams {
@@ -130,7 +130,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
                 method: 'POST',
             });
 
-            if (!response?.ok) {
+            if (response?.ok !== true) {
                 throw new Error('Invalid network response');
             }
             return;
@@ -174,7 +174,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
             const result = parsed.data;
 
             if (result.error) {
-                throw new APIError(result.messages?.[0] ?? 'Please try again.', response.status);
+                throw new APIError(result.messages[0] ?? 'Please try again.', response.status);
             }
 
             // Return pending JWT
@@ -200,7 +200,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
                 body: body,
             });
 
-            if (!response?.ok) {
+            if (response?.ok !== true) {
                 throw new Error('Invalid network response');
             }
             return;
@@ -227,7 +227,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
             }
 
             const json = await safeJson(response);
-            const parsed = validateAPIResponse(z.null().optional()).safeParse(json);
+            const parsed = NoDataAPIResponseSchema.safeParse(json);
             if (!parsed.success) {
                 throw new Error('Please try again.');
             }
@@ -325,7 +325,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
             const result = parsed.data;
 
             if (result.error) {
-                throw new APIError(result.messages?.[0] ?? 'Invalid or expired verification code.', 400);
+                throw new APIError(result.messages[0] ?? 'Invalid or expired verification code.', 400);
             }
 
             // Return access token
@@ -362,7 +362,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
             const result = parsed.data;
 
             if (result.error) {
-                throw new APIError(result.messages?.[0] ?? 'Failed to initiate 2FA setup.', response.status);
+                throw new APIError(result.messages[0] ?? 'Failed to initiate 2FA setup.', response.status);
             }
 
             return result.data;
@@ -403,7 +403,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
 
             const result = parsed.data;
             if (result.error) {
-                throw new APIError(result.messages?.[0] ?? 'Invalid or expired code.', response.status);
+                throw new APIError(result.messages[0] ?? 'Invalid or expired code.', response.status);
             }
 
             return result.data;
@@ -444,7 +444,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
 
             const result = parsed.data;
             if (result.error) {
-                throw new APIError(result.messages?.[0] ?? 'Invalid or expired code.', response.status);
+                throw new APIError(result.messages[0] ?? 'Invalid or expired code.', response.status);
             }
 
             return;

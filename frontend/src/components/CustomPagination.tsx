@@ -7,7 +7,7 @@ import type { ChangeEvent } from 'react';
 interface CustomPaginationProps {
     page: number;
     onPageChange: (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => void;
-    className?: string;
+    className?: string | undefined;
 }
 
 /**

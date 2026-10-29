@@ -78,7 +78,7 @@ export default function Disable2FADialog({ open, onClose, onDisabled }: Disable2
             if (loading) return;
 
             const codeError = codeField.validateField();
-            if (codeError) return;
+            if (codeError != null) return;
 
             setLoading(true);
             setError(null);
@@ -122,7 +122,14 @@ export default function Disable2FADialog({ open, onClose, onDisabled }: Disable2
             <Divider />
             <DialogContent>
                 <Stack spacing={3}>
-                    {error && <ErrorAlert messages={error} onClose={() => setError(null)} />}
+                    {error && (
+                        <ErrorAlert
+                            messages={error}
+                            onClose={() => {
+                                setError(null);
+                            }}
+                        />
+                    )}
 
                     <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>
                         Enter your current 6-digit authenticator code to confirm. If you no longer have access to your
@@ -141,7 +148,7 @@ export default function Disable2FADialog({ open, onClose, onDisabled }: Disable2
                                 value={codeField.value}
                                 onChange={codeField.handleChange}
                                 onBlur={codeField.handleBlur}
-                                error={!!codeField.error}
+                                error={!(codeField.error == null)}
                                 helperText={codeField.error ?? ' '}
                                 disabled={loading}
                             />

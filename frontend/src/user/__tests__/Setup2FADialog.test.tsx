@@ -37,7 +37,9 @@ beforeAll(() =>
         // empty
     })
 );
-afterAll(() => (console.error as jest.Mock).mockRestore());
+afterAll(() => {
+    (console.error as jest.Mock).mockRestore();
+});
 
 const mockUseToastContext = useToastContext_ as jest.Mock;
 const mockUseAuthFetch = useAuthFetch as jest.Mock;

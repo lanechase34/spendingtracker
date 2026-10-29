@@ -10,7 +10,7 @@ interface CategorySelect {
 interface UseCategorySelectReturn {
     value: string | number | null;
     error: string | null;
-    handleChange: (event: SyntheticEvent<Element, Event>, option: SelectOptionType | null) => void;
+    handleChange: (event: SyntheticEvent, option: SelectOptionType | null) => void;
     validateField: () => string | null;
     reset: () => void;
 }
@@ -26,7 +26,7 @@ export default function useCategorySelect({ initialValue, validator }: CategoryS
     const [error, setError] = useState<string | null>(null);
 
     const handleChange = useCallback(
-        (_event: SyntheticEvent<Element, Event>, option: SelectOptionType | null) => {
+        (_event: SyntheticEvent, option: SelectOptionType | null) => {
             const selectedValue = option?.value ?? null;
             setValue(selectedValue);
             setError(validator(selectedValue));

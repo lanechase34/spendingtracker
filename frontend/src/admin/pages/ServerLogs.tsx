@@ -105,11 +105,11 @@ export default function ServerLogs() {
                 const parsed = LogContentResponseSchema.safeParse(json);
 
                 if (!parsed.success) {
-                    throw new APIError('Invalid response format', response?.status ?? 0);
+                    throw new APIError('Invalid response format', response.status);
                 }
 
-                if (parsed.data.error || !response?.ok) {
-                    throw new APIError('Failed to load log content', response?.status ?? 0);
+                if (parsed.data.error || !response.ok) {
+                    throw new APIError('Failed to load log content', response.status);
                 }
 
                 const { lines, filtered, total, truncated } = parsed.data.data;
@@ -119,10 +119,10 @@ export default function ServerLogs() {
                 setTotal(total);
                 setTruncated(truncated);
             } catch (e: unknown) {
-                if (signal?.aborted) return;
+                if (signal?.aborted === true) return;
                 setContentError(e instanceof APIError ? e.message : 'Failed to load log content');
             } finally {
-                if (!signal?.aborted) setContentLoading(false);
+                if (signal?.aborted !== true) setContentLoading(false);
             }
         },
         [authFetch]
@@ -190,7 +190,7 @@ export default function ServerLogs() {
 
     // Search
     const handleSearch = () => {
-        if (!activeFile) return;
+        if (activeFile == null) return;
         setAppliedSearch(searchInput);
         void fetchContent(activeFile, linesToLoad, searchInput);
     };
@@ -198,11 +198,11 @@ export default function ServerLogs() {
     const handleClearSearch = () => {
         setSearchInput('');
         setAppliedSearch('');
-        if (activeFile) void fetchContent(activeFile, linesToLoad, '');
+        if (activeFile != null) void fetchContent(activeFile, linesToLoad, '');
     };
 
     const handleRefresh = () => {
-        if (activeFile) void fetchContent(activeFile, linesToLoad, appliedSearch);
+        if (activeFile != null) void fetchContent(activeFile, linesToLoad, appliedSearch);
     };
 
     const activeMeta = logFiles.find((f) => f.name === activeFile);
@@ -238,13 +238,13 @@ export default function ServerLogs() {
                     </Box>
                 )}
 
-                {filesError && (
+                {filesError != null && (
                     <Alert severity="error" sx={{ m: 1 }}>
                         {filesError}
                     </Alert>
                 )}
 
-                {!filesLoading && !filesError && (
+                {!filesLoading && filesError == null && (
                     <List dense disablePadding sx={{ flex: 1 }}>
                         {logFiles.map((file) => {
                             const isActive = file.name === activeFile;
@@ -255,7 +255,9 @@ export default function ServerLogs() {
                                     key={file.name}
                                     selected={isActive}
                                     disabled={isEmpty}
-                                    onClick={() => !isEmpty && handleSelectFile(file.name)}
+                                    onClick={() => {
+                                        if (!isEmpty) handleSelectFile(file.name);
+                                    }}
                                     sx={{ py: 0.75, px: 1.5, opacity: isEmpty ? 0.45 : 1 }}
                                 >
                                     <ListItemIcon sx={{ minWidth: 28 }}>
@@ -305,7 +307,7 @@ export default function ServerLogs() {
                         flexWrap: 'wrap',
                     }}
                 >
-                    {activeFile ? (
+                    {activeFile != null ? (
                         <>
                             <Typography variant="subtitle2" sx={{ fontFamily: 'monospace', mr: 1 }}>
                                 {activeFile}
@@ -337,9 +339,13 @@ export default function ServerLogs() {
                         size="small"
                         placeholder="Search lines…"
                         value={searchInput}
-                        disabled={!activeFile}
-                        onChange={(e) => setSearchInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        disabled={activeFile == null}
+                        onChange={(e) => {
+                            setSearchInput(e.target.value);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSearch();
+                        }}
                         sx={{ width: 220 }}
                         slotProps={{
                             input: {
@@ -357,7 +363,7 @@ export default function ServerLogs() {
                                         <InputAdornment position="end">
                                             <IconButton
                                                 size="small"
-                                                disabled={!activeFile || !searchInput}
+                                                disabled={activeFile == null || !searchInput}
                                                 onClick={handleSearch}
                                             >
                                                 <SearchIcon fontSize="small" />
@@ -374,11 +380,11 @@ export default function ServerLogs() {
                         select
                         size="small"
                         value={linesToLoad}
-                        disabled={!activeFile}
+                        disabled={activeFile == null}
                         onChange={(e) => {
                             const next: LineOption = e.target.value === 'all' ? 'all' : Number(e.target.value);
                             setLinesToLoad(next);
-                            if (activeFile) void fetchContent(activeFile, next, appliedSearch);
+                            if (activeFile != null) void fetchContent(activeFile, next, appliedSearch);
                         }}
                         sx={{ width: 130 }}
                         slotProps={{
@@ -409,7 +415,7 @@ export default function ServerLogs() {
                             <Button
                                 size="small"
                                 variant="outlined"
-                                disabled={!activeFile || contentLoading}
+                                disabled={activeFile == null || contentLoading}
                                 onClick={handleRefresh}
                                 startIcon={<RefreshIcon fontSize="small" />}
                             >
@@ -435,25 +441,24 @@ export default function ServerLogs() {
                         </Box>
                     )}
 
-                    {contentError && !contentLoading && <Alert severity="error">{contentError}</Alert>}
+                    {contentError != null && !contentLoading && <Alert severity="error">{contentError}</Alert>}
 
-                    {!contentLoading && !contentError && lines.length === 0 && activeFile && (
+                    {!contentLoading && contentError == null && lines.length === 0 && activeFile != null && (
                         <Typography color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
                             No lines to display{appliedSearch ? ' - try a different search term' : ''}.
                         </Typography>
                     )}
 
-                    {!contentLoading && !activeFile && (
+                    {!contentLoading && activeFile == null && (
                         <Typography color="text.secondary" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
                             Select a log file from the sidebar.
                         </Typography>
                     )}
 
                     {!contentLoading &&
-                        activeFile &&
+                        activeFile != null &&
                         lines.map((line, i) => (
-                            // eslint-disable-next-line @eslint-react/no-array-index-key
-                            <LogLine key={`${i}-${line}`} line={line} search={appliedSearch} isDark={isDark} />
+                            <LogLine key={`${String(i)}-${line}`} line={line} search={appliedSearch} isDark={isDark} />
                         ))}
                 </Box>
             </Box>

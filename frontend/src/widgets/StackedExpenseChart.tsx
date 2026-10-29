@@ -2,7 +2,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import { useQuery } from '@tanstack/react-query';
-import type { ChartData, ChartDataset, ChartOptions, LegendItem } from 'chart.js';
+import type { ChartData, ChartOptions, LegendItem } from 'chart.js';
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js';
 import EmptyCard from 'components/EmptyCard';
 import ErrorCard from 'components/ErrorCard';
@@ -11,20 +11,13 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
+import { StackedExpenseChartResponseSchema } from 'types/StackedExpenseChart.type';
 import { barPlugins, pointerHover } from 'utils/chartPlugins';
 import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
 import { safeJson } from 'utils/safeJson';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-interface StackedExpenseChartResponse {
-    data: {
-        labels: string[];
-        datasets: ChartDataset<'bar'>[];
-    };
-    error?: boolean;
-}
 
 /**
  * ChartJS options
@@ -128,8 +121,16 @@ export default function StackedExpenseChart() {
         if (!response) throw new Error('No response');
         if (!response.ok) throw new Error('Invalid network response');
 
-        const result = await safeJson<StackedExpenseChartResponse>(response);
-        if (!result || result.error) throw new Error('Bad Request');
+        const json = await safeJson(response);
+        const parsed = StackedExpenseChartResponseSchema.safeParse(json);
+
+        if (!parsed.success) {
+            console.error('StackedExpenseChart schema mismatch', parsed.error);
+            throw new Error('Bad Request');
+        }
+
+        if (parsed.data.error) throw new Error('Bad Request');
+        const result = parsed.data;
 
         return {
             labels: result.data.labels,
@@ -157,7 +158,7 @@ export default function StackedExpenseChart() {
         return <ErrorCard />;
     }
 
-    if (!chartData?.datasets?.length) {
+    if (!chartData || chartData.datasets.length === 0) {
         return <EmptyCard />;
     }
 

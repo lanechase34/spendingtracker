@@ -6,10 +6,8 @@ import useCooldownAction from '../useCooldownAction';
 // Mock the useLocalStorage hook
 jest.mock('hooks/useLocalStorage', () => ({
     __esModule: true,
-    default: jest.fn(({ initialValue }) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    default: jest.fn(({ initialValue }: { initialValue: unknown }) => {
         const [value, setValue] = useState(initialValue);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return [value, setValue];
     }),
 }));

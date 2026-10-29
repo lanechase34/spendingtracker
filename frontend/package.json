@@ -6,6 +6,7 @@
         "dev": "vite",
         "start": "vite",
         "build": "tsc -b && vite build",
+        "analyze": "vite build",
         "serve": "vite preview",
         "test": "jest",
         "testcoverage": "jest --coverage",
@@ -13,11 +14,11 @@
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:debug": "playwright test --debug",
         "test:e2e:report": "playwright show-report",
-        "lint": "eslint .",
-        "lint:fix": "eslint --fix .",
+        "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/ --max-warnings 0",
+        "lint:fix": "npm run lint -- --fix",
         "audit:prod": "npm audit --omit=dev",
-        "format": "prettier --config .prettierrc --write \"**/*.{ts,tsx}\" --log-level silent",
-        "format:check": "prettier --config .prettierrc --check \"**/*.{ts,tsx}\"",
+        "format": "prettier . --write --cache --log-level warn",
+        "format:check": "prettier . --check --cache",
         "typecheck": "tsc -b --noEmit",
         "check": "npm run format && npm run lint && npm run typecheck && npm run knip",
         "knip": "knip"
@@ -25,7 +26,7 @@
     "dependencies": {
         "@emotion/react": "11.14.0",
         "@emotion/styled": "11.14.1",
-        "@fontsource/roboto": "5.3.0",
+        "@fontsource-variable/roboto": "5.3.0",
         "@mui/icons-material": "9.5.0",
         "@mui/lab": "9.0.0-beta.10",
         "@mui/material": "9.5.0",
@@ -45,6 +46,7 @@
         "zod": "4.6.7"
     },
     "devDependencies": {
+        "@eslint-community/eslint-plugin-eslint-comments": "4.8.1",
         "@eslint-react/eslint-plugin": "5.28.8",
         "@eslint/js": "10.0.1",
         "@playwright/test": "1.64.1",

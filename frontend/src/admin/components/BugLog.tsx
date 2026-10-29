@@ -164,7 +164,12 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
                                 alignItems: 'center',
                             }}
                         >
-                            <Button variant="outlined" onClick={() => setSelectedBug(params.row)}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    setSelectedBug(params.row);
+                                }}
+                            >
                                 <ZoomInIcon fontSize="small" />
                             </Button>
                         </Box>
@@ -220,7 +225,14 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
                 />
             </Box>
 
-            <Dialog open={Boolean(selectedBug)} onClose={() => setSelectedBug(null)} maxWidth="md" fullWidth>
+            <Dialog
+                open={Boolean(selectedBug)}
+                onClose={() => {
+                    setSelectedBug(null);
+                }}
+                maxWidth="md"
+                fullWidth
+            >
                 <DialogTitle
                     sx={{
                         display: 'flex',
@@ -229,7 +241,12 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
                     }}
                 >
                     Details
-                    <IconButton aria-label="close" onClick={() => setSelectedBug(null)}>
+                    <IconButton
+                        aria-label="close"
+                        onClick={() => {
+                            setSelectedBug(null);
+                        }}
+                    >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -257,7 +274,12 @@ export default function BugLog({ height = 'calc(100vh - 100px)' }: BugLogProps) 
                     )}
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button variant="outlined" onClick={() => setSelectedBug(null)}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => {
+                            setSelectedBug(null);
+                        }}
+                    >
                         Close
                     </Button>
                 </DialogActions>

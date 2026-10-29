@@ -1,5 +1,5 @@
 install --production
-install testbox@7.0.0+19
+install testbox@7.2.2+23
 migrate install --verbose
 migrate up --verbose
 migrate seed run --verbose

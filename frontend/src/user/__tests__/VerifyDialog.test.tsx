@@ -1,3 +1,4 @@
+import { at } from '@test-utils';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import VerifyDialog from 'user/VerifyDialog';
@@ -35,7 +36,7 @@ jest.mock('hooks/useAuthContext', () => ({
 
 jest.mock('hooks/usePendingFetch', () => ({
     __esModule: true,
-    default: () => ({ Authorization: `Bearer ${mockPendingToken}` }),
+    default: () => ({ Authorization: `Bearer ${mockPendingToken ?? ''}` }),
 }));
 
 jest.mock('hooks/useLocalStorage', () => ({
@@ -57,7 +58,7 @@ jest.mock('components/ErrorAlert', () => ({
     default: ({ messages, onClose }: { messages: string[]; onClose: () => void }) => (
         <div data-testid="error-alert">
             {messages.map((m, _i) => (
-                <span key={`${crypto.randomUUID()}`}>{m}</span>
+                <span key={crypto.randomUUID()}>{m}</span>
             ))}
             <button type="button" data-testid="dismiss-error" onClick={onClose}>
                 dismiss error
@@ -71,7 +72,7 @@ jest.mock('utils/parseApiValidationError', () => ({
 }));
 
 jest.mock('utils/timeFormatter', () => ({
-    formatSecondsToTime: (s: number) => `${s}s`,
+    formatSecondsToTime: (s: number) => `${String(s)}s`,
 }));
 
 //  Helpers
@@ -197,7 +198,7 @@ describe('VerifyDialog', () => {
             await waitFor(() => {
                 expect(mockVerify).toHaveBeenCalledTimes(1);
             });
-            const formData = mockVerify.mock.calls[0][0];
+            const formData = at(mockVerify.mock.calls, 0)[0];
             expect(formData.get('verificationcode')).toBe('ABCD1234');
         });
 
@@ -248,7 +249,9 @@ describe('VerifyDialog', () => {
             renderDialog();
             await typeCode('ABCD1234');
             await userEvent.click(getVerifyButton());
-            await waitFor(() => expect(screen.getByTestId('error-alert')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByTestId('error-alert')).toBeInTheDocument();
+            });
             await userEvent.click(screen.getByTestId('dismiss-error'));
             await waitFor(() => {
                 expect(screen.queryByTestId('error-alert')).not.toBeInTheDocument();
@@ -297,7 +300,7 @@ describe('VerifyDialog', () => {
             await userEvent.click(getResendButton());
             await waitFor(() => {
                 expect(mockSetCooldownUntil).toHaveBeenCalledTimes(2);
-                const until = mockSetCooldownUntil.mock.calls[1][0]!;
+                const until = at(mockSetCooldownUntil.mock.calls, 1)[0];
                 expect(until).toBeGreaterThanOrEqual(before + 10 * 60 * 1000);
             });
         });
@@ -306,7 +309,9 @@ describe('VerifyDialog', () => {
             mockResendVerificationCode.mockResolvedValue(undefined);
             renderDialog();
             await userEvent.click(getResendButton());
-            await waitFor(() => expect(screen.getByText(/success!/i)).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText(/success!/i)).toBeInTheDocument();
+            });
             await userEvent.click(screen.getByLabelText(/close/i));
             expect(screen.queryByText(/success!/i)).not.toBeInTheDocument();
         });

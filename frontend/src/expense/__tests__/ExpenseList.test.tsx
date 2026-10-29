@@ -1,4 +1,4 @@
-import { createExpenseContext, render } from '@test-utils';
+import { at, createExpenseContext, render } from '@test-utils';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import ExpenseList from 'expense/ExpenseList';
 import { TextDecoder, TextEncoder } from 'util';
@@ -276,7 +276,9 @@ describe('ExpenseList', () => {
             expect(screen.getByRole('dialog')).toBeInTheDocument();
 
             fireEvent.click(screen.getByRole('button', { name: 'close' }));
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
         });
 
         it('Closes the dialog when the Close button is clicked', async () => {
@@ -291,7 +293,9 @@ describe('ExpenseList', () => {
 
             const dialog = screen.getByRole('dialog');
             fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
         });
 
         it('Does not close the dialog on backdrop click', async () => {
@@ -325,7 +329,9 @@ describe('ExpenseList', () => {
             fireEvent.click(screen.getByRole('button', { name: 'close' }));
 
             // After full close, dialog is gone
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
         });
 
         it('Can open detail dialog for a different expense after closing', async () => {
@@ -340,15 +346,17 @@ describe('ExpenseList', () => {
             const detailButtons = screen.getAllByRole('button', { name: /expense detail/i });
 
             // Open first
-            fireEvent.click(detailButtons[0]);
+            fireEvent.click(at(detailButtons, 0));
             expect(within(screen.getByRole('dialog')).getByText('Grocery Run')).toBeInTheDocument();
 
             // Close
             fireEvent.click(screen.getByRole('button', { name: 'close' }));
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
 
             // Open second
-            fireEvent.click(detailButtons[1]);
+            fireEvent.click(at(detailButtons, 1));
             expect(within(screen.getByRole('dialog')).getByText('Dinner Out')).toBeInTheDocument();
         });
     });
@@ -381,7 +389,9 @@ describe('ExpenseList', () => {
             const confirmButton = await screen.findByRole('button', { name: /confirm/i });
             fireEvent.click(confirmButton);
 
-            await waitFor(() => expect(mockDeleteExpense).toHaveBeenCalledWith(2));
+            await waitFor(() => {
+                expect(mockDeleteExpense).toHaveBeenCalledWith(2);
+            });
         });
 
         it('Closes the confirm dialog when handleClose is called', async () => {
@@ -396,7 +406,9 @@ describe('ExpenseList', () => {
             expect(await screen.findByTestId('confirm-dialog')).toBeInTheDocument();
 
             fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
-            await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
+            });
         });
 
         it('Prevents double-firing deleteExpense when deletingExpense is true', async () => {
@@ -417,7 +429,9 @@ describe('ExpenseList', () => {
             fireEvent.click(confirmButton);
             fireEvent.click(confirmButton);
 
-            await waitFor(() => expect(mockDeleteExpense).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockDeleteExpense).toHaveBeenCalledTimes(1);
+            });
         });
 
         it('Resets selectedExpense to -1 after successful delete', async () => {
@@ -434,7 +448,9 @@ describe('ExpenseList', () => {
 
             fireEvent.click(await screen.findByRole('button', { name: /confirm/i }));
 
-            await waitFor(() => expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
+            });
         });
 
         it('Does not render ConfirmDialog when no expense is selected for deletion', () => {
@@ -461,7 +477,9 @@ describe('ExpenseList', () => {
 
             fireEvent.click(await screen.findByRole('button', { name: /confirm/i }));
 
-            await waitFor(() => expect(screen.getByRole('button', { name: /delete/i })).toBeDisabled());
+            await waitFor(() => {
+                expect(screen.getByRole('button', { name: /delete/i })).toBeDisabled();
+            });
         });
     });
 
@@ -483,7 +501,9 @@ describe('ExpenseList', () => {
 
             // Close detail
             fireEvent.click(screen.getByRole('button', { name: 'close' }));
-            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
 
             // Open delete
             openDeleteDialog();
@@ -511,7 +531,7 @@ describe('ExpenseList', () => {
                     expenses: Array.from({ length: 11 }, (_, i) => ({
                         ...EXPENSE_WITHOUT_RECEIPT,
                         id: i + 1,
-                        description: `Expense ${i + 1}`,
+                        description: `Expense ${String(i + 1)}`,
                     })),
                     totalRowCount: 11,
                     handlePaginationModelChange,

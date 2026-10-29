@@ -41,7 +41,7 @@ export default function SlowRequests() {
                         </TableHead>
 
                         <TableBody>
-                            {metrics?.concurrency.slowRequests.map((r: SlowRequest) => (
+                            {metrics.concurrency.slowRequests.map((r: SlowRequest) => (
                                 <TableRow key={`slow_request_${r.uuid}`}>
                                     <TableCell sx={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                                         {r.urlpath}

@@ -10,6 +10,8 @@ import type {
 } from 'chart.js';
 import type { Options as DataLabelsOptions } from 'chartjs-plugin-datalabels/types/options';
 
+import { formatMoney } from './formatMoney';
+
 /**
  * Utility functions
  */
@@ -18,8 +20,6 @@ import type { Options as DataLabelsOptions } from 'chartjs-plugin-datalabels/typ
  * Adds alpha channel to hex color
  */
 function addAlphaToColor(color: string, alpha: string): string {
-    if (typeof color !== 'string') return color;
-
     // If color already has alpha, replace it
     if (color.length === 9 && color.startsWith('#')) {
         return color.slice(0, 7) + alpha;
@@ -38,7 +38,6 @@ function addAlphaToColor(color: string, alpha: string): string {
  * Removes alpha channel from hex color
  */
 function removeAlphaFromColor(color: string): string {
-    if (typeof color !== 'string') return color;
     const hasAlpha = color.length === 9 && color.startsWith('#');
     return hasAlpha ? color.slice(0, 7) : color;
 }
@@ -61,8 +60,8 @@ export const barPlugins = {
     labels: {
         number: (context: TooltipItem<'bar'>): string => {
             const label = context.dataset.label ?? '';
-            const value = context.parsed.y!;
-            return `${label}: $${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+            const value = context.parsed.y ?? 0;
+            return `${label}: ${formatMoney(value)}`;
         },
     },
 
@@ -76,9 +75,9 @@ export const barPlugins = {
         // Calculate the total of all bars at this x-axis position
         let total = 0;
         tooltipItems.forEach((tooltipItem: TooltipItem<'bar'>): void => {
-            total += tooltipItem.parsed.y!;
+            total += tooltipItem.parsed.y ?? 0;
         });
-        return `Total: $${total.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+        return `Total: ${formatMoney(total)}`;
     },
 
     /**
@@ -89,7 +88,7 @@ export const barPlugins = {
         if (tooltipItems.length > 1) return '';
 
         // Show the data point label
-        return tooltipItems[0].label;
+        return tooltipItems[0]?.label ?? '';
     },
 
     /**
@@ -99,8 +98,8 @@ export const barPlugins = {
         id: 'totalSumLabel',
         afterDatasetsDraw: (chart: Chart<'bar'>) => {
             const { ctx, data, scales } = chart;
-            const xScale = scales.x;
-            const yScale = scales.y;
+            const xScale = scales['x'];
+            const yScale = scales['y'];
 
             if (!xScale || !yScale || !data.labels) return;
 
@@ -117,19 +116,21 @@ export const barPlugins = {
                     }
 
                     // The element has the visual pixel position
-                    return element.getProps(['y'], true).y as number;
+                    const { y } = element.getProps(['y'], true);
+                    return typeof y === 'number' ? y : Number.POSITIVE_INFINITY;
                 })
             );
 
             // Draw labels above bars
             data.labels.forEach((_label, index: number) => {
-                const yValue = Math.min(...yValues[index]);
-                if (!isFinite(yValue)) return;
+                const xValue = xValues[index];
+                const yValue = Math.min(...(yValues[index] ?? []));
+                if (xValue === undefined || !isFinite(yValue)) return;
 
                 const chartValue = yScale.getValueForPixel(yValue);
-                if (!chartValue) return;
+                if (chartValue == null) return;
 
-                const textValue = chartValue.toFixed(0);
+                const textValue = formatMoney(chartValue, { maximumFractionDigits: 0 });
 
                 if (chartValue === 0) return;
 
@@ -142,10 +143,10 @@ export const barPlugins = {
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'bottom';
 
-                const xPos = Math.round(xValues[index]);
+                const xPos = Math.round(xValue);
                 const yPos = Math.round(yValue - 6);
 
-                ctx.fillText(`$${textValue}`, xPos, yPos);
+                ctx.fillText(textValue, xPos, yPos);
                 ctx.restore();
             });
         },
@@ -163,29 +164,30 @@ export const barPlugins = {
         // Update all datasets' opacity
         chart.data.datasets.forEach((dataset, datasetIndex) => {
             const meta = chart.getDatasetMeta(datasetIndex);
+            const bgColor: unknown = dataset.backgroundColor;
+            if (typeof bgColor !== 'string') return;
 
             if (datasetIndex === hoveredDatasetIndex) {
                 // This dataset is hovered - full opacity
                 meta.data.forEach((element) => {
-                    element.options.backgroundColor = dataset.backgroundColor as string;
+                    element.options['backgroundColor'] = bgColor;
                 });
             } else {
                 // Other datasets - reduce opacity
-                const bgColor = dataset.backgroundColor as string;
                 const dimmedColor = addAlphaToColor(bgColor, '40'); // 25% opacity
                 meta.data.forEach((element) => {
-                    element.options.backgroundColor = dimmedColor;
+                    element.options['backgroundColor'] = dimmedColor;
                 });
             }
         });
 
         // Set active tooltip elements for all bars in the hovered dataset
-        if (chart.tooltip && typeof chart.tooltip.setActiveElements === 'function') {
+        if (chart.tooltip) {
             const meta = chart.getDatasetMeta(hoveredDatasetIndex);
             const activeElements = meta.data
                 .map((_element, index) => {
                     // Only include bars that have data (not null/undefined/zero)
-                    const value = chart.data.datasets[hoveredDatasetIndex].data[index];
+                    const value = chart.data.datasets[hoveredDatasetIndex]?.data[index];
                     if (value != null && value !== 0) {
                         return {
                             datasetIndex: hoveredDatasetIndex,
@@ -216,13 +218,15 @@ export const barPlugins = {
         // Reset all datasets to normal opacity
         chart.data.datasets.forEach((dataset, datasetIndex) => {
             const meta = chart.getDatasetMeta(datasetIndex);
+            const bgColor: unknown = dataset.backgroundColor;
+            if (typeof bgColor !== 'string') return;
             meta.data.forEach((element) => {
-                element.options.backgroundColor = dataset.backgroundColor as string;
+                element.options['backgroundColor'] = bgColor;
             });
         });
 
         // Clear tooltips
-        if (chart.tooltip && typeof chart.tooltip.setActiveElements === 'function') {
+        if (chart.tooltip) {
             chart.tooltip.setActiveElements([], {
                 x: 0,
                 y: 0,
@@ -255,24 +259,24 @@ export const donutPlugins = {
      */
     labels: {
         money: (context: TooltipItem<'doughnut'>): string => {
-            const label = context.label ?? '';
+            const label = context.label;
             const value = context.parsed;
             const percentage = getPercentage(value, context);
-            return `${label}: $${value.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${percentage}%)`;
+            return `${label}: ${formatMoney(value)} (${percentage}%)`;
         },
 
         number: (context: TooltipItem<'doughnut'>): string => {
-            const label = context.label ?? '';
+            const label = context.label;
             const value = context.parsed;
             const percentage = getPercentage(value, context);
-            return `${label}: ${value} (${percentage}%)`;
+            return `${label}: ${String(value)} (${percentage}%)`;
         },
 
         memory: (context: TooltipItem<'doughnut'>): string => {
-            const label = context.label ?? '';
+            const label = context.label;
             const value = context.parsed;
             const percentage = getPercentage(value, context);
-            return `${label}: ${value}MB (${percentage}%)`;
+            return `${label}: ${String(value)}MB (${percentage}%)`;
         },
     },
 
@@ -294,20 +298,19 @@ export const donutPlugins = {
      */
     handleHover: (_evt: ChartEvent, item: LegendItem, legend: LegendElement<'doughnut'>): void => {
         const chart = legend.chart;
-        const dataset = chart.data.datasets?.[0];
-        const bgColors = dataset && Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor : null;
-
-        if (!bgColors || !Array.isArray(bgColors)) return;
+        const dataset = chart.data.datasets[0];
+        if (!dataset || !Array.isArray(dataset.backgroundColor)) return;
+        const bgColors: unknown[] = dataset.backgroundColor;
+        if (!bgColors.every((color): color is string => typeof color === 'string')) return;
 
         // Mutate colors safely
-        dataset.backgroundColor = bgColors.map((color: string, index) => {
-            if (typeof color !== 'string') return color; // skip invalid
+        dataset.backgroundColor = bgColors.map((color, index) => {
             const isHovered = index === item.index;
             return isHovered ? removeAlphaFromColor(color) : addAlphaToColor(color, '2D');
         });
 
         // Ensure tooltip exists before using
-        if (chart.tooltip && typeof chart.tooltip.setActiveElements === 'function' && item.index !== undefined) {
+        if (chart.tooltip && item.index !== undefined) {
             chart.tooltip.setActiveElements([{ datasetIndex: 0, index: item.index }], {
                 x: 0,
                 y: 0,
@@ -322,16 +325,13 @@ export const donutPlugins = {
      */
     handleLeave: (_evt: ChartEvent, _item: LegendItem, legend: LegendElement<'doughnut'>): void => {
         const chart = legend.chart;
-        const dataset = chart.data.datasets?.[0];
-        const bgColors = dataset && Array.isArray(dataset.backgroundColor) ? dataset.backgroundColor : null;
-
-        if (!bgColors || !Array.isArray(bgColors)) return;
+        const dataset = chart.data.datasets[0];
+        if (!dataset || !Array.isArray(dataset.backgroundColor)) return;
+        const bgColors: unknown[] = dataset.backgroundColor;
+        if (!bgColors.every((color): color is string => typeof color === 'string')) return;
 
         // Mutate colors safely
-        dataset.backgroundColor = bgColors.map((color: string) => {
-            if (typeof color !== 'string') return color; // skip invalid
-            return removeAlphaFromColor(color);
-        });
+        dataset.backgroundColor = bgColors.map((color) => removeAlphaFromColor(color));
 
         chart.update();
     },
@@ -343,8 +343,8 @@ export const linePlugins = {
      */
     labels: {
         money: (context: TooltipItem<'line'>): string => {
-            const value = context.parsed.y!;
-            return `$${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+            const value = context.parsed.y ?? 0;
+            return formatMoney(value);
         },
     },
 

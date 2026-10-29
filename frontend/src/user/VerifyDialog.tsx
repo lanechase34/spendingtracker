@@ -54,9 +54,9 @@ export default function VerifyDialog() {
     useEffect(() => {
         if (verifyDialogOpen && pendingToken == null) {
             // Reset modal state
-            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect
+            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect -- resets the dialog when its pending token disappears
             setResendAlert(null);
-            // eslint-disable-next-line @eslint-react/set-state-in-effect
+            // eslint-disable-next-line @eslint-react/set-state-in-effect -- resets the dialog when its pending token disappears
             setError(null);
             logout();
             closeVerifyDialog();
@@ -68,7 +68,7 @@ export default function VerifyDialog() {
         loading: resendLoading,
         isCooldownActive,
         remainingSeconds,
-    } = useCooldownAction<void>({
+    } = useCooldownAction({
         cooldownMs: COOLDOWN_MS,
         storageKey: 'verificationResendCooldownUntil',
         setInitialCooldown: true,
@@ -179,9 +179,16 @@ export default function VerifyDialog() {
             <DialogContent>
                 <Box component="form" id="verifyForm" onSubmit={(event) => void handleSubmit(event)} sx={{}} noValidate>
                     <Stack spacing={3} sx={{ width: '100%' }}>
-                        {error && <ErrorAlert messages={error} onClose={() => setError(null)} />}
+                        {error && (
+                            <ErrorAlert
+                                messages={error}
+                                onClose={() => {
+                                    setError(null);
+                                }}
+                            />
+                        )}
 
-                        {resendAlert && (
+                        {resendAlert != null && (
                             <Alert
                                 severity="success"
                                 onClose={() => {
@@ -222,7 +229,7 @@ export default function VerifyDialog() {
                             value={verificationField.value}
                             onChange={verificationField.handleChange}
                             onBlur={verificationField.handleBlur}
-                            error={!!verificationField.error}
+                            error={!(verificationField.error == null)}
                             helperText={verificationField.error}
                         />
                     </Stack>

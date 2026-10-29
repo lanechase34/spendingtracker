@@ -24,30 +24,28 @@ export default function SubscriptionOption({
     helperText,
 }: SubscriptionOptionProps) {
     return (
-        <>
-            <FormControl component="fieldset" variant="outlined" error={error}>
-                <FormControlLabel
-                    value="subscription"
-                    control={<Checkbox checked={isSubscription} onChange={handleIsSubscriptionChange} />}
-                    label="Subscription"
-                    labelPlacement="end"
-                />
-                {isSubscription && (
-                    <FormControl>
-                        <RadioGroup
-                            row
-                            aria-labelledby="subscription-interval-label"
-                            name="interval"
-                            value={subscriptionInterval}
-                            onChange={handleSubscriptionIntervalChange}
-                        >
-                            <FormControlLabel value="Y" control={<Radio />} label="Yearly" />
-                            <FormControlLabel value="M" control={<Radio />} label="Monthly" />
-                        </RadioGroup>
-                    </FormControl>
-                )}
-                {error && <FormHelperText>{helperText}</FormHelperText>}
-            </FormControl>
-        </>
+        <FormControl component="fieldset" variant="outlined" error={error}>
+            <FormControlLabel
+                value="subscription"
+                control={<Checkbox checked={isSubscription} onChange={handleIsSubscriptionChange} />}
+                label="Subscription"
+                labelPlacement="end"
+            />
+            {isSubscription && (
+                <FormControl>
+                    <RadioGroup
+                        row
+                        aria-labelledby="subscription-interval-label"
+                        name="interval"
+                        value={subscriptionInterval}
+                        onChange={handleSubscriptionIntervalChange}
+                    >
+                        <FormControlLabel value="Y" control={<Radio />} label="Yearly" />
+                        <FormControlLabel value="M" control={<Radio />} label="Monthly" />
+                    </RadioGroup>
+                </FormControl>
+            )}
+            {error === true && <FormHelperText>{helperText}</FormHelperText>}
+        </FormControl>
     );
 }

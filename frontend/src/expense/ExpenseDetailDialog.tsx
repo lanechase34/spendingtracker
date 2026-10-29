@@ -72,7 +72,7 @@ export default function ExpenseDetailDialog({ open, expense, onClose, onExited }
                         {expense.receipt > 0 && (
                             <ReceiptImg
                                 alt={expense.description}
-                                url={`${API_BASE_URL}/expenses/${expense.id}/receipt`}
+                                url={`${API_BASE_URL}/expenses/${String(expense.id)}/receipt`}
                             />
                         )}
                     </Stack>

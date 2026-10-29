@@ -59,7 +59,7 @@ const defaultAuthContextValue: AuthContextType = {
         return 'placeholder';
     },
     login: async () => {
-        return await Promise.resolve();
+        await Promise.resolve();
     },
     logout: () => {
         /* empty */
@@ -125,7 +125,7 @@ const defaultExpenseContextValue: ExpenseContextType = {
     totalSum: null,
     filteredSum: null,
     deleteExpense: async () => {
-        return await Promise.resolve();
+        await Promise.resolve();
     },
     loading: false,
     error: false,
@@ -143,7 +143,7 @@ const defaultExpenseContextValue: ExpenseContextType = {
     },
     totalRowCount: 0,
     refetch: async () => {
-        return await Promise.resolve();
+        await Promise.resolve();
     },
     resetState: () => {
         /*empty*/
@@ -167,10 +167,10 @@ const defaultSubscriptionContextValue: SubscriptionContextType = {
     totalSum: null,
     filteredSum: null,
     deleteSubscription: async () => {
-        return await Promise.resolve();
+        await Promise.resolve();
     },
     toggleSubscription: async () => {
-        return await Promise.resolve();
+        await Promise.resolve();
     },
     selectedInterval: '',
     handleIntervalChange: () => {
@@ -192,7 +192,7 @@ const defaultSubscriptionContextValue: SubscriptionContextType = {
     },
     totalRowCount: 0,
     refetch: async () => {
-        return await Promise.resolve();
+        await Promise.resolve();
     },
     resetState: () => {
         /*empty*/
@@ -302,6 +302,34 @@ export const createSubscriptionContext = (overrides?: Partial<SubscriptionContex
     ),
     ...overrides,
 });
+
+/**
+ * Returns the value, failing the test if it is null or undefined
+ */
+export function defined<T>(value: T | null | undefined, description = 'value'): T {
+    if (value == null) {
+        throw new Error(`Expected ${description} to be defined`);
+    }
+    return value;
+}
+
+/**
+ * Returns the element with the given id, failing the test if it doesn't exist
+ */
+export function getById(id: string): HTMLElement {
+    return defined(document.getElementById(id), `element #${id}`);
+}
+
+/**
+ * Returns the item at index, failing the test if it doesn't exist
+ */
+export function at<T>(items: readonly T[], index: number): T {
+    const item = items[index];
+    if (item === undefined) {
+        throw new Error(`Expected an item at index ${String(index)}, but found ${String(items.length)} items`);
+    }
+    return item;
+}
 
 export { customRender as render, customRenderHook as renderHook };
 

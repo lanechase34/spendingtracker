@@ -3,7 +3,7 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import { useTheme } from '@mui/material/styles';
 import { useQuery } from '@tanstack/react-query';
-import type { ChartData, ChartDataset, ChartOptions } from 'chart.js';
+import type { ChartData, ChartOptions } from 'chart.js';
 import {
     CategoryScale,
     Chart as ChartJS,
@@ -23,20 +23,14 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
+import { LineChartResponseSchema } from 'types/LineChart.type';
 import { linePlugins } from 'utils/chartPlugins';
 import { API_BASE_URL } from 'utils/constants';
+import { formatMoney } from 'utils/formatMoney';
 import { queryKeys } from 'utils/queryKeys';
 import { safeJson } from 'utils/safeJson';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, annotationPlugin);
-
-interface LineChartResponse {
-    data: {
-        labels: string[];
-        dataset: ChartDataset<'line'>;
-    };
-    error?: boolean;
-}
 
 /**
  * Line chart showing monthly expense trends
@@ -71,8 +65,16 @@ export default function LineChart() {
         if (!response) throw new Error('No response');
         if (!response.ok) throw new Error('Invalid network response');
 
-        const result = await safeJson<LineChartResponse>(response);
-        if (!result || result.error) throw new Error('Bad Request');
+        const json = await safeJson(response);
+        const parsed = LineChartResponseSchema.safeParse(json);
+
+        if (!parsed.success) {
+            console.error('LineChart schema mismatch', parsed.error);
+            throw new Error('Bad Request');
+        }
+
+        if (parsed.data.error) throw new Error('Bad Request');
+        const result = parsed.data;
 
         return {
             labels: result.data.labels,
@@ -106,12 +108,12 @@ export default function LineChart() {
      */
     const averageValue = useMemo(() => {
         // Ensure there is a data array
-        if (!chartData?.datasets?.[0]?.data) return null;
-        const data = chartData.datasets[0].data as number[];
+        if (!chartData?.datasets[0]?.data) return null;
+        const data = chartData.datasets[0].data;
         if (data.length === 0) return null;
 
-        // Only look at non-null data points
-        const validData = data.filter((val): val is number => val !== null);
+        // Only look at numeric data points
+        const validData = data.filter((val): val is number => typeof val === 'number');
         if (validData.length === 0) return null;
 
         // Calculate the average
@@ -142,7 +144,7 @@ export default function LineChart() {
                         color: '#E0E0E0',
                         precision: 0,
                         callback: (value) => {
-                            return '$' + value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+                            return formatMoney(Number(value));
                         },
                     },
                     grid: {
@@ -165,13 +167,7 @@ export default function LineChart() {
                     align: 'top',
                     anchor: 'end',
                     formatter: (value: number) => {
-                        return (
-                            '$' +
-                            value.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            })
-                        );
+                        return formatMoney(value, { minimumFractionDigits: 2 });
                     },
                 },
                 annotation: {
@@ -186,10 +182,7 @@ export default function LineChart() {
                                       borderWidth: 2,
                                       borderDash: [5, 5],
                                       label: {
-                                          content: `Avg: $${averageValue.toLocaleString(undefined, {
-                                              minimumFractionDigits: 2,
-                                              maximumFractionDigits: 2,
-                                          })}`,
+                                          content: `Avg: ${formatMoney(averageValue, { minimumFractionDigits: 2 })}`,
                                           position: 'end',
                                           display: true,
                                           padding: 4,
@@ -215,7 +208,7 @@ export default function LineChart() {
         return <ErrorCard />;
     }
 
-    if (!chartData?.datasets[0]?.data?.length) {
+    if (!chartData || (chartData.datasets[0]?.data.length ?? 0) === 0) {
         return <EmptyCard />;
     }
 

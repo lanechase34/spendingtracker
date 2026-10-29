@@ -205,13 +205,13 @@ describe('useFormField', () => {
             })
         );
 
-        let errorMessage: string | null;
+        let errorMessage: string | null = null;
         act(() => {
             errorMessage = result.current.validateField();
         });
 
         expect(mockValidator).toHaveBeenCalledWith('invalid text');
-        expect(errorMessage!).toBe('Value contains invalid text'); // ! non-null assertion operator
+        expect(errorMessage).toBe('Value contains invalid text');
         expect(result.current.error).toBe('Value contains invalid text');
     });
 

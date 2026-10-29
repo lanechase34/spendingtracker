@@ -19,29 +19,45 @@ export const AuthDialogContextProvider = ({ children }: { children: ReactNode })
      * Login Dialog State
      */
     const [loginDialogOpen, setLoginDialogOpen] = useState<boolean>(false);
-    const openLoginDialog = useCallback(() => setLoginDialogOpen(true), []);
-    const closeLoginDialog = useCallback(() => setLoginDialogOpen(false), []);
+    const openLoginDialog = useCallback(() => {
+        setLoginDialogOpen(true);
+    }, []);
+    const closeLoginDialog = useCallback(() => {
+        setLoginDialogOpen(false);
+    }, []);
 
     /**
      * Verify 2FA Dialog State
      */
     const [verify2FADialogOpen, setVerify2FADialogOpen] = useState<boolean>(false);
-    const openVerify2FADialog = useCallback(() => setVerify2FADialogOpen(true), []);
-    const closeVerify2FADialog = useCallback(() => setVerify2FADialogOpen(false), []);
+    const openVerify2FADialog = useCallback(() => {
+        setVerify2FADialogOpen(true);
+    }, []);
+    const closeVerify2FADialog = useCallback(() => {
+        setVerify2FADialogOpen(false);
+    }, []);
 
     /**
      * Register Dialog State
      */
     const [registerDialogOpen, setRegisterDialogOpen] = useState<boolean>(false);
-    const openRegisterDialog = useCallback(() => setRegisterDialogOpen(true), []);
-    const closeRegisterDialog = useCallback(() => setRegisterDialogOpen(false), []);
+    const openRegisterDialog = useCallback(() => {
+        setRegisterDialogOpen(true);
+    }, []);
+    const closeRegisterDialog = useCallback(() => {
+        setRegisterDialogOpen(false);
+    }, []);
 
     /**
      * Verify Dialog State
      */
     const [verifyDialogOpen, setVerifyDialogOpen] = useState<boolean>(false);
-    const openVerifyDialog = useCallback(() => setVerifyDialogOpen(true), []);
-    const closeVerifyDialog = useCallback(() => setVerifyDialogOpen(false), []);
+    const openVerifyDialog = useCallback(() => {
+        setVerifyDialogOpen(true);
+    }, []);
+    const closeVerifyDialog = useCallback(() => {
+        setVerifyDialogOpen(false);
+    }, []);
 
     const value: AuthDialogContextType = useMemo(
         () => ({

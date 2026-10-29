@@ -25,9 +25,11 @@ interface HeatMapProps {
     color?: ColorPalette;
 }
 
+type Week = [Date, Date, Date, Date, Date, Date, Date];
+
 // Build grid returning weeks as columns, days as rows (Sun–Sat)
-function buildYearGrid(startDate: Date, endDate: Date): Date[][] {
-    const weeks: Date[][] = [];
+export function buildYearGrid(startDate: Date, endDate: Date): Week[] {
+    const weeks: Week[] = [];
 
     const current = new Date(startDate);
     // Pad back to Sunday of the start week
@@ -37,13 +39,15 @@ function buildYearGrid(startDate: Date, endDate: Date): Date[][] {
     const end = new Date(endDate);
     end.setDate(end.getDate() + (6 - end.getDay()));
 
+    // Returns the current day and advances to the next
+    const nextDay = () => {
+        const day = new Date(current);
+        current.setDate(current.getDate() + 1);
+        return day;
+    };
+
     while (current <= end) {
-        const week: Date[] = [];
-        for (let d = 0; d < 7; d++) {
-            week.push(new Date(current));
-            current.setDate(current.getDate() + 1);
-        }
-        weeks.push(week);
+        weeks.push([nextDay(), nextDay(), nextDay(), nextDay(), nextDay(), nextDay(), nextDay()]);
     }
 
     return weeks;
@@ -77,11 +81,10 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
 
         weeks.forEach((week, wi) => {
             // Use Thursday (index 4) as the representative day - same logic git uses
-            const rep = week[4] ?? week[0];
-            const month = rep.getMonth();
+            const month = week[4].getMonth();
 
             if (month !== lastMonth) {
-                offsets.push({ label: MONTHS[month], offset: wi * STEP });
+                offsets.push({ label: MONTHS[month] ?? '', offset: wi * STEP });
                 lastMonth = month;
             }
         });
@@ -163,7 +166,7 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
                             <Typography
                                 key={label}
                                 variant="caption"
-                                sx={{ position: 'absolute', left: `${offset}px`, whiteSpace: 'nowrap' }}
+                                sx={{ position: 'absolute', left: `${String(offset)}px`, whiteSpace: 'nowrap' }}
                             >
                                 {label}
                             </Typography>
@@ -173,14 +176,14 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
                     {/* Grid */}
                     <Box sx={{ display: 'flex', gap: '4px' }}>
                         {/* Day labels */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: `${CELL_GAP}px`, mr: '4px' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: `${String(CELL_GAP)}px`, mr: '4px' }}>
                             {DAYS.map((day) => (
                                 <Typography
                                     key={day}
                                     variant="caption"
                                     sx={{
-                                        height: `${cellSize}px`,
-                                        lineHeight: `${cellSize}px`,
+                                        height: `${String(cellSize)}px`,
+                                        lineHeight: `${String(cellSize)}px`,
                                         whiteSpace: 'nowrap',
                                         textAlign: 'right',
                                     }}
@@ -195,7 +198,7 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
                             return (
                                 <Box
                                     key={weekKey}
-                                    sx={{ display: 'flex', flexDirection: 'column', gap: `${CELL_GAP}px` }}
+                                    sx={{ display: 'flex', flexDirection: 'column', gap: `${String(CELL_GAP)}px` }}
                                 >
                                     {week.map((date) => {
                                         const key = formatDateKey(date);
@@ -215,8 +218,8 @@ export default function HeatMap({ color = 'amber' }: HeatMapProps) {
                                             >
                                                 <Box
                                                     sx={{
-                                                        width: `${cellSize}px`,
-                                                        height: `${cellSize}px`,
+                                                        width: `${String(cellSize)}px`,
+                                                        height: `${String(cellSize)}px`,
                                                         borderRadius: '2px',
                                                         backgroundColor: bg,
                                                         cursor: 'pointer',

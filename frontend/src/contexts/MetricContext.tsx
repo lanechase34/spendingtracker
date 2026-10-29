@@ -22,7 +22,7 @@ export const MetricContextProvider = ({ children }: { children: ReactNode }) => 
     const { authToken } = useAuthContext();
 
     useEffect(() => {
-        if (!authToken) {
+        if (authToken == null) {
             void clientRef.current?.deactivate();
             clientRef.current = null;
             failedRef.current = false;

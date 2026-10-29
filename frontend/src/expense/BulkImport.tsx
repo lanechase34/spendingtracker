@@ -10,6 +10,7 @@ import { ImportResponseSchema } from 'types/BulkImport.type';
 import type { ExpenseDataRow } from 'types/Expense.type';
 import { clearCategoryCache } from 'utils/categoryCache';
 import { API_BASE_URL } from 'utils/constants';
+import { getErrorInfo } from 'utils/errorInfo';
 import { safeJson } from 'utils/safeJson';
 import type { ErrorField } from 'validators/validateExpenseRow';
 import { validateExpenseRow } from 'validators/validateExpenseRow';
@@ -105,9 +106,9 @@ export default function BulkImport() {
             const rowErrors = result.data.errored;
             dispatch({ type: 'SET_IMPORTERRORS', payload: rowErrors });
         } catch (err: unknown) {
-            const errorInfo = err as { name?: string; message?: string };
+            const errorInfo = getErrorInfo(err);
             console.error('Network error:', err);
-            showToast(errorInfo?.message ?? 'Server Error. Please try again.', 'error');
+            showToast(errorInfo.message ?? 'Server Error. Please try again.', 'error');
             dispatch({ type: 'SET_SHOWIMPORTDIALOG', payload: false });
         } finally {
             dispatch({ type: 'SET_LOADING', payload: false });
@@ -142,13 +143,16 @@ export default function BulkImport() {
 
     const handleDelete = useCallback(
         (rowId: string | number) => {
-            delete editedExpensesRef.current[rowId];
-            dispatch({ type: 'DELETE_ROW', id: `${rowId}` });
+            const { [String(rowId)]: _deleted, ...remaining } = editedExpensesRef.current;
+            editedExpensesRef.current = remaining;
+            dispatch({ type: 'DELETE_ROW', id: String(rowId) });
         },
         [dispatch]
     );
 
-    const handleClose = useCallback(() => resetDialog(), [resetDialog]);
+    const handleClose = useCallback(() => {
+        resetDialog();
+    }, [resetDialog]);
 
     /**
      * Submit processed data to bulk endpoint
@@ -161,18 +165,19 @@ export default function BulkImport() {
         /**
          * Validate each row
          */
-        const allRows = Object.values(editedExpensesRef.current);
+        const allEntries = Object.entries(editedExpensesRef.current);
+        const allRows = allEntries.map(([, row]) => row);
         const validationErrors: Record<string, ErrorField[]> = {};
-        allRows.forEach((row: ExpenseDataRow) => {
+        allEntries.forEach(([rowId, row]) => {
             const rowErrors = validateExpenseRow(row);
             if (rowErrors.length > 0) {
-                validationErrors[row.id!] = rowErrors;
+                validationErrors[rowId] = rowErrors;
             }
         });
 
         if (Object.keys(validationErrors).length > 0) {
             dispatch({ type: 'SET_ERRORS', payload: validationErrors });
-            showToast(`${Object.keys(validationErrors).length} invalid rows. Please correct issues.`, 'error');
+            showToast(`${String(Object.keys(validationErrors).length)} invalid rows. Please correct issues.`, 'error');
             dispatch({ type: 'SET_SAVING', payload: false });
             return;
         }
@@ -193,9 +198,9 @@ export default function BulkImport() {
                 }))
             )
         );
-        allRows.forEach((row: ExpenseDataRow) => {
+        allEntries.forEach(([rowId, row]) => {
             if (row.receipt) {
-                formData.append(`receipt_${row.id}`, row.receipt);
+                formData.append(`receipt_${rowId}`, row.receipt);
             }
         });
 

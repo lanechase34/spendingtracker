@@ -468,17 +468,15 @@ describe('AuthContext', () => {
             mockFetch.mockImplementation(
                 () =>
                     new Promise((resolve) =>
-                        setTimeout(
-                            () =>
-                                resolve({
-                                    ok: true,
-                                    json: () => ({
-                                        error: false,
-                                        data: { csrf_token: 'concurrent-csrf' },
-                                    }),
+                        setTimeout(() => {
+                            resolve({
+                                ok: true,
+                                json: () => ({
+                                    error: false,
+                                    data: { csrf_token: 'concurrent-csrf' },
                                 }),
-                            50
-                        )
+                            });
+                        }, 50)
                     )
             );
 
@@ -551,17 +549,15 @@ describe('AuthContext', () => {
             mockFetch.mockImplementationOnce(
                 () =>
                     new Promise((resolve) =>
-                        setTimeout(
-                            () =>
-                                resolve({
-                                    ok: true,
-                                    json: () => ({
-                                        error: false,
-                                        data: { access_token: 'concurrent-refresh' },
-                                    }),
+                        setTimeout(() => {
+                            resolve({
+                                ok: true,
+                                json: () => ({
+                                    error: false,
+                                    data: { access_token: 'concurrent-refresh' },
                                 }),
-                            50
-                        )
+                            });
+                        }, 50)
                     )
             );
 

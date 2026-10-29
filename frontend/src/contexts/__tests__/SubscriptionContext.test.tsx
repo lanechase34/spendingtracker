@@ -186,12 +186,8 @@ describe('SubscriptionContextProvider', () => {
             });
 
             await waitFor(() => {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                const expected = expect.objectContaining({
-                    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                    additionalParams: expect.objectContaining({ interval: 'Y' }),
-                });
-                expect(mockUsePaginatedFetch).toHaveBeenLastCalledWith(expected);
+                const lastCall: unknown = mockUsePaginatedFetch.mock.lastCall;
+                expect(lastCall).toMatchObject([{ additionalParams: { interval: 'Y' } }]);
             });
         });
 
@@ -212,7 +208,7 @@ describe('SubscriptionContextProvider', () => {
         });
 
         it('Does not throw when no HTMLElement is focused', () => {
-            (document.activeElement as HTMLElement)?.blur?.();
+            if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
             const { result } = renderContext();
 
             expect(() => {

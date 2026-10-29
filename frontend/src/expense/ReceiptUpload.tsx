@@ -25,7 +25,7 @@ export default function ReceiptUpload({
     textInline = false,
 }: ReceiptUploadProps) {
     return (
-        <FormControl error={!!error} sx={{ flexGrow: 1 }}>
+        <FormControl error={!(error == null)} sx={{ flexGrow: 1 }}>
             <Button
                 component="label"
                 role={undefined}
@@ -53,7 +53,7 @@ export default function ReceiptUpload({
                 </Typography>
             )}
 
-            {error && (
+            {error != null && (
                 <Typography variant="body2" color="error" sx={{ mt: 1 }}>
                     {error}
                 </Typography>

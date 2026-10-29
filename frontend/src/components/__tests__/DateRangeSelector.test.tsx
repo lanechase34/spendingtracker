@@ -1,4 +1,4 @@
-import { render } from '@test-utils';
+import { at, defined, render } from '@test-utils';
 import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DateRangeSelector from 'components/DateRangeSelector';
@@ -21,8 +21,8 @@ const mockUseDateRangeContext = useDateRangeContext as jest.Mock;
 /**
  * Mock context functions
  */
-const mockSetPresetRange = jest.fn<void, [Exclude<DateRangeType, 'custom'>]>();
-const mockSetCustomRange = jest.fn<void, [Dayjs, Dayjs]>();
+const mockSetPresetRange = jest.fn<undefined, [Exclude<DateRangeType, 'custom'>]>();
+const mockSetCustomRange = jest.fn<undefined, [Dayjs, Dayjs]>();
 
 /**
  * Mock react-day-picker so we can drive the picker's onSelect callback
@@ -209,7 +209,7 @@ describe('DateRangeSelector Component', () => {
             await user.click(screen.getByRole('button', { name: /done/i }));
 
             expect(mockSetCustomRange).toHaveBeenCalledTimes(1);
-            const [calledStart, calledEnd] = mockSetCustomRange.mock.calls[0];
+            const [calledStart, calledEnd] = at(mockSetCustomRange.mock.calls, 0);
             // Compare as ISO strings since Dayjs instances aren't reference-equal
             expect(calledStart.format('YYYY-MM-DD')).toBe(baseStart.format('YYYY-MM-DD'));
             expect(calledEnd.format('YYYY-MM-DD')).toBe(baseEnd.format('YYYY-MM-DD'));
@@ -226,17 +226,14 @@ describe('DateRangeSelector Component', () => {
         });
 
         it('Does not call setCustomRange if tempEndDate is null (defensive guard)', async () => {
-            // Reproduce the cleared-end-date scenario: context has start but null end
-            mockUseDateRangeContext.mockReturnValue({
-                startDate: baseStart,
-                endDate: null as unknown as dayjs.Dayjs,
-                setPresetRange: mockSetPresetRange,
-                setCustomRange: mockSetCustomRange,
-            });
-
-            userEvent.setup();
             render(<DateRangeSelector />);
             await openPicker();
+
+            // Clear the end date the same way the picker does when a fresh start day is clicked
+            const onSelect = mockDayPicker.lastProps?.['onSelect'] as (range: DateRange | undefined) => void;
+            act(() => {
+                onSelect({ from: baseStart.toDate() });
+            });
 
             const doneBtn = screen.getByRole('button', { name: /done/i });
             // Button should be disabled - guard wouldn't be reachable normally
@@ -282,7 +279,7 @@ describe('DateRangeSelector Component', () => {
 
             // Hover the span wrapping the disabled button to trigger tooltip
             const doneBtn = screen.getByRole('button', { name: /done/i });
-            await user.hover(doneBtn.parentElement!);
+            await user.hover(defined(doneBtn.parentElement));
 
             expect(await screen.findByText(/range cannot exceed 365 days/i)).toBeInTheDocument();
         });
@@ -293,7 +290,7 @@ describe('DateRangeSelector Component', () => {
             await openPicker();
 
             const doneBtn = screen.getByRole('button', { name: /done/i });
-            await user.hover(doneBtn.parentElement!);
+            await user.hover(defined(doneBtn.parentElement));
 
             // Tooltip uses title="" when no error, so it shouldn't render the message
             expect(screen.queryByText(/range cannot exceed 365 days/i)).not.toBeInTheDocument();
@@ -424,7 +421,7 @@ describe('DateRangeSelector Component', () => {
             await user.click(screen.getByRole('button', { name: /done/i }));
 
             expect(mockSetCustomRange).toHaveBeenCalledTimes(1);
-            const [calledStart, calledEnd] = mockSetCustomRange.mock.calls[0];
+            const [calledStart, calledEnd] = at(mockSetCustomRange.mock.calls, 0);
             expect(calledStart.format('YYYY-MM-DD')).toBe('2025-05-01');
             expect(calledEnd.format('YYYY-MM-DD')).toBe('2025-05-15');
         });
@@ -449,7 +446,7 @@ describe('DateRangeSelector Component', () => {
             render(<DateRangeSelector />);
             await openPicker();
 
-            expect(mockDayPicker.lastProps?.numberOfMonths).toBe(1);
+            expect(mockDayPicker.lastProps?.['numberOfMonths']).toBe(1);
         });
 
         it('Passes numberOfMonths=2 on desktop', async () => {
@@ -457,7 +454,7 @@ describe('DateRangeSelector Component', () => {
             render(<DateRangeSelector />);
             await openPicker();
 
-            expect(mockDayPicker.lastProps?.numberOfMonths).toBe(2);
+            expect(mockDayPicker.lastProps?.['numberOfMonths']).toBe(2);
         });
 
         it('Still shows preset buttons in mobile layout', async () => {
@@ -490,32 +487,31 @@ describe('DateRangeSelector Component', () => {
             render(<DateRangeSelector />);
             await openPicker();
 
-            const disabled = mockDayPicker.lastProps?.disabled as { before?: Date; after?: Date }[];
+            const disabled = mockDayPicker.lastProps?.['disabled'] as { before?: Date; after?: Date }[];
             expect(disabled).toBeDefined();
             expect(disabled).toHaveLength(2);
-            expect(disabled[0].before).toBeInstanceOf(Date);
-            expect(disabled[1].after).toBeInstanceOf(Date);
+            expect(at(disabled, 0).before).toBeInstanceOf(Date);
+            expect(at(disabled, 1).after).toBeInstanceOf(Date);
 
             // Verify the dates are 365 days away from start
             const start = baseStart;
-            expect(dayjs(disabled[0].before).format('YYYY-MM-DD')).toBe(
+            expect(dayjs(at(disabled, 0).before).format('YYYY-MM-DD')).toBe(
                 start.subtract(365, 'day').format('YYYY-MM-DD')
             );
-            expect(dayjs(disabled[1].after).format('YYYY-MM-DD')).toBe(start.add(365, 'day').format('YYYY-MM-DD'));
+            expect(dayjs(at(disabled, 1).after).format('YYYY-MM-DD')).toBe(start.add(365, 'day').format('YYYY-MM-DD'));
         });
     });
 
     describe('Edge cases', () => {
         it('Handles null tempEndDate gracefully in selectedRangeLabel', async () => {
-            mockUseDateRangeContext.mockReturnValue({
-                startDate: baseStart,
-                endDate: null as unknown as dayjs.Dayjs,
-                setPresetRange: mockSetPresetRange,
-                setCustomRange: mockSetCustomRange,
-            });
-
             render(<DateRangeSelector />);
             await openPicker();
+
+            // Clear the end date the same way the picker does when a fresh start day is clicked
+            const onSelect = mockDayPicker.lastProps?.['onSelect'] as (range: DateRange | undefined) => void;
+            act(() => {
+                onSelect({ from: baseStart.toDate() });
+            });
 
             // The label uses `tempStartDate && tempEndDate ? ... : ''`,
             // so it should render empty when end is null

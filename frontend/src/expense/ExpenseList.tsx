@@ -97,7 +97,7 @@ export default function ExpenseList() {
     }, [deleteExpense, deletingExpense, selectedExpense]);
 
     // Rows of expenses
-    const rows = useMemo<Expense[]>(() => expenses ?? [], [expenses]);
+    const rows = expenses;
 
     // Columns are the expense properties
     const columns: GridColDef<Expense>[] = useMemo(
@@ -228,7 +228,9 @@ export default function ExpenseList() {
                 open={detailOpen}
                 expense={selectedExpenseDetail}
                 onClose={handleCloseDetail}
-                onExited={() => setSelectedExpenseDetail(null)}
+                onExited={() => {
+                    setSelectedExpenseDetail(null);
+                }}
             />
 
             {selectedExpense > 0 && (

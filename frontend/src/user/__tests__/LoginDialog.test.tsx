@@ -1,3 +1,4 @@
+import { at } from '@test-utils';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import useAuthContext from 'hooks/useAuthContext';
@@ -52,7 +53,9 @@ beforeAll(() =>
         // empty
     })
 );
-afterAll(() => (console.error as jest.Mock).mockRestore());
+afterAll(() => {
+    (console.error as jest.Mock).mockRestore();
+});
 
 const mockUseAuthContext = useAuthContext as jest.Mock;
 const mockUseAuthDialogContext = useAuthDialogContext as jest.Mock;
@@ -195,8 +198,8 @@ describe('LoginDialog', () => {
 
             await waitFor(() => {
                 expect(mockUserAPILogin).toHaveBeenCalledTimes(1);
-                const calls = mockUserAPILogin.mock.calls as FormData[][];
-                const formData = calls[0][0];
+                const calls = mockUserAPILogin.mock.calls as [FormData][];
+                const formData = at(calls, 0)[0];
                 expect(formData.get('email')).toBe('test@example.com');
                 expect(formData.get('password')).toBe('Password123!');
                 expect(formData.get('rememberMe')).toBe('false');
@@ -212,8 +215,8 @@ describe('LoginDialog', () => {
             await user.click(screen.getByRole('button', { name: /log in/i }));
 
             await waitFor(() => {
-                const calls = mockUserAPILogin.mock.calls as FormData[][];
-                const formData = calls[0][0];
+                const calls = mockUserAPILogin.mock.calls as [FormData][];
+                const formData = at(calls, 0)[0];
                 expect(formData.get('rememberMe')).toBe('true');
             });
         });
@@ -243,7 +246,9 @@ describe('LoginDialog', () => {
             mockUserAPILogin.mockImplementation(
                 () =>
                     new Promise((resolve) =>
-                        setTimeout(() => resolve({ access_token: 'token', mfa_required: false }), 100)
+                        setTimeout(() => {
+                            resolve({ access_token: 'token', mfa_required: false });
+                        }, 100)
                     )
             );
             renderComponent();
@@ -260,7 +265,9 @@ describe('LoginDialog', () => {
             mockUserAPILogin.mockImplementation(
                 () =>
                     new Promise((resolve) =>
-                        setTimeout(() => resolve({ access_token: 'token', mfa_required: false }), 100)
+                        setTimeout(() => {
+                            resolve({ access_token: 'token', mfa_required: false });
+                        }, 100)
                     )
             );
             renderComponent();
@@ -448,7 +455,9 @@ describe('LoginDialog', () => {
             mockUserAPILogin.mockImplementation(
                 () =>
                     new Promise((resolve) =>
-                        setTimeout(() => resolve({ access_token: 'token', mfa_required: false }), 100)
+                        setTimeout(() => {
+                            resolve({ access_token: 'token', mfa_required: false });
+                        }, 100)
                     )
             );
             renderComponent();

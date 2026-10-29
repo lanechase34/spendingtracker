@@ -1,3 +1,4 @@
+import { getById } from '@test-utils';
 import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import useAuthContext from 'hooks/useAuthContext';
@@ -43,7 +44,9 @@ beforeAll(() =>
         // empty
     })
 );
-afterAll(() => (console.error as jest.Mock).mockRestore());
+afterAll(() => {
+    (console.error as jest.Mock).mockRestore();
+});
 
 const mockUseAuthContext = useAuthContext as jest.Mock;
 const mockUseAuthDialogContext = useAuthDialogContext as jest.Mock;
@@ -81,16 +84,16 @@ function renderComponent(
 const user = userEvent.setup({ delay: null });
 
 function fillForm(email = 'test@example.com', password = 'Password123!', salary = '75000', monthlyTakeHome = '5000') {
-    fireEvent.change(document.getElementById('inputEmailRegister')!, {
+    fireEvent.change(getById('inputEmailRegister'), {
         target: { value: email },
     });
-    fireEvent.change(document.getElementById('inputPasswordRegister')!, {
+    fireEvent.change(getById('inputPasswordRegister'), {
         target: { value: password },
     });
-    fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+    fireEvent.change(getById('outlined-adornment-salary'), {
         target: { value: salary },
     });
-    fireEvent.change(document.getElementById('outlined-adornment-takehome')!, {
+    fireEvent.change(getById('outlined-adornment-takehome'), {
         target: { value: monthlyTakeHome },
     });
 }
@@ -279,7 +282,12 @@ describe('RegisterDialog', () => {
 
         it('Shows loading state while submitting', async () => {
             mockUserAPIRegister.mockImplementation(
-                () => new Promise<string>((resolve) => setTimeout(() => resolve('pending-token'), 10000))
+                () =>
+                    new Promise<string>((resolve) =>
+                        setTimeout(() => {
+                            resolve('pending-token');
+                        }, 10000)
+                    )
             );
             renderComponent();
 
@@ -293,7 +301,12 @@ describe('RegisterDialog', () => {
 
         it('Does not submit again while loading', async () => {
             mockUserAPIRegister.mockImplementation(
-                () => new Promise<string>((resolve) => setTimeout(() => resolve('pending-token'), 10000))
+                () =>
+                    new Promise<string>((resolve) =>
+                        setTimeout(() => {
+                            resolve('pending-token');
+                        }, 10000)
+                    )
             );
             renderComponent();
 
@@ -419,7 +432,12 @@ describe('RegisterDialog', () => {
 
         it('Close button is disabled while loading', async () => {
             mockUserAPIRegister.mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve('token'), 100))
+                () =>
+                    new Promise((resolve) =>
+                        setTimeout(() => {
+                            resolve('token');
+                        }, 100)
+                    )
             );
             renderComponent();
 
@@ -431,7 +449,12 @@ describe('RegisterDialog', () => {
 
         it('Does not close while loading when close is clicked', async () => {
             mockUserAPIRegister.mockImplementation(
-                () => new Promise((resolve) => setTimeout(() => resolve('token'), 100))
+                () =>
+                    new Promise((resolve) =>
+                        setTimeout(() => {
+                            resolve('token');
+                        }, 100)
+                    )
             );
             renderComponent();
 

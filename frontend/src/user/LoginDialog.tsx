@@ -93,7 +93,7 @@ export default function LoginDialog() {
             const result = await userAPI.login(formData);
 
             // If the user is pending 2fa token, show the 2fa dialog
-            if (result.mfa_required) {
+            if (result.mfa_required === true) {
                 setPending2FAToken(result.access_token);
                 openVerify2FADialog();
                 closeLoginDialog();
@@ -141,7 +141,13 @@ export default function LoginDialog() {
                 }}
             >
                 Login
-                <IconButton disabled={loading} aria-label="close" onClick={() => handleClose({}, 'button')}>
+                <IconButton
+                    disabled={loading}
+                    aria-label="close"
+                    onClick={() => {
+                        handleClose({}, 'button');
+                    }}
+                >
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -166,7 +172,7 @@ export default function LoginDialog() {
                             value={emailField.value}
                             onChange={emailField.handleChange}
                             onBlur={emailField.handleBlur}
-                            error={!!emailField.error}
+                            error={!(emailField.error == null)}
                             helperText={emailField.error}
                         />
 
@@ -179,7 +185,7 @@ export default function LoginDialog() {
                             value={passwordField.value}
                             onChange={passwordField.handleChange}
                             onBlur={passwordField.handleBlur}
-                            error={!!passwordField.error}
+                            error={!(passwordField.error == null)}
                             helperText={passwordField.error}
                         />
 
@@ -187,7 +193,9 @@ export default function LoginDialog() {
                             control={
                                 <Checkbox
                                     checked={rememberMe}
-                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    onChange={(e) => {
+                                        setRememberMe(e.target.checked);
+                                    }}
                                     name="rememberMe"
                                     color="primary"
                                     sx={{ pl: 0 }}

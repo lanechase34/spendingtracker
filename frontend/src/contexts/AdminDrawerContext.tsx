@@ -13,7 +13,9 @@ export const AdminDrawerContext = createContext<AdminDrawerContextType | undefin
  */
 export function AdminDrawerContextProvider({ children }: { children: ReactNode }) {
     const [mobileOpen, setMobileOpen] = useState<boolean>(false);
-    const toggleDrawer = useCallback(() => setMobileOpen((prev) => !prev), []);
+    const toggleDrawer = useCallback(() => {
+        setMobileOpen((prev) => !prev);
+    }, []);
 
     const value: AdminDrawerContextType = useMemo(
         () => ({

@@ -6,13 +6,13 @@ import usePaginatedFetch from 'hooks/usePaginatedFetch';
 import useToastContext from 'hooks/useToastContext';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useEffect, useMemo } from 'react';
-import type { APIResponseType } from 'types/APIResponse.type';
 import type { Expense } from 'types/Expense.type';
 import type { ExpenseList } from 'types/ExpenseList.type';
 import { ExpenseListSchema } from 'types/ExpenseList.type';
 import type { UsePaginatedFetchReturn } from 'types/UsePaginatedFetchReturn.type';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
+import { NoDataAPIResponseSchema } from 'validators/validateAPIResponse';
 
 export interface ExpenseContextType extends Omit<UsePaginatedFetchReturn<ExpenseList>, 'data'> {
     expenses: Expense[];
@@ -77,12 +77,12 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
      * Reset state on logout
      */
     useEffect(() => {
-        if (!authToken) {
+        if (authToken == null) {
             resetState();
         }
     }, [authToken, resetState]);
 
-    const currentPageItemCount = data?.expenses?.length ?? 0;
+    const currentPageItemCount = data?.expenses.length ?? 0;
 
     /**
      * deleteExpense function
@@ -92,15 +92,15 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
         async (expenseId: number) => {
             try {
                 const response = await authFetch({
-                    url: `${API_BASE_URL}/expenses/${expenseId}`,
+                    url: `${API_BASE_URL}/expenses/${String(expenseId)}`,
                     method: 'DELETE',
                 });
 
                 if (!response) return;
                 if (!response.ok) throw new Error('Invalid network response');
 
-                const result = await safeJson<APIResponseType<null>>(response);
-                if (!result || result.error) throw new Error('Bad Request');
+                const parsed = NoDataAPIResponseSchema.safeParse(await safeJson(response));
+                if (!parsed.success || parsed.data.error) throw new Error('Bad Request');
 
                 // Refetch the current page
                 // Check if we need to go back a page

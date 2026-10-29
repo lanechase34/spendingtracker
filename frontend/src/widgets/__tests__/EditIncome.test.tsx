@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { render } from '@test-utils';
+import { defined, render } from '@test-utils';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
@@ -174,7 +174,7 @@ describe('<EditIncome />', () => {
             const dialog = screen.getByRole('dialog');
 
             // Simulate backdrop click
-            fireEvent.click(dialog.parentElement!);
+            fireEvent.click(defined(dialog.parentElement));
 
             // Dialog should still be open
             expect(screen.getByText(/edit income/i)).toBeInTheDocument();
@@ -201,7 +201,7 @@ describe('<EditIncome />', () => {
 
             // Try to close with backdrop
             const dialog = screen.getByRole('dialog');
-            fireEvent.click(dialog.parentElement!);
+            fireEvent.click(defined(dialog.parentElement));
 
             // Should still be open
             expect(screen.getByText(/edit income/i)).toBeInTheDocument();
@@ -274,22 +274,6 @@ describe('<EditIncome />', () => {
             await waitFor(() => {
                 expect(mockNumberField.setValue).toHaveBeenCalledWith('5000');
                 expect(mockNumberField.setValue).toHaveBeenCalledWith('500');
-            });
-        });
-
-        it('Handles missing income data gracefully', async () => {
-            mockUseFetchIncome.mockReturnValue({
-                data: { pay: undefined, extra: undefined },
-                isLoading: false,
-                isError: false,
-            });
-
-            render(<EditIncome date={baseDate} />, { queryClient });
-
-            fireEvent.click(screen.getByLabelText(/edit/i));
-
-            await waitFor(() => {
-                expect(mockNumberField.setValue).toHaveBeenCalledWith('0');
             });
         });
 

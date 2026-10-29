@@ -13,5 +13,5 @@ export default function useAuthReady() {
     const { authToken } = useAuthContext();
     const { loading, user } = useUserContext();
 
-    return !!authToken && !loading && !!user;
+    return !(authToken == null) && !loading && !!user;
 }

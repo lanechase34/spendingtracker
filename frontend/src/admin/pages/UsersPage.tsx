@@ -100,7 +100,7 @@ export default function UsersPage() {
             hideable: false,
             type: 'boolean',
             renderCell: (params: GridRenderCellParams<UserRecord>) =>
-                params.value ? <CheckIcon color="success" fontSize="small" /> : null,
+                params.row.verified ? <CheckIcon color="success" fontSize="small" /> : null,
             cellClassName: 'centered-col',
         },
         {
@@ -126,7 +126,12 @@ export default function UsersPage() {
                             alignItems: 'center',
                         }}
                     >
-                        <Button variant="outlined" onClick={() => setSelectedUser(params.row)}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => {
+                                setSelectedUser(params.row);
+                            }}
+                        >
                             <ZoomInIcon fontSize="small" />
                         </Button>
                     </Box>
@@ -178,7 +183,14 @@ export default function UsersPage() {
                 />
             </Box>
 
-            <Dialog open={Boolean(selectedUser)} onClose={() => setSelectedUser(null)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={Boolean(selectedUser)}
+                onClose={() => {
+                    setSelectedUser(null);
+                }}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle
                     sx={{
                         display: 'flex',
@@ -187,7 +199,12 @@ export default function UsersPage() {
                     }}
                 >
                     User Details
-                    <IconButton aria-label="close" onClick={() => setSelectedUser(null)}>
+                    <IconButton
+                        aria-label="close"
+                        onClick={() => {
+                            setSelectedUser(null);
+                        }}
+                    >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -219,7 +236,7 @@ export default function UsersPage() {
                             <DetailRow
                                 label="Last Login"
                                 value={
-                                    selectedUser.lastlogin
+                                    selectedUser.lastlogin != null
                                         ? dayjs(selectedUser.lastlogin).format('MM/DD/YYYY HH:mm:ss')
                                         : 'Never logged in'
                                 }
@@ -228,7 +245,12 @@ export default function UsersPage() {
                     )}
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button variant="outlined" onClick={() => setSelectedUser(null)}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => {
+                            setSelectedUser(null);
+                        }}
+                    >
                         Close
                     </Button>
                 </DialogActions>

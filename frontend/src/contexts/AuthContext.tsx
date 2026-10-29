@@ -94,6 +94,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const [wasAuthenticated, setWasAuthenticated] = useLocalStorage<boolean>({
         key: 'wasAuthenticated',
         initialValue: false,
+        schema: z.boolean(),
     });
 
     /**
@@ -110,7 +111,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             setAuthToken(token); // Then update state
 
             // Update wasAuthenticated flag when we get a valid token
-            if (token) {
+            if (token != null) {
                 setWasAuthenticated(true);
             }
         },
@@ -145,7 +146,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const getCsrfToken = useCallback(
         async (token: string, forceNew = false): Promise<string | null> => {
             // If token already exists, return it
-            if (!forceNew && csrfTokenRef.current) {
+            if (!forceNew && csrfTokenRef.current != null) {
                 return csrfTokenRef.current;
             }
 
@@ -209,7 +210,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             setUserJustLoggedIn(true);
 
             // Get CSRF token immediately
-            if (token) {
+            if (token != null) {
                 await getCsrfToken(token);
             }
         },
@@ -324,7 +325,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
 
         // If user was never authenticated, skip the refresh attempt entirely
         if (!wasAuthenticated) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- the initial auth check completes immediately when there is nothing to refresh
             setHasCompletedInitialCheck(true);
             return;
         }

@@ -127,7 +127,7 @@ export function expenseRow(page: Page, description: string): Locator {
 export function toDatePickerDigits(date: Date): string {
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    return `${mm}${dd}${date.getFullYear()}`;
+    return `${mm}${dd}${String(date.getFullYear())}`;
 }
 
 /**
@@ -136,7 +136,7 @@ export function toDatePickerDigits(date: Date): string {
 export function toDisplayDate(date: Date): string {
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    return `${mm}/${dd}/${date.getFullYear()}`;
+    return `${mm}/${dd}/${String(date.getFullYear())}`;
 }
 
 /**
@@ -146,7 +146,7 @@ export function toDisplayDate(date: Date): string {
 function toCalendarDay(date: Date): string {
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
-    return `${date.getFullYear()}-${mm}-${dd}`;
+    return `${String(date.getFullYear())}-${mm}-${dd}`;
 }
 
 function monthsBetween(a: Date, b: Date): number {

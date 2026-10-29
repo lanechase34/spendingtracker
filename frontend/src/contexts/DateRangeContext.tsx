@@ -4,6 +4,7 @@ import useLocalStorage, { dayjsTransform } from 'hooks/useLocalStorage';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useMemo } from 'react';
 import type { DateRangeType } from 'types/DateRange.type';
+import { DateRangeTypeSchema } from 'types/DateRange.type';
 import type { DateRangeContextType } from 'types/DateRangeContext.type';
 
 export const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
@@ -61,6 +62,7 @@ export const DateRangeContextProvider = ({ children }: { children: ReactNode }) 
     const [rangeType, setRangeType] = useLocalStorage<DateRangeType>({
         key: 'rangeType',
         initialValue: 'this-month',
+        schema: DateRangeTypeSchema,
     });
 
     const [customStartDate, setCustomStartDate] = useLocalStorage<Dayjs | null>({

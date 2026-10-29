@@ -91,10 +91,10 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
         }
 
         // Reset profile on logout or invalid auth token
-        if (!authToken) {
-            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect
+        if (authToken == null) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect -- clears profile state when the auth token goes away
             setLoading(false);
-            // eslint-disable-next-line @eslint-react/set-state-in-effect
+            // eslint-disable-next-line @eslint-react/set-state-in-effect -- clears profile state when the auth token goes away
             setUserProfile(null);
             hasLoadedProfileRef.current = false;
             return;
@@ -114,7 +114,7 @@ export const UserContextProvider = ({ children }: { children: ReactNode }) => {
     }, [authToken, isInitializing]);
 
     const isAuthorized = useCallback(() => {
-        return userProfile !== null && (userProfile?.role ?? '').length > 0;
+        return userProfile !== null && (userProfile.role ?? '').length > 0;
     }, [userProfile]);
 
     /**

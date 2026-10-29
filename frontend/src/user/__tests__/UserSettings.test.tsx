@@ -1,3 +1,4 @@
+import { defined, getById } from '@test-utils';
 import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import useAuthFetch_ from 'hooks/useAuthFetch';
@@ -40,8 +41,12 @@ jest.mock('user/Setup2FADialog', () => ({
     default: jest.fn(({ open, onClose, onEnabled }: { open: boolean; onClose: () => void; onEnabled: () => void }) =>
         open ? (
             <div data-testid="setup-2fa-dialog">
-                <button onClick={onClose}>Close Setup</button>
-                <button onClick={onEnabled}>Confirm Enabled</button>
+                <button type="button" onClick={onClose}>
+                    Close Setup
+                </button>
+                <button type="button" onClick={onEnabled}>
+                    Confirm Enabled
+                </button>
             </div>
         ) : null
     ),
@@ -52,8 +57,12 @@ jest.mock('user/Disable2FADialog', () => ({
     default: jest.fn(({ open, onClose, onDisabled }: { open: boolean; onClose: () => void; onDisabled: () => void }) =>
         open ? (
             <div data-testid="disable-2fa-dialog">
-                <button onClick={onClose}>Close Disable</button>
-                <button onClick={onDisabled}>Confirm Disabled</button>
+                <button type="button" onClick={onClose}>
+                    Close Disable
+                </button>
+                <button type="button" onClick={onDisabled}>
+                    Confirm Disabled
+                </button>
             </div>
         ) : null
     ),
@@ -64,7 +73,9 @@ beforeAll(() =>
         // empty
     })
 );
-afterAll(() => (console.error as jest.Mock).mockRestore());
+afterAll(() => {
+    (console.error as jest.Mock).mockRestore();
+});
 
 const mockUseAuthFetch = useAuthFetch_ as jest.Mock;
 const mockUseToastContext = useToastContext_ as jest.Mock;
@@ -358,7 +369,7 @@ describe('UserSettings', () => {
         it('Enables Save when salary is changed', () => {
             renderComponent({ userOverrides: { salary: 80000 } });
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -368,7 +379,7 @@ describe('UserSettings', () => {
         it('Enables Save when monthly take home is changed', () => {
             renderComponent({ userOverrides: { monthlyTakeHome: 5000 } });
 
-            fireEvent.change(document.getElementById('outlined-adornment-takehome')!, {
+            fireEvent.change(getById('outlined-adornment-takehome'), {
                 target: { value: '6000' },
             });
 
@@ -378,12 +389,12 @@ describe('UserSettings', () => {
         it('Disables Save when salary is changed back to original value', () => {
             renderComponent({ userOverrides: { salary: 80000 } });
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
             expect(screen.getByRole('button', { name: /save/i })).not.toBeDisabled();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '80000' },
             });
             expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
@@ -392,10 +403,10 @@ describe('UserSettings', () => {
         it('Disables Save when there are validation errors', () => {
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: 'notanumber' },
             });
-            fireEvent.blur(document.getElementById('outlined-adornment-salary')!);
+            fireEvent.blur(getById('outlined-adornment-salary'));
 
             expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
         });
@@ -405,7 +416,7 @@ describe('UserSettings', () => {
         it('Calls updateProfile with correct values', async () => {
             renderComponent({ userOverrides: { salary: 80000, monthlyTakeHome: 5000 } });
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -423,7 +434,7 @@ describe('UserSettings', () => {
         it('Shows success toast after save', async () => {
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -437,7 +448,7 @@ describe('UserSettings', () => {
         it('Calls onClose after save', async () => {
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -464,7 +475,7 @@ describe('UserSettings', () => {
         it('Disables Save button after successful save when no further changes are made', async () => {
             renderComponent({ userOverrides: { salary: 80000 } });
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -482,7 +493,7 @@ describe('UserSettings', () => {
             mockUpdateProfile.mockImplementation(() => new Promise<void>((resolve) => setTimeout(resolve, 10000)));
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -497,7 +508,7 @@ describe('UserSettings', () => {
             mockUpdateProfile.mockImplementation(() => new Promise<void>((resolve) => setTimeout(resolve, 10000)));
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -505,9 +516,11 @@ describe('UserSettings', () => {
 
             await waitFor(() => {
                 expect(
-                    within(screen.getByRole('dialog'))
-                        .getAllByRole('button', { name: /close/i })
-                        .find((btn) => btn.textContent?.trim() === 'Close')!
+                    defined(
+                        within(screen.getByRole('dialog'))
+                            .getAllByRole('button', { name: /close/i })
+                            .find((btn) => btn.textContent.trim() === 'Close')
+                    )
                 ).toBeDisabled();
             });
         });
@@ -518,7 +531,7 @@ describe('UserSettings', () => {
             mockUpdateProfile.mockRejectedValue(new Error('Network error'));
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -533,7 +546,7 @@ describe('UserSettings', () => {
             mockUpdateProfile.mockRejectedValue(new Error('Network error'));
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -550,7 +563,7 @@ describe('UserSettings', () => {
             mockUpdateProfile.mockRejectedValue(new Error('Network error'));
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -566,7 +579,7 @@ describe('UserSettings', () => {
 
             renderComponent();
 
-            fireEvent.change(document.getElementById('outlined-adornment-salary')!, {
+            fireEvent.change(getById('outlined-adornment-salary'), {
                 target: { value: '90000' },
             });
 
@@ -588,9 +601,11 @@ describe('UserSettings', () => {
 
             // The text "Close" button in DialogActions
             await user.click(
-                within(screen.getByRole('dialog'))
-                    .getAllByRole('button', { name: /close/i })
-                    .find((btn) => btn.textContent?.trim() === 'Close')!
+                defined(
+                    within(screen.getByRole('dialog'))
+                        .getAllByRole('button', { name: /close/i })
+                        .find((btn) => btn.textContent.trim() === 'Close')
+                )
             );
 
             expect(mockOnClose).toHaveBeenCalledWith({}, 'button');
@@ -600,7 +615,7 @@ describe('UserSettings', () => {
             renderComponent();
 
             // The close icon button is within the DialogTitle
-            const title = screen.getByRole('heading', { name: /settings/i }).closest('h2')!;
+            const title = defined(screen.getByRole('heading', { name: /settings/i }).closest('h2'));
             await user.click(within(title).getByRole('button'));
 
             expect(mockOnClose).toHaveBeenCalled();

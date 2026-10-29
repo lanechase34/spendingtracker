@@ -1,22 +1,28 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { defineConfig } from 'vite';
 
-export default defineConfig(({ mode }) => ({
+const analyze = process.env['npm_lifecycle_event'] === 'analyze';
+
+export default defineConfig({
     build: {
         outDir: 'build',
         chunkSizeWarningLimit: 1000,
-        rollupOptions: {
+        rolldownOptions: {
             output: {
-                manualChunks: (id) => {
-                    if (id.includes('node_modules')) {
-                        if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom'))
-                            return 'vendor-react';
-                        if (id.includes('@mui/material') || id.includes('@mui/icons-material')) return 'vendor-mui';
-                        if (id.includes('@mui/x-data-grid')) return 'vendor-mui-x';
-                        if (id.includes('@mui/x-date-pickers') || id.includes('dayjs')) return 'vendor-date-pickers';
-                        if (id.includes('@tanstack/react-query')) return 'vendor-query';
-                    }
+                codeSplitting: {
+                    groups: [
+                        {
+                            name: 'vendor-react',
+                            test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/,
+                            priority: 20,
+                        },
+                        {
+                            name: 'vendor-mui',
+                            test: /node_modules[\\/](@mui[\\/](material|system|utils|styled-engine|private-theming|core-downloads-tracker)|@emotion|@popperjs|react-transition-group|stylis)[\\/]/,
+                            priority: 10,
+                        },
+                    ],
                 },
             },
         },
@@ -24,40 +30,27 @@ export default defineConfig(({ mode }) => ({
     resolve: {
         tsconfigPaths: true,
     },
-    base: '/spendingtracker',
+    base: '/spendingtracker/',
     plugins: [
         react(),
-        visualizer({
-            filename: 'bundle-stats.json',
-            json: true,
-        }),
-        visualizer({
-            open: true,
-        }),
-        {
-            name: 'html-inject-env',
-            transformIndexHtml(html) {
-                const base = 'SpendingTracker';
-                const title = mode === 'production' ? base : `[DEV] ${base}`;
-                return html.replace('%APP_TITLE%', title);
-            },
-        },
+        analyze && visualizer({ filename: 'bundle-stats.json', json: true }),
+        analyze && visualizer({ open: true }),
     ],
     server: {
         host: '0.0.0.0',
         port: 3000,
         open: false,
         watch: {
-            usePolling: true,
+            usePolling: Boolean(process.env['VITE_POLL']),
             interval: 1000,
             ignored: ['**/test-results/**', '**/playwright-report/**', '**/blob-report/**', '**/coverage/**'],
         },
         proxy: {
             '/spendingtracker/api/v1': {
-                target: process.env.VITE_API_TARGET || 'http://localhost:8082',
+                target: process.env['VITE_API_TARGET'] ?? 'http://localhost:8082',
                 changeOrigin: true,
                 rewrite: (path) => path.replace(/^\/spendingtracker\/api\/v1/, '/api/v1'),
             },
         },
     },
-}));
+});

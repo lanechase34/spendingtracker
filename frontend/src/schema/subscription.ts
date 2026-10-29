@@ -2,10 +2,9 @@ import type useAuthFetch from 'hooks/useAuthFetch';
 import type { Subscription } from 'types/Subscription.type';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
-import { validateAPIResponse } from 'validators/validateAPIResponse';
+import { NoDataAPIResponseSchema, validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
 
-const NoDataAPIResponseSchema = validateAPIResponse(z.null().optional());
 const ToggleSubscriptionAPISchema = validateAPIResponse(
     z.object({
         nextDate: z.iso.datetime({ local: true }),
@@ -26,7 +25,7 @@ export function subscriptionService(authFetch: ReturnType<typeof useAuthFetch>) 
          */
         async toggleSubscription(row: Subscription, signal?: AbortSignal) {
             const response = await authFetch({
-                url: `${API_BASE_URL}/subscriptions/${row.id}/active/${!row.active}`,
+                url: `${API_BASE_URL}/subscriptions/${String(row.id)}/active/${String(!row.active)}`,
                 method: 'PATCH',
                 signal: signal,
             });
@@ -46,7 +45,7 @@ export function subscriptionService(authFetch: ReturnType<typeof useAuthFetch>) 
             }
 
             // Check errors
-            if (parsed.data?.error ?? false) {
+            if (parsed.data.error) {
                 throw new Error('Error toggling subscription. Please try again in a few minutes.');
             }
         },
@@ -59,7 +58,7 @@ export function subscriptionService(authFetch: ReturnType<typeof useAuthFetch>) 
          */
         async deleteSubscription(subscriptionId: number, signal?: AbortSignal) {
             const response = await authFetch({
-                url: `${API_BASE_URL}/subscriptions/${subscriptionId}`,
+                url: `${API_BASE_URL}/subscriptions/${String(subscriptionId)}`,
                 method: 'DELETE',
                 signal: signal,
             });
@@ -78,7 +77,7 @@ export function subscriptionService(authFetch: ReturnType<typeof useAuthFetch>) 
             }
 
             // Check errors
-            if (parsed.data?.error ?? false) {
+            if (parsed.data.error) {
                 throw new Error('Error toggling subscription. Please try again in a few minutes.');
             }
         },

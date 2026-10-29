@@ -21,10 +21,15 @@ import type { IncomeWaterfallChart } from 'types/IncomeWaterfallChart.type';
 import { IncomeWaterfallChartResponseSchema } from 'types/IncomeWaterfallChart.type';
 import { linePlugins } from 'utils/chartPlugins';
 import { API_BASE_URL } from 'utils/constants';
+import { formatMoney } from 'utils/formatMoney';
 import { queryKeys } from 'utils/queryKeys';
 import { safeJson } from 'utils/safeJson';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, annotationPlugin);
+
+const CENTS = { minimumFractionDigits: 2 };
+// Each bar is a change, so gains show a + sign
+const SIGNED_CENTS = { minimumFractionDigits: 2, signDisplay: 'exceptZero' } as const;
 
 /**
  * Waterfall chart showing monthly net income (income - expenses).
@@ -98,7 +103,7 @@ export default function IncomeWaterfallChart() {
      * Build the stacked floating-bar data.
      */
     const chartData: ChartData<'bar'> | null = useMemo(() => {
-        if (!rawData?.segments?.length) return null;
+        if (!rawData || rawData.segments.length === 0) return null;
 
         // Each bar is the full [start, end] range; we'll draw savings as an overlay below
         const ranges: [number, number][] = rawData.segments.map((s) => {
@@ -114,7 +119,7 @@ export default function IncomeWaterfallChart() {
             datasets: [
                 {
                     label: 'Net Change',
-                    data: ranges as unknown as number[],
+                    data: ranges,
                     backgroundColor: colors,
                     borderColor: colors,
                     borderWidth: 0,
@@ -125,7 +130,7 @@ export default function IncomeWaterfallChart() {
     }, [rawData, successColor, errorColor]);
 
     const savingsAnnotations = useMemo(() => {
-        if (!rawData?.segments?.length) return {};
+        if (!rawData || rawData.segments.length === 0) return {};
 
         const annotations: Record<string, AnnotationOptions> = {};
         rawData.segments.forEach((segment, idx) => {
@@ -134,7 +139,7 @@ export default function IncomeWaterfallChart() {
             const end = segment.runningTotal;
             const savingsBottom = Math.max(end - segment.savings, segment.runningTotal - segment.net);
 
-            annotations[`savings_${idx}`] = {
+            annotations[`savings_${String(idx)}`] = {
                 type: 'box',
                 xMin: idx - 0.355,
                 xMax: idx + 0.355,
@@ -154,7 +159,7 @@ export default function IncomeWaterfallChart() {
      * Y-axis bounds padded by 5% of the running-total range
      */
     const yAxisBounds = useMemo(() => {
-        if (!rawData?.segments?.length) return { min: undefined, max: undefined };
+        if (!rawData || rawData.segments.length === 0) return { min: undefined, max: undefined };
 
         let min = 0;
         let max = 0;
@@ -195,7 +200,7 @@ export default function IncomeWaterfallChart() {
                         color: '#E0E0E0',
                         precision: 0,
                         callback: (value) => {
-                            return '$' + Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+                            return formatMoney(Number(value));
                         },
                     },
                     grid: {
@@ -230,19 +235,10 @@ export default function IncomeWaterfallChart() {
                             const segment = rawData?.segments[ctx.dataIndex];
                             if (!segment) return '';
 
-                            const fmt = (n: number) =>
-                                n.toLocaleString(undefined, {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2,
-                                });
-
-                            const netSign = segment.net >= 0 ? '+' : '-';
-                            const totalSign = segment.runningTotal >= 0 ? '+' : '-';
-
                             return [
-                                `Net: ${netSign}$${fmt(Math.abs(segment.net))}`,
-                                `Of which savings: $${fmt(segment.savings)}`,
-                                `Running: ${totalSign}$${fmt(Math.abs(segment.runningTotal))}`,
+                                `Net: ${formatMoney(segment.net, SIGNED_CENTS)}`,
+                                `Of which savings: ${formatMoney(segment.savings, CENTS)}`,
+                                `Running: ${formatMoney(segment.runningTotal, SIGNED_CENTS)}`,
                             ];
                         },
                     },
@@ -255,15 +251,7 @@ export default function IncomeWaterfallChart() {
                     formatter: (_value, ctx) => {
                         const segment = rawData?.segments[ctx.dataIndex];
                         if (!segment) return '';
-                        const sign = segment.net >= 0 ? '+' : '-';
-                        return (
-                            sign +
-                            '$' +
-                            Math.abs(segment.net).toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            })
-                        );
+                        return formatMoney(segment.net, SIGNED_CENTS);
                     },
                 },
                 annotation: {

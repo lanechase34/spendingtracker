@@ -77,15 +77,15 @@ export default function RequestMetrics() {
      * This listens for when metrics is updated and will update the state used here
      */
     const updateChartData = useEffectEvent((activeRequests: number) => {
-        // eslint-disable-next-line @eslint-react/set-state-in-effect
+        // eslint-disable-next-line @eslint-react/set-state-in-effect -- appends each pushed metrics sample; history is external stream data, not derived state
         setHistory((prev) => [...prev.slice(-MAX_POINTS), activeRequests]);
-        // eslint-disable-next-line @eslint-react/set-state-in-effect
+        // eslint-disable-next-line @eslint-react/set-state-in-effect -- timestamp label for the same pushed sample
         setLabels((prev) => [...prev.slice(-MAX_POINTS), new Date().toLocaleTimeString()]);
     });
 
     useEffect(() => {
         if (!metrics) return;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- records each metrics update from the socket into chart history
         updateChartData(metrics.concurrency.activeRequests);
     }, [metrics]);
 
@@ -124,9 +124,9 @@ export default function RequestMetrics() {
 
                     <Paper elevation={0} sx={{ p: 3, flex: 1 }}>
                         <Stack spacing={2}>
-                            <DetailRow label="Current" value={metrics?.concurrency.activeRequests} />
+                            <DetailRow label="Current" value={metrics.concurrency.activeRequests} />
 
-                            <DetailRow label="Peak" value={metrics?.concurrency.maxRequests} />
+                            <DetailRow label="Peak" value={metrics.concurrency.maxRequests} />
                         </Stack>
                     </Paper>
                 </Stack>

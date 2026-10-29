@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
-import { render } from '@test-utils';
+import { defined, render } from '@test-utils';
 import { screen, waitFor } from '@testing-library/react';
-import type { ChartData } from 'chart.js';
+import type { ChartData, ChartOptions } from 'chart.js';
 import { API_BASE_URL } from 'utils/constants';
 import LineChart from 'widgets/LineChart';
 
@@ -31,18 +31,25 @@ jest.mock('components/EmptyCard', () => ({
 
 interface LineMockProps {
     data?: ChartData<'line'>;
+    options?: ChartOptions<'line'>;
 }
+
+// Latest options handed to the chart, so formatters can be checked
+let mockLineOptions: ChartOptions<'line'> | undefined;
 
 // Mock react-chartjs-2 Line component
 jest.mock('react-chartjs-2', () => ({
-    Line: ({ data }: LineMockProps) => (
-        <div data-testid="line-chart">
-            Line Chart Mock - labels: {data?.labels?.join(', ')}
-            {data?.datasets?.[0]?.data && (
-                <span data-testid="chart-data">- data: {(data.datasets[0].data as number[]).join(', ')}</span>
-            )}
-        </div>
-    ),
+    Line: ({ data, options }: LineMockProps) => {
+        mockLineOptions = options;
+        return (
+            <div data-testid="line-chart">
+                Line Chart Mock - labels: {data?.labels?.join(', ')}
+                {data?.datasets[0]?.data && (
+                    <span data-testid="chart-data">- data: {(data.datasets[0].data as number[]).join(', ')}</span>
+                )}
+            </div>
+        );
+    },
 }));
 
 // Mock Chart.js registration
@@ -130,6 +137,7 @@ describe('LineChart Component', () => {
             ok: true,
             json: () => ({
                 error: true,
+                messages: ['Bad Request'],
             }),
         });
 
@@ -141,7 +149,8 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
-                data: { labels: [], dataset: { data: [] } },
+                error: false,
+                data: { labels: [], dataset: { label: 'Monthly Expense Line Chart', data: [] } },
             }),
         });
 
@@ -149,25 +158,27 @@ describe('LineChart Component', () => {
         expect(await screen.findByTestId('empty-card')).toBeInTheDocument();
     });
 
-    it('Renders EmptyCard when API returns null labels', async () => {
+    it('Renders ErrorCard when API returns malformed labels', async () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
-                data: { labels: null, dataset: { data: [] } },
+                error: false,
+                data: { labels: null, dataset: { label: 'Monthly Expense Line Chart', data: [] } },
             }),
         });
 
         render(<LineChart />, { queryClient });
-        expect(await screen.findByTestId('empty-card')).toBeInTheDocument();
+        expect(await screen.findByTestId('error-card')).toBeInTheDocument();
     });
 
     it('Renders Line chart when API returns data', async () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan', 'Feb', 'Mar'],
-                    dataset: { data: [100, 200, 150] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [100, 200, 150] },
                 },
             }),
         });
@@ -188,9 +199,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan', 'Feb', 'Mar'],
-                    dataset: { data: [100.5, 200.75, 150.25] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [100.5, 200.75, 150.25] },
                 },
             }),
         });
@@ -206,9 +218,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan'],
-                    dataset: { data: [100] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [100] },
                 },
             }),
         });
@@ -226,7 +239,12 @@ describe('LineChart Component', () => {
             ok: true,
             json: () =>
                 new Promise((res) =>
-                    setTimeout(() => res({ data: { labels: ['Jan'], dataset: { data: [100] } } }), 100)
+                    setTimeout(() => {
+                        res({
+                            error: false,
+                            data: { labels: ['Jan'], dataset: { label: 'Monthly Expense Line Chart', data: [100] } },
+                        });
+                    }, 100)
                 ),
         });
 
@@ -248,9 +266,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan'],
-                    dataset: { data: [100] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [100] },
                 },
             }),
         });
@@ -269,9 +288,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan'],
-                    dataset: { data: [100] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [100] },
                 },
             }),
         });
@@ -290,9 +310,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan', 'Feb', 'Mar'],
-                    dataset: { data: [0, 100, 0] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [0, 100, 0] },
                 },
             }),
         });
@@ -308,9 +329,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan', 'Feb'],
-                    dataset: { data: [123.45, 678.9] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [123.45, 678.9] },
                 },
             }),
         });
@@ -326,9 +348,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValue({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan'],
-                    dataset: { data: [100] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [100] },
                 },
             }),
         });
@@ -351,9 +374,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan', 'Feb'],
-                    dataset: { data: [999999.99, 1000000.01] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [999999.99, 1000000.01] },
                 },
             }),
         });
@@ -369,9 +393,10 @@ describe('LineChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan', 'Feb'],
-                    dataset: { data: [-100, 50] },
+                    dataset: { label: 'Monthly Expense Line Chart', data: [-100, 50] },
                 },
             }),
         });
@@ -383,13 +408,42 @@ describe('LineChart Component', () => {
         });
     });
 
+    it('Formats negative ticks, labels, and the average with the sign before the dollar sign', async () => {
+        mockFetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => ({
+                error: false,
+                data: {
+                    labels: ['Jan', 'Feb'],
+                    dataset: { label: 'Monthly Expense Line Chart', data: [-100, 50] },
+                },
+            }),
+        });
+
+        render(<LineChart />, { queryClient });
+        await screen.findByTestId('line-chart');
+
+        const options = defined(mockLineOptions, 'line options');
+        const tick = options.scales?.['y']?.ticks?.callback as (value: number) => string;
+        const label = options.plugins?.datalabels?.formatter as (value: number) => string;
+        const annotations = options.plugins?.annotation?.annotations as Record<string, { label: { content: string } }>;
+
+        expect(tick(-1250)).toBe('-$1,250');
+        expect(tick(1250.5)).toBe('$1,250.5');
+        expect(label(-100)).toBe('-$100.00');
+        expect(label(50)).toBe('$50.00');
+        expect(annotations['averageLine']?.label.content).toBe('Avg: -$25.00');
+    });
+
     it('Handles 12 months of data (full year)', async () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     dataset: {
+                        label: 'Monthly Expense Line Chart',
                         data: [100, 150, 200, 175, 225, 250, 300, 275, 325, 350, 400, 450],
                     },
                 },

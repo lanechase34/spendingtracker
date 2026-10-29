@@ -37,7 +37,7 @@ async function fillExpenseForm(dialog: Locator, page: Page, expense: ExpenseInpu
     await dialog.getByLabel('Amount').fill(expense.amount);
     await selectCategory(dialog, page, expense.category);
 
-    if (expense.receiptPath) {
+    if (expense.receiptPath != null) {
         await dialog.locator('#uploadReceipt').setInputFiles(expense.receiptPath);
     }
 }
@@ -51,10 +51,15 @@ test.describe('Track Expense form', () => {
     test('Saves expenses with different dates, descriptions, amounts, and categories', async ({ page }) => {
         const stamp = Date.now();
         const expenses: ExpenseInput[] = [
-            { date: '01152026', description: `Grocery Run ${stamp}`, amount: '54.32', category: 'Grocery' },
-            { date: '04012026', description: `Car Tune Up ${stamp}`, amount: '120', category: 'Car' },
-            { date: '07202026', description: `Movie Night ${stamp}`, amount: '15.5', category: 'Entertainment' },
-            { date: '12252026', description: `Holiday Gifts ${stamp}`, amount: '250.00', category: 'Gifts' },
+            { date: '01152026', description: `Grocery Run ${String(stamp)}`, amount: '54.32', category: 'Grocery' },
+            { date: '04012026', description: `Car Tune Up ${String(stamp)}`, amount: '120', category: 'Car' },
+            {
+                date: '07202026',
+                description: `Movie Night ${String(stamp)}`,
+                amount: '15.5',
+                category: 'Entertainment',
+            },
+            { date: '12252026', description: `Holiday Gifts ${String(stamp)}`, amount: '250.00', category: 'Gifts' },
         ];
 
         for (const expense of expenses) {
@@ -64,7 +69,7 @@ test.describe('Track Expense form', () => {
         }
 
         // Search once by the shared stamp rather than re-searching per expense
-        await searchExpenses(page, `${stamp}`);
+        await searchExpenses(page, String(stamp));
 
         for (const expense of expenses) {
             const row = expenseRow(page, expense.description);
@@ -82,7 +87,7 @@ test.describe('Track Expense form', () => {
         // With a receipt attached
         const withReceipt: ExpenseInput = {
             date: '02102026',
-            description: `Camera Gear ${stamp}`,
+            description: `Camera Gear ${String(stamp)}`,
             amount: '99.99',
             category: 'Entertainment',
             receiptPath: RECEIPT_PATH,
@@ -95,7 +100,7 @@ test.describe('Track Expense form', () => {
         // Without a receipt
         const withoutReceipt: ExpenseInput = {
             date: '02112026',
-            description: `Coffee Run ${stamp}`,
+            description: `Coffee Run ${String(stamp)}`,
             amount: '4.75',
             category: 'Restaurant',
         };
@@ -104,7 +109,7 @@ test.describe('Track Expense form', () => {
         await submitExpenseForm(dialogWithoutReceipt);
 
         // Search once by the shared stamp rather than re-searching per expense
-        await searchExpenses(page, `${stamp}`);
+        await searchExpenses(page, String(stamp));
 
         await expenseRow(page, withReceipt.description).getByRole('button', { name: 'Expense Detail' }).click();
         const detailWithReceipt = page.getByRole('dialog');

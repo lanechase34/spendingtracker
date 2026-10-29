@@ -1,6 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { z } from 'zod';
 
 interface Transform<T, S = string> {
     toStorage: (value: T) => S;
@@ -8,11 +9,14 @@ interface Transform<T, S = string> {
 }
 
 // Generic interface for intitialValue
-interface UseLocalStorageOptions<T> {
+// Stored values are untrusted, so callers either supply a transform or a schema to validate JSON values
+type UseLocalStorageOptions<T> = {
     key: string;
     initialValue: T; // type for the state
-    transform?: Transform<T>; // configurable transform functions going to and from localstorage
-}
+} & (
+    | { transform: Transform<T>; schema?: never } // configurable transform functions going to and from localstorage
+    | { schema: z.ZodType<T>; transform?: never } // stored as JSON, validated on read
+);
 
 // Predefined helper transform functions
 export const dayjsTransform: Transform<Dayjs | null> = {
@@ -28,12 +32,15 @@ export const dayjsTransform: Transform<Dayjs | null> = {
  * @deserialize custom deserializer after reading from local storage and rehydrating to state
  * @returns
  */
-export default function useLocalStorage<T>({ key, initialValue, transform }: UseLocalStorageOptions<T>) {
+export default function useLocalStorage<T>({ key, initialValue, transform, schema }: UseLocalStorageOptions<T>) {
     /**
      * Memoize transform functions to stable references
      */
     const toStorage = useMemo(() => transform?.toStorage ?? ((v: T) => JSON.stringify(v)), [transform]);
-    const fromStorage = useMemo(() => transform?.fromStorage ?? ((v: string) => JSON.parse(v) as T), [transform]);
+    const fromStorage = useMemo((): ((v: string) => T) => {
+        if (transform) return transform.fromStorage;
+        return (v: string) => schema.parse(JSON.parse(v));
+    }, [transform, schema]);
 
     const initialValueRef = useRef(initialValue);
 
@@ -91,7 +98,9 @@ export default function useLocalStorage<T>({ key, initialValue, transform }: Use
         };
 
         window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, [key, fromStorage]);
 
     /**

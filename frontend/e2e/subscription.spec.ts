@@ -83,7 +83,7 @@ test.describe('Track Expense form - subscription option', () => {
         const stamp = Date.now();
         const sub: SubscriptionInput = {
             date: today,
-            description: `Monthly Sub ${stamp}`,
+            description: `Monthly Sub ${String(stamp)}`,
             amount: '9.99',
             category: 'Entertainment',
             interval: 'M',
@@ -113,7 +113,7 @@ test.describe('Track Expense form - subscription option', () => {
         const stamp = Date.now();
         const sub: SubscriptionInput = {
             date: today,
-            description: `Yearly Sub ${stamp}`,
+            description: `Yearly Sub ${String(stamp)}`,
             amount: '199.00',
             category: 'Insurance',
             interval: 'Y',
@@ -143,7 +143,7 @@ test.describe('Track Expense form - subscription option', () => {
         const stamp = Date.now();
         const sub: SubscriptionInput = {
             date: start,
-            description: `Monthly Backfill ${stamp}`,
+            description: `Monthly Backfill ${String(stamp)}`,
             amount: '45.00',
             category: 'Gym',
             interval: 'M',
@@ -174,7 +174,7 @@ test.describe('Track Expense form - subscription option', () => {
         const stamp = Date.now();
         const sub: SubscriptionInput = {
             date: start,
-            description: `Yearly Backfill ${stamp}`,
+            description: `Yearly Backfill ${String(stamp)}`,
             amount: '120.00',
             category: 'Insurance',
             interval: 'Y',

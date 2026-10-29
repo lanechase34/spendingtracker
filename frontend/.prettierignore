@@ -1,3 +1,10 @@
 dist/
 build/
 coverage/
+playwright-report/
+test-results/
+examples/
+src/mock/
+stats.html
+bundle-stats.json
+package-lock.json

@@ -65,7 +65,7 @@ export default function ExportExpensesCard() {
                         throw new APIError('Export failed. Invalid response format.', response.status);
                     }
                     const result = parsed.data;
-                    const errorMessage = result?.messages?.join('; ') ?? 'Export failed.';
+                    const errorMessage = result.messages?.join('; ') ?? 'Export failed.';
                     throw new APIError(errorMessage, response.status);
                 }
 
@@ -127,7 +127,7 @@ export default function ExportExpensesCard() {
                         throw new APIError('Export failed. Invalid response format.', response.status);
                     }
                     const result = parsed.data;
-                    const errorMessage = result?.messages?.join('; ') ?? 'Export failed.';
+                    const errorMessage = result.messages?.join('; ') ?? 'Export failed.';
                     throw new APIError(errorMessage, response.status);
                 }
 
@@ -189,10 +189,22 @@ export default function ExportExpensesCard() {
                                 }}
                             >
                                 <Stack spacing={3}>
-                                    {csvError && <ErrorAlert messages={csvError} onClose={() => setCsvError(null)} />}
+                                    {csvError && (
+                                        <ErrorAlert
+                                            messages={csvError}
+                                            onClose={() => {
+                                                setCsvError(null);
+                                            }}
+                                        />
+                                    )}
 
-                                    {csvSuccess && (
-                                        <Alert severity="success" onClose={() => setCsvSuccess(null)}>
+                                    {csvSuccess != null && (
+                                        <Alert
+                                            severity="success"
+                                            onClose={() => {
+                                                setCsvSuccess(null);
+                                            }}
+                                        >
                                             {csvSuccess}
                                         </Alert>
                                     )}
@@ -239,11 +251,21 @@ export default function ExportExpensesCard() {
                             >
                                 <Stack spacing={3}>
                                     {receiptError && (
-                                        <ErrorAlert messages={receiptError} onClose={() => setReceiptError(null)} />
+                                        <ErrorAlert
+                                            messages={receiptError}
+                                            onClose={() => {
+                                                setReceiptError(null);
+                                            }}
+                                        />
                                     )}
 
-                                    {receiptSuccess && (
-                                        <Alert severity="success" onClose={() => setReceiptSuccess(null)}>
+                                    {receiptSuccess != null && (
+                                        <Alert
+                                            severity="success"
+                                            onClose={() => {
+                                                setReceiptSuccess(null);
+                                            }}
+                                        >
                                             {receiptSuccess}
                                         </Alert>
                                     )}

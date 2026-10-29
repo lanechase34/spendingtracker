@@ -1,8 +1,7 @@
 import type useAuthFetch from 'hooks/useAuthFetch';
-import type { APIResponseType } from 'types/APIResponse.type';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
-import { validateAPIResponse } from 'validators/validateAPIResponse';
+import { NoDataAPIResponseSchema, validateAPIResponse } from 'validators/validateAPIResponse';
 import { z } from 'zod';
 
 /**
@@ -80,10 +79,12 @@ export function incomeService(authFetch: ReturnType<typeof useAuthFetch>) {
             }
 
             if (!response.ok) {
-                const result = await safeJson<APIResponseType<null>>(response);
-                if (!result || result.error) {
-                    throw new Error('Error updating income. Please try again.');
-                }
+                throw new Error('Error updating income. Please try again.');
+            }
+
+            const parsed = NoDataAPIResponseSchema.safeParse(await safeJson(response));
+            if (parsed.success && parsed.data.error) {
+                throw new Error('Error updating income. Please try again.');
             }
 
             return;

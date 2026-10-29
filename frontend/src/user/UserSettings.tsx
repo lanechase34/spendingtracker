@@ -66,12 +66,12 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
     });
 
     const salaryField = useFormField({
-        initialValue: `${user!.salary!}`,
+        initialValue: user?.salary?.toString() ?? '',
         validator: validateMoney,
     });
 
     const monthlyTakeHomeField = useFormField({
-        initialValue: `${user!.monthlyTakeHome!}`,
+        initialValue: user?.monthlyTakeHome?.toString() ?? '',
         validator: validateMoney,
     });
 
@@ -97,9 +97,9 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
      */
     const isValid =
         hasChanges &&
-        !salaryField.error &&
-        !monthlyTakeHomeField.error &&
-        !passwordField.error &&
+        salaryField.error == null &&
+        monthlyTakeHomeField.error == null &&
+        passwordField.error == null &&
         // If changing password, confirm must match
         (!isChangingPassword || confirmPasswordField.value === passwordField.value);
 
@@ -221,7 +221,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                                 value={passwordField.value}
                                 onChange={passwordField.handleChange}
                                 onBlur={passwordField.handleBlur}
-                                error={!!passwordField.error}
+                                error={!(passwordField.error == null)}
                                 helperText={passwordField.error}
                             />
 
@@ -235,12 +235,12 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                                     value={confirmPasswordField.value}
                                     onChange={confirmPasswordField.handleChange}
                                     onBlur={confirmPasswordField.handleBlur}
-                                    error={!!confirmPasswordField.error}
+                                    error={!(confirmPasswordField.error == null)}
                                     helperText={confirmPasswordField.error ?? ' '}
                                 />
                             )}
 
-                            <FormControl variant="outlined" error={!!salaryField.error} fullWidth>
+                            <FormControl variant="outlined" error={!(salaryField.error == null)} fullWidth>
                                 <InputLabel htmlFor="outlined-adornment-salary">Salary</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-salary"
@@ -251,10 +251,10 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                                     onChange={salaryField.handleChange}
                                     onBlur={salaryField.handleBlur}
                                 />
-                                {salaryField.error && <FormHelperText>{salaryField.error}</FormHelperText>}
+                                {salaryField.error != null && <FormHelperText>{salaryField.error}</FormHelperText>}
                             </FormControl>
 
-                            <FormControl variant="outlined" error={!!monthlyTakeHomeField.error} fullWidth>
+                            <FormControl variant="outlined" error={!(monthlyTakeHomeField.error == null)} fullWidth>
                                 <InputLabel htmlFor="outlined-adornment-takehome">Monthly Take Home</InputLabel>
                                 <OutlinedInput
                                     id="outlined-adornment-takehome"
@@ -265,7 +265,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                                     onChange={monthlyTakeHomeField.handleChange}
                                     onBlur={monthlyTakeHomeField.handleBlur}
                                 />
-                                {monthlyTakeHomeField.error && (
+                                {monthlyTakeHomeField.error != null && (
                                     <FormHelperText>{monthlyTakeHomeField.error}</FormHelperText>
                                 )}
                             </FormControl>
@@ -291,13 +291,16 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                             }}
                         >
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                <SecurityIcon fontSize="small" color={user?.totpEnabled ? 'success' : 'action'} />
+                                <SecurityIcon
+                                    fontSize="small"
+                                    color={user?.totpEnabled === true ? 'success' : 'action'}
+                                />
                                 <Box>
                                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                                         Two-Factor Authentication
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
-                                        {user?.totpEnabled
+                                        {user?.totpEnabled === true
                                             ? 'Enabled - your account is protected with 2FA.'
                                             : 'Disabled - add an extra layer of security.'}
                                     </Typography>
@@ -306,11 +309,14 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                             <Button
                                 variant="outlined"
                                 size="small"
-                                color={user?.totpEnabled ? 'error' : 'primary'}
-                                onClick={() => (user?.totpEnabled ? setDisable2FAOpen(true) : setSetup2FAOpen(true))}
+                                color={user?.totpEnabled === true ? 'error' : 'primary'}
+                                onClick={() => {
+                                    if (user?.totpEnabled === true) setDisable2FAOpen(true);
+                                    else setSetup2FAOpen(true);
+                                }}
                                 sx={{ ml: 2, flexShrink: 0 }}
                             >
-                                {user?.totpEnabled ? 'Disable' : 'Enable'}
+                                {user?.totpEnabled === true ? 'Disable' : 'Enable'}
                             </Button>
                         </Box>
                     </Box>

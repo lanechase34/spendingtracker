@@ -33,15 +33,27 @@ jest.mock('@mui/material', () => ({
             <div data-testid="snackbar" data-auto-hide-duration={autoHideDuration}>
                 {children}
                 {/* Normal close */}
-                <button onClick={(e) => onClose(e)} data-testid="snackbar-close">
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        onClose(e);
+                    }}
+                    data-testid="snackbar-close"
+                >
                     Snackbar Close
                 </button>
                 {/* Simulates MUI's clickaway reason */}
-                <button onClick={(e) => onClose(e, 'clickaway')} data-testid="snackbar-clickaway">
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        onClose(e, 'clickaway');
+                    }}
+                    data-testid="snackbar-clickaway"
+                >
                     Clickaway
                 </button>
                 {/* Simulates the exit-animation completing → triggers EXITED */}
-                <button onClick={() => slotProps?.transition?.onExited?.()} data-testid="snackbar-exited">
+                <button type="button" onClick={() => slotProps?.transition?.onExited?.()} data-testid="snackbar-exited">
                     Exited
                 </button>
             </div>
@@ -49,7 +61,7 @@ jest.mock('@mui/material', () => ({
             // Keep the exited button accessible even when closed so tests can
             // fire the transition callback after the snackbar hides.
             <div data-testid="snackbar-hidden">
-                <button onClick={() => slotProps?.transition?.onExited?.()} data-testid="snackbar-exited">
+                <button type="button" onClick={() => slotProps?.transition?.onExited?.()} data-testid="snackbar-exited">
                     Exited
                 </button>
             </div>
@@ -58,7 +70,7 @@ jest.mock('@mui/material', () => ({
     Alert: ({ children, onClose, severity }: { children: React.ReactNode; onClose: () => void; severity?: string }) => (
         <div data-testid="alert" data-severity={severity}>
             <span data-testid="alert-message">{children}</span>
-            <button onClick={onClose} data-testid="alert-close">
+            <button type="button" onClick={onClose} data-testid="alert-close">
                 Alert Close
             </button>
         </div>
@@ -71,19 +83,49 @@ function TestConsumer() {
     if (!context) return <div data-testid="no-context">No context</div>;
     return (
         <div>
-            <button onClick={() => context.showToast('Hello world')} data-testid="show-default">
+            <button
+                type="button"
+                onClick={() => {
+                    context.showToast('Hello world');
+                }}
+                data-testid="show-default"
+            >
                 Show Default
             </button>
-            <button onClick={() => context.showToast('Success message', 'success')} data-testid="show-success">
+            <button
+                type="button"
+                onClick={() => {
+                    context.showToast('Success message', 'success');
+                }}
+                data-testid="show-success"
+            >
                 Show Success
             </button>
-            <button onClick={() => context.showToast('Error message', 'error')} data-testid="show-error">
+            <button
+                type="button"
+                onClick={() => {
+                    context.showToast('Error message', 'error');
+                }}
+                data-testid="show-error"
+            >
                 Show Error
             </button>
-            <button onClick={() => context.showToast('Info message', 'info')} data-testid="show-info">
+            <button
+                type="button"
+                onClick={() => {
+                    context.showToast('Info message', 'info');
+                }}
+                data-testid="show-info"
+            >
                 Show Info
             </button>
-            <button onClick={() => context.showToast('Warning message', 'warning')} data-testid="show-warning">
+            <button
+                type="button"
+                onClick={() => {
+                    context.showToast('Warning message', 'warning');
+                }}
+                data-testid="show-warning"
+            >
                 Show Warning
             </button>
         </div>
@@ -388,7 +430,13 @@ describe('ToastContextProvider - showToast referential stability', () => {
             if (!context) return null;
             capturedRefs.add(context.showToast);
             return (
-                <button onClick={() => context.showToast('Ref test')} data-testid="ref-btn">
+                <button
+                    type="button"
+                    onClick={() => {
+                        context.showToast('Ref test');
+                    }}
+                    data-testid="ref-btn"
+                >
                     Show
                 </button>
             );
@@ -416,10 +464,11 @@ describe('ToastContextProvider - unique id generation', () => {
             if (!context) return null;
             return (
                 <button
+                    type="button"
                     data-testid="show-burst"
                     onClick={() => {
                         for (let i = 0; i < TOAST_COUNT; i++) {
-                            context.showToast(`Toast ${i}`);
+                            context.showToast(`Toast ${String(i)}`);
                         }
                     }}
                 >
@@ -438,7 +487,7 @@ describe('ToastContextProvider - unique id generation', () => {
         await user.click(screen.getByTestId('show-burst'));
 
         for (let i = 0; i < TOAST_COUNT; i++) {
-            expect(screen.getByTestId('alert-message')).toHaveTextContent(`Toast ${i}`);
+            expect(screen.getByTestId('alert-message')).toHaveTextContent(`Toast ${String(i)}`);
             await dismissCurrentToast(user);
         }
 

@@ -168,7 +168,12 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
                                 alignItems: 'center',
                             }}
                         >
-                            <Button variant="outlined" onClick={() => setSelectedAudit(params.row)}>
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    setSelectedAudit(params.row);
+                                }}
+                            >
                                 <ZoomInIcon fontSize="small" />
                             </Button>
                         </Box>
@@ -226,7 +231,14 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
                 />
             </Box>
 
-            <Dialog open={Boolean(selectedAudit)} onClose={() => setSelectedAudit(null)} maxWidth="md" fullWidth>
+            <Dialog
+                open={Boolean(selectedAudit)}
+                onClose={() => {
+                    setSelectedAudit(null);
+                }}
+                maxWidth="md"
+                fullWidth
+            >
                 <DialogTitle
                     sx={{
                         display: 'flex',
@@ -235,7 +247,12 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
                     }}
                 >
                     Details
-                    <IconButton aria-label="close" onClick={() => setSelectedAudit(null)}>
+                    <IconButton
+                        aria-label="close"
+                        onClick={() => {
+                            setSelectedAudit(null);
+                        }}
+                    >
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
@@ -264,7 +281,12 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
                     )}
                 </DialogContent>
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button variant="outlined" onClick={() => setSelectedAudit(null)}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => {
+                            setSelectedAudit(null);
+                        }}
+                    >
                         Close
                     </Button>
                 </DialogActions>

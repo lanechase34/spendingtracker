@@ -31,7 +31,7 @@ jest.mock('components/EmptyCard', () => ({
 // Mock Chart.js and react-chartjs-2 Doughnut component
 jest.mock('react-chartjs-2', () => ({
     Doughnut: (props: React.ComponentProps<typeof Doughnut>) => (
-        <div data-testid="doughnut-chart">Doughnut Chart Mock - labels: {props.data?.labels?.join(', ')}</div>
+        <div data-testid="doughnut-chart">Doughnut Chart Mock - labels: {props.data.labels?.join(', ')}</div>
     ),
 }));
 
@@ -105,6 +105,7 @@ describe('DonutChart Component', () => {
             ok: true,
             json: () => ({
                 error: true,
+                messages: ['Bad Request'],
             }),
         });
 
@@ -116,7 +117,8 @@ describe('DonutChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
-                data: { labels: [], dataset: { data: [] } },
+                error: false,
+                data: { labels: [], dataset: { label: 'Amount', data: [], backgroundColor: [] } },
             }),
         });
 
@@ -128,9 +130,11 @@ describe('DonutChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['A', 'B', 'C'],
                     dataset: {
+                        label: 'Amount',
                         data: [10, 20, 30],
                         backgroundColor: ['#ff0000', '#00ff00', '#0000ff'],
                     },
@@ -155,7 +159,14 @@ describe('DonutChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () =>
-                new Promise((res) => setTimeout(() => res({ data: { labels: [], dataset: { data: [] } } }), 100)),
+                new Promise((res) =>
+                    setTimeout(() => {
+                        res({
+                            error: false,
+                            data: { labels: [], dataset: { label: 'Amount', data: [], backgroundColor: [] } },
+                        });
+                    }, 100)
+                ),
         });
 
         const { unmount } = render(<DonutChart />, { queryClient });
@@ -176,6 +187,7 @@ describe('DonutChart Component', () => {
         mockFetch.mockResolvedValueOnce({
             ok: true,
             json: () => ({
+                error: false,
                 data: {
                     labels: ['Test'],
                     dataset: { data: [100] },

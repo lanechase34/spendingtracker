@@ -9,7 +9,7 @@ describe('useSubscriptionInterval', () => {
         jest.clearAllMocks();
 
         mockValidator = jest.fn((value: string | null, isSubscription: boolean) => {
-            if (isSubscription && !value) return 'Interval required';
+            if (isSubscription && (value === null || value === '')) return 'Interval required';
             if (value === 'invalid') return 'Invalid interval';
             return null;
         });

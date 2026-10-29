@@ -24,11 +24,11 @@ export default function SystemMetrics() {
             <CardContent>
                 <Paper elevation={0} sx={{ p: 3, flex: 1 }}>
                     <Stack spacing={2}>
-                        <DetailRow label="Cores" value={metrics?.cpu.cores} />
+                        <DetailRow label="Cores" value={metrics.cpu.cores} />
 
-                        <DetailRow label="CPU Process Percentage" value={`${metrics?.cpu.processPercent}%`} />
+                        <DetailRow label="CPU Process Percentage" value={`${String(metrics.cpu.processPercent)}%`} />
 
-                        <DetailRow label="CPU System Percentage" value={`${metrics?.cpu.systemPercent}%`} />
+                        <DetailRow label="CPU System Percentage" value={`${String(metrics.cpu.systemPercent)}%`} />
                     </Stack>
                 </Paper>
             </CardContent>

@@ -1,5 +1,5 @@
 import type { MockAbortController } from '@test-utils';
-import { renderHook } from '@test-utils';
+import { at, renderHook } from '@test-utils';
 import { act, waitFor } from '@testing-library/react';
 import usePaginatedFetch from 'hooks/usePaginatedFetch';
 import { API_BASE_URL } from 'utils/constants';
@@ -294,7 +294,12 @@ describe('usePaginatedFetch', () => {
 
     it('Should abort previous requests when a new fetch is triggered', () => {
         mockFetch.mockImplementation(
-            () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, json: () => simpleMockResponse }), 100))
+            () =>
+                new Promise((resolve) =>
+                    setTimeout(() => {
+                        resolve({ ok: true, json: () => simpleMockResponse });
+                    }, 100)
+                )
         );
 
         const abortControllerMock = jest.fn().mockImplementation(() => ({
@@ -326,17 +331,17 @@ describe('usePaginatedFetch', () => {
 
         // Each re-run of the effect cleans up the previous one by calling abort on
         // the controller it closed over - not via the ref
-        expect(controllers[0].abort).toHaveBeenCalledTimes(1);
-        expect(controllers[1].abort).toHaveBeenCalledTimes(1);
-        expect(controllers[2].abort).toHaveBeenCalledTimes(1);
-        expect(controllers[3].abort).toHaveBeenCalledTimes(0);
+        expect(at(controllers, 0).abort).toHaveBeenCalledTimes(1);
+        expect(at(controllers, 1).abort).toHaveBeenCalledTimes(1);
+        expect(at(controllers, 2).abort).toHaveBeenCalledTimes(1);
+        expect(at(controllers, 3).abort).toHaveBeenCalledTimes(0);
 
         expect(global.fetch).toHaveBeenCalledTimes(4);
 
         unmount();
 
         // Unmounting cleans up the last active controller too
-        expect(controllers[3].abort).toHaveBeenCalledTimes(1);
+        expect(at(controllers, 3).abort).toHaveBeenCalledTimes(1);
     });
 
     it('Should reset state when resetState is called', async () => {
@@ -349,7 +354,9 @@ describe('usePaginatedFetch', () => {
             usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema, initialPageSize: 25 })
         );
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
 
         act(() => {
             result.current.handlePaginationModelChange({ page: 3, pageSize: 25 });
@@ -361,7 +368,9 @@ describe('usePaginatedFetch', () => {
             result.current.resetState();
         });
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
 
         expect(result.current.paginationModel).toEqual({ page: 0, pageSize: 25 });
         expect(result.current.sortModel).toEqual([]);
@@ -399,7 +408,9 @@ describe('usePaginatedFetch', () => {
 
         const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
 
         // filteredRecords !== totalRecords → use filteredRecords
         expect(result.current.totalRowCount).toBe(11);
@@ -419,7 +430,9 @@ describe('usePaginatedFetch', () => {
             })
         );
 
-        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+        await waitFor(() => {
+            expect(mockFetch).toHaveBeenCalled();
+        });
 
         expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('status=active'), expect.anything());
         expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('type=expense'), expect.anything());
@@ -445,7 +458,9 @@ describe('usePaginatedFetch', () => {
 
         const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
 
         expect(result.current.error).toBe(true);
         expect(result.current.data).toBeNull();
@@ -459,7 +474,9 @@ describe('usePaginatedFetch', () => {
         const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
 
         // Loading stays true - aborted fetches are silently ignored
-        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+        await waitFor(() => {
+            expect(mockFetch).toHaveBeenCalled();
+        });
 
         expect(result.current.error).toBe(false);
         expect(result.current.data).toBeNull();
@@ -473,13 +490,12 @@ describe('usePaginatedFetch', () => {
 
         renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
 
-        await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+        await waitFor(() => {
+            expect(mockFetch).toHaveBeenCalled();
+        });
 
-        expect(mockFetch).toHaveBeenCalledWith(
-            expect.any(String),
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            expect.objectContaining({ signal: expect.any(EventTarget) })
-        );
+        const firstCall = mockFetch.mock.calls[0] as [string, RequestInit | undefined] | undefined;
+        expect(firstCall?.[1]?.signal).toBeInstanceOf(EventTarget);
     });
 
     it('Should pass signal to fetch when refetch is called with an external signal', async () => {
@@ -489,7 +505,9 @@ describe('usePaginatedFetch', () => {
 
         const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
 
         const externalController = new AbortController();
 
@@ -510,12 +528,160 @@ describe('usePaginatedFetch', () => {
 
         const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
 
-        await waitFor(() => expect(result.current.loading).toBe(false));
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
 
         await act(async () => {
             await result.current.refetch(); // no signal passed
         });
 
         expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    describe('Payload validation', () => {
+        it('Should set error when the envelope is valid but data fails the validator', async () => {
+            mockFetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => ({ error: false, data: [{ id: 'not-a-number', name: 1 }], pagination }),
+            });
+
+            const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(result.current.error).toBe(true);
+            expect(result.current.data).toBeNull();
+        });
+
+        it('Should set error when the envelope is valid but data is missing', async () => {
+            mockFetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => ({ error: false, pagination }),
+            });
+
+            const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(result.current.error).toBe(true);
+            expect(result.current.data).toBeNull();
+        });
+
+        it('Should store the parsed output of the validator', async () => {
+            // A transform proves the validator output is stored, not the raw JSON
+            const UppercaseSchema = z.array(MockData.transform((row) => ({ ...row, name: row.name.toUpperCase() })));
+            mockFetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => ({ error: false, data: [{ id: 1, name: 'item' }], pagination }),
+            });
+
+            const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: UppercaseSchema }));
+
+            await waitFor(() => {
+                expect(result.current.loading).toBe(false);
+            });
+
+            expect(result.current.data).toEqual([{ id: 1, name: 'ITEM' }]);
+        });
+    });
+
+    describe('Fetch params', () => {
+        // Reads the query params off the most recent fetch call
+        const lastParams = () => {
+            const call = at(mockFetch.mock.calls, mockFetch.mock.calls.length - 1) as [string];
+            return new URLSearchParams(call[0].split('?')[1]);
+        };
+
+        beforeEach(() => {
+            mockFetch.mockResolvedValue({ ok: true, json: () => simpleMockResponse });
+        });
+
+        afterEach(() => {
+            mockFetch.mockReset();
+        });
+
+        it('Should send empty sort params when there is no sort', async () => {
+            renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalled();
+            });
+
+            const params = lastParams();
+            expect(params.get('page')).toBe('1');
+            expect(params.get('records')).toBe('10');
+            expect(params.get('orderCol')).toBe('');
+            expect(params.get('orderDir')).toBe('');
+            expect(params.get('search')).toBe('');
+        });
+
+        it('Should send the sort column and direction', async () => {
+            renderHook(() =>
+                usePaginatedFetch({
+                    endpoint: endpoint,
+                    validator: SimpleMockSchema,
+                    defaultSort: [{ field: 'date', sort: 'desc' }],
+                })
+            );
+
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalled();
+            });
+
+            expect(lastParams().get('orderCol')).toBe('date');
+            expect(lastParams().get('orderDir')).toBe('desc');
+        });
+
+        it('Should default the direction to asc when a sort has no direction', async () => {
+            renderHook(() =>
+                usePaginatedFetch({
+                    endpoint: endpoint,
+                    validator: SimpleMockSchema,
+                    defaultSort: [{ field: 'name', sort: null }],
+                })
+            );
+
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalled();
+            });
+
+            expect(lastParams().get('orderCol')).toBe('name');
+            expect(lastParams().get('orderDir')).toBe('asc');
+        });
+
+        it('Should send a 1-based page and join quick filter values', async () => {
+            const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+            act(() => {
+                result.current.handlePaginationModelChange({ page: 2, pageSize: 10 });
+            });
+
+            await waitFor(() => {
+                expect(lastParams().get('page')).toBe('3');
+            });
+
+            // Changing page size resets to the first page
+            act(() => {
+                result.current.handlePaginationModelChange({ page: 2, pageSize: 25 });
+            });
+
+            await waitFor(() => {
+                expect(lastParams().get('records')).toBe('25');
+            });
+            expect(lastParams().get('page')).toBe('1');
+
+            act(() => {
+                result.current.handleFilterModelChange({ items: [], quickFilterValues: ['coffee', 'shop'] });
+            });
+
+            await waitFor(() => {
+                expect(lastParams().get('search')).toBe('coffee shop');
+            });
+        });
     });
 });

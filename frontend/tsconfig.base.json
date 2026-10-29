@@ -1,0 +1,22 @@
+{
+    "$schema": "https://www.schemastore.org/tsconfig",
+    "compilerOptions": {
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "noEmit": true,
+        "skipLibCheck": true,
+        "verbatimModuleSyntax": true,
+        "erasableSyntaxOnly": true,
+        "strict": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "exactOptionalPropertyTypes": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowUnreachableCode": false,
+        "allowUnusedLabels": false
+    }
+}

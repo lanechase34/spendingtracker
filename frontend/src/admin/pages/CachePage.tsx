@@ -14,6 +14,7 @@ import type { ChartData, ChartOptions } from 'chart.js';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import CustomPagination from 'components/CustomPagination';
 import ErrorCard from 'components/ErrorCard';
+import LoadingCard from 'components/LoadingCard';
 import SearchToolbar from 'components/SearchToolbar';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -92,7 +93,7 @@ export default function CachePage() {
             signal: signal,
         });
 
-        if (!response?.ok) {
+        if (response?.ok !== true) {
             throw new Error('Invalid network response');
         }
 
@@ -107,7 +108,7 @@ export default function CachePage() {
         const result = parsed.data;
 
         if (result.error) {
-            throw new Error(result.messages?.[0] ?? 'Server error');
+            throw new Error(result.messages[0] ?? 'Server error');
         }
 
         return result.data;
@@ -130,7 +131,7 @@ export default function CachePage() {
     // Calculate metrics
     const hitRate = useMemo(() => {
         if (!cacheData) return 0;
-        return calculateHitRate(cacheData.hits ?? 0, cacheData.misses ?? 0);
+        return calculateHitRate(cacheData.hits, cacheData.misses);
     }, [cacheData]);
 
     const used = cacheData?.data.length ?? 0;
@@ -255,6 +256,11 @@ export default function CachePage() {
         }),
         [used, remaining, utilizationPercent, theme]
     );
+
+    // Avoid flashing zeroed metrics before the first response
+    if (isLoading) {
+        return <LoadingCard loadingMessage="Loading cache data..." />;
+    }
 
     return (
         <>
@@ -462,7 +468,6 @@ export default function CachePage() {
                             pageSizeOptions={[10, 25, 100]}
                             rows={rows}
                             columns={columns}
-                            loading={isLoading}
                             disableColumnSelector
                             disableColumnMenu
                             disableColumnFilter

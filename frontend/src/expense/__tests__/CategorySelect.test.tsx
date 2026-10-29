@@ -23,7 +23,9 @@ function mockSuccessResponse(data: { id: number; name: string }[]) {
 /** Returns a delayed fetch mock that resolves after `ms` milliseconds */
 function mockDelayedResponse(data: { id: number; name: string }[], ms = 5000) {
     return new Promise((resolve) => {
-        setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ error: false, data: data }) }), ms);
+        setTimeout(() => {
+            resolve({ ok: true, json: () => Promise.resolve({ error: false, data: data }) });
+        }, ms);
     });
 }
 
@@ -153,9 +155,13 @@ describe('CategorySelect', () => {
 
             expect(await screen.findByRole('progressbar')).toBeInTheDocument();
 
-            act(() => jest.advanceTimersByTime(5000));
+            act(() => {
+                jest.advanceTimersByTime(5000);
+            });
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
         });
 
         it('Uses the records prop to determine page size in the API URL', async () => {
@@ -167,9 +173,9 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
 
-            await waitFor(() =>
-                expect(mockFetch).toHaveBeenCalledWith(expect.stringMatching(/records=25/), expect.anything())
-            );
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledWith(expect.stringMatching(/records=25/), expect.anything());
+            });
         });
     });
 
@@ -205,7 +211,7 @@ describe('CategorySelect', () => {
                 .mockReturnValueOnce([{ value: 2, label: 'Vegetables' }]); // page 2 - cache hit
 
             mockFetch.mockResolvedValueOnce(
-                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` })))
             );
 
             render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
@@ -220,7 +226,9 @@ describe('CategorySelect', () => {
             const listbox = screen.getByRole('listbox');
             fireScrollNearBottom(listbox);
 
-            await waitFor(() => expect(screen.getByText('Vegetables')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Vegetables')).toBeInTheDocument();
+            });
         });
 
         it('Saves API results to cache after a successful fetch', async () => {
@@ -249,12 +257,18 @@ describe('CategorySelect', () => {
             const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
             await user.type(screen.getByRole('combobox'), 'NewCategory');
 
-            act(() => jest.advanceTimersByTime(900));
+            act(() => {
+                jest.advanceTimersByTime(900);
+            });
             expect(mockFetch).toHaveBeenCalledTimes(1); // only the open fetch
 
-            act(() => jest.advanceTimersByTime(200));
+            act(() => {
+                jest.advanceTimersByTime(200);
+            });
 
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(2);
+            });
         });
 
         it('Resets the debounce timer when user keeps typing', async () => {
@@ -267,17 +281,25 @@ describe('CategorySelect', () => {
             const user = userEvent.setup({ delay: 0, advanceTimers: jest.advanceTimersByTime });
 
             await user.type(screen.getByRole('combobox'), 'N');
-            act(() => jest.advanceTimersByTime(500));
+            act(() => {
+                jest.advanceTimersByTime(500);
+            });
 
             await user.type(screen.getByRole('combobox'), 'ewCategory');
-            act(() => jest.advanceTimersByTime(900));
+            act(() => {
+                jest.advanceTimersByTime(900);
+            });
 
             // 900ms since last keystroke - still before debounce
             expect(mockFetch).toHaveBeenCalledTimes(1);
 
-            act(() => jest.advanceTimersByTime(200));
+            act(() => {
+                jest.advanceTimersByTime(200);
+            });
 
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(2);
+            });
         });
 
         it('Trims whitespace from search input before fetching', async () => {
@@ -289,9 +311,9 @@ describe('CategorySelect', () => {
             await user.type(screen.getByRole('combobox'), '  Books  ');
             jest.runAllTimers();
 
-            await waitFor(() =>
-                expect(mockFetch).toHaveBeenLastCalledWith(expect.stringMatching(/search=Books$/), expect.anything())
-            );
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenLastCalledWith(expect.stringMatching(/search=Books$/), expect.anything());
+            });
         });
 
         it('Sends the correct search param in the API URL', async () => {
@@ -304,14 +326,16 @@ describe('CategorySelect', () => {
             const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
             await user.type(screen.getByRole('combobox'), 'NewCategory');
 
-            act(() => jest.advanceTimersByTime(600));
+            act(() => {
+                jest.advanceTimersByTime(600);
+            });
 
-            await waitFor(() =>
+            await waitFor(() => {
                 expect(mockFetch).toHaveBeenLastCalledWith(
                     expect.stringMatching(/search=NewCategory/),
                     expect.objectContaining({ method: 'GET' })
-                )
-            );
+                );
+            });
         });
 
         it('Resets page to 1 and hasMore to true when new input is entered', async () => {
@@ -319,7 +343,9 @@ describe('CategorySelect', () => {
             // exhaust results on page 2, then type to trigger a reset
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([])) // page 2 - exhausts hasMore
                 .mockResolvedValueOnce(mockSuccessResponse([])); // search fetch
@@ -335,18 +361,22 @@ describe('CategorySelect', () => {
             const listbox = screen.getByRole('listbox');
             fireScrollNearBottom(listbox);
             jest.runAllTimers();
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(2);
+            });
 
             // Now type - should reset page and hasMore
             await user.type(screen.getByRole('combobox'), 'Cat');
-            act(() => jest.advanceTimersByTime(600));
+            act(() => {
+                jest.advanceTimersByTime(600);
+            });
 
-            await waitFor(() =>
+            await waitFor(() => {
                 expect(mockFetch).toHaveBeenLastCalledWith(
                     expect.stringMatching(/page=1.*search=Cat|search=Cat.*page=1/),
                     expect.anything()
-                )
-            );
+                );
+            });
         });
     });
 
@@ -365,7 +395,9 @@ describe('CategorySelect', () => {
 
             // Select an option to get the Clear button
             await user.click(screen.getByText('Books'));
-            await waitFor(() => expect(screen.getByTitle('Clear')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByTitle('Clear')).toBeInTheDocument();
+            });
 
             // Clear
             await user.click(screen.getByTitle('Clear'));
@@ -375,14 +407,18 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Fruits')).toBeInTheDocument();
+            });
             expect(mockFetch).toHaveBeenCalledTimes(2);
         });
 
         it('Resets page and hasMore on clear', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 ) // initial open
                 .mockResolvedValueOnce(mockSuccessResponse([])) // page 2 scroll
                 .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.fruits])); // after clear
@@ -395,29 +431,37 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
             await screen.findByText('Cat 1');
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
 
             // Scroll to page 2 to exhaust hasMore
             const listbox = screen.getByRole('listbox');
             fireScrollNearBottom(listbox);
             jest.runAllTimers();
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(2);
+            });
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
 
             // Select an option - this gives MUI a value and renders the Clear button
             await user.click(screen.getByText('Cat 1'));
-            await waitFor(() => expect(screen.getByTitle('Clear')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByTitle('Clear')).toBeInTheDocument();
+            });
 
             // Clear - should reset page and hasMore, then fetch page 1 with no search
             await user.click(screen.getByTitle('Clear'));
             jest.runAllTimers();
 
-            await waitFor(() =>
+            await waitFor(() => {
                 expect(mockFetch).toHaveBeenLastCalledWith(
                     expect.stringMatching(/page=1.*search=$|search=$.*page=1/),
                     expect.anything()
-                )
-            );
+                );
+            });
         });
     });
 
@@ -431,7 +475,9 @@ describe('CategorySelect', () => {
             await user.type(screen.getByRole('combobox'), 'NewCategory');
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.getByText('Add "NewCategory"')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Add "NewCategory"')).toBeInTheDocument();
+            });
         });
 
         it('Does not show Add option when input is shorter than MIN_NEW_CATEGORY_LENGTH', async () => {
@@ -446,7 +492,9 @@ describe('CategorySelect', () => {
             await user.type(screen.getByRole('combobox'), 'AB');
             jest.runAllTimers();
 
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(3));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(3);
+            });
             expect(screen.queryByText(/Add "/)).not.toBeInTheDocument();
         });
 
@@ -477,21 +525,29 @@ describe('CategorySelect', () => {
             // Open first to consume the initial fetch
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(1);
+            });
 
             // Type search term
             await user.type(screen.getByRole('combobox'), 'NewCategory');
 
             // Advance past debounce to trigger the delayed fetch
-            act(() => jest.advanceTimersByTime(600));
+            act(() => {
+                jest.advanceTimersByTime(600);
+            });
 
             // Fetch is now in flight but response delayed - spinner should be visible
             expect(await screen.findByRole('progressbar')).toBeInTheDocument();
             expect(screen.queryByText(/Add "/)).not.toBeInTheDocument();
 
             // Resolve the delayed fetch
-            act(() => jest.advanceTimersByTime(5000));
-            await waitFor(() => expect(screen.getByText('Add "NewCategory"')).toBeInTheDocument());
+            act(() => {
+                jest.advanceTimersByTime(5000);
+            });
+            await waitFor(() => {
+                expect(screen.getByText('Add "NewCategory"')).toBeInTheDocument();
+            });
         });
 
         it('Calls handleCategorySelectChange with raw string value when Add option is selected', async () => {
@@ -556,7 +612,9 @@ describe('CategorySelect', () => {
         it('Loads next page when user scrolls within 100px of the bottom', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
 
@@ -573,14 +631,16 @@ describe('CategorySelect', () => {
             fireScrollNearBottom(listbox);
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Cat 11')).toBeInTheDocument();
+            });
             expect(mockFetch).toHaveBeenCalledTimes(2);
             expect(mockFetch).toHaveBeenLastCalledWith(expect.stringMatching(/page=2/), expect.anything());
         });
 
         it('Does not load next page when scroll is not near the bottom', async () => {
             mockFetch.mockResolvedValueOnce(
-                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` })))
             );
 
             render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
@@ -618,7 +678,7 @@ describe('CategorySelect', () => {
         it('Does not load next page while a fetch is already in flight', async () => {
             mockFetch.mockImplementationOnce(() =>
                 mockDelayedResponse(
-                    Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })),
+                    Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` })),
                     100
                 )
             );
@@ -637,7 +697,9 @@ describe('CategorySelect', () => {
                 jest.advanceTimersByTime(100);
             });
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
 
             // Confirm no second fetch was triggered
             expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -646,7 +708,9 @@ describe('CategorySelect', () => {
         it('Appends results to existing options during pagination', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
 
@@ -679,7 +743,9 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
         });
 
         it('Shows toast and clears loading when fetch returns null/undefined response', async () => {
@@ -691,7 +757,9 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
         });
 
         it('Shows toast and clears loading when API response fails schema validation', async () => {
@@ -706,7 +774,9 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
         });
 
         it('Shows toast and clears loading when result.error is true', async () => {
@@ -721,7 +791,9 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.queryByRole('progressbar')).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            });
         });
 
         it('Does not show toast for AbortError - silently ignores it', async () => {
@@ -737,7 +809,9 @@ describe('CategorySelect', () => {
             const user = userEvent.setup();
             await user.click(screen.getByLabelText('Category'));
 
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(1);
+            });
 
             // Ensure no error toast rendered
             expect(screen.queryByText('Server Error. Please try again.')).not.toBeInTheDocument();
@@ -766,7 +840,9 @@ describe('CategorySelect', () => {
             mockFetch.mockImplementation(
                 () =>
                     new Promise((resolve) => {
-                        setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ data: [] }) }), 50);
+                        setTimeout(() => {
+                            resolve({ ok: true, json: () => Promise.resolve({ data: [] }) });
+                        }, 50);
                     })
             );
 
@@ -774,12 +850,18 @@ describe('CategorySelect', () => {
 
             const user = userEvent.setup();
             await user.click(screen.getByLabelText('Category'));
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(1);
+            });
 
             // Typing triggers a new fetch, which should abort the previous one
             await user.type(screen.getByRole('combobox'), 'NewBook');
-            await waitFor(() => expect(abortSpy).toHaveBeenCalled());
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+            await waitFor(() => {
+                expect(abortSpy).toHaveBeenCalled();
+            });
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(2);
+            });
 
             jest.useFakeTimers();
         });
@@ -796,7 +878,9 @@ describe('CategorySelect', () => {
             mockFetch.mockImplementation(
                 () =>
                     new Promise((resolve) =>
-                        setTimeout(() => resolve({ ok: true, json: () => Promise.resolve({ data: [] }) }), 1000)
+                        setTimeout(() => {
+                            resolve({ ok: true, json: () => Promise.resolve({ data: [] }) });
+                        }, 1000)
                     )
             );
 
@@ -804,7 +888,9 @@ describe('CategorySelect', () => {
 
             const user = userEvent.setup();
             await user.click(screen.getByLabelText('Category'));
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(1);
+            });
 
             unmount();
 
@@ -827,7 +913,9 @@ describe('CategorySelect', () => {
             // Open to trigger initial fetch
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(1);
+            });
 
             // Use fireEvent to queue the debounced fetch without advancing timers
             const input = screen.getByRole('combobox');
@@ -837,7 +925,9 @@ describe('CategorySelect', () => {
             unmount();
 
             // Advance past debounce - should not fire
-            act(() => jest.advanceTimersByTime(1500));
+            act(() => {
+                jest.advanceTimersByTime(1500);
+            });
 
             expect(mockFetch).toHaveBeenCalledTimes(1);
         });
@@ -847,7 +937,9 @@ describe('CategorySelect', () => {
         it('Restores scroll position after appending paginated results from API', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
 
@@ -864,7 +956,9 @@ describe('CategorySelect', () => {
             fireScrollNearBottom(listbox);
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Cat 11')).toBeInTheDocument();
+            });
             expect(scrollTopSpy).toHaveBeenCalled();
         });
 
@@ -872,7 +966,7 @@ describe('CategorySelect', () => {
             mockGetCachedCategories.mockReturnValueOnce(null).mockReturnValueOnce([{ value: 11, label: 'Cat 11' }]);
 
             mockFetch.mockResolvedValueOnce(
-                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` })))
             );
 
             render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
@@ -888,14 +982,18 @@ describe('CategorySelect', () => {
             fireScrollNearBottom(listbox);
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Cat 11')).toBeInTheDocument();
+            });
             expect(scrollTopSpy).toHaveBeenCalled();
         });
 
         it('Restores the most recent scroll position, not the position at fetch trigger time', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
 
@@ -920,7 +1018,9 @@ describe('CategorySelect', () => {
             const scrollTopSetter = jest.spyOn(listbox, 'scrollTop', 'set');
 
             jest.runAllTimers();
-            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Cat 11')).toBeInTheDocument();
+            });
 
             // Should restore to 1100 (most recent position), not 1000 (fetch trigger position)
             expect(scrollTopSetter).toHaveBeenCalledWith(1100);
@@ -928,7 +1028,7 @@ describe('CategorySelect', () => {
 
         it('Updates saved scroll position on every scroll event, not just when the threshold is crossed', async () => {
             mockFetch.mockResolvedValueOnce(
-                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` })))
             );
 
             render(<CategorySelect handleCategorySelectChange={mockHandleChange} records={10} />);
@@ -949,7 +1049,9 @@ describe('CategorySelect', () => {
         it('Does not restore scroll position when replacing options on a new search', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.fruits]));
 
@@ -964,9 +1066,13 @@ describe('CategorySelect', () => {
             const scrollTopSpy = jest.spyOn(listbox, 'scrollTop', 'set');
 
             await user.type(screen.getByRole('combobox'), 'Fruit');
-            act(() => jest.advanceTimersByTime(600));
+            act(() => {
+                jest.advanceTimersByTime(600);
+            });
 
-            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Fruits')).toBeInTheDocument();
+            });
             expect(scrollTopSpy).not.toHaveBeenCalled();
         });
 
@@ -985,14 +1091,18 @@ describe('CategorySelect', () => {
             const scrollTopSpy = jest.spyOn(screen.getByRole('listbox'), 'scrollTop', 'set');
 
             await user.click(screen.getByText('Books'));
-            await waitFor(() => expect(screen.getByTitle('Clear')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByTitle('Clear')).toBeInTheDocument();
+            });
 
             await user.click(screen.getByTitle('Clear'));
             jest.runAllTimers();
 
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
-            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Fruits')).toBeInTheDocument();
+            });
 
             expect(scrollTopSpy).not.toHaveBeenCalled();
         });
@@ -1006,7 +1116,9 @@ describe('CategorySelect', () => {
             await user.click(screen.getByLabelText('Category'));
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Fruits')).toBeInTheDocument();
+            });
 
             // No listbox scroll interaction occurred, so scrollTop should never be set
             const listbox = screen.getByRole('listbox');
@@ -1018,7 +1130,9 @@ describe('CategorySelect', () => {
                 .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.books]))
                 .mockResolvedValueOnce(mockSuccessResponse([CATEGORIES.fruits]))
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
 
@@ -1033,12 +1147,18 @@ describe('CategorySelect', () => {
 
             // Search triggers a replace operation
             await user.type(screen.getByRole('combobox'), 'Fruit');
-            act(() => jest.advanceTimersByTime(600));
-            await waitFor(() => expect(screen.getByText('Fruits')).toBeInTheDocument());
+            act(() => {
+                jest.advanceTimersByTime(600);
+            });
+            await waitFor(() => {
+                expect(screen.getByText('Fruits')).toBeInTheDocument();
+            });
 
             // Select and clear to get back to a pageable list
             await user.click(screen.getByText('Fruits'));
-            await waitFor(() => expect(screen.getByTitle('Clear')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByTitle('Clear')).toBeInTheDocument();
+            });
             await user.click(screen.getByTitle('Clear'));
             jest.runAllTimers();
 
@@ -1054,14 +1174,18 @@ describe('CategorySelect', () => {
             fireScrollNearBottom(listbox);
             jest.runAllTimers();
 
-            await waitFor(() => expect(screen.getByText('Cat 11')).toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByText('Cat 11')).toBeInTheDocument();
+            });
             expect(scrollTopSpy).toHaveBeenCalled();
         });
 
         it('Preserves all existing options in the list after new page is appended', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
 
@@ -1087,7 +1211,9 @@ describe('CategorySelect', () => {
         it('Does not throw and skips restore when listbox is unmounted before append completes', async () => {
             mockFetch
                 .mockResolvedValueOnce(
-                    mockSuccessResponse(Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${i + 1}` })))
+                    mockSuccessResponse(
+                        Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `Cat ${String(i + 1)}` }))
+                    )
                 )
                 .mockResolvedValueOnce(mockSuccessResponse([{ id: 11, name: 'Cat 11' }]));
 
@@ -1106,7 +1232,9 @@ describe('CategorySelect', () => {
 
             // Should not throw
             jest.runAllTimers();
-            await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(2);
+            });
         });
     });
 });

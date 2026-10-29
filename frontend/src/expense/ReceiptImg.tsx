@@ -52,7 +52,7 @@ export default function ReceiptImg({ alt, url }: ReceiptImgProps) {
         );
     }
 
-    if (error) {
+    if (error != null) {
         return (
             <Box
                 sx={{

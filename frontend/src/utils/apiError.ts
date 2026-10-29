@@ -3,7 +3,7 @@
  */
 export class APIError extends Error {
     public readonly statusCode: number;
-    public readonly name: string;
+    public override readonly name: string;
     public readonly data: string;
 
     constructor(message: string, statusCode = 500, data = '') {

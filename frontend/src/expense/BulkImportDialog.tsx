@@ -93,56 +93,55 @@ export default function BulkImportDialog({
                     {!loading && (
                         <Stack spacing={1} sx={{ width: '100%' }}>
                             {rowOrder.length === 0 && <Alert severity="error">No rows to import.</Alert>}
-                            {!loading && (
-                                <>
-                                    <BulkImportErrors errors={importErrors} onClose={clearImportErrors} />
-                                    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                                        <TableContainer sx={{ maxHeight: '70vh', overflowX: 'scroll' }}>
-                                            <Table
-                                                stickyHeader
-                                                sx={{ tableLayout: 'fixed', maxWidth: '100%' }}
-                                                aria-label="Bulk import expenses"
-                                            >
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableCell sx={{ width: '15%' }}>Date</TableCell>
-                                                        <TableCell sx={{ width: '15%' }}>Amount</TableCell>
-                                                        <TableCell sx={{ width: '28%' }}>Description</TableCell>
-                                                        <TableCell sx={{ width: '22%' }}>Category</TableCell>
-                                                        <TableCell sx={{ width: '20%' }}></TableCell>
-                                                    </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {rowOrder.map((rowId: string) => {
-                                                        const row = loadedExpenses[rowId];
-                                                        return (
-                                                            <BulkImportRow
-                                                                key={rowId}
-                                                                row={row}
-                                                                rowId={rowId}
-                                                                onRowChange={onRowChange}
-                                                                onDelete={onDelete}
-                                                                error={errors[rowId] ?? []}
-                                                            />
-                                                        );
-                                                    })}
-                                                </TableBody>
-                                            </Table>
-                                        </TableContainer>
-                                    </Paper>
-                                </>
-                            )}
+                            <>
+                                <BulkImportErrors errors={importErrors} onClose={clearImportErrors} />
+                                <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+                                    <TableContainer sx={{ maxHeight: '70vh', overflowX: 'scroll' }}>
+                                        <Table
+                                            stickyHeader
+                                            sx={{ tableLayout: 'fixed', maxWidth: '100%' }}
+                                            aria-label="Bulk import expenses"
+                                        >
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell sx={{ width: '15%' }}>Date</TableCell>
+                                                    <TableCell sx={{ width: '15%' }}>Amount</TableCell>
+                                                    <TableCell sx={{ width: '28%' }}>Description</TableCell>
+                                                    <TableCell sx={{ width: '22%' }}>Category</TableCell>
+                                                    <TableCell sx={{ width: '20%' }}></TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {rowOrder.map((rowId: string) => {
+                                                    const row = loadedExpenses[rowId];
+                                                    if (!row) return null;
+                                                    return (
+                                                        <BulkImportRow
+                                                            key={rowId}
+                                                            row={row}
+                                                            rowId={rowId}
+                                                            onRowChange={onRowChange}
+                                                            onDelete={onDelete}
+                                                            error={errors[rowId] ?? []}
+                                                        />
+                                                    );
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </Paper>
+                            </>
                         </Stack>
                     )}
                 </Box>
             </DialogContent>
             {!loading && (
                 <DialogActions sx={{ px: 3, pb: 1 }}>
-                    <Button disabled={loading || saving} variant="outlined" onClick={onClose}>
+                    <Button disabled={saving} variant="outlined" onClick={onClose}>
                         Cancel
                     </Button>
                     <Button
-                        disabled={loading || rowOrder.length === 0}
+                        disabled={rowOrder.length === 0}
                         loading={saving}
                         variant="outlined"
                         onClick={() => {

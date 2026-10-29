@@ -2,7 +2,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import { useQuery } from '@tanstack/react-query';
-import type { ChartData, ChartDataset, ChartOptions, LegendItem } from 'chart.js';
+import type { ChartData, ChartOptions, LegendItem } from 'chart.js';
 import { ArcElement, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import EmptyCard from 'components/EmptyCard';
 import ErrorCard from 'components/ErrorCard';
@@ -11,20 +11,13 @@ import useAuthFetch from 'hooks/useAuthFetch';
 import useDateRangeContext from 'hooks/useDateRangeContext';
 import { useMemo } from 'react';
 import { Doughnut } from 'react-chartjs-2';
+import { DonutChartResponseSchema } from 'types/DonutChart.type';
 import { donutPlugins, pointerHover } from 'utils/chartPlugins';
 import { API_BASE_URL } from 'utils/constants';
 import { queryKeys } from 'utils/queryKeys';
 import { safeJson } from 'utils/safeJson';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-
-interface DonutChartResponse {
-    data: {
-        labels: string[];
-        dataset: ChartDataset<'doughnut'>;
-    };
-    error?: boolean;
-}
 
 /**
  * ChartJS options
@@ -92,8 +85,16 @@ export default function DonutChart() {
         if (!response) throw new Error('No response');
         if (!response.ok) throw new Error('Invalid network response');
 
-        const result = await safeJson<DonutChartResponse>(response);
-        if (!result || result.error) throw new Error('Bad Request');
+        const json = await safeJson(response);
+        const parsed = DonutChartResponseSchema.safeParse(json);
+
+        if (!parsed.success) {
+            console.error('DonutChart schema mismatch', parsed.error);
+            throw new Error('Bad Request');
+        }
+
+        if (parsed.data.error) throw new Error('Bad Request');
+        const result = parsed.data;
 
         return {
             labels: result.data.labels,
@@ -121,7 +122,7 @@ export default function DonutChart() {
         return <ErrorCard />;
     }
 
-    if (!chartData?.labels?.length) {
+    if (!chartData || (chartData.labels?.length ?? 0) === 0) {
         return <EmptyCard />;
     }
 

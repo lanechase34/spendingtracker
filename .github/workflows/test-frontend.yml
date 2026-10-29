@@ -44,8 +44,8 @@ jobs:
         run: npm ci
 
       - name: Run Jest Tests with Coverage
-        run: npm test -- --coverage --coverageReporters="json-summary" --coverageReporters="text"
-        continue-on-error: true
+        id: jest
+        run: npm test -- --ci --coverage --coverageReporters="json-summary" --coverageReporters="text"
 
       - name: Display Coverage Summary
         if: always()
@@ -65,7 +65,7 @@ jobs:
 
       - name: Jest Coverage Comment
         uses: MishaKav/jest-coverage-comment@a3e9823fbde02ccc79cf8a75efe2998e1da023ea # v1.0.23
-        if: github.event_name == 'pull_request'
+        if: always() && steps.jest.outcome != 'skipped' && github.event_name == 'pull_request'
         with:
           coverage-summary-path: frontend/coverage/coverage-summary.json
           title: Frontend Test Coverage

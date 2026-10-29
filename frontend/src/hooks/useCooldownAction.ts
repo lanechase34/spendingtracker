@@ -1,5 +1,6 @@
 import useLocalStorage from 'hooks/useLocalStorage';
 import { useCallback, useEffect, useState } from 'react';
+import { z } from 'zod';
 
 interface UseCooldownActionOptions {
     cooldownMs: number;
@@ -37,6 +38,7 @@ export default function useCooldownAction<T = void>({
     const [cooldownUntil, setCooldownUntil] = useLocalStorage<number | null>({
         key: storageKey,
         initialValue: null,
+        schema: z.number().nullable(),
     });
 
     // Set initial cooldown on mount if requested
@@ -49,18 +51,20 @@ export default function useCooldownAction<T = void>({
                 return prev;
             });
         }
-        // eslint-disable-next-line @eslint-react/exhaustive-deps
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- applies the initial cooldown once on mount only
+    }, []);
 
     // Tick now every second while cooldown is active
     const [now, setNow] = useState(Date.now);
 
     useEffect(() => {
-        if (!cooldownUntil) return;
+        if (cooldownUntil == null) return;
 
         // Reset now on the next tick (not synchronously) so remainingSeconds is accurate
         // from the start of a new cooldown
-        const resetTimeout = setTimeout(() => setNow(Date.now()), 0);
+        const resetTimeout = setTimeout(() => {
+            setNow(Date.now());
+        }, 0);
 
         const interval = setInterval(() => {
             const currentNow = Date.now();
@@ -77,7 +81,7 @@ export default function useCooldownAction<T = void>({
         };
     }, [cooldownUntil, setCooldownUntil]);
 
-    const remainingSeconds = cooldownUntil ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0;
+    const remainingSeconds = cooldownUntil != null ? Math.max(0, Math.ceil((cooldownUntil - now) / 1000)) : 0;
 
     const isCooldownActive = remainingSeconds > 0;
 

@@ -119,7 +119,7 @@ export default function SubscriptionList() {
     );
 
     // Rows of Subscriptions
-    const rows: Subscription[] = useMemo(() => subscriptions ?? [], [subscriptions]);
+    const rows = subscriptions;
 
     // Columns are the expense properties
     const columns: GridColDef<Subscription>[] = useMemo(
@@ -209,8 +209,8 @@ export default function SubscriptionList() {
                         >
                             <ButtonGroup variant="outlined">
                                 <Button
-                                    color={params.value ? 'warning' : 'success'}
-                                    aria-label={params.value ? 'Pause subscription' : 'Resume subscription'}
+                                    color={params.row.active === 1 ? 'warning' : 'success'}
+                                    aria-label={params.row.active === 1 ? 'Pause subscription' : 'Resume subscription'}
                                     onClick={(event: MouseEvent<HTMLButtonElement>) => {
                                         event.preventDefault();
                                         event.stopPropagation(); // stop row selection
@@ -221,7 +221,7 @@ export default function SubscriptionList() {
                                 >
                                     {activeAction?.type === 'toggle' && activeAction.id === params.id ? (
                                         <CircularProgress size={16} color="inherit" />
-                                    ) : params.value ? (
+                                    ) : params.row.active === 1 ? (
                                         <PauseIcon fontSize="small" />
                                     ) : (
                                         <PlayArrowIcon fontSize="small" />

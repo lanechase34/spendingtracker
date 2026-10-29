@@ -34,18 +34,19 @@ export default function SearchToolbar({ title }: SearchToolbarProps) {
                                             <SearchIcon fontSize="small" />
                                         </InputAdornment>
                                     ),
-                                    endAdornment: other.value ? (
-                                        <InputAdornment position="end">
-                                            <QuickFilterClear
-                                                edge="end"
-                                                size="small"
-                                                aria-label="Clear search"
-                                                material={{ sx: { marginRight: -0.75 } }}
-                                            >
-                                                <CancelIcon fontSize="small" />
-                                            </QuickFilterClear>
-                                        </InputAdornment>
-                                    ) : null,
+                                    endAdornment:
+                                        (other.value ?? '') !== '' ? (
+                                            <InputAdornment position="end">
+                                                <QuickFilterClear
+                                                    edge="end"
+                                                    size="small"
+                                                    aria-label="Clear search"
+                                                    material={{ sx: { marginRight: -0.75 } }}
+                                                >
+                                                    <CancelIcon fontSize="small" />
+                                                </QuickFilterClear>
+                                            </InputAdornment>
+                                        ) : null,
                                     ...other.slotProps?.input,
                                 },
                                 ...other.slotProps,

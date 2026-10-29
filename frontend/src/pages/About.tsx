@@ -319,33 +319,33 @@ export default function About() {
                     <FeatureShowcase
                         title="Expense Tracking"
                         description="A high-performance expense table supports sorting, pagination, search, receipt viewing, and dynamic totals - built to handle real-world datasets."
-                        media={`${BASE_URL}/screenshots/expense_widget.webp`}
+                        media={`${BASE_URL}screenshots/expense_widget.webp`}
                     />
 
                     <FeatureShowcase
                         title="Category Breakdown"
                         description="Visual breakdown by category of where your money is going."
-                        media={`${BASE_URL}/screenshots/category_widget.webp`}
+                        media={`${BASE_URL}screenshots/category_widget.webp`}
                         reverse
                     />
 
                     <FeatureShowcase
                         title="Weekly Trends"
                         description="Visualize category and spending trends over time using dynamic date ranges."
-                        media={`${BASE_URL}/screenshots/stacked_widget.webp`}
+                        media={`${BASE_URL}screenshots/stacked_widget.webp`}
                     />
 
                     <FeatureShowcase
                         title="Subscription Management"
                         description="Automatically recurring subscriptions with weekly or monthly billing cycles."
-                        media={`${BASE_URL}/screenshots/subscription_widget.webp`}
+                        media={`${BASE_URL}screenshots/subscription_widget.webp`}
                         reverse
                     />
 
                     <FeatureShowcase
                         title="CSV Bulk Import"
                         description="Bulk import expenses using a CSV with parsing, validation, transformation, and error handling."
-                        media={`${BASE_URL}/gifs/csv_import.gif`}
+                        media={`${BASE_URL}gifs/csv_import.gif`}
                     />
                 </Box>
 

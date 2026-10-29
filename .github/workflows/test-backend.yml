@@ -59,6 +59,14 @@ jobs:
         with:
           version: latest
 
+      - name: Cache CommandBox Downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.CommandBox/artifacts
+            ~/.CommandBox/serverJREs
+          key: commandbox-${{ runner.os }}-${{ hashFiles('backend/box.json', 'backend/server.json') }}
+
       - name: Create .env file
         run: |
           cat > .env << 'EOL'
@@ -152,6 +160,7 @@ jobs:
           check_name: "TestBox Report"
           include_passed: false
           fail_on_failure: true
+          require_tests: true
           detailed_summary: true
 
       - name: TestBox Results Comment
@@ -238,3 +247,9 @@ jobs:
         run: |
           box server stop
         continue-on-error: true
+
+      - name: Fail if tests failed
+        if: env.TESTS_FAILED == 'true'
+        run: |
+          echo "TestBox run failed"
+          exit 1
