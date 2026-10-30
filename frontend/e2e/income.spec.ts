@@ -3,9 +3,11 @@ import { expect, type Locator, type Page, test } from '@playwright/test';
 import {
     fillDate,
     login,
+    netIncomeCard,
     NORMAL_USER,
     openExpenseForm,
-    parseCurrency,
+    openIncomeForm,
+    readCardAmount,
     selectCategory,
     setDateRangePreset,
     submitExpenseForm,
@@ -13,38 +15,27 @@ import {
 } from './helpers';
 
 /**
- * The Net Income card, scoped by its "Net Income" title so it isn't confused
- * with any other card on the dashboard
+ * Extra income is a list of entries that persists across runs, so remove every entry for the month
+ * then stage a single entry for the amount, leaving Extra equal to exactly that amount
  */
-function netIncomeCard(page: Page): Locator {
-    return page.locator('.MuiCard-root').filter({ hasText: 'Net Income' });
-}
+async function setExtraIncome(dialog: Locator, amount: string) {
+    // Entries are listed once the extra income fetch finishes
+    await expect(dialog.getByLabel('Extra', { exact: true })).toBeEnabled();
 
-/**
- * Reads the dollar amount out of one of the Net Income card's three inner
- * cards ("Income", "Expenses", "Net"), identified by its label
- */
-async function readCardAmount(page: Page, label: string): Promise<number> {
-    const subCard = netIncomeCard(page).locator('.MuiCard-root').filter({ hasText: label });
-    const text = await subCard.innerText();
-    const match = /-?\$[\d,]+\.\d{2}/.exec(text);
-    if (!match) throw new Error(`Could not find a currency amount in the "${label}" card: ${text}`);
-    return parseCurrency(match[0]);
-}
+    const deleteButtons = dialog.getByRole('button', { name: /^delete / });
+    while ((await deleteButtons.count()) > 0) {
+        await deleteButtons.first().click();
+    }
 
-/**
- * Opens the Net Income card's Edit Income dialog
- */
-async function openIncomeForm(page: Page): Promise<Locator> {
-    await netIncomeCard(page).getByRole('button', { name: 'edit' }).click();
-    const dialog = page.getByRole('dialog');
-    await expect(dialog).toBeVisible();
-    return dialog;
+    await dialog.getByLabel('Amount').fill(amount);
+    await dialog.getByLabel('Description').fill(`E2E extra ${String(Date.now())}`);
+    await dialog.getByRole('button', { name: 'Add' }).click();
+    await expect(dialog.getByLabel('Extra', { exact: true })).toHaveValue(amount);
 }
 
 async function fillIncomeForm(dialog: Locator, pay: string, extra: string) {
     await dialog.getByLabel('Pay').fill(pay);
-    await dialog.getByLabel('Extra').fill(extra);
+    await setExtraIncome(dialog, extra);
 }
 
 async function submitIncomeForm(dialog: Locator) {
@@ -124,17 +115,38 @@ test.describe('Net Income card', () => {
         expect(await readCardAmount(page, 'Net')).toBeGreaterThan(0);
     });
 
-    test('Requires pay and extra before saving', async ({ page }) => {
+    test('Requires a valid pay before saving', async ({ page }) => {
         const dialog = await openIncomeForm(page);
 
         await dialog.getByLabel('Pay').fill('');
-        await dialog.getByLabel('Extra').fill('');
         await dialog.getByRole('button', { name: 'Update' }).click();
 
         await expect(dialog).toBeVisible();
-        await expect(dialog.getByText('Field is required')).toHaveCount(2);
+        await expect(dialog.getByText('Field is required')).toHaveCount(1);
 
         await fillIncomeForm(dialog, '100.00', '10.00');
         await submitIncomeForm(dialog);
+    });
+
+    test('Requires an amount and description to add extra income, and only saves on Update', async ({ page }) => {
+        const dialog = await openIncomeForm(page);
+        await expect(dialog.getByLabel('Extra', { exact: true })).toBeEnabled();
+        const extraBefore = await dialog.getByLabel('Extra', { exact: true }).inputValue();
+
+        await dialog.getByRole('button', { name: 'Add' }).click();
+        await expect(dialog.getByText('Field is required')).toBeVisible();
+        await expect(dialog.getByText('Description is required')).toBeVisible();
+
+        // A staged entry is discarded when the dialog closes without saving
+        await dialog.getByLabel('Amount').fill('12.34');
+        await dialog.getByLabel('Description').fill('Discarded entry');
+        await dialog.getByRole('button', { name: 'Add' }).click();
+        await expect(dialog.getByText('Discarded entry')).toBeVisible();
+        await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+        await expect(dialog).toBeHidden();
+
+        const reopened = await openIncomeForm(page);
+        await expect(reopened.getByLabel('Extra', { exact: true })).toHaveValue(extraBefore);
+        await expect(reopened.getByText('Discarded entry')).toHaveCount(0);
     });
 });

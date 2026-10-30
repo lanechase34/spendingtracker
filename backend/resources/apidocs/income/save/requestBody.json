@@ -4,7 +4,7 @@
         "application/x-www-form-urlencoded": {
             "schema": {
                 "type": "object",
-                "required": ["date", "pay", "extra"],
+                "required": ["date", "pay"],
                 "properties": {
                     "date": {
                         "type": "string",
@@ -12,8 +12,7 @@
                         "example": "04-01-2025",
                         "description": "The year and month for this income record in MM-DD-YYYY format. (DD does not matter)."
                     },
-                    "pay": { "type": "number", "minimum": 0, "maximum": 99999, "example": 4500 },
-                    "extra": { "type": "number", "minimum": 0, "maximum": 99999, "example": 250 }
+                    "pay": { "type": "number", "minimum": 0, "maximum": 99999, "example": 4500 }
                 }
             }
         }

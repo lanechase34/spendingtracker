@@ -1,0 +1,26 @@
+{
+    "required": true,
+    "content": {
+        "application/x-www-form-urlencoded": {
+            "schema": {
+                "type": "object",
+                "required": ["date", "amount", "description"],
+                "properties": {
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "04-15-2025",
+                        "description": "The date the extra income was received in MM-DD-YYYY format."
+                    },
+                    "amount": { "type": "number", "minimum": 0.01, "maximum": 99999, "example": 250 },
+                    "description": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 500,
+                        "example": "Freelance project"
+                    }
+                }
+            }
+        }
+    }
+}

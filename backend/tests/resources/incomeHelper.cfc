@@ -20,9 +20,9 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * @userid      The user the income belongs to
      * @count       How many income rows to insert
      * @date        Any date in the target month - will be normalized to the first of the month
-     * @description Unused in the income table; accepted for parity with expenseHelper
+     * @description Description for the income_extra row (only used when @extra > 0)
      * @pay         Pay amount per row. If -1, a random amount is generated
-     * @extra       Extra pay amount per row. Defaults to 0
+     * @extra       Extra pay amount. When > 0, a single income_extra row is inserted on @date. Defaults to 0
      * @amount      Convenience alias for `pay` to mirror expenseHelper.mock(). If provided
      */
     struct function mock(
@@ -37,7 +37,8 @@ component extends="coldbox.system.testing.BaseTestCase" {
             sum     : 0, // total pay + extra inserted
             paySum  : 0,
             extraSum: 0,
-            ids     : []
+            ids     : [], // income ids
+            extraIds: [] // income_extra ids
         };
 
         // Allow `amount` as an alias for `pay` so callers can use the same shape
@@ -58,13 +59,29 @@ component extends="coldbox.system.testing.BaseTestCase" {
             .insert({
                 date  : {value: incomeDate, cfsqltype: 'date'},
                 userid: {value: userid, cfsqltype: 'numeric'},
-                pay   : {value: securityService.encryptValue(payAmount), cfsqltype: 'varchar'},
-                extra : {value: securityService.encryptValue(extraAmount), cfsqltype: 'varchar'}
+                pay   : {value: securityService.encryptValue(payAmount), cfsqltype: 'varchar'}
             })
             .result
             .id;
 
         result.ids.append(curr);
+
+        // Extra income lives in its own table and keeps the supplied date (any day in the month)
+        if(extraAmount > 0) {
+            var extraId = q
+                .from('income_extra')
+                .returning('id')
+                .insert({
+                    date       : {value: date, cfsqltype: 'date'},
+                    amount     : {value: securityService.encryptValue(extraAmount), cfsqltype: 'varchar'},
+                    description: {value: description.len() ? description : 'Extra income', cfsqltype: 'varchar'},
+                    userid     : {value: userid, cfsqltype: 'numeric'}
+                })
+                .result
+                .id;
+
+            result.extraIds.append(extraId);
+        }
         result.paySum += payAmount;
         result.extraSum += extraAmount;
         result.sum += (payAmount + extraAmount);

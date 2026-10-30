@@ -14,6 +14,9 @@ export const queryKeys = {
         ['incomeWaterfallChart', params] as const,
 
     income: (params?: { startDate: string; endDate: string }) => ['income', params] as const,
+
+    // Nested under 'income' so invalidating ['income'] also refreshes the extra income entries
+    incomeExtra: (params?: { startDate: string; endDate: string }) => ['income', 'extra', params] as const,
 } as const;
 
 export const WIDGET_KEYS = [

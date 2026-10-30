@@ -202,8 +202,38 @@ export async function setCustomDateRange(page: Page, start: Date, end: Date) {
 /**
  * Parses a formatted currency string (e.g. "-$1,234.56") into a number
  */
-export function parseCurrency(text: string): number {
+function parseCurrency(text: string): number {
     const negative = text.trim().startsWith('-');
     const numeric = Number(text.replace(/[^0-9.]/g, ''));
     return negative ? -numeric : numeric;
+}
+
+/**
+ * The Net Income card, scoped by its "Net Income" title so it isn't confused
+ * with any other card on the dashboard
+ */
+export function netIncomeCard(page: Page): Locator {
+    return page.locator('.MuiCard-root').filter({ hasText: 'Net Income' });
+}
+
+/**
+ * Reads the dollar amount out of one of the Net Income card's three inner
+ * cards ("Income", "Expenses", "Net"), identified by its label
+ */
+export async function readCardAmount(page: Page, label: string): Promise<number> {
+    const subCard = netIncomeCard(page).locator('.MuiCard-root').filter({ hasText: label });
+    const text = await subCard.innerText();
+    const match = /-?\$[\d,]+\.\d{2}/.exec(text);
+    if (!match) throw new Error(`Could not find a currency amount in the "${label}" card: ${text}`);
+    return parseCurrency(match[0]);
+}
+
+/**
+ * Opens the Net Income card's Edit Income dialog
+ */
+export async function openIncomeForm(page: Page): Promise<Locator> {
+    await netIncomeCard(page).getByRole('button', { name: 'edit' }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    return dialog;
 }

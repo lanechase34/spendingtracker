@@ -40,6 +40,8 @@ component {
             route('/widgets/incomeWaterfall').withAction({GET: 'incomeWaterFall'}).toHandler('widget');
 
             // Income
+            route('/income/extra/:id-numeric').withAction({DELETE: 'removeExtra'}).toHandler('income');
+            route('/income/extra').withAction({GET: 'viewExtra', POST: 'saveExtra'}).toHandler('income');
             route('/income').withAction({GET: 'view', PUT: 'save'}).toHandler('income');
 
             // Authentication

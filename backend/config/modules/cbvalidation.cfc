@@ -189,12 +189,32 @@ component {
                     required: true,
                     type    : 'numeric',
                     range   : '0..99999'
-                },
-                extra: {
+                }
+            },
+            'income.removeExtra': {
+                id: {
                     required: true,
                     type    : 'numeric',
-                    range   : '0..99999'
+                    min     : 1
                 }
+            }
+        };
+
+        incomeHandler['income.viewExtra'] = incomeHandler['income.view'];
+        incomeHandler['income.saveExtra'] = {
+            date  : incomeHandler['income.save'].date,
+            amount: {
+                required  : true,
+                type      : 'numeric',
+                min       : 0.01,
+                minMessage: 'Amount needs to be a valid, positive number',
+                max       : 99999,
+                maxMessage: 'Amount needs to be a valid, positive number'
+            },
+            description: {
+                required: true,
+                type    : 'string',
+                size    : '1..500'
             }
         };
 

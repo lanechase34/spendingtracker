@@ -170,6 +170,13 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 {value: userObj.getId(), cfsqltype: 'numeric'}
             )
             .delete();
+        q.from('income_extra')
+            .where(
+                'userid',
+                '=',
+                {value: userObj.getId(), cfsqltype: 'numeric'}
+            )
+            .delete();
         q.from('income')
             .where(
                 'userid',

@@ -14,6 +14,59 @@ component singleton accessors="true" {
     }
 
     /**
+     * Clear every cached income result for the user, along with widgets built from income
+     */
+    private void function clearIncomeCache(required numeric userid) {
+        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|income');
+        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
+        return;
+    }
+
+    /**
+     * Get every pay and extra income row for the full months spanning the dates
+     * Pay rows are always dated the first of the month, extra rows can fall on any day
+     *
+     * @return query of type ('pay' | 'extra'), date, amount (encrypted)
+     */
+    private query function getIncomeRows(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var formattedStartDate = formatIncomeDate(startDate);
+        var formattedEndDate   = formatIncomeDate(endDate);
+
+        return queryExecute(
+            '
+            SELECT
+                ''pay'' AS type,
+                date,
+                pay AS amount
+            FROM income
+            WHERE userid = :userid
+            AND date BETWEEN :startDate AND :endDate
+
+            UNION ALL
+
+            SELECT
+                ''extra'' AS type,
+                date,
+                amount
+            FROM income_extra
+            WHERE userid = :userid
+            AND date >= :startDate
+            AND date < :endDateExclusive
+        ',
+            {
+                userid          : {value: userid, cfsqltype: 'numeric'},
+                startDate       : {value: formattedStartDate, cfsqltype: 'date'},
+                endDate         : {value: formattedEndDate, cfsqltype: 'date'},
+                endDateExclusive: {value: dateAdd('m', 1, formattedEndDate), cfsqltype: 'date'}
+            }
+        );
+    }
+
+    /**
      * Get the total income and extra pay amounts between the dates
      */
     public struct function getTotal(
@@ -27,32 +80,19 @@ component singleton accessors="true" {
         var cacheKey = 'userid=#userid#|income.getTotal|startDate=#formattedStartDate#|endDate=#formattedEndDate#';
         var total    = cacheStorage.get(cacheKey);
         if(isNull(total)) {
-            var result = queryExecute(
-                '
-                SELECT 
-                    pay,
-                    extra
-                FROM income
-                WHERE userid = :userid
-                AND date BETWEEN :startDate AND :endDate
-            ',
-                {
-                    userid   : {value: userid, cfsqltype: 'numeric'},
-                    startDate: {value: formattedStartDate, cfsqltype: 'date'},
-                    endDate  : {value: formattedEndDate, cfsqltype: 'date'}
-                }
+            var result = getIncomeRows(
+                startDate = formattedStartDate,
+                endDate   = formattedEndDate,
+                userid    = userid
             );
 
             // Decrypt and sum the amounts
-            var totalPay   = 0;
-            var totalExtra = 0;
-
+            var totals = {pay: 0, extra: 0};
             result.each((row) => {
-                totalPay += securityService.decryptValue(row.pay, 'numeric');
-                totalExtra += securityService.decryptValue(row.extra, 'numeric');
+                totals[row.type] += securityService.decryptValue(row.amount, 'numeric');
             });
 
-            total = {pay: securityService.intToFloat(totalPay), extra: securityService.intToFloat(totalExtra)};
+            total = {pay: securityService.intToFloat(totals.pay), extra: securityService.intToFloat(totals.extra)};
 
             cacheStorage.set(cacheKey, total);
         }
@@ -115,15 +155,13 @@ component singleton accessors="true" {
     public void function pay(
         required date date,
         required numeric userid,
-        required numeric pay,
-        numeric extra = 0
+        required numeric pay
     ) {
         q.from('income')
             .insert({
                 date  : {value: formatIncomeDate(date), cfsqltype: 'date'},
                 userid: {value: userid, cfsqltype: 'numeric'},
-                pay   : {value: securityService.encryptValue(pay), cfsqltype: 'varchar'},
-                extra : {value: securityService.encryptValue(extra), cfsqltype: 'varchar'}
+                pay   : {value: securityService.encryptValue(pay), cfsqltype: 'varchar'}
             });
         return;
     }
@@ -135,27 +173,24 @@ component singleton accessors="true" {
     public void function upsert(
         required date date,
         required numeric userid,
-        required numeric pay,
-        required numeric extra
+        required numeric pay
     ) {
         queryExecute(
             '
-            INSERT INTO income (date, userid, pay, extra)
-            VALUES (:date, :userid, :pay, :extra)
+            INSERT INTO income (date, userid, pay)
+            VALUES (:date, :userid, :pay)
             ON CONFLICT (userid, date)
             DO UPDATE SET
-                pay = excluded.pay,
-                extra = excluded.extra
+                pay = excluded.pay
         ',
             {
                 date  : {value: formatIncomeDate(date), cfsqltype: 'date'},
                 userid: {value: userid, cfsqltype: 'numeric'},
-                pay   : {value: securityService.encryptValue(pay), cfsqltype: 'varchar'},
-                extra : {value: securityService.encryptValue(extra), cfsqltype: 'varchar'}
+                pay   : {value: securityService.encryptValue(pay), cfsqltype: 'varchar'}
             }
         );
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|income');
+        clearIncomeCache(userid);
         return;
     }
 
@@ -175,36 +210,134 @@ component singleton accessors="true" {
         var cacheKey = 'userid=#userid#|income.getMonthlyTotals|startDate=#formattedStartDate#|endDate=#formattedEndDate#';
         var totals   = cacheStorage.get(cacheKey);
         if(isNull(totals)) {
-            var result = queryExecute(
-                '
-                SELECT
-                    date,
-                    pay,
-                    extra
-                FROM income
-                WHERE userid = :userid
-                AND date BETWEEN :startDate AND :endDate
-                ',
-                {
-                    userid   : {value: userid, cfsqltype: 'numeric'},
-                    startDate: {value: formattedStartDate, cfsqltype: 'date'},
-                    endDate  : {value: formattedEndDate, cfsqltype: 'date'}
-                }
+            var result = getIncomeRows(
+                startDate = formattedStartDate,
+                endDate   = formattedEndDate,
+                userid    = userid
             );
 
-            totals = result.reduce((acc, row) => {
-                var bucket  = dateFormat(row.date, 'yyyy-mm');
-                acc[bucket] = {
-                    pay  : securityService.intToFloat(securityService.decryptValue(row.pay, 'numeric')),
-                    extra: securityService.intToFloat(securityService.decryptValue(row.extra, 'numeric'))
-                };
-                return acc;
-            }, {});
+            totals = result
+                .reduce((acc, row) => {
+                    var bucket = dateFormat(row.date, 'yyyy-mm');
+                    if(!acc.keyExists(bucket)) {
+                        acc[bucket] = {pay: 0, extra: 0};
+                    }
+                    acc[bucket][row.type] += securityService.decryptValue(row.amount, 'numeric');
+                    return acc;
+                }, {})
+                .map((bucket, bucketTotals) => {
+                    return {
+                        pay  : securityService.intToFloat(bucketTotals.pay),
+                        extra: securityService.intToFloat(bucketTotals.extra)
+                    };
+                });
 
             cacheStorage.set(cacheKey, totals);
         }
 
         return totals;
+    }
+
+    /**
+     * Get the individual extra income entries for the full months spanning the dates
+     *
+     * @return array of {id, date, amount, description} ordered newest first
+     */
+    public array function getExtra(
+        required date startDate,
+        required date endDate,
+        required numeric userid
+    ) {
+        var formattedStartDate = formatIncomeDate(startDate);
+        var formattedEndDate   = formatIncomeDate(endDate);
+
+        var cacheKey = 'userid=#userid#|income.getExtra|startDate=#formattedStartDate#|endDate=#formattedEndDate#';
+        var extras   = cacheStorage.get(cacheKey);
+        if(isNull(extras)) {
+            var result = q
+                .from('income_extra')
+                .select(['id', 'date', 'amount', 'description'])
+                .where(
+                    'userid',
+                    '=',
+                    {value: userid, cfsqltype: 'numeric'}
+                )
+                .andWhere(
+                    'date',
+                    '>=',
+                    {value: formattedStartDate, cfsqltype: 'date'}
+                )
+                .andWhere(
+                    'date',
+                    '<',
+                    {value: dateAdd('m', 1, formattedEndDate), cfsqltype: 'date'}
+                )
+                .orderBy('date', 'desc')
+                .orderBy('id', 'desc')
+                .get();
+
+            extras = result.reduce((acc, row) => {
+                acc.append({
+                    id         : row.id,
+                    date       : dateFormat(row.date, 'yyyy-mm-dd'),
+                    amount     : securityService.intToFloat(securityService.decryptValue(row.amount, 'numeric')),
+                    description: row.description
+                });
+                return acc;
+            }, []);
+
+            cacheStorage.set(cacheKey, extras);
+        }
+
+        return extras;
+    }
+
+    /**
+     * Save a new extra income entry
+     *
+     * @return the new entry's id (pk)
+     */
+    public numeric function saveExtra(
+        required date date,
+        required numeric amount,
+        required string description,
+        required numeric userid
+    ) {
+        var qResult = q
+            .from('income_extra')
+            .returning('id')
+            .insert({
+                date       : {value: date, cfsqltype: 'date'},
+                amount     : {value: securityService.encryptValue(amount), cfsqltype: 'varchar'},
+                description: {value: description, cfsqltype: 'varchar'},
+                userid     : {value: userid, cfsqltype: 'numeric'}
+            });
+
+        clearIncomeCache(userid);
+        return val(qResult.result.id);
+    }
+
+    /**
+     * Delete an extra income entry by the supplied id (pk)
+     */
+    public boolean function deleteExtra(required numeric id, required numeric userid) {
+        var qResult = q
+            .from('income_extra')
+            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+            .andWhere(
+                'userid',
+                '=',
+                {value: userid, cfsqltype: 'numeric'}
+            )
+            .delete();
+
+        var success = qResult.result.recordCount == 1;
+
+        if(success) {
+            clearIncomeCache(userid);
+        }
+
+        return success;
     }
 
 }

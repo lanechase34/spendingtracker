@@ -87,7 +87,7 @@ describe('incomeService', () => {
     });
 
     describe('updateIncome', () => {
-        const body = { date: '2026-03', pay: '1000', extra: '0' };
+        const body = { date: '2026-03', pay: '1000' };
 
         it('Should PUT the body and resolve on success', async () => {
             authFetch.mockResolvedValue(ok());
@@ -119,6 +119,139 @@ describe('incomeService', () => {
         it('Should resolve on an ok response with an empty body', async () => {
             authFetch.mockResolvedValue(mockResponse(204));
             await expect(service.updateIncome(body)).resolves.toBeUndefined();
+        });
+    });
+
+    describe('fetchExtraIncome', () => {
+        const entry = { id: 3, date: '2026-03-15', amount: 250.5, description: 'Freelance project' };
+
+        it('Should call the extra income endpoint with the query string and return the entries', async () => {
+            authFetch.mockResolvedValue(ok([entry]));
+            const controller = new AbortController();
+
+            await expect(service.fetchExtraIncome('startDate=a&endDate=b', controller.signal)).resolves.toEqual([
+                entry,
+            ]);
+            expect(authFetch).toHaveBeenCalledWith({
+                url: `${API_BASE_URL}/income/extra?startDate=a&endDate=b`,
+                method: 'GET',
+                signal: controller.signal,
+            });
+        });
+
+        it('Should resolve an empty list', async () => {
+            authFetch.mockResolvedValue(ok([]));
+            await expect(service.fetchExtraIncome('')).resolves.toEqual([]);
+        });
+
+        it('Should throw when not authenticated', async () => {
+            authFetch.mockResolvedValue(null);
+            await expect(service.fetchExtraIncome('')).rejects.toThrow('User not authenticated');
+        });
+
+        it('Should throw on a non-ok response', async () => {
+            authFetch.mockResolvedValue(mockResponse(500, {}));
+            await expect(service.fetchExtraIncome('')).rejects.toThrow(
+                'Error Retrieving Extra Income. Please try again.'
+            );
+        });
+
+        it.each([
+            ['a non-array payload', { error: false, data: entry }],
+            ['a zero amount', { error: false, data: [{ ...entry, amount: 0 }] }],
+            ['a missing description', { error: false, data: [{ id: 3, date: '2026-03-15', amount: 1 }] }],
+            ['a non-ISO date', { error: false, data: [{ ...entry, date: '03-15-2026' }] }],
+            ['a non-JSON body', undefined],
+        ])('Should throw a validation error for %s', async (_label, body) => {
+            authFetch.mockResolvedValue(mockResponse(200, body));
+            await expect(service.fetchExtraIncome('')).rejects.toThrow(
+                'Extra Income Validation failed: Invalid response format'
+            );
+        });
+
+        it('Should throw when the API reports an error', async () => {
+            authFetch.mockResolvedValue(apiError(200));
+            await expect(service.fetchExtraIncome('')).rejects.toThrow(
+                'Error Retrieving Extra Income. Please try again.'
+            );
+        });
+    });
+
+    describe('saveExtraIncome', () => {
+        const body = { date: '2026-03-15', amount: '250', description: 'Freelance project' };
+
+        it('Should POST the body and resolve the new id', async () => {
+            authFetch.mockResolvedValue(ok({ id: 12 }));
+
+            await expect(service.saveExtraIncome(body)).resolves.toBe(12);
+            expect(authFetch).toHaveBeenCalledWith({ url: `${API_BASE_URL}/income/extra`, method: 'POST', body });
+        });
+
+        it('Should throw when not authenticated', async () => {
+            authFetch.mockResolvedValue(null);
+            await expect(service.saveExtraIncome(body)).rejects.toThrow('User not authenticated');
+        });
+
+        it('Should throw on a non-ok response', async () => {
+            authFetch.mockResolvedValue(apiError(400, ['Invalid amount']));
+            await expect(service.saveExtraIncome(body)).rejects.toThrow('Error saving extra income. Please try again.');
+        });
+
+        it.each([
+            ['a missing id', { error: false, data: {} }],
+            ['no data', { error: false }],
+            ['a non-JSON body', undefined],
+        ])('Should throw a validation error for %s', async (_label, responseBody) => {
+            authFetch.mockResolvedValue(mockResponse(200, responseBody));
+            await expect(service.saveExtraIncome(body)).rejects.toThrow(
+                'Extra Income Validation failed: Invalid response format'
+            );
+        });
+
+        it('Should throw when the API reports an error', async () => {
+            authFetch.mockResolvedValue(apiError(200));
+            await expect(service.saveExtraIncome(body)).rejects.toThrow('Error saving extra income. Please try again.');
+        });
+    });
+
+    describe('deleteExtraIncome', () => {
+        it('Should DELETE the entry by id and resolve on success', async () => {
+            authFetch.mockResolvedValue(ok());
+            const controller = new AbortController();
+
+            await expect(service.deleteExtraIncome(12, controller.signal)).resolves.toBeUndefined();
+            expect(authFetch).toHaveBeenCalledWith({
+                url: `${API_BASE_URL}/income/extra/12`,
+                method: 'DELETE',
+                signal: controller.signal,
+            });
+        });
+
+        it('Should throw when not authenticated', async () => {
+            authFetch.mockResolvedValue(null);
+            await expect(service.deleteExtraIncome(12)).rejects.toThrow('User not authenticated');
+        });
+
+        it.each([
+            ['a not found response', apiError(404, ['Not found.'])],
+            ['a server error', mockResponse(500, undefined)],
+        ])('Should throw on %s', async (_label, response) => {
+            authFetch.mockResolvedValue(response);
+            await expect(service.deleteExtraIncome(12)).rejects.toThrow(
+                'Error deleting extra income. Please try again.'
+            );
+        });
+
+        it('Should throw on an ok response whose body reports an error', async () => {
+            authFetch.mockResolvedValue(apiError(200));
+            await expect(service.deleteExtraIncome(12)).rejects.toThrow(
+                'Error deleting extra income. Please try again.'
+            );
+        });
+
+        it('Should resolve on an ok response with an empty body', async () => {
+            authFetch.mockResolvedValue(mockResponse(204));
+            await expect(service.deleteExtraIncome(12)).resolves.toBeUndefined();
         });
     });
 });
