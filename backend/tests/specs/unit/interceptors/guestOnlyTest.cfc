@@ -44,8 +44,8 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
             });
 
             it('Allows unauthenticated requests through on guest-only routes', () => {
-                // No valid JWT - authenticate throws
-                mockJwtService.$('authenticate').$throws(type = 'InvalidCredentials');
+                // No valid JWT - getUser throws
+                mockJwtService.$('getUser').$throws(type = 'InvalidCredentials');
 
                 interceptor.preProcess(
                     event  = mockRequestContext,
@@ -62,7 +62,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
             it('Blocks authenticated users from accessing guest-only routes', () => {
                 var mockUser = createEmptyMock('models.objects.userobj');
                 mockUser.$('isLoaded', true);
-                mockJwtService.$('authenticate', mockUser);
+                mockJwtService.$('getUser', mockUser);
 
                 interceptor.preProcess(
                     event  = mockRequestContext,
@@ -87,7 +87,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 var mockUser = createEmptyMock('models.objects.userobj');
                 mockUser.$('isLoaded', true);
-                mockJwtService.$('authenticate', mockUser);
+                mockJwtService.$('getUser', mockUser);
 
                 interceptor.preProcess(
                     event  = mockRequestContext,
@@ -106,7 +106,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 var mockUser = createEmptyMock('models.objects.userobj');
                 mockUser.$('isLoaded', true);
-                mockJwtService.$('authenticate', mockUser);
+                mockJwtService.$('getUser', mockUser);
 
                 interceptor.preProcess(
                     event  = mockRequestContext,
@@ -116,16 +116,16 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                     prc    = prc
                 );
 
-                // authenticate should never even be called since the event is not guest-only
-                expect(mockJwtService.$never('authenticate')).toBeTrue();
+                // getUser should never even be called since the event is not guest-only
+                expect(mockJwtService.$never('getUser')).toBeTrue();
                 expect(mockRequestContext.$never('noExecution')).toBeTrue();
                 expect(mockRequestContext.$never('renderData')).toBeTrue();
             });
 
-            it('Allows through when authenticate returns an unloaded user', () => {
+            it('Allows through when getUser returns an unloaded user', () => {
                 var mockUser = createEmptyMock('models.objects.userobj');
                 mockUser.$('isLoaded', false);
-                mockJwtService.$('authenticate', mockUser);
+                mockJwtService.$('getUser', mockUser);
 
                 interceptor.preProcess(
                     event  = mockRequestContext,
@@ -139,8 +139,8 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 expect(mockRequestContext.$never('renderData')).toBeTrue();
             });
 
-            it('Allows through when authenticate returns null', () => {
-                mockJwtService.$('authenticate', javacast('null', ''));
+            it('Allows through when getUser returns null', () => {
+                mockJwtService.$('getUser', javacast('null', ''));
 
                 interceptor.preProcess(
                     event  = mockRequestContext,
@@ -159,7 +159,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
 
                 var mockUser = createEmptyMock('models.objects.userobj');
                 mockUser.$('isLoaded', true);
-                mockJwtService.$('authenticate', mockUser);
+                mockJwtService.$('getUser', mockUser);
 
                 interceptor.preProcess(
                     event  = mockRequestContext,

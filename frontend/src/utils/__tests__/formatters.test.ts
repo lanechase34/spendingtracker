@@ -1,6 +1,6 @@
 import { formatDateKey } from 'utils/dates';
 import { safeJson } from 'utils/safeJson';
-import { formatMinutesToTime, formatSecondsToTime } from 'utils/timeFormatter';
+import { formatMinutesToTime, formatSecondsToTime, formatUptime } from 'utils/timeFormatter';
 
 describe('formatDateKey', () => {
     it('Should format a date as YYYY-MM-DD', () => {
@@ -69,5 +69,21 @@ describe('safeJson', () => {
     it('Should return null when json() throws', async () => {
         const response = { json: () => Promise.reject(new Error('stream already read')) } as unknown as Response;
         await expect(safeJson(response)).resolves.toBeNull();
+    });
+});
+
+describe('formatUptime', () => {
+    it('Should format minutes only under an hour', () => {
+        expect(formatUptime(0)).toBe('0m');
+        expect(formatUptime(59_999)).toBe('0m');
+        expect(formatUptime(5 * 60_000)).toBe('5m');
+    });
+
+    it('Should format hours and minutes under a day', () => {
+        expect(formatUptime(3 * 3_600_000 + 7 * 60_000)).toBe('3h 7m');
+    });
+
+    it('Should format days, hours and minutes', () => {
+        expect(formatUptime(2 * 86_400_000 + 4 * 3_600_000 + 12 * 60_000)).toBe('2d 4h 12m');
     });
 });

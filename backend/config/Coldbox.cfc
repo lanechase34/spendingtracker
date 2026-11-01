@@ -85,7 +85,6 @@ component {
             debugging      : false,
             encryptionKey  : getSystemSetting('ENCRYPTIONKEY'),
             fromEmail      : 'spendingtracker@chaselane.dev',
-            gcTime         : 0,
             guestOnlyRoutes: ['auth.login', 'auth.register'],
             healthCheck    : true,
             imageExtension : '.webp',
@@ -96,23 +95,64 @@ component {
             logQueries     : false,
             logRequests    : true,
             maxThreads     : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
-            port           : getSystemSetting('HTTP_PORT'),
-            rateLimits     : {
-                /**
-                 * limit - num of request allowed per window
-                 * window - time in minutes
-                 * key - valid options, ip, email, ip+email
-                 */
-                'auth.login'                 : {limit: 10, window: 5, key: 'ip+email'},
-                'auth.register'              : {limit: 3, window: 30, key: 'ip'},
-                'auth.verify'                : {limit: 5, window: 10, key: 'email'},
-                'auth.resendverificationcode': {limit: 3, window: 10, key: 'email'},
-                'expense.export'             : {limit: 1, window: 1, key: 'email'},
-                'expense.exportreceipts'     : {limit: 1, window: 10, key: 'email'},
-                'user.setup2fa'              : {limit: 5, window: 60, key: 'email'},
-                'user.confirm2fa'            : {limit: 5, window: 10, key: 'email'},
-                'user.disable2fa'            : {limit: 3, window: 10, key: 'email'},
-                'auth.verify2fa'             : {limit: 5, window: 10, key: 'ip'}
+            metrics        : {
+                slowQueryThreshold: 250, // ms
+                maxSlowQueries    : 25,
+                sqlLength         : 1000,
+                diagnosticsTTL    : 30 // seconds the diagnostics snapshot is cached for
+            },
+            port: getSystemSetting('HTTP_PORT'),
+            /**
+             * Per event rate limits, every rule for the event is counted - any one exceeded blocks the request
+             *
+             * by              : ordered list of fields the rule is scoped by
+             *                   ip   - the request ip
+             *                   user - the authenticated user's id (rule skipped if not authenticated)
+             *                   anything else is read from rc (rule skipped if missing)
+             * limit           : hits allowed per window
+             * window          : window length in minutes
+             * resetOnSuccess  : clear the counter when the request succeeds (2xx), optional
+             * refundOnFailure : don't count the hit when the request fails (>= 400), optional
+             */
+            rateLimits: {
+                'auth.login': [
+                    {by: 'ip', limit: 20, window: 15},
+                    {
+                        by            : 'ip,email',
+                        limit         : 10,
+                        window        : 5,
+                        resetOnSuccess: true
+                    },
+                    // Credential stuffing against one account from many ips
+                    {by: 'email', limit: 20, window: 15}
+                ],
+                'auth.register'              : [{by: 'ip', limit: 3, window: 30}],
+                'auth.verify'                : [{by: 'user', limit: 5, window: 10}],
+                'auth.resendverificationcode': [{by: 'user', limit: 3, window: 10}],
+                'auth.verify2fa'             : [
+                    {by: 'ip', limit: 5, window: 10},
+                    // Brute forcing one account's code from many ips
+                    {by: 'user', limit: 10, window: 10}
+                ],
+                'expense.export': [
+                    {
+                        by             : 'user',
+                        limit          : 1,
+                        window         : 1,
+                        refundOnFailure: true
+                    }
+                ],
+                'expense.exportreceipts': [
+                    {
+                        by             : 'user',
+                        limit          : 1,
+                        window         : 3,
+                        refundOnFailure: true
+                    }
+                ],
+                'user.setup2fa'  : [{by: 'user', limit: 5, window: 60}],
+                'user.confirm2fa': [{by: 'user', limit: 5, window: 10}],
+                'user.disable2fa': [{by: 'user', limit: 3, window: 10}]
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
             recoveryCodeCount   : 8, // number of recovery codes to provide for TOTP
@@ -243,13 +283,13 @@ component {
                 properties: {}
             },
             {
-                class     : 'interceptors.ratelimiter',
-                name      : 'rateLimiterInterceptor',
+                class     : 'interceptors.guestOnly',
+                name      : 'guestOnlyInterceptor',
                 properties: {}
             },
             {
-                class     : 'interceptors.guestOnly',
-                name      : 'guestOnlyInterceptor',
+                class     : 'interceptors.ratelimiter',
+                name      : 'rateLimiterInterceptor',
                 properties: {}
             }
         ];

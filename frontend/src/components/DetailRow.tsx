@@ -25,6 +25,8 @@ export default function DetailRow({
             </Typography>
             <Typography
                 variant="body2"
+                // Elements like chips render divs, which can't be nested in a <p>
+                component={typeof value === 'string' || typeof value === 'number' ? 'p' : 'div'}
                 sx={{
                     whiteSpace: multiline ? 'pre-wrap' : 'nowrap',
                     wordBreak: 'break-word',

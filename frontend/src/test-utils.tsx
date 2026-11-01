@@ -15,6 +15,7 @@ import type { ToastContextType } from './contexts/ToastContext';
 import { ToastContext, ToastContextProvider } from './contexts/ToastContext';
 import { UserContext, UserContextProvider } from './contexts/UserContext';
 import type { AuthContextType } from './types/AuthContext.type';
+import type { Metric } from './types/MetricResponse.type';
 import type { UserContextType } from './types/UserContext.type';
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
@@ -300,6 +301,27 @@ export const createSubscriptionContext = (overrides?: Partial<SubscriptionContex
     ...Object.fromEntries(
         Object.entries(defaultSubscriptionContextValue).map(([k, v]) => [k, typeof v === 'function' ? jest.fn() : v])
     ),
+    ...overrides,
+});
+
+/**
+ * Helper function to create a metrics payload with sensible defaults
+ */
+export const createMetric = (overrides?: Partial<Metric>): Metric => ({
+    uptimeMs: 3_600_000,
+    cpu: { cores: 4, processPercent: 10, systemPercent: 20 },
+    memory: { totalMB: 8000, usedMB: 4000, maxMB: 8000 },
+    threads: { live: 40, peak: 50, daemon: 30, deadlocked: 0 },
+    gc: { totalMs: 1200, deltaMs: 5, percent: 0.1 },
+    concurrency: { activeRequests: 1, maxRequests: 10, slowRequests: [] },
+    queries: { count: 12, errors: 0, avgMs: 3.5, maxMs: 20, peak: 40, total: 1000, slowQueries: [] },
+    database: {
+        up: true,
+        pingMs: 1,
+        connections: { total: 5, active: 1, idle: 4, idleInTransaction: 0, waitingOnLock: 0, max: 100 },
+        longestQuerySeconds: 0,
+    },
+    rateLimit: { blocked: 0, total: 2, byEvent: { 'api.login': 2 } },
     ...overrides,
 });
 

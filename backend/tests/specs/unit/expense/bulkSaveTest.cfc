@@ -155,8 +155,12 @@ component extends="tests.resources.baseTest" {
                                     categoryid : 1
                                 },
                                 {
-                                    id         : createUUID(),
-                                    date       : createDate(year(now()), month(now()), day(now()) + 1),
+                                    id  : createUUID(),
+                                    date: createDate(
+                                        year(now()),
+                                        month(now()),
+                                        min(day(now()) + 1, 28)
+                                    ),
                                     amount     : 20.00,
                                     description: 'Expense 2',
                                     categoryid : 4

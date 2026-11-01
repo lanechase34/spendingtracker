@@ -1,5 +1,6 @@
 import type { IFrame, IMessage } from '@stomp/stompjs';
 import { Client } from '@stomp/stompjs';
+import { createMetric } from '@test-utils';
 import { createMetricsClient } from 'sockets/createMetricsClient';
 import type { Metric } from 'types/MetricResponse.type';
 
@@ -63,15 +64,7 @@ describe('createMetricsClient', () => {
     });
 
     it('Calls onMetrics for valid message', () => {
-        const mockMetricResponse: Metric = {
-            cpu: { cores: 4, processPercent: 10, systemPercent: 20 },
-            memory: { totalMB: 8000, usedMB: 4000, maxMB: 8000 },
-            concurrency: {
-                activeRequests: 1,
-                maxRequests: 10,
-                slowRequests: [],
-            },
-        };
+        const mockMetricResponse: Metric = createMetric();
 
         const mockResponse = {
             error: false,

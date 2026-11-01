@@ -1,4 +1,4 @@
-import { defined } from '@test-utils';
+import { createMetric, defined } from '@test-utils';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { MetricContext, MetricContextProvider } from 'contexts/MetricContext';
 import useAuthContext from 'hooks/useAuthContext';
@@ -25,7 +25,7 @@ jest.mock('utils/constants', () => ({
 
 // Constants
 
-const MOCK_METRIC: Metric = {
+const MOCK_METRIC: Metric = createMetric({
     cpu: {
         cores: 8,
         processPercent: 23.5,
@@ -50,7 +50,7 @@ const MOCK_METRIC: Metric = {
             },
         ],
     },
-};
+});
 
 const MOCK_AUTH_TOKEN = 'mock_auth_token';
 

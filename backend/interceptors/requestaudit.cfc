@@ -50,7 +50,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for auditing ea
      * Fire async task to audit the request
      * Adds slow requests to concurrency array
      */
-    function postProcess(event, rc, prc) {
+    function postProcess(event, data, buffer, rc, prc) {
         /**
          * Add last details to request audit and audit it
          */

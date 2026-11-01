@@ -40,7 +40,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to populate jwt
     /**
      * If the api response has newTokens, set them in the cookies
      */
-    function postProcess(event, rc, prc) {
+    function postProcess(event, data, buffer, rc, prc) {
         if(
             prc.keyExists('newTokens')
             && lCase(event.getCurrentEvent()) == 'cbsecurity:jwt.refreshtoken'

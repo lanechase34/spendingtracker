@@ -79,6 +79,89 @@ component extends="tests.resources.baseTest" {
                     expect(renderData.type).toBe('json');
                     expect(renderData.data.error).toBeTrue();
                     expect(renderData.data.messages[1]).toBe('You are already authenticated.');
+
+                    // Handler never ran - no new token was issued
+                    expect(response.getHasData()).toBeFalse();
+                });
+
+                it('Blocks authenticated users sending the token as an Authorization bearer header', () => {
+                    user = mockUser.make();
+                    jwt  = mockUser.login(user);
+
+                    setup();
+
+                    var event = post(
+                        route  = '/api/v1/login',
+                        params = {
+                            email     : user.getEmail(),
+                            password  : 'anything',
+                            rememberMe: false
+                        },
+                        headers = {'Authorization': 'Bearer #jwt#'}
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getMessages()[1]).toBe('You are already authenticated.');
+                    expect(response.getHasData()).toBeFalse();
+                });
+            });
+
+            describe('Rejected tokens are treated as guests', () => {
+                /**
+                 * POST /login with the given token, asserting the handler ran and issued a fresh token
+                 */
+                var expectLoginReachesHandler = (required string token) => {
+                    setup();
+
+                    var event = post(
+                        route  = '/api/v1/login',
+                        params = {
+                            email     : user.getEmail(),
+                            password  : createUUID(),
+                            rememberMe: false
+                        },
+                        headers = {'x-auth-token': token}
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(200);
+                    expect(response.getError()).toBeFalse();
+                    expect(response.getData()).toHaveKey('access_token');
+                    expect(response.getData().access_token).notToBe(token);
+                };
+
+                beforeEach(() => {
+                    user = mockUser.make();
+                });
+
+                it('Allows a garbage token through to /login', () => {
+                    expectLoginReachesHandler('not-a-jwt');
+                });
+
+                it('Allows a token with a tampered signature through to /login', () => {
+                    jwt = mockUser.login(user);
+                    cbauth.logout();
+
+                    expectLoginReachesHandler(jwt.listSetAt(3, 'tamperedsignature', '.'));
+                });
+
+                it('Allows an expired token through to /login', () => {
+                    jwt = mockUser.login(user);
+                    cbauth.logout();
+
+                    // Re-sign the same claims with an expiration in the past
+                    var payload = jwtService.decode(jwt);
+                    payload.exp = int(getTickCount() / 1000) - 60;
+
+                    expectLoginReachesHandler(jwtService.encode(payload));
+                });
+
+                it('Allows a revoked (logged out) token through to /login', () => {
+                    jwt = mockUser.login(user);
+                    mockUser.logout(user, jwt);
+
+                    expectLoginReachesHandler(jwt);
                 });
             });
 

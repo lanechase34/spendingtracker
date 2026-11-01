@@ -6,8 +6,9 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
     property name="uploadPath"  inject="coldbox:setting:uploadPath";
     property name="queryLogPath" type="string";
 
-    property name="emailService" inject="provider:services.email";
-    property name="imageService" inject="provider:Helpers@ImageMagick";
+    property name="emailService"   inject="provider:services.email";
+    property name="imageService"   inject="provider:Helpers@ImageMagick";
+    property name="metricsService" inject="services.metrics";
 
     /**
      * Configuration
@@ -30,7 +31,11 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
             queryExecute('SELECT 1', []);
         }
         catch(any e) {
-            throw('Cannot connect to database');
+            throw(
+                type    = 'DatabaseConnectionError',
+                message = 'Cannot connect to database',
+                detail  = e.message
+            );
         }
 
         // Verify ImageMagick
@@ -73,9 +78,14 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
     }
 
     /**
+     * Record QB query stats for the metrics dashboard
      * Log QB results for debugging in development
      */
     function postQBExecute(event, data, buffer, rc, prc, interceptData) {
+        if(!(data?.pretend ?: false)) {
+            metricsService.recordQuery(sql = data?.sql ?: '', ms = data?.executionTime ?: 0);
+        }
+
         if(
             environment == 'development'
             && getSetting('logQueries')
@@ -90,6 +100,13 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
                 }
             });
         }
+    }
+
+    /**
+     * Count failed QB queries for the metrics dashboard
+     */
+    function onQBExecuteException(event, data, buffer, rc, prc) {
+        metricsService.recordQueryError();
     }
 
 }

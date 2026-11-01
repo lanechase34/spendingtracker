@@ -114,7 +114,7 @@ component {
                         reapFrequency                 : 1,
                         evictionPolicy                : 'LRU',
                         evictCount                    : 2,
-                        maxObjects                    : 300,
+                        maxObjects                    : 20000,
                         objectStore                   : 'ConcurrentStore',
                         resetTimeoutOnAccess          : false
                     }

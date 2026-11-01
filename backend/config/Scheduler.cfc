@@ -1,9 +1,9 @@
 component {
 
-    property name="adminService"        inject="provider:services.admin";
     property name="auditService"        inject="provider:services.audit";
     property name="bugService"          inject="provider:services.bug";
     property name="incomeService"       inject="provider:services.income";
+    property name="metricsService"      inject="provider:services.metrics";
     property name="subscriptionService" inject="provider:services.subscription";
 
     /**
@@ -72,14 +72,14 @@ component {
                     /**
                      * Post metrics response message to topic/metrics
                      */
-                    var metrics = adminService.getMetrics();
+                    var metrics = metricsService.getMetrics();
                     application.ws.send('topic/metrics', {data: metrics, error: false});
                 }
 
                 /**
-                 * Reset active request count
+                 * Reset active request count and close the query / rate limit / gc window
                  */
-                adminService.resetActiveRequests();
+                metricsService.markWindow();
             })
             .onFailure((task, exception) => {
                 callbackOnFailure(task, exception);

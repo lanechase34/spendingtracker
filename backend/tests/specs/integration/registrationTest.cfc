@@ -145,7 +145,7 @@ component extends="tests.resources.baseTest" {
                 });
 
                 it('Returns 429 with correct JSON response after exceeding the rate limit', () => {
-                    var registerLimit = application.cbController.getSetting('rateLimits')['auth.register'].limit;
+                    var registerLimit = application.cbController.getSetting('rateLimits')['auth.register'][1].limit;
 
                     // exhaust the limit
                     for(var i = 1; i <= registerLimit; i++) {

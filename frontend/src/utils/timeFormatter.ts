@@ -19,3 +19,17 @@ export const formatMinutesToTime = (minutes: number): string => {
     if (seconds < 86400) return `${String(Math.floor(seconds / 3600))}h`;
     return `${String(Math.floor(seconds / 86400))}d`;
 };
+
+/**
+ * Format a duration in milliseconds to a compact uptime string e.g. 3d 4h 12m
+ */
+export const formatUptime = (ms: number): string => {
+    const totalMinutes = Math.floor(ms / 60000);
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+
+    if (days > 0) return `${String(days)}d ${String(hours)}h ${String(minutes)}m`;
+    if (hours > 0) return `${String(hours)}h ${String(minutes)}m`;
+    return `${String(minutes)}m`;
+};

@@ -20,17 +20,17 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for mail events
     function postMailSend(event, data, buffer, rc, prc) {
         if(data.result.error) {
             // Log bug
-            prc.bugDetail = {
+            var bugDetail = {
                 ip     : '-1',
                 urlpath: 'cbMailQueue',
                 method : 'N/A',
                 agent  : 'Scheduled Task',
                 detail : 'Failed to send email',
-                stack  : data.result
+                stack  : duplicate(data.result)
             };
 
             async.newFuture(() => {
-                bugService.log(argumentCollection = prc.bugDetail);
+                bugService.log(argumentCollection = bugDetail);
             });
         }
     }

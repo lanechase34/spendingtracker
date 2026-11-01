@@ -608,11 +608,12 @@ component {
                     udfMessage: 'orderDir must be asc or desc'
                 }
             },
-            'admin.metrics'  : {},
-            'admin.cachedata': {},
-            'admin.taskdata' : {},
-            'admin.viewLogs' : {},
-            'admin.readLog'  : {
+            'admin.metrics'    : {},
+            'admin.diagnostics': {},
+            'admin.cachedata'  : {},
+            'admin.taskdata'   : {},
+            'admin.viewLogs'   : {},
+            'admin.readLog'    : {
                 filename: {required: true, type: 'string'},
                 lines   : {
                     required: false,

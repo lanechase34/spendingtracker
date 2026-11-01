@@ -71,6 +71,7 @@ component {
             route('/admin/audits').withAction({GET: 'viewAudits'}).toHandler('admin');
             route('/admin/bugs').withAction({GET: 'viewBugs'}).toHandler('admin');
             route('/admin/metrics').withAction({GET: 'metrics'}).toHandler('admin');
+            route('/admin/diagnostics').withAction({GET: 'diagnostics'}).toHandler('admin');
             route('/admin/cachedata').withAction({GET: 'cacheData'}).toHandler('admin');
             route('/admin/taskdata').withAction({GET: 'taskData'}).toHandler('admin');
             route('/admin/logs/:filename').withAction({GET: 'readLog'}).toHandler('admin');

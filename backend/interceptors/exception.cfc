@@ -1,18 +1,12 @@
 component extends="coldbox.system.Interceptor" hint="Interceptor for handling exceptions and validation exceptions" {
 
-    property name="async"      inject="asyncManager@coldbox";
-    property name="bugService" inject="services.bug";
-    property name="excludedEvents" type="struct" default="{}";
-    property name="excludedTypes"  type="struct" default="{}";
+    property name="async"        inject="asyncManager@coldbox";
+    property name="bugService"   inject="services.bug";
     property name="emailService" inject="provider:services.email";
 
-    /**
-     * Configuration
-     */
-    function configure() {
-        this.excludedEvents = {'cbsecurity:jwt.refreshtoken': true, 'auth.logout': true};
-        this.excludedTypes  = {'tokenmismatchexception': true};
-    }
+    // Events and exception types that are expected and shouldn't be logged as bugs
+    variables.EXCLUDED_EVENTS = {'cbsecurity:jwt.refreshtoken': true, 'auth.logout': true};
+    variables.EXCLUDED_TYPES  = {'tokenmismatchexception': true};
 
     /**
      * Generic exception interceptor
@@ -23,7 +17,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
          * Check if curr event is excluded
          */
         var currEvent = lCase(event.getCurrentEvent());
-        if(this.excludedEvents.keyExists(currEvent)) {
+        if(EXCLUDED_EVENTS.keyExists(currEvent)) {
             return;
         }
 
@@ -31,26 +25,19 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
          * Check if this specific error type is excluded
          */
         var currType = lCase(interceptData?.exception?.type ?: '');
-        if(this.excludedTypes.keyExists(currType)) {
+        if(EXCLUDED_TYPES.keyExists(currType)) {
             return;
         }
 
         /**
-         * Handle scenario where requestAudit may not be properly instantiated
+         * Log and email the bug
          */
-        if(!prc.keyExists('requestAudit')) {
-            prc.requestAudit = {};
-        }
-
-        /**
-         * Handle exceptions here. Including logging, audit, email, etc
-         */
-        prc.requestAudit.userid = prc?.userid ?: -1;
-        prc.requestAudit.detail = 'onException';
-        prc.requestAudit.stack  = interceptData;
-
-        // Duplicate the audit struct to use safely
-        var bugSnapshot = duplicate(prc.requestAudit);
+        var bugSnapshot = buildBugSnapshot(
+            event  = event,
+            prc    = prc,
+            detail = 'onException',
+            stack  = interceptData
+        );
 
         async.newFuture(() => {
             bugService.log(argumentCollection = bugSnapshot);
@@ -67,11 +54,10 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
             getSetting('environment') == 'development'
             && (url.keyExists('debug') || getSetting('debugging'))
         ) {
-            cfsavecontent(variable = "variables.dump") {
+            cfsavecontent(variable = "local.dump") {
                 writeDump(var = interceptData.exception);
             }
-            event.renderData(type = 'HTML', data = dump);
-            return;
+            event.renderData(type = 'HTML', data = local.dump);
         }
     }
 
@@ -80,11 +66,51 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
      * Announced in onValidationException
      */
     function onValidationException(event, data, buffer, rc, prc, interceptData) {
-        prc.requestAudit.detail = 'onValidationException';
-        prc.requestAudit.stack  = interceptData;
+        var bugSnapshot = buildBugSnapshot(
+            event  = event,
+            prc    = prc,
+            detail = 'onValidationException',
+            stack  = interceptData
+        );
+
         async.newFuture(() => {
-            bugService.log(argumentCollection = prc.requestAudit);
+            bugService.log(argumentCollection = bugSnapshot);
         });
+    }
+
+    /**
+     * Build a standalone copy of the request audit for bug logging
+     *
+     * @event  the request context
+     * @prc    the prc scope
+     * @detail bug detail
+     * @stack  intercept data containing the exception
+     */
+    private struct function buildBugSnapshot(
+        required event,
+        required struct prc,
+        required string detail,
+        required struct stack
+    ) {
+        // Fallbacks when requestAudit.preProcess didn't run (e.g. an earlier interceptor threw)
+        var snapshot = {
+            ip     : '-1',
+            urlpath: event.getFullPath(),
+            method : event.getHTTPMethod(),
+            agent  : ''
+        };
+
+        snapshot.append(prc?.requestAudit ?: {}, true);
+        snapshot.append(
+            {
+                userid: prc?.userid ?: -1,
+                detail: detail,
+                stack : stack
+            },
+            true
+        );
+
+        return duplicate(snapshot);
     }
 
 }

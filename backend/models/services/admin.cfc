@@ -1,92 +1,13 @@
-component singleton accessors="true" {
+component singleton accessors="true" hint="Admin tooling - cache, scheduled task and log viewers" {
 
-    property name="adminLog"         inject="logbox:logger:Admin";
     property name="cacheStorage"     inject="cachebox:coldboxStorage";
     property name="logPath"          inject="coldbox:setting:logPath";
     property name="rateCacheStorage" inject="cachebox:rateStorage";
     property name="wsCacheStorage"   inject="cachebox:wsStorage";
-    property name="concurrency"      inject="coldbox:setting:concurrency";
     property name="schedulerService" inject="coldbox:schedulerService";
 
     // Hard cap for load entire file
     variables.MAX_FULL_READ_LINES = 50000;
-
-    /**
-     * Return struct containing server metric information
-     */
-    public struct function getMetrics() {
-        // JVM Memory
-        var runtime  = createObject('java', 'java.lang.Runtime').getRuntime();
-        var totalMem = runtime.totalMemory();
-        var freeMem  = runtime.freeMemory();
-        var maxMem   = runtime.maxMemory();
-        var usedMem  = totalMem - freeMem;
-
-        // Active threads
-        var threadCount = createObject('java', 'java.lang.Thread').activeCount();
-
-        // CPU
-        var osBean         = createObject('java', 'java.lang.management.ManagementFactory').getOperatingSystemMXBean();
-        var systemCpuLoad  = '';
-        var processCpuLoad = '';
-        try {
-            systemCpuLoad  = osBean.getSystemCpuLoad() * 100;
-            processCpuLoad = osBean.getProcessCpuLoad() * 100;
-        }
-        catch(any e) {
-            adminLog.error('Error retrieving system cpu stats.');
-        }
-
-        // Garbage collection
-        var gcBeans = createObject('java', 'java.lang.management.ManagementFactory').getGarbageCollectorMXBeans();
-        var gcTime  = gcBeans.reduce((prev, b) => {
-            return prev + b.getCollectionTime();
-        }, 0);
-        var gcDelta = gcTime - application.cbController.getSetting('gcTime');
-        application.cbController.setSetting('gcTime', gcTime);
-
-        var metrics = {
-            timestamp: now(),
-            uptimeMs : getTickCount(),
-            memory   : {
-                usedMB : round(usedMem / 1024 / 1024),
-                totalMB: round(totalMem / 1024 / 1024),
-                maxMB  : round(maxMem / 1024 / 1024)
-            },
-            threads: {active: threadCount},
-            cpu    : {
-                systemPercent : normalizeCPU(systemCpuLoad),
-                processPercent: normalizeCPU(processCpuLoad),
-                cores         : osBean.getAvailableProcessors()
-            },
-            gc         : {totalMs: gcTime, deltaMs: gcDelta},
-            concurrency: {
-                activeRequests: concurrency.activeRequests,
-                maxRequests   : concurrency.maxRequests,
-                slowRequests  : concurrency.slowRequests
-            }
-        };
-
-        return metrics;
-    }
-
-    /**
-     * Reset the active requests count
-     */
-    public void function resetActiveRequests() {
-        lock name="concurrencyLock" timeout="5" type="exclusive" throwOnTimeout=false {
-            concurrency.activeRequests = 0;
-        }
-    }
-
-    /**
-     * Normalizes the CPU percentage
-     */
-    private number function normalizeCPU(any cpuVal) {
-        if(!isNumeric(cpuVal)) return null;
-        if(cpuVal < 0 || cpuVal > 100) return null;
-        return round(cpuVal);
-    }
 
     /**
      * Returns detailed information the current cache state

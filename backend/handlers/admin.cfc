@@ -1,18 +1,20 @@
 component extends="base" hint="Admin Endpoints" secured="Admin" {
 
     this.allowedMethods = {
-        viewAudits: 'GET',
-        viewBugs  : 'GET',
-        metrics   : 'GET',
-        cacheData : 'GET',
-        taskData  : 'GET',
-        viewLogs  : 'GET',
-        readLog   : 'GET'
+        viewAudits : 'GET',
+        viewBugs   : 'GET',
+        metrics    : 'GET',
+        diagnostics: 'GET',
+        cacheData  : 'GET',
+        taskData   : 'GET',
+        viewLogs   : 'GET',
+        readLog    : 'GET'
     };
 
-    property name="adminService" inject="services.admin";
-    property name="auditService" inject="services.audit";
-    property name="bugService"   inject="services.bug";
+    property name="adminService"   inject="services.admin";
+    property name="auditService"   inject="services.audit";
+    property name="bugService"     inject="services.bug";
+    property name="metricsService" inject="services.metrics";
 
     /**
      * Paginated view for audits
@@ -105,7 +107,26 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @response-401 ~errors/401.json
      */
     function metrics(event, rc, prc) {
-        prc.data = adminService.getMetrics();
+        prc.data = metricsService.getMetrics();
+
+        event
+            .getResponse()
+            .setData(prc.data)
+            .setStatusCode(200);
+    }
+
+    /**
+     * Get diagnostics - app/runtime info, disk space, postgres internals
+     *
+     * @summary      Server Diagnostics
+     * @tags         Admin
+     * @security     ApiKeyAuth
+     * @hint         Returns static app info, disk space, and database diagnostics. Cached briefly server side.
+     * @response-200 { "description": "Server diagnostics data" }
+     * @response-401 ~errors/401.json
+     */
+    function diagnostics(event, rc, prc) {
+        prc.data = metricsService.getDiagnostics();
 
         event
             .getResponse()
