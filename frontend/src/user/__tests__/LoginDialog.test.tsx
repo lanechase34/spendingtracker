@@ -259,6 +259,11 @@ describe('LoginDialog', () => {
 
             expect(screen.getByRole('button', { name: /log in/i })).toBeDisabled();
             expect(screen.getByRole('button', { name: /close/i })).toBeDisabled();
+
+            // Let the delayed login settle so it doesn't leak into later tests
+            await waitFor(() => {
+                expect(mockCloseLoginDialog).toHaveBeenCalledTimes(1);
+            });
         });
 
         it('Does not submit again while loading', async () => {
@@ -280,6 +285,11 @@ describe('LoginDialog', () => {
 
             await waitFor(() => {
                 expect(mockUserAPILogin).toHaveBeenCalledTimes(1);
+            });
+
+            // Let the delayed login settle so it doesn't leak into later tests
+            await waitFor(() => {
+                expect(mockCloseLoginDialog).toHaveBeenCalledTimes(1);
             });
         });
     });
