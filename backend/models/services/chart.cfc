@@ -14,7 +14,7 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
-        var cacheKey = 'userid=#userid#|widget.stackedBarChart|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "userid=#userid#|widget.stackedBarChart|startDate=#startDate#|endDate=#endDate#";
         var result   = cacheStorage.get(cacheKey);
         if(!isNull(result)) {
             return result;
@@ -33,13 +33,13 @@ component singleton accessors="true" {
         );
 
         // Determine if we are looking at a single week or longer than a week
-        var daysDiff   = dateDiff('d', startDate, endDate) + 1;
+        var daysDiff   = dateDiff("d", startDate, endDate) + 1;
         var isWeekView = daysDiff <= 7;
 
         // Week views are grouped by day
         if(isWeekView) {
             for(var i = 1; i <= daysDiff; i++) {
-                var curr = dateFormat(dateAdd('d', i - 1, startDate), 'short');
+                var curr = dateFormat(dateAdd("d", i - 1, startDate), "short");
                 labels.append(curr);
                 labelMap[curr] = i;
             }
@@ -48,24 +48,24 @@ component singleton accessors="true" {
         // Bucketed by day-offset from the first day of startDate's week
         else {
             var firstDayOfStartWeek = getFirstDayOfWeek(week(startDate), year(startDate));
-            var totalWeeks          = int(dateDiff('d', firstDayOfStartWeek, endDate) / 7) + 1;
+            var totalWeeks          = int(dateDiff("d", firstDayOfStartWeek, endDate) / 7) + 1;
 
             for(var i = 1; i <= totalWeeks; i++) {
-                var bucketStart = dateAdd('d', (i - 1) * 7, firstDayOfStartWeek);
-                var currStart   = dateFormat(bucketStart, 'short');
-                var currEnd     = dateFormat(dateAdd('d', 6, bucketStart), 'short');
+                var bucketStart = dateAdd("d", (i - 1) * 7, firstDayOfStartWeek);
+                var currStart   = dateFormat(bucketStart, "short");
+                var currEnd     = dateFormat(dateAdd("d", 6, bucketStart), "short");
 
                 // Make sure the date range is INCLUSIVE to the current range
                 // Edge case for first day
-                if(i == 1 && dateCompare(currStart, startDate, 'd') < 0) {
-                    currStart = dateFormat(startDate, 'short');
+                if(i == 1 && dateCompare(currStart, startDate, "d") < 0) {
+                    currStart = dateFormat(startDate, "short");
                 }
                 // Edge case for last day
-                if(i == totalWeeks && dateCompare(currEnd, endDate, 'd') > 0) {
-                    currEnd = dateFormat(endDate, 'short');
+                if(i == totalWeeks && dateCompare(currEnd, endDate, "d") > 0) {
+                    currEnd = dateFormat(endDate, "short");
                 }
 
-                labels.append('#currStart# - #currEnd#');
+                labels.append("#currStart# - #currEnd#");
             }
         }
 
@@ -73,8 +73,8 @@ component singleton accessors="true" {
         expenseData.each((row) => {
             // Get position in dataset.data array
             var identifier = isWeekView
-             ? dateFormat(row.date, 'short')
-             : int(dateDiff('d', firstDayOfStartWeek, row.date) / 7) + 1;
+             ? dateFormat(row.date, "short")
+             : int(dateDiff("d", firstDayOfStartWeek, row.date) / 7) + 1;
 
             var labelIndex = isWeekView ? labelMap[identifier] : identifier;
 
@@ -83,7 +83,7 @@ component singleton accessors="true" {
                 dataset.append({
                     label          : row.category,
                     data           : [],
-                    backgroundColor: '###row.color#'
+                    backgroundColor: "###row.color#"
                 });
 
                 categoryMap[row.category] = dataset.len();
@@ -97,7 +97,7 @@ component singleton accessors="true" {
                 dataset[categoryPosition].data[labelIndex] = 0;
             }
 
-            dataset[categoryPosition].data[labelIndex] += securityService.decryptValue(row.amount, 'numeric');
+            dataset[categoryPosition].data[labelIndex] += securityService.decryptValue(row.amount, "numeric");
         });
 
         // Convert int cents for output
@@ -124,7 +124,7 @@ component singleton accessors="true" {
         var dayOfWeek      = dayOfWeek(firstDayOfYear);
 
         return dateAdd(
-            'd',
+            "d",
             ((week - 1) * 7) - dayOfWeek + 1,
             firstDayOfYear
         );
@@ -139,10 +139,10 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
-        var cacheKey = 'userid=#userid#|widget.rawData|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "userid=#userid#|widget.rawData|startDate=#startDate#|endDate=#endDate#";
         return cacheStorage.getOrSet(cacheKey, () => {
             return queryExecute(
-                '
+                "
                 select
                     c.name as category, 
                     c.color as color,
@@ -153,11 +153,11 @@ component singleton accessors="true" {
                 where e.userid = :userid
                 and e.date >= :start
                 and e.date <= :end
-                ',
+                ",
                 {
-                    userid: {value: userid, cfsqltype: 'integer'},
-                    start : {value: startDate, cfsqltype: 'date'},
-                    end   : {value: endDate, cfsqltype: 'date'}
+                    userid: {value: userid, cfsqltype: "integer"},
+                    start : {value: startDate, cfsqltype: "date"},
+                    end   : {value: endDate, cfsqltype: "date"}
                 }
             );
         });
@@ -172,14 +172,14 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
-        var cacheKey = 'userid=#userid#|widget.donutChart|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "userid=#userid#|widget.donutChart|startDate=#startDate#|endDate=#endDate#";
         var result   = cacheStorage.get(cacheKey);
         if(!isNull(result)) {
             return result;
         }
 
         var dataset = {
-            label          : 'Amount',
+            label          : "Amount",
             data           : [],
             backgroundColor: []
         };
@@ -204,14 +204,14 @@ component singleton accessors="true" {
                 dataset.data[labels.len()] = 0;
 
                 // Set category color
-                dataset.backgroundColor[labels.len()] = '###row.color#'
+                dataset.backgroundColor[labels.len()] = "###row.color#"
             }
 
             // Get array position
             var position = categoryMap[row.category];
 
             // Add values
-            dataset.data[position] += securityService.decryptValue(row.amount, 'numeric');
+            dataset.data[position] += securityService.decryptValue(row.amount, "numeric");
         });
 
         // Convert int cents for output
@@ -234,14 +234,14 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
-        var cacheKey = 'userid=#userid#|widget.lineChart|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "userid=#userid#|widget.lineChart|startDate=#startDate#|endDate=#endDate#";
         var result   = cacheStorage.get(cacheKey);
         if(!isNull(result)) {
             return result;
         }
 
         var dataset = {
-            label: 'Monthly Expense Line Chart',
+            label: "Monthly Expense Line Chart",
             data : [].resize(12) // always 12 months in this view
         };
         var labels = [].resize(12);
@@ -264,7 +264,7 @@ component singleton accessors="true" {
                 dataset.data[currMonth] = 0;
             }
 
-            dataset.data[currMonth] += securityService.decryptValue(row.amount, 'numeric');
+            dataset.data[currMonth] += securityService.decryptValue(row.amount, "numeric");
         });
 
         dataset.data = dataset.data.map((intCents) => {
@@ -286,7 +286,7 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
-        var cacheKey = 'userid=#userid#|widget.heatMap|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "userid=#userid#|widget.heatMap|startDate=#startDate#|endDate=#endDate#";
         var result   = cacheStorage.get(cacheKey);
         if(!isNull(result)) {
             return result;
@@ -302,7 +302,7 @@ component singleton accessors="true" {
         var heatMap = {};
 
         expenseData.each((row) => {
-            var curr = dateFormat(row.date, 'yyyy-mm-dd');
+            var curr = dateFormat(row.date, "yyyy-mm-dd");
 
             if(!heatMap.keyExists(curr)) {
                 heatMap[curr] = 0;
@@ -324,7 +324,7 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
-        var cacheKey = 'userid=#userid#|widget.waterfallChart|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "userid=#userid#|widget.waterfallChart|startDate=#startDate#|endDate=#endDate#";
         var result   = cacheStorage.get(cacheKey);
         if(!isNull(result)) {
             return result;
@@ -338,17 +338,17 @@ component singleton accessors="true" {
                 userid    = userid
             ).reduce((acc, row) => {
                     // Group expenses by month
-                    var bucket = dateFormat(row.date, 'yyyy-mm');
+                    var bucket = dateFormat(row.date, "yyyy-mm");
                     if(!acc.keyExists(bucket)) {
                         acc[bucket] = {expenses: 0, savings: 0}
                     }
 
                     // Count savings separately
-                    if(row.category == 'Savings') {
-                        acc[bucket].savings += securityService.decryptValue(row.amount, 'numeric');
+                    if(row.category == "Savings") {
+                        acc[bucket].savings += securityService.decryptValue(row.amount, "numeric");
                     }
                     else {
-                        acc[bucket].expenses += securityService.decryptValue(row.amount, 'numeric');
+                        acc[bucket].expenses += securityService.decryptValue(row.amount, "numeric");
                     }
 
                     return acc;
@@ -372,12 +372,12 @@ component singleton accessors="true" {
         result = {labels: [], segments: []};
 
         // Combine data
-        var loopCount    = dateDiff('m', startDate, endDate);
+        var loopCount    = dateDiff("m", startDate, endDate);
         var runningTotal = 0;
         for(var i = 0; i <= loopCount; i++) {
-            var curr   = dateAdd('m', i, startDate);
-            var bucket = dateFormat(curr, 'yyyy-mm');
-            result.labels.append(dateFormat(curr, 'mmm yyyy'));
+            var curr   = dateAdd("m", i, startDate);
+            var bucket = dateFormat(curr, "yyyy-mm");
+            result.labels.append(dateFormat(curr, "mmm yyyy"));
 
             var currIncome   = incomeMonthlyTotals[bucket] ?: {pay: 0, extra: 0};
             var currExpenses = expenseMonthlyTotals[bucket] ?: {savings: 0, expenses: 0};

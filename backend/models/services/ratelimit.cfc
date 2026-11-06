@@ -97,26 +97,26 @@ component singleton hint="Service layer for rate limiting specific actions" {
 
         for(var field in by) {
             // The ip and user are passed in - other values come from rc scope
-            var value = '';
+            var value = "";
             switch(field) {
-                case 'ip':
+                case "ip":
                     value = ip;
                     break;
-                case 'user':
+                case "user":
                     value = userid;
                     break;
                 default:
-                    value = context[field] ?: '';
+                    value = context[field] ?: "";
             }
 
             if(!isSimpleValue(value) || !len(trim(value))) {
-                return '';
+                return "";
             }
 
-            parts.append('#field#=#lCase(trim(value))#');
+            parts.append("#field#=#lCase(trim(value))#");
         }
 
-        return 'ratelimit:#currentEvent#:#by.toList('+')#:#window#:#hash(parts.toList('|'), 'SHA-256')#';
+        return "ratelimit:#currentEvent#:#by.toList("+")#:#window#:#hash(parts.toList("|"), "SHA-256")#";
     }
 
 }

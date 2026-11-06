@@ -20,19 +20,19 @@ component singleton accessors="true" {
         var jsonStack = serializeJSON(stack);
 
         var data = {
-            ip     : {value: ip, cfsqltype: 'varchar'},
-            urlpath: {value: urlpath, cfsqltype: 'varchar'},
-            method : {value: method, cfsqltype: 'varchar'},
-            agent  : {value: agent, cfsqltype: 'varchar'},
-            detail : {value: detail, cfsqltype: 'varchar'},
-            stack  : {value: jsonStack, cfsqltype: 'varchar'}
+            ip     : {value: ip, cfsqltype: "varchar"},
+            urlpath: {value: urlpath, cfsqltype: "varchar"},
+            method : {value: method, cfsqltype: "varchar"},
+            agent  : {value: agent, cfsqltype: "varchar"},
+            detail : {value: detail, cfsqltype: "varchar"},
+            stack  : {value: jsonStack, cfsqltype: "varchar"}
         };
 
         if(userid > 0) {
-            data.userid = {value: userid, cfsqltype: 'numeric'};
+            data.userid = {value: userid, cfsqltype: "numeric"};
         }
 
-        q.from('bug').insert(data);
+        q.from("bug").insert(data);
         return;
     }
 
@@ -46,40 +46,40 @@ component singleton accessors="true" {
         required numeric userid,
         required numeric page,
         required numeric records,
-        required string search   = '',
-        required string orderCol = '',
-        required string orderDir = ''
+        required string search   = "",
+        required string orderCol = "",
+        required string orderDir = ""
     ) {
         /**
          * Base query
          */
         var base = q
-            .from('bug')
-            .leftJoin('users', 'bug.userid', '=', 'users.id')
+            .from("bug")
+            .leftJoin("users", "bug.userid", "=", "users.id")
             .where(
-                'bug.created',
-                '>=',
-                {value: startDate, cfsqltype: 'date'}
+                "bug.created",
+                ">=",
+                {value: startDate, cfsqltype: "date"}
             )
             .andWhere(
-                'bug.created',
-                '<',
-                {value: dateAdd('d', 1, endDate), cfsqltype: 'date'}
+                "bug.created",
+                "<",
+                {value: dateAdd("d", 1, endDate), cfsqltype: "date"}
             )
             .andWhere((q1) => {
-                q1.whereLike(q.raw('lower(bug.urlpath)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(bug.method)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(bug.agent)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(bug.detail)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(bug.ip)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(users.email)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
+                q1.whereLike(q.raw("lower(bug.urlpath)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(bug.method)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(bug.agent)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(bug.detail)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(bug.ip)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(users.email)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
                     .when(
                         condition = isDate(search),
                         onTrue    = (q2) => {
                             q2.orWhere(
-                                'bug.created',
-                                '=',
-                                {value: search, cfsqltype: 'date'}
+                                "bug.created",
+                                "=",
+                                {value: search, cfsqltype: "date"}
                             );
                         },
                         withoutScoping = true
@@ -90,7 +90,7 @@ component singleton accessors="true" {
          * Total info
          */
         var offset          = (page - 1) * records;
-        var filteredRecords = base.count('bug.id');
+        var filteredRecords = base.count("bug.id");
 
         var asyncTotal = async.newFuture(() => {
             return getTotalRecords(startDate = startDate, endDate = endDate);
@@ -101,29 +101,29 @@ component singleton accessors="true" {
                 .when(
                     orderCol.len() && orderDir.len(),
                     (q1) => {
-                        q1.orderBy(orderCol, orderDir).orderBy('bug.id', orderDir);
+                        q1.orderBy(orderCol, orderDir).orderBy("bug.id", orderDir);
                     },
                     (q1) => {
-                        q1.orderBy('bug.created', 'desc').orderBy('bug.id', 'desc');
+                        q1.orderBy("bug.created", "desc").orderBy("bug.id", "desc");
                     }
                 )
                 .limit(records)
                 .offset(offset)
                 .select([
-                    'bug.id',
-                    'bug.created',
-                    'bug.ip',
-                    'bug.urlpath',
-                    'bug.method',
-                    'bug.agent',
-                    'bug.detail',
-                    'bug.stack',
-                    'users.email'
+                    "bug.id",
+                    "bug.created",
+                    "bug.ip",
+                    "bug.urlpath",
+                    "bug.method",
+                    "bug.agent",
+                    "bug.detail",
+                    "bug.stack",
+                    "users.email"
                 ])
                 .get()
                 .map(
                     (value) => {
-                        value.created = dateTimeFormat(value.created, 'yyyy-mm-dd HH:nn:ss');
+                        value.created = dateTimeFormat(value.created, "yyyy-mm-dd HH:nn:ss");
                         return value;
                     },
                     true,
@@ -153,16 +153,16 @@ component singleton accessors="true" {
      * Get the total count of records of bugs in the date range
      */
     private numeric function getTotalRecords(required date startDate, required date endDate) {
-        var cacheKey = 'bug.getTotalRecords|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "bug.getTotalRecords|startDate=#startDate#|endDate=#endDate#";
         var total    = cacheStorage.get(cacheKey);
         if(isNull(total)) {
             var base = queryExecute(
-                '
+                "
                 select count(id) as count
                 from bug
                 where created between :startDate and :endDate
-                ',
-                {startDate: {value: startDate, cfsqltype: 'date'}, endDate: {value: endDate, cfsqltype: 'date'}}
+                ",
+                {startDate: {value: startDate, cfsqltype: "date"}, endDate: {value: endDate, cfsqltype: "date"}}
             );
 
             total = base.count;

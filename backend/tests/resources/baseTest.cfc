@@ -17,24 +17,24 @@ component extends="coldbox.system.testing.BaseTestCase" {
          * Check if this test has helper functions
          */
         var metadata = this.getMetaData();
-        var testName = listToArray(metadata.fullname, '.');
-        if(testname.len() == 5 && fileExists('tests/resources/#testname[4]#Helper.cfc')) {
-            variables['#testname[4]#Helper'] = getInstance('tests.resources.#testname[4]#Helper');
+        var testName = listToArray(metadata.fullname, ".");
+        if(testname.len() == 5 && fileExists("tests/resources/#testname[4]#Helper.cfc")) {
+            variables["#testname[4]#Helper"] = getInstance("tests.resources.#testname[4]#Helper");
         }
         if(testname.len() == 4) {
-            var helper = replaceNoCase(testname[4], 'test', '');
-            if(fileExists('tests/resources/#helper#Helper.cfc')) {
-                variables['#helper#Helper'] = getInstance('tests.resources.#helper#Helper');
+            var helper = replaceNoCase(testname[4], "test", "");
+            if(fileExists("tests/resources/#helper#Helper.cfc")) {
+                variables["#helper#Helper"] = getInstance("tests.resources.#helper#Helper");
             }
         }
 
         /**
          * Mock a temp dir to use
          */
-        tempDir = '#uploadPath#/tests/#createUUID()#';
+        tempDir = "#uploadPath#/tests/#createUUID()#";
         directoryCreate(tempDir);
         variables._originalUploadPath = uploadPath;
-        application.cbController.setSetting('uploadPath', '#uploadPath#/tests/');
+        application.cbController.setSetting("uploadPath", "#uploadPath#/tests/");
 
         /**
          * Log out any lingering user
@@ -44,9 +44,9 @@ component extends="coldbox.system.testing.BaseTestCase" {
         /**
          * Make sure rate limiter is turned off
          */
-        var rateLimiter                   = application.cbController.getInterceptorService().getInterceptor('rateLimiterInterceptor');
-        variables._originalUseRateLimiter = rateLimiter.getPropertyMixin('useRateLimiter', 'variables');
-        rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = false);
+        var rateLimiter                   = application.cbController.getInterceptorService().getInterceptor("rateLimiterInterceptor");
+        variables._originalUseRateLimiter = rateLimiter.getPropertyMixin("useRateLimiter", "variables");
+        rateLimiter.injectPropertyMixin(propertyName = "useRateLimiter", propertyValue = false);
     }
 
     function afterAll() {
@@ -60,16 +60,16 @@ component extends="coldbox.system.testing.BaseTestCase" {
         /**
          * Restore rate limiter setting
          */
-        var rateLimiter = application.cbController.getInterceptorService().getInterceptor('rateLimiterInterceptor');
+        var rateLimiter = application.cbController.getInterceptorService().getInterceptor("rateLimiterInterceptor");
         rateLimiter.injectPropertyMixin(
-            propertyName  = 'useRateLimiter',
+            propertyName  = "useRateLimiter",
             propertyValue = variables._originalUseRateLimiter
         );
 
         /**
          * Restore the upload dir
          */
-        application.cbController.setSetting('uploadPath', '#uploadPath#');
+        application.cbController.setSetting("uploadPath", "#uploadPath#");
     }
 
     /**
@@ -87,13 +87,13 @@ component extends="coldbox.system.testing.BaseTestCase" {
             method = "GET"
         );
 
-        var path = '#tempDir#/#createUUID()#.#extension#';
+        var path = "#tempDir#/#createUUID()#.#extension#";
 
         /**
          * HEIC is not supported by CF's imageNew(), so write raw bytes
          * directly to disk and let ImageMagick handle decoding later.
          */
-        if(lCase(extension) == 'heic') {
+        if(lCase(extension) == "heic") {
             fileWrite(path, imgResult.filecontent);
             return path;
         }
@@ -119,7 +119,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required any condition,
         numeric timeout  = 5,
         numeric interval = 100,
-        string message   = 'Condition was not met within #timeout# seconds'
+        string message   = "Condition was not met within #timeout# seconds"
     ) {
         var start   = getTickCount();
         var elapsed = 0;

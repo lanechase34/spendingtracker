@@ -1,6 +1,6 @@
 component extends="base" hint="Category Endpoints" secured="User,Admin" {
 
-    this.allowedMethods = {view: 'GET'};
+    this.allowedMethods = {view: "GET"};
 
     property name="categoryService" inject="services.category";
 
@@ -22,7 +22,7 @@ component extends="base" hint="Category Endpoints" secured="User,Admin" {
         prc.data = categoryService.paginate(
             page    = rc.page,
             records = rc.records,
-            search  = rc?.search ?: '',
+            search  = rc?.search ?: "",
             userid  = prc.userid
         );
 
@@ -30,8 +30,8 @@ component extends="base" hint="Category Endpoints" secured="User,Admin" {
             .getResponse()
             .setDataWithPagination(
                 data          = prc.data,
-                resultsKey    = 'results',
-                paginationKey = 'pagination'
+                resultsKey    = "results",
+                paginationKey = "pagination"
             )
             .setStatusCode(200);
     }

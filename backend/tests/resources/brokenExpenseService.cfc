@@ -2,7 +2,7 @@ component {
 
     variables.calls          = 0;
     // Real expenseService
-    variables.expenseService = application.wirebox.getInstance('services.expense');
+    variables.expenseService = application.wirebox.getInstance("services.expense");
 
     // Force an exception when save is called on the first try only
     public void function save(
@@ -23,7 +23,7 @@ component {
 
         // First attempt will fail
         if(shouldFail) {
-            throw(type = 'TestException', message = 'Simulated save failure');
+            throw(type = "TestException", message = "Simulated save failure");
         }
 
         variables.expenseService.save(argumentCollection = arguments);

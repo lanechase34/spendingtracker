@@ -16,9 +16,9 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
     public struct function getCacheData() {
         var stats = cacheStorage.getStats();
 
-        var cacheData = formatCacheData(cacheStorage, 'cache');
-        var rateData  = formatCacheData(rateCacheStorage, 'rate');
-        var wsData    = formatCacheData(wsCacheStorage, 'ws');
+        var cacheData = formatCacheData(cacheStorage, "cache");
+        var rateData  = formatCacheData(rateCacheStorage, "rate");
+        var wsData    = formatCacheData(wsCacheStorage, "ws");
 
         var data = cacheData.append(rateData, true).append(wsData, true);
 
@@ -43,16 +43,16 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
      * @name          what the cache is called
      */
     private array function formatCacheData(required component cacheInstance, required string name) {
-        var data = cacheInstance.getCachedObjectMetadataMulti(cacheInstance.getKeys().toList(','));
+        var data = cacheInstance.getCachedObjectMetadataMulti(cacheInstance.getKeys().toList(","));
 
         return data.reduce((result, key, value) => {
             return result.append({
                 id               : key,
                 key              : key,
-                created          : dateTimeFormat(value.created, 'long'),
+                created          : dateTimeFormat(value.created, "long"),
                 hits             : value.hits,
                 expired          : value.isExpired,
-                lastaccessed     : dateTimeFormat(value.lastAccessed, 'long'),
+                lastaccessed     : dateTimeFormat(value.lastAccessed, "long"),
                 lastaccesstimeout: value.lastAccessTimeout,
                 timeout          : value.timeout,
                 storage          : name
@@ -73,11 +73,11 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
                     .getExecutor()
                     .getName()
                     .reReplace(
-                        'coldbox\.system\.web\.tasks.|-scheduler',
-                        '',
-                        'all'
+                        "coldbox\.system\.web\.tasks.|-scheduler",
+                        "",
+                        "all"
                     );
-                var moduleName = key == 'appScheduler@coldbox' ? 'global' : key.replace('cbScheduler@', '');
+                var moduleName = key == "appScheduler@coldbox" ? "global" : key.replace("cbScheduler@", "");
 
                 scheduler
                     .getRegisteredTasks()
@@ -87,11 +87,11 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
 
                         tasks.append({
                             name             : taskName,
-                            created          : dateTimeFormat(stats.created, 'long'),
+                            created          : dateTimeFormat(stats.created, "long"),
                             executor         : executorName,
                             module           : moduleName,
-                            lastRun          : dateTimeFormat(stats.lastRun, 'long'),
-                            nextRun          : dateTimeFormat(stats.nextRun, 'long'),
+                            lastRun          : dateTimeFormat(stats.lastRun, "long"),
+                            nextRun          : dateTimeFormat(stats.nextRun, "long"),
                             totalFailures    : stats.totalFailures,
                             totalSuccess     : stats.totalSuccess,
                             totalRuns        : stats.totalRuns,
@@ -113,24 +113,24 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
     public query function getLogs() {
         // Commandbox Logs
         var cbLogs = directoryList(
-            path    : '#logPath#/../logs',
+            path    : "#logPath#/../logs",
             recurse : false,
-            listInfo: 'query',
-            filter  : '*.log|*.txt',
-            sort    : ''
+            listInfo: "query",
+            filter  : "*.log|*.txt",
+            sort    : ""
         );
 
         // Lucee Logs
         var luceeServerLogs = directoryList(
-            path    : '#logPath#/lucee-server/context/logs',
+            path    : "#logPath#/lucee-server/context/logs",
             recurse : false,
-            listInfo: 'query',
-            filter  : '*.log',
-            sort    : ''
+            listInfo: "query",
+            filter  : "*.log",
+            sort    : ""
         );
 
         return queryExecute(
-            '
+            "
             select name, size, type, dateLastModified, directory
             from cbLogs
             where type = :type
@@ -139,9 +139,9 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
             from luceeServerLogs
             where type = :type
             order by dateLastModified desc
-        ',
-            {type: {value: 'File', cfsqltype: 'varchar'}},
-            {dbtype: 'query'}
+        ",
+            {type: {value: "File", cfsqltype: "varchar"}},
+            {dbtype: "query"}
         );
     }
 
@@ -157,7 +157,7 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
     public struct function readLog(
         required string  filename,
         numeric          lines  = 200,
-        string           search = '',
+        string           search = "",
         boolean          all    = false
     ) {
         // Derive directory from discovered logs by matching filename
@@ -167,14 +167,14 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
         });
 
         if(!match.recordCount) {
-            throw(type = 'LogViewer.FileNotFound', message = 'Log file not found in available logs: #filename#');
+            throw(type = "LogViewer.FileNotFound", message = "Log file not found in available logs: #filename#");
         }
 
-        var fullPath = match.directory[1] & '/' & filename;
+        var fullPath = match.directory[1] & "/" & filename;
 
         // Final safety check on the resolved path
         if(!fileExists(fullPath)) {
-            throw(type = 'LogViewer.FileNotFound', message = 'Log file could not be found on disk: #fullPath#');
+            throw(type = "LogViewer.FileNotFound", message = "Log file could not be found on disk: #fullPath#");
         }
 
         var result = tailFile(
@@ -184,12 +184,12 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
         );
 
         return {
-            'filename' : filename,
-            'lines'    : result.lines,
-            'count'    : result.lines.len(),
-            'total'    : result.total,
-            'truncated': result.total > result.lines.len(),
-            'filtered' : search.len() > 0
+            "filename" : filename,
+            "lines"    : result.lines,
+            "count"    : result.lines.len(),
+            "total"    : result.total,
+            "truncated": result.total > result.lines.len(),
+            "filtered" : search.len() > 0
         };
     }
 
@@ -206,13 +206,13 @@ component singleton accessors="true" hint="Admin tooling - cache, scheduled task
     private struct function tailFile(
         required string  path,
         required numeric maxLines,
-        string           search = ''
+        string           search = ""
     ) {
         var result = [];
         var total  = 0;
-        var buffer = createObject('java', 'java.util.ArrayDeque');
-        var reader = createObject('java', 'java.io.BufferedReader').init(
-            createObject('java', 'java.io.FileReader').init(path)
+        var buffer = createObject("java", "java.util.ArrayDeque");
+        var reader = createObject("java", "java.io.BufferedReader").init(
+            createObject("java", "java.io.FileReader").init(path)
         );
 
         try {

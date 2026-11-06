@@ -40,7 +40,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for auditing ea
             method    : left(event.getHTTPMethod(), METHOD_LENGTH),
             start     : getTickCount(),
             agent     : left(securityService.getUserAgent(), AGENT_LENGTH),
-            detail    : '',
+            detail    : "",
             statuscode: -1,
             userid    : -1
         };
@@ -57,7 +57,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for auditing ea
         prc.requestAudit.userid     = prc?.userid ?: -1;
         prc.requestAudit.delta      = getTickCount() - prc.requestAudit.start;
         prc.requestAudit.statuscode = prc?.response?.getStatusCode() ?: -1;
-        prc.requestAudit.detail     = left(prc?.response?.getMessagesString() ?: '', DETAIL_LENGTH);
+        prc.requestAudit.detail     = left(prc?.response?.getMessagesString() ?: "", DETAIL_LENGTH);
 
         if(LOG_REQUESTS) {
             var auditData = duplicate(prc.requestAudit);
@@ -74,7 +74,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for auditing ea
 
             lock name="slowRequestsLock" timeout="5" type="exclusive" throwOnTimeout=false {
                 // Delete requests older than 24 hours
-                var twentyFourHoursAgo   = dateAdd('h', -24, timestamp);
+                var twentyFourHoursAgo   = dateAdd("h", -24, timestamp);
                 concurrency.slowRequests = concurrency.slowRequests.filter((req) => {
                     return req.time > twentyFourHoursAgo;
                 });

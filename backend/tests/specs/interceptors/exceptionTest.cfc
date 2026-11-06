@@ -21,7 +21,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
             {
                 event        : mockRequestContext,
                 data         : interceptData,
-                buffer       : '',
+                buffer       : "",
                 rc           : rc,
                 prc          : prc,
                 interceptData: interceptData
@@ -30,7 +30,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
     }
 
     function run() {
-        describe('Exception Interceptor', () => {
+        describe("Exception Interceptor", () => {
             beforeEach(() => {
                 setup();
 
@@ -38,145 +38,145 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 futures   = [];
                 mockAsync = createStub();
                 mockAsync.$(
-                    method   = 'newFuture',
+                    method   = "newFuture",
                     callback = function() {
                         futures.append(arguments[1]);
                     }
                 );
 
-                mockBugService   = createStub().$('log');
-                mockEmailService = createStub().$('sendBug');
+                mockBugService   = createStub().$("log");
+                mockEmailService = createStub().$("sendBug");
 
-                interceptor.$property(propertyName = 'async', mock = mockAsync);
-                interceptor.$property(propertyName = 'bugService', mock = mockBugService);
-                interceptor.$property(propertyName = 'emailService', mock = mockEmailService);
-                interceptor.$('getSetting', 'test');
+                interceptor.$property(propertyName = "async", mock = mockAsync);
+                interceptor.$property(propertyName = "bugService", mock = mockBugService);
+                interceptor.$property(propertyName = "emailService", mock = mockEmailService);
+                interceptor.$("getSetting", "test");
 
-                mockRequestContext = createEmptyMock('coldbox.system.web.context.RequestContext');
-                mockRequestContext.$('getCurrentEvent', 'expense.view');
-                mockRequestContext.$('getFullPath', '/api/v1/expenses');
-                mockRequestContext.$('getHTTPMethod', 'GET');
-                mockRequestContext.$('renderData', mockRequestContext);
+                mockRequestContext = createEmptyMock("coldbox.system.web.context.RequestContext");
+                mockRequestContext.$("getCurrentEvent", "expense.view");
+                mockRequestContext.$("getFullPath", "/api/v1/expenses");
+                mockRequestContext.$("getHTTPMethod", "GET");
+                mockRequestContext.$("renderData", mockRequestContext);
 
-                interceptData = {exception: {type: 'Database', message: 'Boom'}};
+                interceptData = {exception: {type: "Database", message: "Boom"}};
                 rc            = {};
                 prc           = {
                     userid      : 7,
                     requestAudit: {
-                        ip        : '192.168.1.1',
-                        urlpath   : '/api/v1/expenses',
-                        method    : 'GET',
-                        agent     : 'Mozilla',
-                        detail    : '',
+                        ip        : "192.168.1.1",
+                        urlpath   : "/api/v1/expenses",
+                        method    : "GET",
+                        agent     : "Mozilla",
+                        detail    : "",
                         statuscode: -1,
                         userid    : -1
                     }
                 };
             });
 
-            it('Can be created', () => {
+            it("Can be created", () => {
                 expect(interceptor).toBeComponent();
             });
 
-            describe('onException', () => {
-                it('Should log and email the bug', () => {
-                    announce('onException');
+            describe("onException", () => {
+                it("Should log and email the bug", () => {
+                    announce("onException");
                     futures.each((task) => task());
 
-                    expect(mockBugService.$once('log')).toBeTrue();
+                    expect(mockBugService.$once("log")).toBeTrue();
                     var logCall = mockBugService.$callLog().log[1];
-                    expect(logCall.ip).toBe('192.168.1.1');
+                    expect(logCall.ip).toBe("192.168.1.1");
                     expect(logCall.userid).toBe(7);
-                    expect(logCall.detail).toBe('onException');
-                    expect(logCall.stack.exception.message).toBe('Boom');
+                    expect(logCall.detail).toBe("onException");
+                    expect(logCall.stack.exception.message).toBe("Boom");
 
-                    expect(mockEmailService.$once('sendBug')).toBeTrue();
-                    expect(mockEmailService.$callLog().sendBug[1].bugInfo.detail).toBe('onException');
+                    expect(mockEmailService.$once("sendBug")).toBeTrue();
+                    expect(mockEmailService.$callLog().sendBug[1].bugInfo.detail).toBe("onException");
                 });
 
-                it('Should leave prc.requestAudit untouched', () => {
-                    announce('onException');
+                it("Should leave prc.requestAudit untouched", () => {
+                    announce("onException");
                     futures.each((task) => task());
 
-                    expect(prc.requestAudit).notToHaveKey('stack');
-                    expect(prc.requestAudit.detail).toBe('');
+                    expect(prc.requestAudit).notToHaveKey("stack");
+                    expect(prc.requestAudit.detail).toBe("");
                     expect(prc.requestAudit.userid).toBe(-1);
                 });
 
-                it('Should log a copy that later prc changes do not affect', () => {
-                    announce('onException');
+                it("Should log a copy that later prc changes do not affect", () => {
+                    announce("onException");
 
                     // requestAudit.postProcess runs before the async log
-                    prc.requestAudit.ip = 'changed';
+                    prc.requestAudit.ip = "changed";
                     futures.each((task) => task());
 
-                    expect(mockBugService.$callLog().log[1].ip).toBe('192.168.1.1');
+                    expect(mockBugService.$callLog().log[1].ip).toBe("192.168.1.1");
                 });
 
-                it('Should fall back to the request when requestAudit is missing', () => {
+                it("Should fall back to the request when requestAudit is missing", () => {
                     prc = {};
 
-                    announce('onException');
+                    announce("onException");
                     futures.each((task) => task());
 
                     var logCall = mockBugService.$callLog().log[1];
-                    expect(logCall.ip).toBe('-1');
-                    expect(logCall.urlpath).toBe('/api/v1/expenses');
-                    expect(logCall.method).toBe('GET');
-                    expect(logCall.agent).toBe('');
+                    expect(logCall.ip).toBe("-1");
+                    expect(logCall.urlpath).toBe("/api/v1/expenses");
+                    expect(logCall.method).toBe("GET");
+                    expect(logCall.agent).toBe("");
                     expect(logCall.userid).toBe(-1);
-                    expect(prc).notToHaveKey('requestAudit');
+                    expect(prc).notToHaveKey("requestAudit");
                 });
 
-                it('Should skip excluded events', () => {
-                    mockRequestContext.$('getCurrentEvent', 'Auth.Logout');
+                it("Should skip excluded events", () => {
+                    mockRequestContext.$("getCurrentEvent", "Auth.Logout");
 
-                    announce('onException');
+                    announce("onException");
 
                     expect(futures).toBeEmpty();
                 });
 
-                it('Should skip excluded exception types', () => {
-                    interceptData.exception.type = 'TokenMismatchException';
+                it("Should skip excluded exception types", () => {
+                    interceptData.exception.type = "TokenMismatchException";
 
-                    announce('onException');
+                    announce("onException");
 
                     expect(futures).toBeEmpty();
                 });
 
-                it('Should not render a dump outside development', () => {
-                    announce('onException');
+                it("Should not render a dump outside development", () => {
+                    announce("onException");
 
-                    expect(mockRequestContext.$never('renderData')).toBeTrue();
+                    expect(mockRequestContext.$never("renderData")).toBeTrue();
                 });
             });
 
-            describe('onValidationException', () => {
-                it('Should log the bug without emailing', () => {
-                    announce('onValidationException');
+            describe("onValidationException", () => {
+                it("Should log the bug without emailing", () => {
+                    announce("onValidationException");
                     futures.each((task) => task());
 
-                    expect(mockBugService.$once('log')).toBeTrue();
-                    expect(mockBugService.$callLog().log[1].detail).toBe('onValidationException');
-                    expect(mockEmailService.$never('sendBug')).toBeTrue();
+                    expect(mockBugService.$once("log")).toBeTrue();
+                    expect(mockBugService.$callLog().log[1].detail).toBe("onValidationException");
+                    expect(mockEmailService.$never("sendBug")).toBeTrue();
                 });
 
-                it('Should leave prc.requestAudit untouched', () => {
-                    announce('onValidationException');
+                it("Should leave prc.requestAudit untouched", () => {
+                    announce("onValidationException");
                     futures.each((task) => task());
 
-                    expect(prc.requestAudit).notToHaveKey('stack');
-                    expect(prc.requestAudit.detail).toBe('');
+                    expect(prc.requestAudit).notToHaveKey("stack");
+                    expect(prc.requestAudit.detail).toBe("");
                 });
 
-                it('Should not error when requestAudit is missing', () => {
+                it("Should not error when requestAudit is missing", () => {
                     prc = {};
 
-                    announce('onValidationException');
+                    announce("onValidationException");
                     futures.each((task) => task());
 
-                    expect(mockBugService.$once('log')).toBeTrue();
-                    expect(mockBugService.$callLog().log[1].urlpath).toBe('/api/v1/expenses');
+                    expect(mockBugService.$once("log")).toBeTrue();
+                    expect(mockBugService.$callLog().log[1].urlpath).toBe("/api/v1/expenses");
                 });
             });
         });

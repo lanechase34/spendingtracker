@@ -9,53 +9,53 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
 
     // Fields a rule can be scoped by - ip and user are resolved here, the rest are read from rc
     // Add new rc fields here before using them in a rule
-    variables.BY_FIELDS = ['ip', 'user', 'email'];
+    variables.BY_FIELDS = ["ip", "user", "email"];
 
     /**
      * Validate the rate limit rules on startup
      */
     function configure() {
         rateLimits.each((currentEvent, rules) => {
-            var prefix = 'Invalid rate limit rule for [#currentEvent#]';
+            var prefix = "Invalid rate limit rule for [#currentEvent#]";
 
             // Events are looked up lowercased
             if(compare(currentEvent, lCase(currentEvent)) != 0) {
-                throw(type = 'RateLimitConfigError', message = '#prefix#: event name must be lowercase');
+                throw(type = "RateLimitConfigError", message = "#prefix#: event name must be lowercase");
             }
 
             if(!isArray(rules) || !rules.len()) {
-                throw(type = 'RateLimitConfigError', message = '#prefix#: rules must be a non empty array');
+                throw(type = "RateLimitConfigError", message = "#prefix#: rules must be a non empty array");
             }
 
             rules.each((rule) => {
                 if(!isStruct(rule)) {
-                    throw(type = 'RateLimitConfigError', message = '#prefix#: each rule must be a struct');
+                    throw(type = "RateLimitConfigError", message = "#prefix#: each rule must be a struct");
                 }
 
-                var by = listToArray(rule?.by ?: '');
+                var by = listToArray(rule?.by ?: "");
                 if(!by.len()) {
-                    throw(type = 'RateLimitConfigError', message = '#prefix#: by is required');
+                    throw(type = "RateLimitConfigError", message = "#prefix#: by is required");
                 }
 
                 by.each((field) => {
                     if(!BY_FIELDS.find(field)) {
                         throw(
-                            type    = 'RateLimitConfigError',
-                            message = '#prefix#: unknown by field [#field#], allowed: #BY_FIELDS.toList(', ')#'
+                            type    = "RateLimitConfigError",
+                            message = "#prefix#: unknown by field [#field#], allowed: #BY_FIELDS.toList(", ")#"
                         );
                     }
                 });
 
-                for(var setting in ['limit', 'window']) {
-                    var value = rule[setting] ?: '';
-                    if(!isValid('integer', value) || value < 1) {
-                        throw(type = 'RateLimitConfigError', message = '#prefix#: #setting# must be a positive integer');
+                for(var setting in ["limit", "window"]) {
+                    var value = rule[setting] ?: "";
+                    if(!isValid("integer", value) || value < 1) {
+                        throw(type = "RateLimitConfigError", message = "#prefix#: #setting# must be a positive integer");
                     }
                 }
 
-                for(var flag in ['resetOnSuccess', 'refundOnFailure']) {
+                for(var flag in ["resetOnSuccess", "refundOnFailure"]) {
                     if(rule.keyExists(flag) && !isBoolean(rule[flag])) {
-                        throw(type = 'RateLimitConfigError', message = '#prefix#: #flag# must be a boolean');
+                        throw(type = "RateLimitConfigError", message = "#prefix#: #flag# must be a boolean");
                     }
                 }
             });
@@ -123,7 +123,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
         if(!allowed) {
             metricsService.recordRateLimitBlock(event = prc.currEvent);
 
-            var message = 'Too many attempts. Please try again later.';
+            var message = "Too many attempts. Please try again later.";
             event
                 .getResponse()
                 .setErrorMessage(message)
@@ -132,7 +132,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
             event.renderData(
                 data       = {error: true, messages: [message]},
                 statusCode = 429,
-                type       = 'json'
+                type       = "json"
             );
 
             // Stop execution of the current request - the response is handled above
@@ -201,8 +201,8 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
      * @prc   the prc scope
      */
     private string function getUserid(required array rules, required struct prc) {
-        if(!rules.some((rule) => listToArray(rule.by).find('user'))) {
-            return '';
+        if(!rules.some((rule) => listToArray(rule.by).find("user"))) {
+            return "";
         }
 
         // Auth user loaded
@@ -221,7 +221,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
             // No valid JWT present - rules scoped by user are skipped
         }
 
-        return '';
+        return "";
     }
 
 }

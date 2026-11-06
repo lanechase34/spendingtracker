@@ -49,8 +49,8 @@ component
      */
     ApiResponseObj function setDataWithPagination(
         data,
-        resultsKey    = 'results',
-        paginationKey = 'pagination'
+        resultsKey    = "results",
+        paginationKey = "pagination"
     ) {
         super.setDataWithPagination(argumentCollection = arguments);
         setHasData(true);

@@ -5,9 +5,9 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        q           = getInstance('provider:QueryBuilder@qb');
-        mockUser    = getInstance('tests.resources.mockuser');
-        userService = getInstance('services.user');
+        q           = getInstance("provider:QueryBuilder@qb");
+        mockUser    = getInstance("tests.resources.mockuser");
+        userService = getInstance("services.user");
     }
 
     function afterAll() {
@@ -15,17 +15,17 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('Mock User', () => {
+        describe("Mock User", () => {
             beforeEach((currentSpec) => {
                 setup();
             });
 
-            it('Can be created', () => {
+            it("Can be created", () => {
                 expect(mockUser).toBeComponent();
             });
 
-            describe('Mock user life cycle', () => {
-                it('Can create a mock user', () => {
+            describe("Mock user life cycle", () => {
+                it("Can create a mock user", () => {
                     count = countUsers();
 
                     /**
@@ -38,20 +38,20 @@ component extends="tests.resources.baseTest" {
                     expect(user.getId()).toBeGTE(1);
                 });
 
-                it('Can login mock user and receive JWT', () => {
+                it("Can login mock user and receive JWT", () => {
                     jwt = mockUser.login(user);
 
                     expect(jwt).toBeString();
                     expect(jwt.len()).toBeGT(1);
                 });
 
-                it('Can logout mock user and invalidate JWT', () => {
+                it("Can logout mock user and invalidate JWT", () => {
                     mockUser.logout(userObj = user, jwt = jwt);
 
                     expect(cbauth.isLoggedIn()).toBeFalse();
                 });
 
-                it('Can delete a mock user', () => {
+                it("Can delete a mock user", () => {
                     mockUser.delete(user);
 
                     /**
@@ -64,9 +64,9 @@ component extends="tests.resources.baseTest" {
                     // expect(countUsers()).toBe(count); // Count is reverted to original
                 });
 
-                it('Can create an admin level user', () => {
+                it("Can create an admin level user", () => {
                     var adminUser       = mockUser.make(security_level = 50);
-                    var adminPermission = 'ADMIN'
+                    var adminPermission = "ADMIN"
 
                     expect(adminUser.getPermissions()).toInclude(adminPermission);
                     expect(adminUser.hasPermission(adminPermission)).toBeTrue();
@@ -78,7 +78,7 @@ component extends="tests.resources.baseTest" {
 
     // Count the number of users in database
     numeric function countUsers() {
-        return q.from('users').count();
+        return q.from("users").count();
     }
 
 }

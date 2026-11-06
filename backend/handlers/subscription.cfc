@@ -1,10 +1,10 @@
 component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {
-        view  : 'GET',
-        save  : 'POST',
-        remove: 'DELETE',
-        toggle: 'PATCH'
+        view  : "GET",
+        save  : "POST",
+        remove: "DELETE",
+        toggle: "PATCH"
     };
 
     property name="categoryService"     inject="services.category";
@@ -33,18 +33,18 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
             userid   = prc.userid,
             page     = rc.page,
             records  = rc.records,
-            search   = rc?.search ?: '',
-            orderCol = rc?.orderCol ?: '',
-            orderDir = rc?.orderDir ?: '',
-            interval = rc?.interval ?: ''
+            search   = rc?.search ?: "",
+            orderCol = rc?.orderCol ?: "",
+            orderDir = rc?.orderDir ?: "",
+            interval = rc?.interval ?: ""
         );
 
         event
             .getResponse()
             .setDataWithPagination(
                 data          = prc.data,
-                resultsKey    = 'results',
-                paginationKey = 'pagination'
+                resultsKey    = "results",
+                paginationKey = "pagination"
             )
             .setStatusCode(200);
     }
@@ -63,7 +63,7 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      */
     function save(event, rc, prc) {
         // Create category if needed
-        prc.categoryid = (rc.keyExists('categoryid') && isNumeric(rc.categoryid))
+        prc.categoryid = (rc.keyExists("categoryid") && isNumeric(rc.categoryid))
          ? parseNumber(rc.categoryid)
          : categoryService.save(name = ucFirst(rc.category), userid = prc.userid);
 
@@ -79,7 +79,7 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
 
         event
             .getResponse()
-            .setMessages(['Successfully saved subscription.'])
+            .setMessages(["Successfully saved subscription."])
             .setStatusCode(200);
     }
 
@@ -100,13 +100,13 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
         if(prc.success) {
             event
                 .getResponse()
-                .setMessages(['Successfully deleted subscription.'])
+                .setMessages(["Successfully deleted subscription."])
                 .setStatusCode(200);
         }
         else {
             event
                 .getResponse()
-                .setErrorMessage('Not found.')
+                .setErrorMessage("Not found.")
                 .setStatusCode(404);
         }
     }
@@ -135,13 +135,13 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
             event
                 .getResponse()
                 .setData({nextDate: prc.result.nextDate})
-                .setMessages(['Successfully #rc.active ? 'activated' : 'inactivated'# subscription.'])
+                .setMessages(["Successfully #rc.active ? "activated" : "inactivated"# subscription."])
                 .setStatusCode(200);
         }
         else {
             event
                 .getResponse()
-                .setErrorMessage('Not found.')
+                .setErrorMessage("Not found.")
                 .setStatusCode(404);
         }
     }

@@ -5,7 +5,7 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        mockUser = getInstance('tests.resources.mockuser');
+        mockUser = getInstance("tests.resources.mockuser");
 
         /**
          * Setup user to be shared throughout the test suite
@@ -22,19 +22,19 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('subscription.remove', () => {
+        describe("subscription.remove", () => {
             beforeEach(() => {
                 setup();
             });
 
-            it('Can DELETE a subscription', () => {
+            it("Can DELETE a subscription", () => {
                 /**
                  * Mock a subscription
                  */
                 var id = subscriptionHelper.insert(
                     data = subscriptionHelper.mock(
-                        date     = dateAdd('d', randRange(-31, -2), dateAdd('m', -1, now())),
-                        interval = 'M',
+                        date     = dateAdd("d", randRange(-31, -2), dateAdd("m", -1, now())),
+                        interval = "M",
                         userid   = user.getId()
                     ),
                     active = true
@@ -42,34 +42,34 @@ component extends="tests.resources.baseTest" {
 
                 var before = subscriptionHelper.count(userid = user.getId());
 
-                var event = delete(route = '/api/v1/subscriptions/#id#', headers = {'x-auth-token': jwt});
+                var event = delete(route = "/api/v1/subscriptions/#id#", headers = {"x-auth-token": jwt});
 
                 // Verify JSON response
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
                 expect(response.getError()).toBeFalse();
-                expect(response.getMessages()[1]).toBe('Successfully deleted subscription.');
+                expect(response.getMessages()[1]).toBe("Successfully deleted subscription.");
 
                 // Check the record was deleted
                 expect(subscriptionHelper.count(userid = user.getId())).toBe(before - 1);
                 expect(subscriptionHelper.load(id)).toBeEmpty();
             });
 
-            it('Can DELETE a subscription that has charged expenses but won''t delete the expense records', () => {
+            it("Can DELETE a subscription that has charged expenses but won't delete the expense records", () => {
                 /**
                  * Mock subscription that will charge immediately
                  */
                 var description = createUUID();
                 var data        = subscriptionHelper.mock(
-                    date        = dateAdd('d', randRange(-31, -2), dateAdd('m', -3, now())),
-                    interval    = 'M',
+                    date        = dateAdd("d", randRange(-31, -2), dateAdd("m", -3, now())),
+                    interval    = "M",
                     userid      = user.getId(),
                     description = description
                 );
                 var before = subscriptionHelper.count(userid = user.getId());
                 var event  = post(
-                    route   = '/api/v1/subscriptions',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/subscriptions",
+                    headers = {"x-auth-token": jwt},
                     params  = data
                 );
 
@@ -84,7 +84,7 @@ component extends="tests.resources.baseTest" {
                  * Delete the subscription
                  */
                 var id    = subscriptionHelper.getFromDescription(description).id;
-                var event = delete(route = '/api/v1/subscriptions/#id#', headers = {'x-auth-token': jwt});
+                var event = delete(route = "/api/v1/subscriptions/#id#", headers = {"x-auth-token": jwt});
 
                 // Check the record was deleted
                 expect(subscriptionHelper.count(userid = user.getId())).toBe(before);
@@ -94,18 +94,18 @@ component extends="tests.resources.baseTest" {
                 subscriptionHelper.verifyExpense(data, true);
             });
 
-            describe('Receipt integration', () => {
-                it('Can delete a subscription with a receipt, but the receipt won''t delete', () => {
+            describe("Receipt integration", () => {
+                it("Can delete a subscription with a receipt, but the receipt won't delete", () => {
                     /**
                      * Mock subscription with receipt
                      */
                     var receipt = createUUID();
-                    var path    = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpeg');
-                    fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
+                    var path    = fetchAndWriteImg("https://picsum.photos/seed/test/200/200", "jpeg");
+                    fileCopy(source = path, destination = "#user.getDir()#/#receipt#.webp");
                     var id = subscriptionHelper.insert(
                         data = subscriptionHelper.mock(
-                            date     = dateAdd('d', randRange(-31, -2), dateAdd('m', -1, now())),
-                            interval = 'M',
+                            date     = dateAdd("d", randRange(-31, -2), dateAdd("m", -1, now())),
+                            interval = "M",
                             userid   = user.getId(),
                             receipt  = receipt
                         ),
@@ -113,28 +113,28 @@ component extends="tests.resources.baseTest" {
                     );
 
                     var before = subscriptionHelper.count(userid = user.getId());
-                    var event  = delete(route = '/api/v1/subscriptions/#id#', headers = {'x-auth-token': jwt});
+                    var event  = delete(route = "/api/v1/subscriptions/#id#", headers = {"x-auth-token": jwt});
 
                     // Check the record was deleted
                     expect(subscriptionHelper.count(userid = user.getId())).toBe(before - 1);
                     expect(subscriptionHelper.load(id)).toBeEmpty();
 
                     // Verify receipt did not delete
-                    expect(fileExists('#user.getDir()#/#receipt#.webp')).toBeTrue();
+                    expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeTrue();
                 });
 
-                it('Can delete an expense charged by subscription, but this will not delete the subscription''s receipt', () => {
+                it("Can delete an expense charged by subscription, but this will not delete the subscription's receipt", () => {
                     /**
                      * Mock subscription with receipt that will charge immediately
                      */
                     var description = createUUID();
                     var receipt     = createUUID();
-                    var path        = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpeg');
-                    fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
+                    var path        = fetchAndWriteImg("https://picsum.photos/seed/test/200/200", "jpeg");
+                    fileCopy(source = path, destination = "#user.getDir()#/#receipt#.webp");
                     var id = subscriptionHelper.insert(
                         data = subscriptionHelper.mock(
-                            date        = dateAdd('d', randRange(-31, -2), dateAdd('m', -3, now())),
-                            interval    = 'M',
+                            date        = dateAdd("d", randRange(-31, -2), dateAdd("m", -3, now())),
+                            interval    = "M",
                             userid      = user.getId(),
                             receipt     = receipt,
                             description = description
@@ -147,16 +147,16 @@ component extends="tests.resources.baseTest" {
                     /**
                      * Trigger the 'charge' task for subscription
                      */
-                    getInstance('services.subscription').charge(subscription.id);
+                    getInstance("services.subscription").charge(subscription.id);
 
                     var expenses = subscriptionHelper.getExpenses(subscription.id);
                     expect(expenses.len()).toBeGTE(1);
 
                     // Delete an expense
-                    var event = delete(route = '/api/v1/expenses/#expenses[1].id#', headers = {'x-auth-token': jwt});
+                    var event = delete(route = "/api/v1/expenses/#expenses[1].id#", headers = {"x-auth-token": jwt});
 
                     // Verify the receipt did NOT delete
-                    expect(fileExists('#user.getDir()#/#receipt#.webp')).toBeTrue();
+                    expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeTrue();
                 });
             });
         });

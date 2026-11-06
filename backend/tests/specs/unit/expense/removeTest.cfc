@@ -5,8 +5,8 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        categoryService = getInstance('services.category');
-        mockUser        = getInstance('tests.resources.mockuser');
+        categoryService = getInstance("services.category");
+        mockUser        = getInstance("tests.resources.mockuser");
 
         /**
          * Setup user to be shared throughout the test suite
@@ -23,37 +23,37 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('expense.remove', () => {
+        describe("expense.remove", () => {
             beforeEach(() => {
                 setup();
             });
 
-            it('Can DELETE an expense', () => {
+            it("Can DELETE an expense", () => {
                 var id = expenseHelper.mock(
                     userid      = user.getId(),
                     count       = 1,
                     date        = now(),
-                    description = 'Will delete',
+                    description = "Will delete",
                     categoryid  = 1
                 ).ids[1];
 
                 var beforeCount = expenseHelper.count(user.getId());
                 expect(beforeCount).toBe(1);
 
-                var event = delete(route = '/api/v1/expenses/#id#', headers = {'x-auth-token': jwt});
+                var event = delete(route = "/api/v1/expenses/#id#", headers = {"x-auth-token": jwt});
 
                 // Verify JSON response
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
                 expect(response.getError()).toBeFalse();
-                expect(response.getMessages()[1]).toBe('Successfully deleted expense.');
+                expect(response.getMessages()[1]).toBe("Successfully deleted expense.");
 
                 // Verify deleted
                 expect(expenseHelper.count(user.getId())).toBe(beforeCount - 1);
             });
 
-            describe('Category integration', () => {
-                it('Can DELETE an expense with a custom category, and custom category stays', () => {
+            describe("Category integration", () => {
+                it("Can DELETE an expense with a custom category, and custom category stays", () => {
                     // Create new category
                     var newCategory = left(createUUID(), 30);
                     var categoryid  = categoryService.save(name = newCategory, userid = user.getId());
@@ -64,20 +64,20 @@ component extends="tests.resources.baseTest" {
                         userid      = user.getId(),
                         count       = 1,
                         date        = now(),
-                        description = 'Will delete w/ custom category',
+                        description = "Will delete w/ custom category",
                         categoryid  = categoryid
                     ).ids[1];
 
                     var beforeCount = expenseHelper.count(user.getId());
                     expect(beforeCount).toBe(1);
 
-                    var event = delete(route = '/api/v1/expenses/#id#', headers = {'x-auth-token': jwt});
+                    var event = delete(route = "/api/v1/expenses/#id#", headers = {"x-auth-token": jwt});
 
                     // Verify JSON response
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Successfully deleted expense.');
+                    expect(response.getMessages()[1]).toBe("Successfully deleted expense.");
 
                     // Verify deleted
                     expect(expenseHelper.count(user.getId())).toBe(beforeCount - 1);
@@ -85,25 +85,25 @@ component extends="tests.resources.baseTest" {
                     // Verify category still exists
                     var category = categoryService.getFromName(newCategory);
                     expect(category).toBeStruct();
-                    expect(category).toHaveKey('id');
+                    expect(category).toHaveKey("id");
                     expect(category.id).toBeGTE(1);
                 });
             });
 
-            describe('Receipt integration', () => {
-                it('Can delete an expense with a receipt, and the receipt deletes', () => {
+            describe("Receipt integration", () => {
+                it("Can delete an expense with a receipt, and the receipt deletes", () => {
                     /**
                      * Mock an expense with a receipt
                      */
                     var receipt = createUUID();
-                    var path    = fetchAndWriteImg('https://picsum.photos/seed/test/200/200', 'jpeg');
-                    fileCopy(source = path, destination = '#user.getDir()#/#receipt#.webp');
+                    var path    = fetchAndWriteImg("https://picsum.photos/seed/test/200/200", "jpeg");
+                    fileCopy(source = path, destination = "#user.getDir()#/#receipt#.webp");
 
                     var id = expenseHelper.mock(
                         userid      = user.getId(),
                         count       = 1,
                         date        = now(),
-                        description = 'Expense w/ receipt',
+                        description = "Expense w/ receipt",
                         categoryid  = 1,
                         receipt     = receipt
                     ).ids[1];
@@ -111,19 +111,19 @@ component extends="tests.resources.baseTest" {
                     var beforeCount = expenseHelper.count(user.getId());
                     expect(beforeCount).toBe(1);
 
-                    var event = delete(route = '/api/v1/expenses/#id#', headers = {'x-auth-token': jwt});
+                    var event = delete(route = "/api/v1/expenses/#id#", headers = {"x-auth-token": jwt});
 
                     // Verify JSON response
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Successfully deleted expense.');
+                    expect(response.getMessages()[1]).toBe("Successfully deleted expense.");
 
                     // Verify deleted
                     expect(expenseHelper.count(user.getId())).toBe(beforeCount - 1);
 
                     // Verify receipt deleted
-                    expect(fileExists('#user.getDir()#/#receipt#.webp')).toBeFalse();
+                    expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeFalse();
                 });
             });
         });

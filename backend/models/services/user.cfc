@@ -18,35 +18,35 @@ component singleton accessors="true" {
     property name="verificationLifespan" inject="coldbox:setting:verificationLifespan";
 
     this.roleMap = {
-        '0' : 'UNVERIFIED',
-        '5' : 'PENDING2FA',
-        '10': 'USER',
-        '50': 'ADMIN'
+        "0" : "UNVERIFIED",
+        "5" : "PENDING2FA",
+        "10": "USER",
+        "50": "ADMIN"
     };
 
     this.userCols = [
-        'id',
-        'email',
-        'password',
-        'lastlogin',
-        'security_level',
-        'verified',
-        'verificationsentdate',
-        'settings',
-        'salary',
-        'monthlytakehome',
-        'totp_enabled',
-        'password_changed_at'
+        "id",
+        "email",
+        "password",
+        "lastlogin",
+        "security_level",
+        "verified",
+        "verificationsentdate",
+        "settings",
+        "salary",
+        "monthlytakehome",
+        "totp_enabled",
+        "password_changed_at"
     ];
 
     // Columns the admin user table may sort by
     this.orderCols = [
-        'email',
-        'security_level',
-        'verified',
-        'lastlogin'
+        "email",
+        "security_level",
+        "verified",
+        "lastlogin"
     ];
-    this.orderDirs = ['asc', 'desc'];
+    this.orderDirs = ["asc", "desc"];
 
     /**
 	 * Construct a new user object via WireBox Providers
@@ -66,7 +66,7 @@ component singleton accessors="true" {
         // 1. Check this is a valid user and the password
         // Unknown accounts still pay for a bcrypt check so response time does not reveal which emails exist
         var user       = retrieveUserByUserName(username);
-        var passwordOk = checkHash(password, user.isLoaded() ? user.getPassword() : '');
+        var passwordOk = checkHash(password, user.isLoaded() ? user.getPassword() : "");
         if(!user.isLoaded() || !(impersonation || passwordOk)) {
             return false;
         }
@@ -74,7 +74,7 @@ component singleton accessors="true" {
         // 2. Check that they are verified
         if(!user.getVerified()) {
             // throw special exception to be caught
-            throw(message = 'User not verified', type = 'VerificationException');
+            throw(message = "User not verified", type = "VerificationException");
         }
 
         // 2FA users haven't logged in yet - lastlogin is updated once their code is verified
@@ -112,7 +112,7 @@ component singleton accessors="true" {
      * @password The plaintext password
      */
     private void function checkDummyPassword(required string password) {
-        if(!variables.keyExists('dummyPasswordHash')) {
+        if(!variables.keyExists("dummyPasswordHash")) {
             variables.dummyPasswordHash = securityService.generateBcryptPassword(createUUID());
         }
 
@@ -128,12 +128,12 @@ component singleton accessors="true" {
      */
     public boolean function checkCurrentPassword(required numeric id, required string password) {
         var base = q
-            .from('users')
-            .where('id', '=', {value: id, cfsqltype: 'numeric'})
-            .select(['password'])
+            .from("users")
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
+            .select(["password"])
             .first();
 
-        return checkHash(password, base.password ?: '');
+        return checkHash(password, base.password ?: "");
     }
 
     /**
@@ -141,9 +141,9 @@ component singleton accessors="true" {
      */
     public void function updateLastLogin(required numeric userid) {
         async.newFuture(() => {
-            q.from('users')
-                .where('id', '=', {value: userid, cfsqltype: 'numeric'})
-                .update({lastlogin: {value: now(), cfsqltype: 'timestamp'}});
+            q.from("users")
+                .where("id", "=", {value: userid, cfsqltype: "numeric"})
+                .update({lastlogin: {value: now(), cfsqltype: "timestamp"}});
         });
     }
 
@@ -153,12 +153,12 @@ component singleton accessors="true" {
      * @userData struct returned from querybuilder on user
      */
     private struct function refineUserFields(required struct userData) {
-        if(!userData.keyExists('id')) {
+        if(!userData.keyExists("id")) {
             return userData;
         }
 
         // Build user dir and make sure it exists
-        userData.dir = '#uploadPath#/#userData.id#';
+        userData.dir = "#uploadPath#/#userData.id#";
 
         // Make sure dir exists
         if(!directoryExists(userData.dir)) {
@@ -166,9 +166,9 @@ component singleton accessors="true" {
         }
 
         // Decrypt fields
-        userData.salary          = securityService.intToFloat(securityService.decryptValue(userData.salary, 'numeric'));
+        userData.salary          = securityService.intToFloat(securityService.decryptValue(userData.salary, "numeric"));
         userData.monthlytakehome = securityService.intToFloat(
-            securityService.decryptValue(userData.monthlytakehome, 'numeric')
+            securityService.decryptValue(userData.monthlytakehome, "numeric")
         );
         return userData;
     }
@@ -182,8 +182,8 @@ component singleton accessors="true" {
 	 */
     public userObj function retrieveUserByUsername(required string username) {
         var base = q
-            .from('users')
-            .where('email', '=', lCase(username))
+            .from("users")
+            .where("email", "=", lCase(username))
             .select(this.userCols)
             .first();
 
@@ -194,7 +194,7 @@ component singleton accessors="true" {
          */
         if(user.isLoaded()) {
             user.setPermissions(this.roleMap[user.getSecurityLevel()]);
-            cacheStorage.set('user_#user.getId()#', user);
+            cacheStorage.set("user_#user.getId()#", user);
         }
 
         return user;
@@ -213,19 +213,19 @@ component singleton accessors="true" {
 
         // Check if there is a custom scope set in the incoming JWT payload
         // If so, we need to use this for the user's permission
-        if(checkPending && prc.keyExists('jwt_payload') && (prc.jwt_payload?.scope ?: '') == 'Pending2FA') {
+        if(checkPending && prc.keyExists("jwt_payload") && (prc.jwt_payload?.scope ?: "") == "Pending2FA") {
             var pendingUser = new ();
             pendingUser.setId(arguments.id);
-            pendingUser.setPermissions('Pending2FA');
+            pendingUser.setPermissions("Pending2FA");
             return pendingUser;
         }
 
-        var cacheKey = 'user_#id#';
+        var cacheKey = "user_#id#";
         var user     = cacheStorage.get(cacheKey);
         if(isNull(user)) {
             var base = q
-                .from('users')
-                .where('id', '=', {value: id, cfsqltype: 'numeric'})
+                .from("users")
+                .where("id", "=", {value: id, cfsqltype: "numeric"})
                 .select(this.userCols)
                 .first();
 
@@ -233,7 +233,7 @@ component singleton accessors="true" {
 
             // Token for an account that no longer exists - same exception cbsecurity uses, never cache it
             if(!user.isLoaded()) {
-                throw(message = 'The user was not found by the user service', type = 'InvalidTokenUser');
+                throw(message = "The user was not found by the user service", type = "InvalidTokenUser");
             }
 
             user.setPermissions(this.roleMap[user.getSecurityLevel()]);
@@ -265,36 +265,36 @@ component singleton accessors="true" {
         var hashedPassword = securityService.generateBcryptPassword(password);
 
         var existing = q
-            .from('users')
+            .from("users")
             .where(
-                'email',
-                '=',
-                {value: email, cfsqltype: 'varchar'}
+                "email",
+                "=",
+                {value: email, cfsqltype: "varchar"}
             )
-            .select(['id', 'verified', 'verificationsentdate'])
+            .select(["id", "verified", "verificationsentdate"])
             .first();
 
-        if(existing.keyExists('id')) {
+        if(existing.keyExists("id")) {
             if(existing.verified) {
                 // Match the bcrypt work of hashing a new account's verification code
                 securityService.generateBcryptPassword(generateVerificationCode());
                 return;
             }
 
-            q.from('users')
+            q.from("users")
                 .where(
-                    'id',
-                    '=',
-                    {value: existing.id, cfsqltype: 'numeric'}
+                    "id",
+                    "=",
+                    {value: existing.id, cfsqltype: "numeric"}
                 )
                 .update({
-                    password       : {value: hashedPassword, cfsqltype: 'varchar'},
-                    salary         : {value: securityService.encryptValue(salary), cfsqltype: 'varchar'},
-                    monthlytakehome: {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}
+                    password       : {value: hashedPassword, cfsqltype: "varchar"},
+                    salary         : {value: securityService.encryptValue(salary), cfsqltype: "varchar"},
+                    monthlytakehome: {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: "varchar"}
                 });
-            cacheStorage.clearByKeySnippet(keySnippet = 'user_#existing.id#');
+            cacheStorage.clearByKeySnippet(keySnippet = "user_#existing.id#");
 
-            if(inVerificationCooldown(existing.verificationsentdate ?: '')) {
+            if(inVerificationCooldown(existing.verificationsentdate ?: "")) {
                 securityService.generateBcryptPassword(generateVerificationCode());
             }
             else {
@@ -305,20 +305,20 @@ component singleton accessors="true" {
 
         try {
             var qResult = q
-                .from('users')
-                .returning(['id'])
+                .from("users")
+                .returning(["id"])
                 .insert({
-                    email          : {value: email, cfsqltype: 'varchar'},
-                    password       : {value: hashedPassword, cfsqltype: 'varchar'},
-                    security_level : {value: 0, cfsqltype: 'numeric'},
-                    verified       : {value: false, cfsqltype: 'boolean'},
-                    salary         : {value: securityService.encryptValue(salary), cfsqltype: 'varchar'},
-                    monthlytakehome: {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}
+                    email          : {value: email, cfsqltype: "varchar"},
+                    password       : {value: hashedPassword, cfsqltype: "varchar"},
+                    security_level : {value: 0, cfsqltype: "numeric"},
+                    verified       : {value: false, cfsqltype: "boolean"},
+                    salary         : {value: securityService.encryptValue(salary), cfsqltype: "varchar"},
+                    monthlytakehome: {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: "varchar"}
                 });
         }
         catch(database e) {
             // Unique violation - a concurrent registration just created this email, that one sends the email
-            if((e.sqlState ?: '') == '23505') {
+            if((e.sqlState ?: "") == "23505") {
                 return;
             }
             rethrow;
@@ -327,8 +327,8 @@ component singleton accessors="true" {
         /**
          * Create user directory
          */
-        if(!directoryExists('#uploadPath#/#qResult.result.id#')) {
-            directoryCreate('#uploadPath#/#qResult.result.id#');
+        if(!directoryExists("#uploadPath#/#qResult.result.id#")) {
+            directoryCreate("#uploadPath#/#qResult.result.id#");
         }
 
         /**
@@ -353,18 +353,18 @@ component singleton accessors="true" {
      * Returns struct of user profile information
      */
     public struct function retrieveUserDataById(required numeric id) {
-        var cacheKey = 'user_#id#_data';
+        var cacheKey = "user_#id#_data";
         var result   = cacheStorage.get(cacheKey);
         if(isNull(result)) {
             var base = q
-                .from('users')
-                .where('id', '=', {value: id, cfsqltype: 'numeric'})
+                .from("users")
+                .where("id", "=", {value: id, cfsqltype: "numeric"})
                 .select([
-                    'security_level',
-                    'salary',
-                    'monthlytakehome',
-                    'settings',
-                    'totp_enabled'
+                    "security_level",
+                    "salary",
+                    "monthlytakehome",
+                    "settings",
+                    "totp_enabled"
                 ])
                 .first();
 
@@ -372,9 +372,9 @@ component singleton accessors="true" {
             result = {
                 role           : this.roleMap[base.security_level],
                 settings       : deserializeJSON(base.settings.toString()),
-                salary         : securityService.intToFloat(securityService.decryptValue(base.salary, 'numeric')),
+                salary         : securityService.intToFloat(securityService.decryptValue(base.salary, "numeric")),
                 monthlytakehome: securityService.intToFloat(
-                    securityService.decryptValue(base.monthlytakehome, 'numeric')
+                    securityService.decryptValue(base.monthlytakehome, "numeric")
                 ),
                 totp_enabled: base.totp_enabled
             };
@@ -396,46 +396,46 @@ component singleton accessors="true" {
      */
     public void function updateProfile(
         required numeric id,
-        string password         = '',
+        string password         = "",
         numeric salary          = -1,
         numeric monthlyTakeHome = -1,
         struct settings         = {}
     ) {
-        q.from('users')
-            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+        q.from("users")
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
             .when(
                 condition = password.len(),
                 onTrue    = (q) => {
                     // password_changed_at revokes every token issued before now (see interceptors.tokenRevocation)
                     var hashedPassword = securityService.generateBcryptPassword(password);
                     return q.addUpdate({
-                        'password'           : {value: hashedPassword, cfsqltype: 'varchar'},
-                        'password_changed_at': {value: now(), cfsqltype: 'timestamp'}
+                        "password"           : {value: hashedPassword, cfsqltype: "varchar"},
+                        "password_changed_at": {value: now(), cfsqltype: "timestamp"}
                     });
                 }
             )
             .when(
                 condition = salary > 0,
                 onTrue    = (q) => {
-                    return q.addUpdate({'salary': {value: securityService.encryptValue(salary), cfsqltype: 'varchar'}});
+                    return q.addUpdate({"salary": {value: securityService.encryptValue(salary), cfsqltype: "varchar"}});
                 }
             )
             .when(
                 condition = monthlyTakeHome > 0,
                 onTrue    = (q) => {
-                    return q.addUpdate({'monthlytakehome': {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}});
+                    return q.addUpdate({"monthlytakehome": {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: "varchar"}});
                 }
             )
             .when(
-                condition = settings.keyExists('updated'),
+                condition = settings.keyExists("updated"),
                 onTrue    = (q) => {
-                    settings.delete('updated');
-                    return q.addUpdate({'settings': {value: serializeJSON(settings), cfsqltype: 'other'}});
+                    settings.delete("updated");
+                    return q.addUpdate({"settings": {value: serializeJSON(settings), cfsqltype: "other"}});
                 }
             )
             .update();
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'user_#id#');
+        cacheStorage.clearByKeySnippet(keySnippet = "user_#id#");
         return;
     }
 
@@ -448,19 +448,19 @@ component singleton accessors="true" {
 
         // Store hashed code
         var sent = q
-            .from('users')
-            .returning('email')
-            .where('id', '=', {value: userid, cfsqltype: 'numeric'})
+            .from("users")
+            .returning("email")
+            .where("id", "=", {value: userid, cfsqltype: "numeric"})
             .update({
                 verificationcode: {
                     value    : securityService.generateBcryptPassword(verificationCode),
-                    cfsqltype: 'varchar'
+                    cfsqltype: "varchar"
                 },
-                verificationsentdate: {value: now(), cfsqltype: 'datetime'}
+                verificationsentdate: {value: now(), cfsqltype: "datetime"}
             });
 
         // Send the email with how long until the code expires
-        var expires = dateAdd('n', getVerificationLifespan(), now());
+        var expires = dateAdd("n", getVerificationLifespan(), now());
 
         emailService.sendVerificationEmail(
             to                   = sent.result.email,
@@ -469,7 +469,7 @@ component singleton accessors="true" {
             verificationLifeSpan = getVerificationLifespan()
         );
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'user_#userid#');
+        cacheStorage.clearByKeySnippet(keySnippet = "user_#userid#");
         return;
     }
 
@@ -478,9 +478,9 @@ component singleton accessors="true" {
      * Uppercase alphabet without look-alike characters (0/O, 1/I), 8 chars = 40 bits
      */
     private string function generateVerificationCode() {
-        var alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        var random   = createObject('java', 'java.security.SecureRandom').init();
-        var code     = '';
+        var alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        var random   = createObject("java", "java.security.SecureRandom").init();
+        var code     = "";
         for(var i = 1; i <= 8; i++) {
             code &= alphabet.mid(random.nextInt(alphabet.len()) + 1, 1);
         }
@@ -492,19 +492,19 @@ component singleton accessors="true" {
      * The verification code is cleared so it can never be used again
      */
     public void function markVerified(required numeric userid) {
-        q.from('users')
-            .where('id', '=', {value: userid, cfsqltype: 'numeric'})
+        q.from("users")
+            .where("id", "=", {value: userid, cfsqltype: "numeric"})
             .update({
-                'verified'        : {value: true, cfsqltype: 'boolean'},
-                'security_level'  : {value: 10, cfsqltype: 'numeric'},
-                'verificationcode': {
-                    value    : '',
-                    cfsqltype: 'varchar',
+                "verified"        : {value: true, cfsqltype: "boolean"},
+                "security_level"  : {value: 10, cfsqltype: "numeric"},
+                "verificationcode": {
+                    value    : "",
+                    cfsqltype: "varchar",
                     null     : true
                 }
             });
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'user_#userid#');
+        cacheStorage.clearByKeySnippet(keySnippet = "user_#userid#");
         updateLastLogin(userid = userid);
         return;
     }
@@ -515,7 +515,7 @@ component singleton accessors="true" {
      * @sentDate when the last code was sent, empty if never
      */
     private boolean function inVerificationCooldown(required any sentDate) {
-        return isDate(sentDate) && dateDiff('n', sentDate, now()) <= verificationCooldown;
+        return isDate(sentDate) && dateDiff("n", sentDate, now()) <= verificationCooldown;
     }
 
     /**
@@ -524,18 +524,18 @@ component singleton accessors="true" {
      */
     private struct function retrieveVerificationData(required string email) {
         return q
-            .from('users')
+            .from("users")
             .where(
-                'email',
-                '=',
-                {value: lCase(email), cfsqltype: 'varchar'}
+                "email",
+                "=",
+                {value: lCase(email), cfsqltype: "varchar"}
             )
             .select([
-                'id',
-                'password',
-                'verified',
-                'verificationcode',
-                'verificationsentdate'
+                "id",
+                "password",
+                "verified",
+                "verificationcode",
+                "verificationsentdate"
             ])
             .first();
     }
@@ -560,24 +560,24 @@ component singleton accessors="true" {
         required string code
     ) {
         var base  = retrieveVerificationData(email);
-        var found = base.keyExists('id');
+        var found = base.keyExists("id");
 
         // Always run both checks - codes are generated uppercase so normalize what the user typed
-        var passwordOk = checkHash(password, found ? base.password : '');
-        var codeOk     = checkHash(code.trim().uCase(), found ? (base.verificationcode ?: '') : '');
+        var passwordOk = checkHash(password, found ? base.password : "");
+        var codeOk     = checkHash(code.trim().uCase(), found ? (base.verificationcode ?: "") : "");
         passwordOk     = found && (impersonation || passwordOk);
 
         if(passwordOk && base.verified) {
-            throw(message = 'User already verified', type = 'UserAlreadyVerified');
+            throw(message = "User already verified", type = "UserAlreadyVerified");
         }
 
         if(
             !passwordOk
             || !codeOk
-            || !isDate(base.verificationsentdate ?: '')
-            || dateDiff('n', base.verificationsentdate, now()) > verificationLifespan
+            || !isDate(base.verificationsentdate ?: "")
+            || dateDiff("n", base.verificationsentdate, now()) > verificationLifespan
         ) {
-            throw(message = 'Invalid or expired verification code', type = 'InvalidVerification');
+            throw(message = "Invalid or expired verification code", type = "InvalidVerification");
         }
 
         markVerified(userid = base.id);
@@ -595,19 +595,19 @@ component singleton accessors="true" {
      */
     public string function resendVerificationCode(required string email, required string password) {
         var base       = retrieveVerificationData(email);
-        var found      = base.keyExists('id');
-        var passwordOk = checkHash(password, found ? base.password : '');
+        var found      = base.keyExists("id");
+        var passwordOk = checkHash(password, found ? base.password : "");
 
         if(!found || !(impersonation || passwordOk) || base.verified) {
-            return 'ignored';
+            return "ignored";
         }
 
-        if(inVerificationCooldown(base.verificationsentdate ?: '')) {
-            return 'cooldown';
+        if(inVerificationCooldown(base.verificationsentdate ?: "")) {
+            return "cooldown";
         }
 
         sendVerificationCode(userid = base.id);
-        return 'sent';
+        return "sent";
     }
 
     /**
@@ -617,29 +617,29 @@ component singleton accessors="true" {
     public struct function paginate(
         required numeric page,
         required numeric records,
-        required string search   = '',
-        required string orderCol = '',
-        required string orderDir = ''
+        required string search   = "",
+        required string orderCol = "",
+        required string orderDir = ""
     ) {
         if(!this.orderCols.containsNoCase(orderCol) || !this.orderDirs.containsNoCase(orderDir)) {
-            orderCol = '';
-            orderDir = '';
+            orderCol = "";
+            orderDir = "";
         }
 
         /**
          * Base Query
          */
         var base = q
-            .from('users')
+            .from("users")
             .where((q1) => {
-                q1.whereLike(q.raw('lower(email)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
+                q1.whereLike(q.raw("lower(email)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
                     .when(
                         condition = isDate(search),
                         onTrue    = (q2) => {
                             q2.orWhere(
-                                'lastlogin',
-                                '=',
-                                {value: search, cfsqltype: 'timestamp'}
+                                "lastlogin",
+                                "=",
+                                {value: search, cfsqltype: "timestamp"}
                             );
                         },
                         withoutScoping = true
@@ -648,9 +648,9 @@ component singleton accessors="true" {
                         condition = isNumeric(search),
                         onTrue    = (q2) => {
                             q2.orWhere(
-                                'security_level',
-                                '=',
-                                {value: search, cfsqltype: 'numeric'}
+                                "security_level",
+                                "=",
+                                {value: search, cfsqltype: "numeric"}
                             );
                         },
                         withoutScoping = true
@@ -660,7 +660,7 @@ component singleton accessors="true" {
         /**
          * Calculate the filtered total and number of records
          */
-        var filteredRecords = base.select(['id']).count();
+        var filteredRecords = base.select(["id"]).count();
 
         /**
          * Perform total info query and data query in parallel
@@ -674,27 +674,27 @@ component singleton accessors="true" {
                 .when(
                     orderCol.len() && orderDir.len(),
                     (q1) => {
-                        q1.orderByRaw('#orderCol# #orderDir# nulls last').orderBy('id', orderDir);
+                        q1.orderByRaw("#orderCol# #orderDir# nulls last").orderBy("id", orderDir);
                     },
                     (q1) => {
-                        q1.orderByRaw('lastlogin desc nulls last').orderBy('id', 'desc');
+                        q1.orderByRaw("lastlogin desc nulls last").orderBy("id", "desc");
                     }
                 )
                 .limit(records)
                 .offset(offset)
                 .select([
-                    'id',
-                    'email',
-                    'security_level',
-                    'verified',
-                    'lastlogin'
+                    "id",
+                    "email",
+                    "security_level",
+                    "verified",
+                    "lastlogin"
                 ])
                 .get()
                 .map(
                     (value) => {
                         // Format lastlogin to ensure consistent timestamp format
                         if(!isNull(value.lastlogin)) {
-                            value.lastlogin = dateTimeFormat(value.lastlogin, 'yyyy-mm-dd HH:nn:ss');
+                            value.lastlogin = dateTimeFormat(value.lastlogin, "yyyy-mm-dd HH:nn:ss");
                         }
                         // Map security_level -> permission
                         value.security_level = this.roleMap[value.security_level];
@@ -728,10 +728,10 @@ component singleton accessors="true" {
      * Get the total count of all users
      */
     private struct function getTotalInfo() {
-        var cacheKey = 'user.getTotalInfo';
+        var cacheKey = "user.getTotalInfo";
         var total    = cacheStorage.get(cacheKey);
         if(isNull(total)) {
-            var result = queryExecute('select count(id) as count from users', {});
+            var result = queryExecute("select count(id) as count from users", {});
             total      = {count: result.count};
             cacheStorage.set(cacheKey, total);
         }

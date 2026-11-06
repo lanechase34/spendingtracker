@@ -1,11 +1,11 @@
 component extends="base" hint="Income Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {
-        view       : 'GET',
-        save       : 'PUT',
-        viewExtra  : 'GET',
-        saveExtra  : 'POST',
-        removeExtra: 'DELETE'
+        view       : "GET",
+        save       : "PUT",
+        viewExtra  : "GET",
+        saveExtra  : "POST",
+        removeExtra: "DELETE"
     };
 
     property name="incomeService" inject="services.income";
@@ -57,7 +57,7 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
 
         event
             .getResponse()
-            .setMessages(['Successfully saved income.'])
+            .setMessages(["Successfully saved income."])
             .setStatusCode(200);
     }
 
@@ -110,7 +110,7 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
         event
             .getResponse()
             .setData({id: prc.id})
-            .setMessages(['Successfully saved extra income.'])
+            .setMessages(["Successfully saved extra income."])
             .setStatusCode(200);
     }
 
@@ -131,13 +131,13 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
         if(prc.success) {
             event
                 .getResponse()
-                .setMessages(['Successfully deleted extra income.'])
+                .setMessages(["Successfully deleted extra income."])
                 .setStatusCode(200);
         }
         else {
             event
                 .getResponse()
-                .setErrorMessage('Not found.')
+                .setErrorMessage("Not found.")
                 .setStatusCode(404);
         }
     }

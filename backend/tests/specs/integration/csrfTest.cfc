@@ -5,14 +5,14 @@ component extends="tests.resources.baseTest" {
 
     function beforeAll() {
         super.beforeAll();
-        mockUser = getInstance('tests.resources.mockuser');
+        mockUser = getInstance("tests.resources.mockuser");
 
         // Make sure interceptor not in 'test' mode
         // By default, Testbox bypass this interceptor to check CSRF token on non-GET requests
-        test = getInstance(dsl = 'coldbox:interceptor:VerifyCsfr@cbcsrf');
+        test = getInstance(dsl = "coldbox:interceptor:VerifyCsfr@cbcsrf");
         test.setIsTestMode(false);
 
-        testMethods = ['post', 'delete', 'put', 'patch'];
+        testMethods = ["post", "delete", "put", "patch"];
 
         // Make sure nothing is logged in to start our calls
         cbauth.logout();
@@ -30,41 +30,41 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('CSRF Integration Tests', () => {
+        describe("CSRF Integration Tests", () => {
             beforeEach(() => {
                 setup();
             });
 
-            it('Can login and receive a CSRF token', () => {
+            it("Can login and receive a CSRF token", () => {
                 var csrf = mockUser.getCSRF(jwt); // get csrf using jwt
                 expect(csrf.len()).toBeGT(2);
             });
 
-            it('Throws a TokenNotFoundException when accessing a non-GET endpoint without CSRF token', () => {
+            it("Throws a TokenNotFoundException when accessing a non-GET endpoint without CSRF token", () => {
                 // This should work even without the x-csrf-token key present, but the mock will fail if it's not there
                 testMethods.each((method) => {
                     expect(() => {
-                        this[method](route = '/api/v1/expenses', headers = {'x-auth-token': jwt, 'x-csrf-token': ''});
-                    }).toThrow(type = 'TokenNotFoundException', message = 'The CSRF token was not included.');
+                        this[method](route = "/api/v1/expenses", headers = {"x-auth-token": jwt, "x-csrf-token": ""});
+                    }).toThrow(type = "TokenNotFoundException", message = "The CSRF token was not included.");
                 });
             });
 
-            it('Throws a TokenMismatchException when accessing non-GET endpoint with invalid CSRF token', () => {
+            it("Throws a TokenMismatchException when accessing non-GET endpoint with invalid CSRF token", () => {
                 var csrf = mockUser.getCSRF(jwt); // create CSRF
 
                 testMethods.each((method) => {
                     expect(() => {
                         this[method](
-                            route = '/api/v1/expenses', headers = {'x-auth-token': jwt, 'x-csrf-token': createUUID()}
+                            route = "/api/v1/expenses", headers = {"x-auth-token": jwt, "x-csrf-token": createUUID()}
                         );
-                    }).toThrow(type = 'TokenMismatchException', message = 'The CSRF token is invalid.');
+                    }).toThrow(type = "TokenMismatchException", message = "The CSRF token is invalid.");
                 });
             });
 
-            it('Can access non-GET endpoint with valid CSRF token', () => {
+            it("Can access non-GET endpoint with valid CSRF token", () => {
                 var csrf = mockUser.getCSRF(jwt); // create CSRF
 
-                var event    = post(route = '/api/v1/expenses', headers = {'x-auth-token': jwt, 'x-csrf-token': csrf});
+                var event    = post(route = "/api/v1/expenses", headers = {"x-auth-token": jwt, "x-csrf-token": csrf});
                 var response = event.getResponse();
 
                 /**
@@ -72,7 +72,7 @@ component extends="tests.resources.baseTest" {
                  */
                 expect(response.getStatusCode()).toBe(400);
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toInclude('Invalid Parameters');
+                expect(response.getMessages()[1]).toInclude("Invalid Parameters");
             });
         });
     }

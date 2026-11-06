@@ -5,7 +5,7 @@ component extends="tests.resources.baseTest" {
 
     function beforeAll() {
         super.beforeAll();
-        mockUser = getInstance('tests.resources.mockuser');
+        mockUser = getInstance("tests.resources.mockuser");
     }
 
     function afterAll() {
@@ -13,7 +13,7 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('Login Tests', () => {
+        describe("Login Tests", () => {
             beforeEach((currentSpec) => {
                 setup();
 
@@ -28,17 +28,17 @@ component extends="tests.resources.baseTest" {
                 jwtService.getTokenStorage().clearAll();
             });
 
-            it('Will receive a 400 with bad parameters', () => {
+            it("Will receive a 400 with bad parameters", () => {
                 expect(cbauth.isLoggedIn()).toBeFalse();
                 // Login with an invalid email
-                var event = post(route = '/api/v1/login', params = {email: 'notARealUser', rememberMe: false});
+                var event = post(route = "/api/v1/login", params = {email: "notARealUser", rememberMe: false});
 
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(400);
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toInclude('Invalid Parameters.');
-                expect(response.getMessages()[1]).toInclude('The ''email'' has an invalid type, expected type is email');
-                expect(response.getMessages()[1]).toInclude('The ''password'' value is required');
+                expect(response.getMessages()[1]).toInclude("Invalid Parameters.");
+                expect(response.getMessages()[1]).toInclude("The 'email' has an invalid type, expected type is email");
+                expect(response.getMessages()[1]).toInclude("The 'password' value is required");
 
                 /**
                  * Still logged out
@@ -46,12 +46,12 @@ component extends="tests.resources.baseTest" {
                 expect(cbauth.isLoggedIn()).toBeFalse();
             });
 
-            it('Will receive a 401 with bad credentials', () => {
+            it("Will receive a 401 with bad credentials", () => {
                 expect(cbauth.isLoggedIn()).toBeFalse();
                 var event = post(
-                    route  = '/api/v1/login',
+                    route  = "/api/v1/login",
                     params = {
-                        email     : 'notARealUser@gmail.com',
+                        email     : "notARealUser@gmail.com",
                         password  : createUUID(),
                         rememberMe: false
                     }
@@ -60,7 +60,7 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(401);
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toBe('Invalid Login.');
+                expect(response.getMessages()[1]).toBe("Invalid Login.");
 
                 /**
                  * Still logged out
@@ -68,8 +68,8 @@ component extends="tests.resources.baseTest" {
                 expect(cbauth.isLoggedIn()).toBeFalse();
             });
 
-            it('Will receive unauthorized error trying to access secured location', () => {
-                var event = get(route = '/api/v1/expenses');
+            it("Will receive unauthorized error trying to access secured location", () => {
+                var event = get(route = "/api/v1/expenses");
 
                 /**
                  * Check that we have been denied
@@ -77,23 +77,23 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(401);
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toInclude('Invalid access.');
+                expect(response.getMessages()[1]).toInclude("Invalid access.");
 
                 /**
                  * Check the validation results
                  */
-                var cbSecure = event.getPrivateValue('cbSecurity_validatorResults');
+                var cbSecure = event.getPrivateValue("cbSecurity_validatorResults");
                 expect(cbSecure.allow).toBeFalse();
-                expect(cbSecure.messages).toInclude('TokenNotFoundException');
+                expect(cbSecure.messages).toInclude("TokenNotFoundException");
 
                 expect(cbauth.isLoggedIn()).toBeFalse();
             });
 
-            it('Will forbid an unverified user from logging in', () => {
+            it("Will forbid an unverified user from logging in", () => {
                 var user = mockUser.make(verified = false); // unverified user
                 expect(cbauth.isLoggedIn()).toBeFalse();
                 var event = post(
-                    route  = '/api/v1/login',
+                    route  = "/api/v1/login",
                     params = {
                         email     : user.getEmail(),
                         password  : createUUID(),
@@ -103,19 +103,19 @@ component extends="tests.resources.baseTest" {
 
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(403);
-                expect(response.getMessages()[1]).toInclude('Please verify your email. Email is not verified.');
+                expect(response.getMessages()[1]).toInclude("Please verify your email. Email is not verified.");
                 expect(response.getHasData()).toBeFalse(); // no token of any kind for unverified users
                 mockUser.delete(user);
             });
 
-            it('Can login and receive a JWT and use the JWT for secured endpoint', () => {
+            it("Can login and receive a JWT and use the JWT for secured endpoint", () => {
                 var user = mockUser.make();
                 var jwt  = mockUser.login(user); // login and receive JWT
 
                 /**
                  * Attempt secured route with JWT
                  */
-                var event    = get(route = '/api/v1/expenses', headers = {'x-auth-token': jwt});
+                var event    = get(route = "/api/v1/expenses", headers = {"x-auth-token": jwt});
                 var response = event.getResponse();
 
                 /**
@@ -123,11 +123,11 @@ component extends="tests.resources.baseTest" {
                  */
                 expect(response.getStatusCode()).toBe(400);
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toInclude('Invalid Parameters');
+                expect(response.getMessages()[1]).toInclude("Invalid Parameters");
                 mockUser.delete(user);
             });
 
-            it('Can logout and invalidate JWT', () => {
+            it("Can logout and invalidate JWT", () => {
                 var user = mockUser.make();
                 var jwt  = mockUser.login(user); // login and receive JWT
 
@@ -139,24 +139,24 @@ component extends="tests.resources.baseTest" {
                 /**
                  * Try secured endpoint and expect to receive unauthorized
                  */
-                var event = get(route = '/api/v1/expenses', headers = {'x-auth-token': jwt});
+                var event = get(route = "/api/v1/expenses", headers = {"x-auth-token": jwt});
 
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(401);
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toInclude('Invalid access.');
+                expect(response.getMessages()[1]).toInclude("Invalid access.");
 
-                var cbSecure = event.getPrivateValue('cbSecurity_validatorResults');
+                var cbSecure = event.getPrivateValue("cbSecurity_validatorResults");
                 expect(cbSecure.allow).toBeFalse();
                 mockUser.delete(user);
             });
 
-            it('Will block invalid refresh token request', () => {
-                var event    = post(route = '/api/v1/security/refreshtoken');
+            it("Will block invalid refresh token request", () => {
+                var event    = post(route = "/api/v1/security/refreshtoken");
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(400);
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toInclude('The refresh token was not passed via the header or the rc. Cannot refresh the unrefreshable!');
+                expect(response.getMessages()[1]).toInclude("The refresh token was not passed via the header or the rc. Cannot refresh the unrefreshable!");
             });
         });
     }

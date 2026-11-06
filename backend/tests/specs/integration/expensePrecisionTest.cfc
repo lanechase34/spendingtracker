@@ -3,10 +3,10 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        expenseHelper   = getInstance('tests.resources.expenseHelper');
-        expenseService  = getInstance('services.expense');
-        securityService = getInstance('services.security');
-        mockUser        = getInstance('tests.resources.mockuser');
+        expenseHelper   = getInstance("tests.resources.expenseHelper");
+        expenseService  = getInstance("services.expense");
+        securityService = getInstance("services.security");
+        mockUser        = getInstance("tests.resources.mockuser");
     }
 
     function afterAll() {
@@ -14,7 +14,7 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('Expense Decimal Precision Integration Tests', () => {
+        describe("Expense Decimal Precision Integration Tests", () => {
             beforeEach(() => {
                 setup();
                 user = mockUser.make();
@@ -26,8 +26,8 @@ component extends="tests.resources.baseTest" {
                 mockUser.delete(user);
             });
 
-            describe('Verify encryption/decryption is working - fields in db are stored as varchar (encrypted integer cents)', () => {
-                it('Verifies encryption service converts dollars to cents and stores as integer', () => {
+            describe("Verify encryption/decryption is working - fields in db are stored as varchar (encrypted integer cents)", () => {
+                it("Verifies encryption service converts dollars to cents and stores as integer", () => {
                     // Test various floating-point precision scenarios
                     // Input: dollars with floating point noise
                     // Expected: exact cents as integer, exact dollars when converted back
@@ -104,12 +104,12 @@ component extends="tests.resources.baseTest" {
                         var encrypted = securityService.encryptValue(testCase.inputDollars);
 
                         // Decrypt it back (returns integer cents)
-                        var decryptedCents = securityService.decryptValue(encrypted, 'numeric');
+                        var decryptedCents = securityService.decryptValue(encrypted, "numeric");
 
                         // Verify the encrypted/decrypted value is the expected integer cents
                         expect(decryptedCents).toBe(
                             testCase.expectedCents,
-                            'Input $#testCase.inputDollars# should encrypt/decrypt to #testCase.expectedCents# cents, but got #decryptedCents# cents'
+                            "Input $#testCase.inputDollars# should encrypt/decrypt to #testCase.expectedCents# cents, but got #decryptedCents# cents"
                         );
 
                         // Convert cents back to dollars
@@ -118,18 +118,18 @@ component extends="tests.resources.baseTest" {
                         // Verify the dollar conversion matches expected
                         expect(decryptedDollars).toBe(
                             testCase.expectedDollars,
-                            'Cents #decryptedCents# should convert to $#testCase.expectedDollars#, but got $#decryptedDollars#'
+                            "Cents #decryptedCents# should convert to $#testCase.expectedDollars#, but got $#decryptedDollars#"
                         );
 
                         // Verify the full round-trip: dollars → cents → dollars
                         expect(decryptedDollars).toBe(
                             round(testCase.inputDollars, 2),
-                            'Full round-trip failed: $#testCase.inputDollars# → #decryptedCents# cents → $#decryptedDollars#'
+                            "Full round-trip failed: $#testCase.inputDollars# → #decryptedCents# cents → $#decryptedDollars#"
                         );
                     });
                 });
 
-                it('Verifies encryption roundtrip maintains cent precision for large batch', () => {
+                it("Verifies encryption roundtrip maintains cent precision for large batch", () => {
                     var numTests   = 100;
                     var allMatched = true;
                     var failures   = [];
@@ -147,7 +147,7 @@ component extends="tests.resources.baseTest" {
 
                         // Encrypt and decrypt
                         var encrypted        = securityService.encryptValue(dirtyValue);
-                        var decryptedCents   = securityService.decryptValue(encrypted, 'numeric');
+                        var decryptedCents   = securityService.decryptValue(encrypted, "numeric");
                         var decryptedDollars = securityService.intToFloat(decryptedCents);
 
                         // Verify cents match
@@ -178,11 +178,11 @@ component extends="tests.resources.baseTest" {
                     }
 
                     expect(allMatched).toBeTrue(
-                        'All #numTests# encryption roundtrips should maintain cent precision. Failures: #serializeJSON(failures)#'
+                        "All #numTests# encryption roundtrips should maintain cent precision. Failures: #serializeJSON(failures)#"
                     );
                 });
 
-                it('Verifies that summing cents has perfect precision (no rounding needed)', () => {
+                it("Verifies that summing cents has perfect precision (no rounding needed)", () => {
                     var numExpenses      = 100;
                     var expectedSumCents = 0;
                     var amounts          = [];
@@ -193,7 +193,7 @@ component extends="tests.resources.baseTest" {
 
                         // What the encryption service will actually store (in cents)
                         var encrypted   = securityService.encryptValue(dirtyAmount);
-                        var storedCents = securityService.decryptValue(encrypted, 'numeric');
+                        var storedCents = securityService.decryptValue(encrypted, "numeric");
 
                         amounts.append(storedCents);
                         expectedSumCents += storedCents; // Integer addition - perfect precision!
@@ -208,7 +208,7 @@ component extends="tests.resources.baseTest" {
                     // These should match EXACTLY - no rounding, no tolerance needed
                     expect(actualSumCents).toBe(
                         expectedSumCents,
-                        'Sum of cents should match exactly with no rounding. Expected: #expectedSumCents#, Got: #actualSumCents#'
+                        "Sum of cents should match exactly with no rounding. Expected: #expectedSumCents#, Got: #actualSumCents#"
                     );
 
                     // Convert to dollars for verification
@@ -217,11 +217,11 @@ component extends="tests.resources.baseTest" {
 
                     expect(actualSumDollars).toBe(
                         expectedSumDollars,
-                        'Sum in dollars should match. Expected: $#numberFormat(expectedSumDollars, '999,999.99')#, Got: $#numberFormat(actualSumDollars, '999,999.99')#'
+                        "Sum in dollars should match. Expected: $#numberFormat(expectedSumDollars, "999,999.99")#, Got: $#numberFormat(actualSumDollars, "999,999.99")#"
                     );
                 });
 
-                it('Verifies no precision loss when summing many large amounts', () => {
+                it("Verifies no precision loss when summing many large amounts", () => {
                     var numExpenses = 1000;
                     var totalCents  = 0;
                     var amounts     = [];
@@ -231,7 +231,7 @@ component extends="tests.resources.baseTest" {
                         var dollars = randRange(1, 10000) + (randRange(0, 99) / 100);
 
                         var encrypted = securityService.encryptValue(dollars);
-                        var cents     = securityService.decryptValue(encrypted, 'numeric');
+                        var cents     = securityService.decryptValue(encrypted, "numeric");
 
                         amounts.append(cents);
                         totalCents += cents;
@@ -244,17 +244,17 @@ component extends="tests.resources.baseTest" {
                     });
 
                     // Should match EXACTLY with NO tolerance needed
-                    expect(calculatedSum).toBe(totalCents, 'Summing 1000 large amounts should have perfect precision');
+                    expect(calculatedSum).toBe(totalCents, "Summing 1000 large amounts should have perfect precision");
 
                     // Verify the difference is EXACTLY zero (not "close to zero")
                     var difference = abs(calculatedSum - totalCents);
                     expect(difference).toBe(
                         0,
-                        'Difference should be exactly 0, not just close. Difference: #difference#'
+                        "Difference should be exactly 0, not just close. Difference: #difference#"
                     );
                 });
 
-                it('Verifies edge cases for cent conversion', () => {
+                it("Verifies edge cases for cent conversion", () => {
                     var edgeCases = [
                         {
                             input          : 0,
@@ -305,44 +305,44 @@ component extends="tests.resources.baseTest" {
 
                     edgeCases.each((testCase) => {
                         var encrypted = securityService.encryptValue(testCase.input);
-                        var cents     = securityService.decryptValue(encrypted, 'numeric');
+                        var cents     = securityService.decryptValue(encrypted, "numeric");
                         var dollars   = securityService.intToFloat(cents);
 
                         expect(cents).toBe(
                             testCase.expectedCents,
-                            'Input $#testCase.input# should convert to #testCase.expectedCents# cents'
+                            "Input $#testCase.input# should convert to #testCase.expectedCents# cents"
                         );
 
                         expect(dollars).toBe(
                             testCase.expectedDollars,
-                            'Cents #cents# should convert back to $#testCase.expectedDollars#'
+                            "Cents #cents# should convert back to $#testCase.expectedDollars#"
                         );
                     });
                 });
             });
 
-            it('Can save expenses with various decimal amounts and verify pagination totals', () => {
+            it("Can save expenses with various decimal amounts and verify pagination totals", () => {
                 // Test data with various decimal precision scenarios
                 var testExpenses = [
-                    {amount: 10.99, description: 'Two decimal places'},
-                    {amount: 25.50, description: 'Single trailing zero'},
-                    {amount: 100.00, description: 'Two trailing zeros'},
-                    {amount: 7.01, description: 'Small decimal'},
-                    {amount: 99.99, description: 'Max cents value'},
-                    {amount: 15.49, description: 'Mid-range decimal'},
-                    {amount: 50.00, description: 'Round dollar amount'},
-                    {amount: 33.33, description: 'Repeating decimal'},
-                    {amount: 1.05, description: 'Low single digit'},
-                    {amount: 200.75, description: 'Large amount'},
-                    {amount: 99.99, description: 'Max cents value'},
-                    {amount: 99.99, description: 'Max cents value'},
-                    {amount: 99.99, description: 'Max cents value'},
-                    {amount: 99.99, description: 'Max cents value'},
-                    {amount: 9.99, description: 'Max cents value'},
-                    {amount: 999.99, description: 'Max cents value'},
-                    {amount: 6.35, description: '35 cents'},
-                    {amount: 6.35, description: '35 cents'},
-                    {amount: 6.35, description: '35 cents'},
+                    {amount: 10.99, description: "Two decimal places"},
+                    {amount: 25.50, description: "Single trailing zero"},
+                    {amount: 100.00, description: "Two trailing zeros"},
+                    {amount: 7.01, description: "Small decimal"},
+                    {amount: 99.99, description: "Max cents value"},
+                    {amount: 15.49, description: "Mid-range decimal"},
+                    {amount: 50.00, description: "Round dollar amount"},
+                    {amount: 33.33, description: "Repeating decimal"},
+                    {amount: 1.05, description: "Low single digit"},
+                    {amount: 200.75, description: "Large amount"},
+                    {amount: 99.99, description: "Max cents value"},
+                    {amount: 99.99, description: "Max cents value"},
+                    {amount: 99.99, description: "Max cents value"},
+                    {amount: 99.99, description: "Max cents value"},
+                    {amount: 9.99, description: "Max cents value"},
+                    {amount: 999.99, description: "Max cents value"},
+                    {amount: 6.35, description: "35 cents"},
+                    {amount: 6.35, description: "35 cents"},
+                    {amount: 6.35, description: "35 cents"},
                     {amount: 14.49, description: createUUID()},
                     {amount: 600.00, description: createUUID()},
                     {amount: 30.27, description: createUUID()},
@@ -350,27 +350,27 @@ component extends="tests.resources.baseTest" {
                 ];
 
                 var expectedTotalCents = 0;
-                var startDate          = dateAdd('d', -1, now());
-                var endDate            = dateAdd('d', 1, now());
+                var startDate          = dateAdd("d", -1, now());
+                var endDate            = dateAdd("d", 1, now());
 
                 // Save all test expenses
                 testExpenses.each((expense) => {
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : expense.amount,
                             description: expense.description,
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Successfully saved expense.');
+                    expect(response.getMessages()[1]).toBe("Successfully saved expense.");
 
                     // Convert to cents for tracking (same logic as encryption service)
                     expectedTotalCents += round(expense.amount * 100, 0);
@@ -381,11 +381,11 @@ component extends="tests.resources.baseTest" {
 
                 // Test pagination endpoint - retrieve all expenses
                 var paginateEvent = get(
-                    route   = '/api/v1/expenses',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/expenses",
+                    headers = {"x-auth-token": jwt},
                     params  = {
-                        startDate: dateFormat(startDate, 'yyyy-mm-dd'),
-                        endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
+                        startDate: dateFormat(startDate, "yyyy-mm-dd"),
+                        endDate  : dateFormat(endDate, "yyyy-mm-dd"),
                         page     : 1,
                         records  : 50
                     }
@@ -411,7 +411,7 @@ component extends="tests.resources.baseTest" {
 
                 var calculatedSumCents = 0;
                 returnedExpenses.each((expense) => {
-                    expect(expense.keyExists('amount')).toBeTrue();
+                    expect(expense.keyExists("amount")).toBeTrue();
                     expect(isNumeric(expense.amount)).toBeTrue();
 
                     // Convert back to cents for perfect precision sum
@@ -421,29 +421,29 @@ component extends="tests.resources.baseTest" {
                 // Verify sum in cents matches exactly
                 expect(calculatedSumCents).toBe(
                     expectedTotalCents,
-                    'Sum of returned expenses (in cents) should match exactly. Expected: #expectedTotalCents# cents, Got: #calculatedSumCents# cents'
+                    "Sum of returned expenses (in cents) should match exactly. Expected: #expectedTotalCents# cents, Got: #calculatedSumCents# cents"
                 );
 
                 // Also verify in dollars
                 var calculatedSumDollars = calculatedSumCents / 100;
                 expect(calculatedSumDollars).toBe(
                     expectedTotalDollars,
-                    'Sum of returned expenses (in dollars) should match. Expected: $#numberFormat(expectedTotalDollars, '999,999.99')#, Got: $#numberFormat(calculatedSumDollars, '999,999.99')#'
+                    "Sum of returned expenses (in dollars) should match. Expected: $#numberFormat(expectedTotalDollars, "999,999.99")#, Got: $#numberFormat(calculatedSumDollars, "999,999.99")#"
                 );
             });
 
-            it('Can filter expenses and verify filtered sum accuracy', () => {
+            it("Can filter expenses and verify filtered sum accuracy", () => {
                 // Create expenses with specific descriptions for filtering
                 var groceryExpenses = [
-                    {amount: 45.67, description: 'Grocery store trip'},
-                    {amount: 23.45, description: 'Grocery delivery'},
-                    {amount: 78.90, description: 'Weekly groceries'}
+                    {amount: 45.67, description: "Grocery store trip"},
+                    {amount: 23.45, description: "Grocery delivery"},
+                    {amount: 78.90, description: "Weekly groceries"}
                 ];
 
                 var otherExpenses = [
-                    {amount: 100.00, description: 'Gas station'},
-                    {amount: 50.50, description: 'Restaurant'},
-                    {amount: 25.25, description: 'Coffee shop'}
+                    {amount: 100.00, description: "Gas station"},
+                    {amount: 50.50, description: "Restaurant"},
+                    {amount: 25.25, description: "Coffee shop"}
                 ];
 
                 var expectedGroceryCents = 0;
@@ -452,14 +452,14 @@ component extends="tests.resources.baseTest" {
                 // Save grocery expenses
                 groceryExpenses.each((expense) => {
                     post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : expense.amount,
                             description: expense.description,
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
                     var cents = round(expense.amount * 100, 0);
@@ -470,14 +470,14 @@ component extends="tests.resources.baseTest" {
                 // Save other expenses
                 otherExpenses.each((expense) => {
                     post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : expense.amount,
                             description: expense.description,
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
                     expectedOverallCents += round(expense.amount * 100, 0);
@@ -487,19 +487,19 @@ component extends="tests.resources.baseTest" {
                 var expectedGroceryDollars = expectedGroceryCents / 100;
                 var expectedOverallDollars = expectedOverallCents / 100;
 
-                var startDate = dateAdd('d', -1, now());
-                var endDate   = dateAdd('d', 1, now());
+                var startDate = dateAdd("d", -1, now());
+                var endDate   = dateAdd("d", 1, now());
 
                 // Test with search filter for "grocery"
                 var filteredEvent = get(
-                    route   = '/api/v1/expenses',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/expenses",
+                    headers = {"x-auth-token": jwt},
                     params  = {
-                        startDate: dateFormat(startDate, 'yyyy-mm-dd'),
-                        endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
+                        startDate: dateFormat(startDate, "yyyy-mm-dd"),
+                        endDate  : dateFormat(endDate, "yyyy-mm-dd"),
                         page     : 1,
                         records  : 50,
-                        search   : 'grocer'
+                        search   : "grocer"
                     }
                 );
 
@@ -528,18 +528,18 @@ component extends="tests.resources.baseTest" {
 
                 expect(manualFilteredCents).toBe(
                     expectedGroceryCents,
-                    'Manual filtered sum should match expected grocery total. Expected: #expectedGroceryCents# cents, Got: #manualFilteredCents# cents'
+                    "Manual filtered sum should match expected grocery total. Expected: #expectedGroceryCents# cents, Got: #manualFilteredCents# cents"
                 );
             });
 
-            it('Handles edge case decimal amounts correctly', () => {
+            it("Handles edge case decimal amounts correctly", () => {
                 var edgeCaseExpenses = [
-                    {amount: 0.01, description: '1 Single penny'},
-                    {amount: 0.99, description: '2 Just under dollar'},
-                    {amount: 999.99, description: '3 Large amount max cents'},
-                    {amount: 1000.00, description: '4 Round thousand'},
-                    {amount: 12.345, description: '5 More than 2 decimals (should round to 12.35)'},
-                    {amount: 7.999, description: '6 Should round up to 8.00'}
+                    {amount: 0.01, description: "1 Single penny"},
+                    {amount: 0.99, description: "2 Just under dollar"},
+                    {amount: 999.99, description: "3 Large amount max cents"},
+                    {amount: 1000.00, description: "4 Round thousand"},
+                    {amount: 12.345, description: "5 More than 2 decimals (should round to 12.35)"},
+                    {amount: 7.999, description: "6 Should round up to 8.00"}
                 ];
 
                 // Expected values after conversion to cents and back
@@ -550,32 +550,32 @@ component extends="tests.resources.baseTest" {
                 // Save all edge case expenses
                 edgeCaseExpenses.each((expense) => {
                     post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : expense.amount,
                             description: expense.description,
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
                 });
 
                 // Retrieve and verify
-                var startDate = dateAdd('d', -1, now());
-                var endDate   = dateAdd('d', 1, now());
+                var startDate = dateAdd("d", -1, now());
+                var endDate   = dateAdd("d", 1, now());
 
                 var event = get(
-                    route   = '/api/v1/expenses',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/expenses",
+                    headers = {"x-auth-token": jwt},
                     params  = {
-                        startDate: dateFormat(startDate, 'yyyy-mm-dd'),
-                        endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
+                        startDate: dateFormat(startDate, "yyyy-mm-dd"),
+                        endDate  : dateFormat(endDate, "yyyy-mm-dd"),
                         page     : 1,
                         records  : 50,
-                        orderCol : 'description',
-                        orderDir : 'asc'
+                        orderCol : "description",
+                        orderDir : "asc"
                     }
                 );
 
@@ -615,36 +615,36 @@ component extends="tests.resources.baseTest" {
                 expect(manualSumCents).toBe(expectedTotalCents);
             });
 
-            it('Maintains precision with large monetary amounts', () => {
+            it("Maintains precision with large monetary amounts", () => {
                 // Test large amounts - no floating point precision issues with cent storage
                 var largeAmounts = [
-                    {amount: 9999.99, description: 'Just under 10k'},
-                    {amount: 10000.00, description: 'Exactly 10k'},
-                    {amount: 15678.45, description: 'Mid five-figure'},
-                    {amount: 25000.50, description: '25k with cents'},
-                    {amount: 50000.01, description: '50k and one penny'},
-                    {amount: 75432.10, description: 'Large with decimal'},
-                    {amount: 99999.99, description: 'Just under 100k'},
-                    {amount: 100000.00, description: 'Exactly 100k'},
-                    {amount: 123456.78, description: 'Six-figure amount'},
-                    {amount: 250000.25, description: 'Quarter million'}
+                    {amount: 9999.99, description: "Just under 10k"},
+                    {amount: 10000.00, description: "Exactly 10k"},
+                    {amount: 15678.45, description: "Mid five-figure"},
+                    {amount: 25000.50, description: "25k with cents"},
+                    {amount: 50000.01, description: "50k and one penny"},
+                    {amount: 75432.10, description: "Large with decimal"},
+                    {amount: 99999.99, description: "Just under 100k"},
+                    {amount: 100000.00, description: "Exactly 100k"},
+                    {amount: 123456.78, description: "Six-figure amount"},
+                    {amount: 250000.25, description: "Quarter million"}
                 ];
 
                 var expectedTotalCents = 0;
-                var startDate          = dateAdd('d', -1, now());
-                var endDate            = dateAdd('d', 1, now());
+                var startDate          = dateAdd("d", -1, now());
+                var endDate            = dateAdd("d", 1, now());
 
                 // Save all large expenses
                 largeAmounts.each((expense) => {
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : expense.amount,
                             description: expense.description,
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
@@ -658,11 +658,11 @@ component extends="tests.resources.baseTest" {
 
                 // Retrieve all expenses
                 var event = get(
-                    route   = '/api/v1/expenses',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/expenses",
+                    headers = {"x-auth-token": jwt},
                     params  = {
-                        startDate: dateFormat(startDate, 'yyyy-mm-dd'),
-                        endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
+                        startDate: dateFormat(startDate, "yyyy-mm-dd"),
+                        endDate  : dateFormat(endDate, "yyyy-mm-dd"),
                         page     : 1,
                         records  : 50
                     }
@@ -694,8 +694,8 @@ component extends="tests.resources.baseTest" {
                     var found         = retrievedAmountsCents.find((cents) => cents == expectedCents);
 
                     expect(found).toBeTypeOf(
-                        'numeric',
-                        'Large amount #originalExpense.amount# (#expectedCents# cents) not found in retrieved expenses'
+                        "numeric",
+                        "Large amount #originalExpense.amount# (#expectedCents# cents) not found in retrieved expenses"
                     );
                 });
 
@@ -707,11 +707,11 @@ component extends="tests.resources.baseTest" {
 
                 expect(manualSumCents).toBe(
                     expectedTotalCents,
-                    'Manual sum should match exactly (integer arithmetic). Expected: #expectedTotalCents# cents, Got: #manualSumCents# cents'
+                    "Manual sum should match exactly (integer arithmetic). Expected: #expectedTotalCents# cents, Got: #manualSumCents# cents"
                 );
             });
 
-            it('Handles extremely large single expense amounts', () => {
+            it("Handles extremely large single expense amounts", () => {
                 // Test individual very large amounts - cent storage handles these perfectly
                 var extremeAmounts = [999998.99, 100000.00, 500000.50, 99999.99];
 
@@ -719,14 +719,14 @@ component extends="tests.resources.baseTest" {
 
                 extremeAmounts.each((amount) => {
                     post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : amount,
-                            description: 'Extreme amount test: $#numberFormat(amount, '999,999,999.99')#',
+                            description: "Extreme amount test: $#numberFormat(amount, "999,999,999.99")#",
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
                     expectedTotalCents += round(amount * 100, 0);
@@ -735,15 +735,15 @@ component extends="tests.resources.baseTest" {
                 var expectedTotalDollars = expectedTotalCents / 100;
 
                 // Retrieve and verify
-                var startDate = dateAdd('d', -1, now());
-                var endDate   = dateAdd('d', 1, now());
+                var startDate = dateAdd("d", -1, now());
+                var endDate   = dateAdd("d", 1, now());
 
                 var event = get(
-                    route   = '/api/v1/expenses',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/expenses",
+                    headers = {"x-auth-token": jwt},
                     params  = {
-                        startDate: dateFormat(startDate, 'yyyy-mm-dd'),
-                        endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
+                        startDate: dateFormat(startDate, "yyyy-mm-dd"),
+                        endDate  : dateFormat(endDate, "yyyy-mm-dd"),
                         page     : 1,
                         records  : 50
                     }
@@ -771,11 +771,11 @@ component extends="tests.resources.baseTest" {
 
                 expect(manualSumCents).toBe(
                     expectedTotalCents,
-                    'Extreme amounts should maintain perfect precision. Expected: #expectedTotalCents# cents, Got: #manualSumCents# cents'
+                    "Extreme amounts should maintain perfect precision. Expected: #expectedTotalCents# cents, Got: #manualSumCents# cents"
                 );
             });
 
-            it('Verifies integer cent arithmetic has perfect precision at scale', () => {
+            it("Verifies integer cent arithmetic has perfect precision at scale", () => {
                 // Pure math test - no HTTP, no DB
                 var numExpenses        = 1000;
                 var expectedTotalCents = 0;
@@ -795,7 +795,7 @@ component extends="tests.resources.baseTest" {
                 expect(actualSum).toBe(expectedTotalCents);
             });
 
-            it('Maintains perfect precision when summing many large amounts', () => {
+            it("Maintains perfect precision when summing many large amounts", () => {
                 // Test combining all tests above into a stress test
                 // This has many large sum amounts with various floating point precision
                 var numExpenses        = randRange(25, 45);
@@ -808,17 +808,17 @@ component extends="tests.resources.baseTest" {
                     // Generate amount with potential floating-point imprecision
                     var rand        = round(randRange(0, 98) / 100, 2);
                     var amount      = baseAmount + i + rand;
-                    var description = '#i# Large batch expense';
+                    var description = "#i# Large batch expense";
 
                     post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : amount,
                             description: description,
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
@@ -835,19 +835,19 @@ component extends="tests.resources.baseTest" {
                 var expectedTotalDollars = expectedTotalCents / 100;
 
                 // Retrieve all expenses across multiple pages
-                var startDate = dateAdd('d', -1, now());
-                var endDate   = dateAdd('d', 1, now());
+                var startDate = dateAdd("d", -1, now());
+                var endDate   = dateAdd("d", 1, now());
 
                 var event = get(
-                    route   = '/api/v1/expenses',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/expenses",
+                    headers = {"x-auth-token": jwt},
                     params  = {
-                        startDate: dateFormat(startDate, 'yyyy-mm-dd'),
-                        endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
+                        startDate: dateFormat(startDate, "yyyy-mm-dd"),
+                        endDate  : dateFormat(endDate, "yyyy-mm-dd"),
                         page     : 1,
                         records  : 10,
-                        orderCol : 'description',
-                        orderDir : 'asc'
+                        orderCol : "description",
+                        orderDir : "asc"
                     }
                 );
 
@@ -871,11 +871,11 @@ component extends="tests.resources.baseTest" {
 
                 for(var i = 2; i <= totalPages; i++) {
                     var currEvent = get(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
-                            startDate: dateFormat(startDate, 'yyyy-mm-dd'),
-                            endDate  : dateFormat(endDate, 'yyyy-mm-dd'),
+                            startDate: dateFormat(startDate, "yyyy-mm-dd"),
+                            endDate  : dateFormat(endDate, "yyyy-mm-dd"),
                             page     : i,
                             records  : 10
                         }
@@ -884,7 +884,7 @@ component extends="tests.resources.baseTest" {
                     allExpenses.append(currData.expenses, true);
                 }
 
-                expect(allExpenses.len()).toBe(numExpenses, 'Should have collected all expenses across pages');
+                expect(allExpenses.len()).toBe(numExpenses, "Should have collected all expenses across pages");
 
                 // At this point we know the total amounts are equal (checked against rollingSum, expectedTotalDollars)
                 // Lets verify each individual expense saved. We can check based on the unique description

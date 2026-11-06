@@ -17,7 +17,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
      * Window counters are reset by the metrics scheduler task, totals live for the life of the app
      */
     function onDIComplete() {
-        var AtomicLong = createObject('java', 'java.util.concurrent.atomic.AtomicLong');
+        var AtomicLong = createObject("java", "java.util.concurrent.atomic.AtomicLong");
 
         variables.queries = {
             count  : AtomicLong.init(0),
@@ -32,7 +32,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
         variables.rateLimit = {
             blocked: AtomicLong.init(0),
             total  : AtomicLong.init(0),
-            byEvent: createObject('java', 'java.util.concurrent.ConcurrentHashMap').init()
+            byEvent: createObject("java", "java.util.concurrent.ConcurrentHashMap").init()
         };
 
         // Last gc total and when it was read - only advanced by markWindow
@@ -43,10 +43,10 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
      * Return struct containing live server metric information
      */
     public struct function getMetrics() {
-        var mf = createObject('java', 'java.lang.management.ManagementFactory');
+        var mf = createObject("java", "java.lang.management.ManagementFactory");
 
         // JVM Memory
-        var runtime  = createObject('java', 'java.lang.Runtime').getRuntime();
+        var runtime  = createObject("java", "java.lang.Runtime").getRuntime();
         var totalMem = runtime.totalMemory();
         var freeMem  = runtime.freeMemory();
         var maxMem   = runtime.maxMemory();
@@ -58,8 +58,8 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
 
         // CPU
         var osBean         = mf.getOperatingSystemMXBean();
-        var systemCpuLoad  = '';
-        var processCpuLoad = '';
+        var systemCpuLoad  = "";
+        var processCpuLoad = "";
         try {
             try {
                 systemCpuLoad = osBean.getCpuLoad() * 100;
@@ -70,7 +70,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
             processCpuLoad = osBean.getProcessCpuLoad() * 100;
         }
         catch(any e) {
-            adminLog.error('Error retrieving system cpu stats.');
+            adminLog.error("Error retrieving system cpu stats.");
         }
 
         var runtimeBean = mf.getRuntimeMXBean();
@@ -113,7 +113,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
      * Cumulative gc time across all collectors
      */
     private numeric function getGcTotalMs() {
-        var gcBeans = createObject('java', 'java.lang.management.ManagementFactory').getGarbageCollectorMXBeans();
+        var gcBeans = createObject("java", "java.lang.management.ManagementFactory").getGarbageCollectorMXBeans();
         return gcBeans.reduce((prev, b) => {
             return prev + max(b.getCollectionTime(), 0);
         }, 0);
@@ -125,32 +125,32 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
     private struct function getLiveDatabaseStats() {
         var stats = {
             up                 : false,
-            pingMs             : javacast('null', ''),
-            connections        : javacast('null', ''),
+            pingMs             : javacast("null", ""),
+            connections        : javacast("null", ""),
             longestQuerySeconds: 0
         };
 
         try {
             var start = getTickCount();
-            queryExecute('select 1', {});
+            queryExecute("select 1", {});
             stats.pingMs = getTickCount() - start;
             stats.up     = true;
 
             var activity = queryExecute(
-                '
+                "
                 select count(*)                                                         as total,
-                       count(*) filter (where state = ''active'')                       as active,
-                       count(*) filter (where state = ''idle'')                         as idle,
-                       count(*) filter (where state like ''idle in transaction%'')      as idleintransaction,
-                       count(*) filter (where wait_event_type = ''Lock'')               as waitingonlock,
+                       count(*) filter (where state = 'active')                       as active,
+                       count(*) filter (where state = 'idle')                         as idle,
+                       count(*) filter (where state like 'idle in transaction%')      as idleintransaction,
+                       count(*) filter (where wait_event_type = 'Lock')               as waitingonlock,
                        coalesce(max(extract(epoch from now() - query_start))
-                                filter (where state = ''active''), 0)                   as longestqueryseconds,
-                       cast(current_setting(''max_connections'') as int)                as maxconnections
+                                filter (where state = 'active'), 0)                   as longestqueryseconds,
+                       cast(current_setting('max_connections') as int)                as maxconnections
                 from pg_stat_activity
                 where datname = current_database()
-                  and backend_type = ''client backend''
+                  and backend_type = 'client backend'
                   and pid <> pg_backend_pid()
-            ',
+            ",
                 {}
             );
 
@@ -165,7 +165,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
             stats.longestQuerySeconds = round(activity.longestqueryseconds * 10) / 10;
         }
         catch(any e) {
-            adminLog.error('Error retrieving live database stats: #e.message#');
+            adminLog.error("Error retrieving live database stats: #e.message#");
         }
 
         return stats;
@@ -202,7 +202,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
     public void function recordQuery(required string sql, required numeric ms) {
         queries.count.incrementAndGet();
         queries.total.incrementAndGet();
-        queries.totalMs.addAndGet(javacast('long', ms));
+        queries.totalMs.addAndGet(javacast("long", ms));
         setMax(queries.maxMs, ms);
 
         if(ms >= settings.slowQueryThreshold) {
@@ -210,14 +210,14 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
 
             lock name="slowQueriesLock" timeout="5" type="exclusive" throwOnTimeout=false {
                 // Delete queries older than 24 hours
-                var twentyFourHoursAgo = dateAdd('h', -24, timestamp);
+                var twentyFourHoursAgo = dateAdd("h", -24, timestamp);
                 variables.slowQueries  = slowQueries.filter((q) => {
                     return q.time > twentyFourHoursAgo;
                 });
 
                 // Bindings are left out on purpose - they can contain user data
                 slowQueries.append({
-                    sql : left(reReplace(trim(sql), '\s+', ' ', 'all'), settings.sqlLength),
+                    sql : left(reReplace(trim(sql), "\s+", " ", "all"), settings.sqlLength),
                     ms  : ms,
                     time: timestamp,
                     uuid: createUUID()
@@ -245,7 +245,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
     public void function recordRateLimitBlock(required string event) {
         rateLimit.blocked.incrementAndGet();
         rateLimit.total.incrementAndGet();
-        rateLimit.byEvent.putIfAbsent(event, createObject('java', 'java.util.concurrent.atomic.AtomicLong').init(0));
+        rateLimit.byEvent.putIfAbsent(event, createObject("java", "java.util.concurrent.atomic.AtomicLong").init(0));
         rateLimit.byEvent.get(event).incrementAndGet();
     }
 
@@ -339,15 +339,15 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
      */
     private struct function getAppInfo() {
         if(isNull(variables.appInfo)) {
-            var version = 'unknown';
+            var version = "unknown";
             try {
-                version = deserializeJSON(fileRead('#basePath#/box.json')).version;
+                version = deserializeJSON(fileRead("#basePath#/box.json")).version;
             }
             catch(any e) {
                 // Missing or unreadable box.json - report the version as unknown
             }
 
-            var runtimeBean = createObject('java', 'java.lang.management.ManagementFactory').getRuntimeMXBean();
+            var runtimeBean = createObject("java", "java.lang.management.ManagementFactory").getRuntimeMXBean();
 
             variables.appInfo = {
                 name       : appName,
@@ -355,8 +355,8 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
                 environment: environment,
                 startedAt  : runtimeBean.getStartTime(),
                 lucee      : server.lucee.version,
-                java       : '#server.java.version# (#server.java.vendor#)',
-                os         : '#server.os.name# #server.os.version# (#server.os.arch#)',
+                java       : "#server.java.version# (#server.java.vendor#)",
+                os         : "#server.os.name# #server.os.version# (#server.os.arch#)",
                 timezone   : getTimezone()
             };
         }
@@ -369,12 +369,12 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
      */
     private array function getDiskStats() {
         var paths = [
-            {name: 'Logs', path: logPath},
-            {name: 'Uploads', path: uploadPath}
+            {name: "Logs", path: logPath},
+            {name: "Uploads", path: uploadPath}
         ];
 
         return paths.map((item) => {
-            var file    = createObject('java', 'java.io.File').init(item.path);
+            var file    = createObject("java", "java.io.File").init(item.path);
             var mb      = 1024 * 1024;
             var totalMB = round(file.getTotalSpace() / mb);
             var freeMB  = round(file.getUsableSpace() / mb);
@@ -396,27 +396,27 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
     private struct function getDatabaseDiagnostics() {
         var result = {
             available : false,
-            version   : '',
+            version   : "",
             sizeMB    : 0,
-            stats     : javacast('null', ''),
+            stats     : javacast("null", ""),
             tables    : [],
             statements: {
                 available: false,
-                message  : '',
+                message  : "",
                 rows     : []
             }
         };
 
         try {
             var db = queryExecute(
-                '
-                select current_setting(''server_version'')     as version,
+                "
+                select current_setting('server_version')     as version,
                        pg_database_size(current_database())  as sizebytes,
                        d.xact_commit, d.xact_rollback, d.blks_hit, d.blks_read,
                        d.deadlocks, d.temp_files, d.temp_bytes, d.conflicts, d.stats_reset
                 from pg_stat_database d
                 where d.datname = current_database()
-            ',
+            ",
                 {}
             );
 
@@ -437,7 +437,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
             };
 
             var tables = queryExecute(
-                '
+                "
                 select relname                                  as name,
                        n_live_tup                               as liverows,
                        n_dead_tup                               as deadrows,
@@ -449,9 +449,9 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
                 from pg_stat_user_tables
                 order by pg_total_relation_size(relid) desc
                 limit 25
-            ',
+            ",
                 {},
-                {returntype: 'array'}
+                {returntype: "array"}
             );
 
             result.tables = tables.map((row) => {
@@ -468,7 +468,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
             });
         }
         catch(any e) {
-            adminLog.error('Error retrieving database diagnostics: #e.message#');
+            adminLog.error("Error retrieving database diagnostics: #e.message#");
             return result;
         }
 
@@ -483,13 +483,13 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
     private struct function getTopStatements() {
         var statements = {
             available: false,
-            message  : '',
+            message  : "",
             rows     : []
         };
 
         try {
             var top = queryExecute(
-                '
+                "
                 select query,
                        calls,
                        total_exec_time as totalms,
@@ -498,18 +498,18 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
                        rows
                 from pg_stat_statements
                 where dbid = (select oid from pg_database where datname = current_database())
-                  and query not ilike ''%pg_stat%''
+                  and query not ilike '%pg_stat%'
                 order by total_exec_time desc
                 limit 15
-            ',
+            ",
                 {},
-                {returntype: 'array'}
+                {returntype: "array"}
             );
 
             statements.available = true;
             statements.rows      = top.map((row) => {
                 return {
-                    query  : left(reReplace(trim(row.query), '\s+', ' ', 'all'), settings.sqlLength),
+                    query  : left(reReplace(trim(row.query), "\s+", " ", "all"), settings.sqlLength),
                     calls  : val(row.calls),
                     totalMs: round(row.totalms),
                     meanMs : round(row.meanms * 100) / 100,
@@ -530,7 +530,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
      */
     private any function nullIfEmpty(any value) {
         if(isNull(value) || (isSimpleValue(value) && !len(value))) {
-            return javacast('null', '');
+            return javacast("null", "");
         }
         return value;
     }
@@ -551,7 +551,7 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
      * @value  candidate value
      */
     private void function setMax(required any atomic, required numeric value) {
-        var newValue = javacast('long', value);
+        var newValue = javacast("long", value);
         var current  = atomic.get();
         while(newValue > current && !atomic.compareAndSet(current, newValue)) {
             current = atomic.get();

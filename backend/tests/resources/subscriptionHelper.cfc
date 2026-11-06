@@ -1,9 +1,9 @@
 component extends="coldbox.system.testing.BaseTestCase" {
 
     function init() {
-        cacheStorage    = getInstance('cachebox:coldboxStorage');
-        q               = getInstance('provider:QueryBuilder@qb');
-        securityService = getInstance('services.security');
+        cacheStorage    = getInstance("cachebox:coldboxStorage");
+        q               = getInstance("provider:QueryBuilder@qb");
+        securityService = getInstance("services.security");
     }
 
     /**
@@ -13,7 +13,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required date date,
         required string interval,
         required numeric userid,
-        string receipt     = '',
+        string receipt     = "",
         string description = createUUID()
     ) {
         return {
@@ -31,7 +31,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required date date,
         required string interval,
         required numeric userid,
-        string receipt     = '',
+        string receipt     = "",
         string description = createUUID(),
         numeric categoryid = 1,
         boolean active     = true,
@@ -44,17 +44,17 @@ component extends="coldbox.system.testing.BaseTestCase" {
             var susbcriptionAmount = amount < 0 ? round(randRange(1, 100) + (randRange(1, 99) / 100), 2) : amount;
 
             var curr = q
-                .from('subscription')
-                .returning('id')
+                .from("subscription")
+                .returning("id")
                 .insert({
-                    next_charge_date: {value: date, cfsqltype: 'date'},
-                    amount          : {value: securityService.encryptValue(susbcriptionAmount), cfsqltype: 'varchar'},
-                    description     : {value: description, cfsqltype: 'varchar'},
-                    interval        : {value: interval, cfsqltype: 'varchar'},
-                    active          : {value: active, cfsqltype: 'boolean'},
-                    categoryid      : {value: categoryid, cfsqltype: 'numeric'},
-                    receipt         : {value: receipt, cfsqltype: 'varchar'},
-                    userid          : {value: userid, cfsqltype: 'numeric'}
+                    next_charge_date: {value: date, cfsqltype: "date"},
+                    amount          : {value: securityService.encryptValue(susbcriptionAmount), cfsqltype: "varchar"},
+                    description     : {value: description, cfsqltype: "varchar"},
+                    interval        : {value: interval, cfsqltype: "varchar"},
+                    active          : {value: active, cfsqltype: "boolean"},
+                    categoryid      : {value: categoryid, cfsqltype: "numeric"},
+                    receipt         : {value: receipt, cfsqltype: "varchar"},
+                    userid          : {value: userid, cfsqltype: "numeric"}
                 })
                 .result
                 .id;
@@ -63,7 +63,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
             result.sum += susbcriptionAmount;
         }
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|subscription');
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|subscription");
         return result;
     }
 
@@ -80,27 +80,27 @@ component extends="coldbox.system.testing.BaseTestCase" {
         var before = count(userid = userid);
 
         var insertData = {
-            next_charge_date: {value: data.date, cfsqltype: 'date'},
-            amount          : {value: securityService.encryptValue(data.amount), cfsqltype: 'varchar'},
-            description     : {value: data.description, cfsqltype: 'varchar'},
-            interval        : {value: data.interval, cfsqltype: 'varchar'},
-            active          : {value: active, cfsqltype: 'boolean'},
-            categoryid      : {value: data.categoryid, cfsqltype: 'numeric'},
-            receipt         : {value: data.receipt, cfsqltype: 'varchar'},
-            userid          : {value: data.userid, cfsqltype: 'numeric'}
+            next_charge_date: {value: data.date, cfsqltype: "date"},
+            amount          : {value: securityService.encryptValue(data.amount), cfsqltype: "varchar"},
+            description     : {value: data.description, cfsqltype: "varchar"},
+            interval        : {value: data.interval, cfsqltype: "varchar"},
+            active          : {value: active, cfsqltype: "boolean"},
+            categoryid      : {value: data.categoryid, cfsqltype: "numeric"},
+            receipt         : {value: data.receipt, cfsqltype: "varchar"},
+            userid          : {value: data.userid, cfsqltype: "numeric"}
         };
 
         // Force set the updated column to the past for testing
         if(mockUpdated) {
-            insertData.updated = {value: dateAdd('d', -10, now()), cfsqltype: 'timestamp'};
+            insertData.updated = {value: dateAdd("d", -10, now()), cfsqltype: "timestamp"};
         }
 
         var newSubscription = q
-            .from('subscription')
-            .returning('id')
+            .from("subscription")
+            .returning("id")
             .insert(insertData);
 
-        expect(newSubscription).toHaveKey('result');
+        expect(newSubscription).toHaveKey("result");
         expect(newSubscription.result.id).toBeGT(0);
         expect(count(userid)).toBe(before + 1);
         return newSubscription.result.id
@@ -111,23 +111,23 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     numeric function count(required numeric userid) {
         return q
-            .from('subscription')
+            .from("subscription")
             .where(
-                'subscription.userid',
-                '=',
-                {value: userid, cfsqltype: 'numeric'}
+                "subscription.userid",
+                "=",
+                {value: userid, cfsqltype: "numeric"}
             )
-            .count('id');
+            .count("id");
     }
 
     /**
      * Makes fresh slate of the subscriptions table
      */
     void function fresh() {
-        q.from('expense')
-            .whereNotNull('subscriptionid')
+        q.from("expense")
+            .whereNotNull("subscriptionid")
             .delete();
-        q.from('subscription').delete();
+        q.from("subscription").delete();
         return;
     }
 
@@ -136,49 +136,49 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     void function verifyExpense(required struct data, required boolean exists = true) {
         var check = q
-            .from('expense')
-            .where('expense.userid', '=', data.userid)
-            .andWhere('expense.description', '=', data.description)
+            .from("expense")
+            .where("expense.userid", "=", data.userid)
+            .andWhere("expense.description", "=", data.description)
             .andWhere(
-                'expense.amount',
-                '=',
-                {value: securityService.encryptValue(data.amount), cfsqltype: 'varchar'}
+                "expense.amount",
+                "=",
+                {value: securityService.encryptValue(data.amount), cfsqltype: "varchar"}
             )
             .andWhere(
-                'expense.categoryid',
-                '=',
-                {value: data.categoryid, cfsqltype: 'numeric'}
+                "expense.categoryid",
+                "=",
+                {value: data.categoryid, cfsqltype: "numeric"}
             )
             .get();
 
         expect(check).toBeArray();
         if(exists) {
             var count;
-            if(data.interval == 'Y') {
-                count = dateDiff('yyyy', data.date, now()) + 1;
+            if(data.interval == "Y") {
+                count = dateDiff("yyyy", data.date, now()) + 1;
             }
             else {
-                count = dateDiff('m', data.date, now()) + 1;
+                count = dateDiff("m", data.date, now()) + 1;
             }
 
             expect(check.len()).toBe(
                 count,
-                'Records mismatch. Expected #count# records but only received #check.len()# records in db'
+                "Records mismatch. Expected #count# records but only received #check.len()# records in db"
             );
             check.each((expense) => {
                 expect(expense).toBeStruct();
-                expect(expense).toHaveKey('id');
+                expect(expense).toHaveKey("id");
                 expect(expense.id).toBeGT(0);
-                expect(expense).toHaveKey('subscriptionid');
+                expect(expense).toHaveKey("subscriptionid");
 
                 // Verify the encrypted amount
-                expect(securityService.intToFloat(securityService.decryptValue(expense.amount, 'numeric'))).toBe(
+                expect(securityService.intToFloat(securityService.decryptValue(expense.amount, "numeric"))).toBe(
                     data.amount
                 )
             });
         }
         else {
-            expect(check.len()).toBe(0, 'Records created when they should not have');
+            expect(check.len()).toBe(0, "Records created when they should not have");
         }
 
         return;
@@ -189,34 +189,34 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     void function verifySubscription(required struct data, required boolean exists = true) {
         var check = q
-            .from('subscription')
-            .where('subscription.userid', '=', data.userid)
+            .from("subscription")
+            .where("subscription.userid", "=", data.userid)
             // .andWhere(
             //     'subscription.next_charge_date',
             //     '=',
             //     {value: data.date, cfsqltype: 'date'}
             // )
             .andWhere(
-                'subscription.description',
-                '=',
+                "subscription.description",
+                "=",
                 data.description
             )
             .andWhere(
-                'subscription.amount',
-                '=',
-                {value: securityService.encryptValue(data.amount), cfsqltype: 'varchar'}
+                "subscription.amount",
+                "=",
+                {value: securityService.encryptValue(data.amount), cfsqltype: "varchar"}
             )
-            .andWhere('subscription.interval', '=', data.interval)
+            .andWhere("subscription.interval", "=", data.interval)
             .andWhere(
-                'subscription.categoryid',
-                '=',
-                {value: data.categoryid, cfsqltype: 'numeric'}
+                "subscription.categoryid",
+                "=",
+                {value: data.categoryid, cfsqltype: "numeric"}
             )
             .first();
 
         expect(check).toBeStruct();
         if(exists) {
-            expect(check).toHaveKey('id');
+            expect(check).toHaveKey("id");
             expect(check.id).toBeGT(0);
         }
         else {
@@ -228,35 +228,35 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
     struct function load(required numeric subscriptionid) {
         return q
-            .from('subscription')
+            .from("subscription")
             .where(
-                'id',
-                '=',
-                {value: subscriptionid, cfsqltype: 'numeric'}
+                "id",
+                "=",
+                {value: subscriptionid, cfsqltype: "numeric"}
             )
             .first();
     }
 
     struct function getFromDescription(required string description) {
         return q
-            .from('subscription')
+            .from("subscription")
             .where(
-                'description',
-                '=',
-                {value: description, cfsqltype: 'varchar'}
+                "description",
+                "=",
+                {value: description, cfsqltype: "varchar"}
             )
             .first();
     }
 
     array function getExpenses(required numeric subscriptionid) {
         return q
-            .from('expense')
+            .from("expense")
             .where(
-                'subscriptionid',
-                '=',
-                {value: subscriptionid, cfsqltype: 'numeric'}
+                "subscriptionid",
+                "=",
+                {value: subscriptionid, cfsqltype: "numeric"}
             )
-            .select('id')
+            .select("id")
             .get();
     }
 
@@ -268,26 +268,26 @@ component extends="coldbox.system.testing.BaseTestCase" {
         var mockSubscriptionService = prepareMock(object = subscriptionServiceObj);
 
         // Manually wire up all dependencies
-        mockSubscriptionService.setQ(getInstance('provider:QueryBuilder@qb'));
-        mockSubscriptionService.setSecurityService(getInstance('services.security'));
-        mockSubscriptionService.setAuditService(getInstance('services.audit'));
-        mockSubscriptionService.setCacheStorage(getInstance('cachebox:coldboxStorage'));
-        mockSubscriptionService.setAsync(getInstance('asyncManager@coldbox'));
+        mockSubscriptionService.setQ(getInstance("provider:QueryBuilder@qb"));
+        mockSubscriptionService.setSecurityService(getInstance("services.security"));
+        mockSubscriptionService.setAuditService(getInstance("services.audit"));
+        mockSubscriptionService.setCacheStorage(getInstance("cachebox:coldboxStorage"));
+        mockSubscriptionService.setAsync(getInstance("asyncManager@coldbox"));
         mockSubscriptionService.setMaxThreads(0);
 
         // Wire in the mock broken expense service
-        var mockExpenseService = createObject('component', 'tests.resources.brokenExpenseService');
+        var mockExpenseService = createObject("component", "tests.resources.brokenExpenseService");
         mockSubscriptionService.setExpenseService(mockExpenseService);
 
         return mockSubscriptionService;
     }
 
     numeric function countSubscriptionAudits() {
-        return queryExecute('
+        return queryExecute("
             SELECT COUNT(id) AS count
             FROM audit
-            WHERE urlpath LIKE ''%subscriptionService.%''
-        ').count;
+            WHERE urlpath LIKE '%subscriptionService.%'
+        ").count;
     }
 
     // Validates Response returned from get(/subscriptions)
@@ -303,7 +303,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric pageSize,
         required numeric page
     ) {
-        expect(response.getFormat()).toBe('json');
+        expect(response.getFormat()).toBe("json");
         expect(response.getStatusCode()).toBe(200);
         expect(response.getError()).toBeFalse();
 
@@ -343,22 +343,22 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric pageSize,
         required numeric page
     ) {
-        expect(paginateResponse).toHaveKey('totalRecords');
+        expect(paginateResponse).toHaveKey("totalRecords");
         expect(paginateResponse.totalRecords).toBe(
             totalRecords,
-            'Total records mismatch. Expected: #totalRecords#, Got: #paginateResponse.totalRecords#'
+            "Total records mismatch. Expected: #totalRecords#, Got: #paginateResponse.totalRecords#"
         );
 
-        expect(paginateResponse).toHaveKey('filteredRecords');
+        expect(paginateResponse).toHaveKey("filteredRecords");
         expect(paginateResponse.filteredRecords).toBe(
             filteredRecords,
-            'Filtered records mismatch. Expected: #filteredRecords#, Got: #paginateResponse.filteredRecords#'
+            "Filtered records mismatch. Expected: #filteredRecords#, Got: #paginateResponse.filteredRecords#"
         );
 
-        expect(paginateResponse).toHaveKey('offset');
+        expect(paginateResponse).toHaveKey("offset");
         expect(paginateResponse.offset).toBe(pageSize * (page - 1));
 
-        expect(paginateResponse).toHaveKey('page');
+        expect(paginateResponse).toHaveKey("page");
         expect(paginateResponse.page).toBe(page);
     }
 
@@ -378,23 +378,23 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric filteredSum,
         required numeric recordsReturned
     ) {
-        expect(dataResponse).toHaveKey('subscriptions');
+        expect(dataResponse).toHaveKey("subscriptions");
         expect(dataResponse.subscriptions).toBeArray();
         expect(dataResponse.subscriptions.len()).toBe(
             recordsReturned,
-            'Records returned mismatch. Expected: #recordsReturned#, Got: #dataResponse.subscriptions.len()#'
+            "Records returned mismatch. Expected: #recordsReturned#, Got: #dataResponse.subscriptions.len()#"
         );
 
-        expect(dataResponse).toHaveKey('totalSum');
+        expect(dataResponse).toHaveKey("totalSum");
         expect(dataResponse.totalSum).toBe(
             totalSum,
-            'Total sum mismatch. Expected: #totalSum#, Got: #dataResponse.totalSum#'
+            "Total sum mismatch. Expected: #totalSum#, Got: #dataResponse.totalSum#"
         );
 
-        expect(dataResponse).toHaveKey('filteredSum');
+        expect(dataResponse).toHaveKey("filteredSum");
         expect(dataResponse.filteredSum).toBe(
             filteredSum,
-            'Filtered sum mismatch. Expected: #filteredSum#, Got: #dataResponse.filteredSum#'
+            "Filtered sum mismatch. Expected: #filteredSum#, Got: #dataResponse.filteredSum#"
         );
     }
 

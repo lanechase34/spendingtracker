@@ -3,21 +3,21 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
     /**
 	 * Socket destination -> Allowed permission(s)
 	 */
-    this.validSockets = {'metrics': 'ADMIN'};
+    this.validSockets = {"metrics": "ADMIN"};
 
     // Initialize dependencies and store in app scope
     function initDeps() {
-        application.wsLog            = application.wirebox.getInstance('logbox:logger:WebSocket');
-        application.wsJwtService     = application.wirebox.getInstance('JwtService@cbsecurity');
-        application.wsRequestService = application.wirebox.getInstance('coldbox:requestService');
-        application.wsCache          = application.wirebox.getInstance('cachebox:wsStorage');
+        application.wsLog            = application.wirebox.getInstance("logbox:logger:WebSocket");
+        application.wsJwtService     = application.wirebox.getInstance("JwtService@cbsecurity");
+        application.wsRequestService = application.wirebox.getInstance("coldbox:requestService");
+        application.wsCache          = application.wirebox.getInstance("cachebox:wsStorage");
     }
 
     function configure() {
         return {
             debugMode    : false,
             heartBeatMS  : 10000,
-            exchanges    : {topic: {bindings: {metrics: 'metrics'}}},
+            exchanges    : {topic: {bindings: {metrics: "metrics"}}},
             subscriptions: {}
         };
     };
@@ -56,11 +56,11 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
             /**
              * Store the decoded token in cache using the channel's hash code
              */
-            var payload = application.wsRequestService.getContext().getPrivateValue('jwt_payload');
+            var payload = application.wsRequestService.getContext().getPrivateValue("jwt_payload");
 
             application.wsCache.set(
-                'ws_token_#channel.hashCode()#',
-                {scope: payload.scope ?: '', sub: payload.sub ?: ''},
+                "ws_token_#channel.hashCode()#",
+                {scope: payload.scope ?: "", sub: payload.sub ?: ""},
                 30,
                 1
             );
@@ -74,7 +74,7 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
         catch(TokenExpiredException e) {
         }
         catch(any e) {
-            application.wsLog.error('WebSocket authentication failed unexpectedly: #e.message#', e.stackTrace);
+            application.wsLog.error("WebSocket authentication failed unexpectedly: #e.message#", e.stackTrace);
         }
 
         return false;
@@ -104,10 +104,10 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
 		 * We want the sessionID for this connection, so we'll get the details about this channel's connection
 		 */
         var connectionDetails = getConnectionDetails(channel);
-        var sessionID         = connectionDetails['sessionID'] ?: '';
+        var sessionID         = connectionDetails["sessionID"] ?: "";
 
         if(!sessionID.len()) {
-            application.wsLog.warn('WebSocket authorization failed - no sessionID for destination: #arguments.destination#');
+            application.wsLog.warn("WebSocket authorization failed - no sessionID for destination: #arguments.destination#");
             return false;
         }
 
@@ -115,18 +115,18 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
             /**
 			 * Check the permissions associated with this user
 			 */
-            var decodedToken = application.wsCache.get('ws_token_#channel.hashCode()#');
+            var decodedToken = application.wsCache.get("ws_token_#channel.hashCode()#");
             if(isNull(decodedToken)) {
-                application.wsLog.warn('WebSocket authorization failed - token not in cache for channel #channel.hashCode()#');
+                application.wsLog.warn("WebSocket authorization failed - token not in cache for channel #channel.hashCode()#");
                 return false;
             }
 
-            var hasScope = decodedToken.scope.listFindNoCase(this.validSockets[destination], ' ') > 0;
+            var hasScope = decodedToken.scope.listFindNoCase(this.validSockets[destination], " ") > 0;
 
             if(!hasScope) {
                 application.wsLog.warn(
-                    'WebSocket authorization failed - insufficient scope for destination "#arguments.destination#". ' &
-                    'Required: "#this.validSockets[destination]#", subject: "#decodedToken.sub#"'
+                    "WebSocket authorization failed - insufficient scope for destination ""#arguments.destination#"". " &
+                    "Required: ""#this.validSockets[destination]#"", subject: ""#decodedToken.sub#"""
                 );
             }
 
@@ -134,7 +134,7 @@ component extends="modules.socketbox.models.WebSocketSTOMP" hint="WebSocket Endp
         }
         catch(any e) {
             application.wsLog.error(
-                'WebSocket authorization failed unexpectedly for destination "#arguments.destination#": #e.message#',
+                "WebSocket authorization failed unexpectedly for destination ""#arguments.destination#"": #e.message#",
                 e.stackTrace
             );
         }

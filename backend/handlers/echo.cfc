@@ -6,45 +6,45 @@ component extends="base" hint="Not Resource Specific Endpoints" {
      * Warmup the server on first start
      */
     function warmup(event, rc, prc) {
-        var trustedIPs = ['0:0:0:0:0:0:0:1', '127.0.0.1'];
+        var trustedIPs = ["0:0:0:0:0:0:0:1", "127.0.0.1"];
         if(
-            !getSetting('warmedUp')
+            !getSetting("warmedUp")
             && trustedIPs.contains(securityService.getRequestIP())
-            && findNoCase('Java', cgi.http_user_agent) > 0
+            && findNoCase("Java", cgi.http_user_agent) > 0
         ) {
             setting requestTimeout=300;
 
             var start = getTickCount();
-            if(getSetting('environment') == 'development') {
+            if(getSetting("environment") == "development") {
                 /**
                  * Data setup by forcing tasks to run
                  */
                 for(var i = 0; i < 12; i++) {
-                    getInstance('services.subscription').charge();
-                    getInstance('services.income').payMonthly(
+                    getInstance("services.subscription").charge();
+                    getInstance("services.income").payMonthly(
                         dateFormat(
                             dateAdd(
-                                'm',
+                                "m",
                                 -i,
                                 createDate(year(now()), month(now()), 1)
                             ),
-                            'short'
+                            "short"
                         )
                     );
                 }
             }
 
-            setSetting('warmedUp', true);
+            setSetting("warmedUp", true);
 
             event
                 .getResponse()
-                .addMessage('Successfully warmed up server in #getTickCount() - start#ms.')
+                .addMessage("Successfully warmed up server in #getTickCount() - start#ms.")
                 .setStatusCode(200);
         }
         else {
             event
                 .getResponse()
-                .addMessage('Ok!')
+                .addMessage("Ok!")
                 .setStatusCode(200);
         }
     }
@@ -59,13 +59,13 @@ component extends="base" hint="Not Resource Specific Endpoints" {
      * @response-200 { "description": "Ok!" }
      */
     function healthCheck(event, rc, prc) {
-        if(!getSetting('healthCheck')) {
-            throw('Failed health check');
+        if(!getSetting("healthCheck")) {
+            throw("Failed health check");
         }
 
         event
             .getResponse()
-            .setData('Ok!')
+            .setData("Ok!")
             .setStatusCode(200);
     }
 
@@ -82,9 +82,9 @@ component extends="base" hint="Not Resource Specific Endpoints" {
         event
             .getResponse()
             .setData({
-                environment: getSetting('environment'),
-                version    : getSetting('version'),
-                status     : 'ok'
+                environment: getSetting("environment"),
+                version    : getSetting("version"),
+                status     : "ok"
             })
             .setStatusCode(200);
     }
@@ -95,7 +95,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     function invalidHTTPMethod(event, rc, prc) {
         event
             .getResponse()
-            .setErrorMessage('Method Not Allowed')
+            .setErrorMessage("Method Not Allowed")
             .setStatusCode(405);
     }
 
@@ -105,7 +105,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     function invalidEvent(event, rc, prc) {
         event
             .getResponse()
-            .setErrorMessage('Bad Request Invalid Event')
+            .setErrorMessage("Bad Request Invalid Event")
             .setStatusCode(400);
     }
 
@@ -115,7 +115,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     function onMissingAction(event, rc, prc) {
         event
             .getResponse()
-            .setErrorMessage('Bad Request Missing Action')
+            .setErrorMessage("Bad Request Missing Action")
             .setStatusCode(400);
     }
 
@@ -127,17 +127,17 @@ component extends="base" hint="Not Resource Specific Endpoints" {
          * Handle CB CSRF Exceptions
          */
         var type = prc.exception.getType();
-        if(type == 'TokenNotFoundException' || type == 'TokenMismatchException') {
+        if(type == "TokenNotFoundException" || type == "TokenMismatchException") {
             event
                 .getResponse()
-                .setErrorMessage('Missing or invalid CSRF token.')
+                .setErrorMessage("Missing or invalid CSRF token.")
                 .setStatusCode(403);
             return;
         }
 
         event
             .getResponse()
-            .setErrorMessage('An exception occurred please try again.')
+            .setErrorMessage("An exception occurred please try again.")
             .setStatusCode(500);
     }
 
@@ -153,7 +153,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     function unauthorized(event, rc, prc) {
         event
             .getResponse()
-            .setErrorMessage('Invalid access.')
+            .setErrorMessage("Invalid access.")
             .setStatusCode(401);
     }
 
@@ -163,7 +163,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
     function missingTemplate(event, rc, prc) {
         event
             .getResponse()
-            .setErrorMessage('Invalid access.')
+            .setErrorMessage("Invalid access.")
             .setStatusCode(401);
     }
 

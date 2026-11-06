@@ -8,9 +8,9 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for mail events
      */
     function preMailSend(event, data, buffer, rc, prc) {
         // Change the subject and mailer if we are on development
-        if(getSetting('environment') == 'development' || getSetting('environment') == 'test') {
-            data.mail.setMailer('devFiles');
-            data.mail.setSubject('[TESTING]  #data.mail.getSubject()#');
+        if(getSetting("environment") == "development" || getSetting("environment") == "test") {
+            data.mail.setMailer("devFiles");
+            data.mail.setSubject("[TESTING]  #data.mail.getSubject()#");
         }
     }
 
@@ -21,11 +21,11 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for mail events
         if(data.result.error) {
             // Log bug
             var bugDetail = {
-                ip     : '-1',
-                urlpath: 'cbMailQueue',
-                method : 'N/A',
-                agent  : 'Scheduled Task',
-                detail : 'Failed to send email',
+                ip     : "-1",
+                urlpath: "cbMailQueue",
+                method : "N/A",
+                agent  : "Scheduled Task",
+                detail : "Failed to send email",
                 stack  : duplicate(data.result)
             };
 

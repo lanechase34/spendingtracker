@@ -2,15 +2,15 @@ component {
 
     function configure() {
         return {
-            defaultProtocol: 'default',
+            defaultProtocol: "default",
             mailers        : {
-                default : {class: 'CFMail'},
+                default : {class: "CFMail"},
                 devFiles: {
-                    class     : 'mail.uniquefileprotocol',
-                    properties: {filePath: controller.getSetting('testEmailPath'), autoExpand: false}
+                    class     : "mail.uniquefileprotocol",
+                    properties: {filePath: controller.getSetting("testEmailPath"), autoExpand: false}
                 }
             },
-            defaults    : {from: controller.getSetting('fromEmail'), type: 'text/html'},
+            defaults    : {from: controller.getSetting("fromEmail"), type: "text/html"},
             runQueueTask: true
         }
     }

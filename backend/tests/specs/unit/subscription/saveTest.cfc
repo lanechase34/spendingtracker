@@ -3,7 +3,7 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        mockUser = getInstance('tests.resources.mockuser');
+        mockUser = getInstance("tests.resources.mockuser");
 
         /**
          * Setup user to be shared throughout the test suite
@@ -25,22 +25,22 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('subscription.save', () => {
+        describe("subscription.save", () => {
             beforeEach(() => {
                 setup();
             });
 
-            it('Can POST a FUTURE monthly subscription', () => {
+            it("Can POST a FUTURE monthly subscription", () => {
                 var before = subscriptionHelper.count(userid = user.getId());
                 var data   = subscriptionHelper.mock(
-                    date     = dateAdd('d', 1, now()),
-                    interval = 'M',
+                    date     = dateAdd("d", 1, now()),
+                    interval = "M",
                     userid   = user.getId()
                 );
 
                 var event = post(
-                    route   = '/api/v1/subscriptions',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/subscriptions",
+                    headers = {"x-auth-token": jwt},
                     params  = data
                 );
 
@@ -48,7 +48,7 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
                 expect(response.getError()).toBeFalse();
-                expect(response.getMessages()[1]).toBe('Successfully saved subscription.');
+                expect(response.getMessages()[1]).toBe("Successfully saved subscription.");
 
                 // Verify the subscription saved successfully
                 expect(subscriptionHelper.count(userid = user.getId())).toBe(before + 1);
@@ -58,17 +58,17 @@ component extends="tests.resources.baseTest" {
                 subscriptionHelper.verifyExpense(data, false);
             });
 
-            it('Can POST a FUTURE yearly subscription', () => {
+            it("Can POST a FUTURE yearly subscription", () => {
                 var before = subscriptionHelper.count(userid = user.getId());
                 var data   = subscriptionHelper.mock(
-                    date     = dateAdd('d', 1, now()),
-                    interval = 'Y',
+                    date     = dateAdd("d", 1, now()),
+                    interval = "Y",
                     userid   = user.getId()
                 );
 
                 var event = post(
-                    route   = '/api/v1/subscriptions',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/subscriptions",
+                    headers = {"x-auth-token": jwt},
                     params  = data
                 );
 
@@ -76,7 +76,7 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
                 expect(response.getError()).toBeFalse();
-                expect(response.getMessages()[1]).toBe('Successfully saved subscription.');
+                expect(response.getMessages()[1]).toBe("Successfully saved subscription.");
 
                 // Verify the subscription saved successfully
                 expect(subscriptionHelper.count(userid = user.getId())).toBe(before + 1);
@@ -86,17 +86,17 @@ component extends="tests.resources.baseTest" {
                 subscriptionHelper.verifyExpense(data, false);
             });
 
-            it('Block invalid subscription interval', () => {
+            it("Block invalid subscription interval", () => {
                 var before = subscriptionHelper.count(userid = user.getId());
                 var data   = subscriptionHelper.mock(
                     date     = now(),
-                    interval = 'C',
+                    interval = "C",
                     userid   = user.getId()
                 );
 
                 var event = post(
-                    route   = '/api/v1/subscriptions',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/subscriptions",
+                    headers = {"x-auth-token": jwt},
                     params  = data
                 );
 
@@ -104,27 +104,27 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(400); // bad request
                 expect(response.getError()).toBeTrue();
-                expect(response.getMessages()[1]).toBe('Invalid Parameters. Value must be Y (Year) or M (Month).');
+                expect(response.getMessages()[1]).toBe("Invalid Parameters. Value must be Y (Year) or M (Month).");
 
                 // Verify the subscription did not save
                 expect(before).toBe(subscriptionHelper.count(userid = user.getId()));
                 subscriptionHelper.verifySubscription(data, false);
             });
 
-            it('Overdue MONTHLY subscription charges immediately', () => {
+            it("Overdue MONTHLY subscription charges immediately", () => {
                 for(var i = 1; i <= loopCount; i++) {
                     var dayRand   = randRange(-31, -2);
                     var monthRand = randRange(-2, -10);
-                    var date      = dateAdd('d', dayRand, dateAdd('m', monthRand, now()));
+                    var date      = dateAdd("d", dayRand, dateAdd("m", monthRand, now()));
 
                     // Edge cases
                     // Last day of month
                     if(i == loopCount || i == loopCount - 1) {
                         var yearMod = month(now()) == 1 ? -1 : 0;
                         date        = createDate(
-                            year(dateAdd('yyyy', yearMod, now())),
-                            month(dateAdd('m', -1, now())),
-                            daysInMonth(dateAdd('m', -1, now()))
+                            year(dateAdd("yyyy", yearMod, now())),
+                            month(dateAdd("m", -1, now())),
+                            daysInMonth(dateAdd("m", -1, now()))
                         );
                     }
                     // Last day of year
@@ -135,7 +135,7 @@ component extends="tests.resources.baseTest" {
                     var before = subscriptionHelper.count(userid = user.getId());
                     var data   = subscriptionHelper.mock(
                         date     = date,
-                        interval = 'M',
+                        interval = "M",
                         userid   = user.getId()
                     );
 
@@ -143,8 +143,8 @@ component extends="tests.resources.baseTest" {
                      * We are expecting this to CHARGE an expense immediately
                      */
                     var event = post(
-                        route   = '/api/v1/subscriptions',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/subscriptions",
+                        headers = {"x-auth-token": jwt},
                         params  = data
                     );
 
@@ -152,7 +152,7 @@ component extends="tests.resources.baseTest" {
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Successfully saved subscription.');
+                    expect(response.getMessages()[1]).toBe("Successfully saved subscription.");
 
                     // Verify the subscription saved successfully
                     expect(subscriptionHelper.count(userid = user.getId())).toBe(before + 1);
@@ -163,11 +163,11 @@ component extends="tests.resources.baseTest" {
                 }
             });
 
-            it('Overdue YEARLY subscription charges immediately', () => {
+            it("Overdue YEARLY subscription charges immediately", () => {
                 for(var i = 1; i <= loopCount; i++) {
                     var dayRand   = randRange(-31, -2);
                     var monthRand = randRange(-2, -10);
-                    var date      = dateAdd('d', dayRand, dateAdd('m', monthRand, now()));
+                    var date      = dateAdd("d", dayRand, dateAdd("m", monthRand, now()));
 
                     // Edge cases
                     // Last day of year
@@ -178,7 +178,7 @@ component extends="tests.resources.baseTest" {
                     var before = subscriptionHelper.count(userid = user.getId());
                     var data   = subscriptionHelper.mock(
                         date     = date,
-                        interval = 'Y',
+                        interval = "Y",
                         userid   = user.getId()
                     );
 
@@ -186,8 +186,8 @@ component extends="tests.resources.baseTest" {
                      * We are expecting this to CHARGE an expense immediately
                      */
                     var event = post(
-                        route   = '/api/v1/subscriptions',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/subscriptions",
+                        headers = {"x-auth-token": jwt},
                         params  = data
                     );
 
@@ -195,7 +195,7 @@ component extends="tests.resources.baseTest" {
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Successfully saved subscription.');
+                    expect(response.getMessages()[1]).toBe("Successfully saved subscription.");
 
                     // Verify the subscription saved successfully
                     expect(subscriptionHelper.count(userid = user.getId())).toBe(before + 1);

@@ -5,8 +5,8 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        expenseService = getInstance('services.expense');
-        mockUser       = getInstance('tests.resources.mockuser');
+        expenseService = getInstance("services.expense");
+        mockUser       = getInstance("tests.resources.mockuser");
 
         user = mockUser.make();
         jwt  = mockUser.login(user);
@@ -20,21 +20,21 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('expenseService.getReceipt', () => {
+        describe("expenseService.getReceipt", () => {
             beforeEach(() => {
                 setup();
             });
 
-            it('Returns the receipt file path for an expense with a valid receipt', () => {
+            it("Returns the receipt file path for an expense with a valid receipt", () => {
                 var receipt     = createUUID();
-                var receiptPath = '#user.getDir()#/#receipt#.webp';
-                fileWrite(receiptPath, 'dummy');
+                var receiptPath = "#user.getDir()#/#receipt#.webp";
+                fileWrite(receiptPath, "dummy");
 
                 var id = expenseHelper.mock(
                     userid      = user.getId(),
                     count       = 1,
                     date        = now(),
-                    description = 'Expense with receipt',
+                    description = "Expense with receipt",
                     categoryid  = 1,
                     receipt     = receipt
                 ).ids[1];
@@ -51,12 +51,12 @@ component extends="tests.resources.baseTest" {
                 fileDelete(receiptPath);
             });
 
-            it('Returns 404 image path when expense has no receipt', () => {
+            it("Returns 404 image path when expense has no receipt", () => {
                 var id = expenseHelper.mock(
                     userid      = user.getId(),
                     count       = 1,
                     date        = now(),
-                    description = 'Expense without receipt',
+                    description = "Expense without receipt",
                     categoryid  = 1
                 ).ids[1];
 
@@ -66,17 +66,17 @@ component extends="tests.resources.baseTest" {
                     userid  = user.getId()
                 );
 
-                expect(result).toInclude('404.webp');
+                expect(result).toInclude("404.webp");
             });
 
-            it('Returns 404 image path when the expense belongs to another user', () => {
+            it("Returns 404 image path when the expense belongs to another user", () => {
                 var otherUser = mockUser.make();
 
                 var id = expenseHelper.mock(
                     userid      = otherUser.getId(),
                     count       = 1,
                     date        = now(),
-                    description = 'Other user expense',
+                    description = "Other user expense",
                     categoryid  = 1
                 ).ids[1];
 
@@ -87,22 +87,22 @@ component extends="tests.resources.baseTest" {
                     userid  = user.getId()
                 );
 
-                expect(result).toInclude('404.webp');
+                expect(result).toInclude("404.webp");
 
                 mockUser.delete(otherUser);
             });
 
-            it('Returns 404 image path for a non-existent expense id', () => {
+            it("Returns 404 image path for a non-existent expense id", () => {
                 var result = expenseService.getReceipt(
                     id      = 999999999,
                     userDir = user.getDir(),
                     userid  = user.getId()
                 );
 
-                expect(result).toInclude('404.webp');
+                expect(result).toInclude("404.webp");
             });
 
-            it('Returns 404 image path when the receipt UUID is in the DB but the file is missing from disk', () => {
+            it("Returns 404 image path when the receipt UUID is in the DB but the file is missing from disk", () => {
                 // Insert a receipt UUID into the record but intentionally skip creating the file
                 var receipt = createUUID();
 
@@ -110,7 +110,7 @@ component extends="tests.resources.baseTest" {
                     userid      = user.getId(),
                     count       = 1,
                     date        = now(),
-                    description = 'Expense with orphaned receipt reference',
+                    description = "Expense with orphaned receipt reference",
                     categoryid  = 1,
                     receipt     = receipt
                 ).ids[1];
@@ -121,16 +121,16 @@ component extends="tests.resources.baseTest" {
                     userid  = user.getId()
                 );
 
-                expect(result).toInclude('404.webp');
-                expect(fileExists('#user.getDir()#/#receipt#.webp')).toBeFalse();
+                expect(result).toInclude("404.webp");
+                expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeFalse();
             });
 
-            it('Returns empty string when return404 is false and expense has no receipt', () => {
+            it("Returns empty string when return404 is false and expense has no receipt", () => {
                 var id = expenseHelper.mock(
                     userid      = user.getId(),
                     count       = 1,
                     date        = now(),
-                    description = 'Expense for return404=false test',
+                    description = "Expense for return404=false test",
                     categoryid  = 1
                 ).ids[1];
 
@@ -141,17 +141,17 @@ component extends="tests.resources.baseTest" {
                     return404 = false
                 );
 
-                expect(result).toBe('');
+                expect(result).toBe("");
             });
 
-            it('Returns empty string when return404 is false and expense belongs to another user', () => {
+            it("Returns empty string when return404 is false and expense belongs to another user", () => {
                 var otherUser = mockUser.make();
 
                 var id = expenseHelper.mock(
                     userid      = otherUser.getId(),
                     count       = 1,
                     date        = now(),
-                    description = 'Other user expense return404=false',
+                    description = "Other user expense return404=false",
                     categoryid  = 1
                 ).ids[1];
 
@@ -162,7 +162,7 @@ component extends="tests.resources.baseTest" {
                     return404 = false
                 );
 
-                expect(result).toBe('');
+                expect(result).toBe("");
 
                 mockUser.delete(otherUser);
             });

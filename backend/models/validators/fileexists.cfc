@@ -6,7 +6,7 @@ component accessors="true" singleton hint="Validator for checking a file exists 
      * Init validator
      */
     function init() {
-        this.name = 'fileExistsCheck';
+        this.name = "fileExistsCheck";
     }
 
     /**
@@ -34,10 +34,10 @@ component accessors="true" singleton hint="Validator for checking a file exists 
         any validationData
     ) {
         var errorStruct = {
-            message       : '',
+            message       : "",
             field         : arguments.field,
             validationType: getName(),
-            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ''),
+            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ""),
             validationData: arguments.validationData
         };
 
@@ -46,9 +46,9 @@ component accessors="true" singleton hint="Validator for checking a file exists 
             isNull(arguments.targetValue) ||
             !isSimpleValue(arguments.targetValue) ||
             !arguments.targetValue.len() ||
-            !arguments.validationData.keyExists('path')
+            !arguments.validationData.keyExists("path")
         ) {
-            errorStruct.message = 'Invalid file exists check call.';
+            errorStruct.message = "Invalid file exists check call.";
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)
@@ -58,10 +58,10 @@ component accessors="true" singleton hint="Validator for checking a file exists 
         }
 
         // Make sure file exists, if extension provided, use that
-        var check = fileExists('#validationData.path#/#arguments.targetValue##validationData.keyExists('extension') ? validationData.extension : ''#');
+        var check = fileExists("#validationData.path#/#arguments.targetValue##validationData.keyExists("extension") ? validationData.extension : ""#");
 
         if(!check) {
-            errorStruct.message = 'The file #arguments.targetValue# does not exist.';
+            errorStruct.message = "The file #arguments.targetValue# does not exist.";
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)

@@ -1,10 +1,10 @@
 component extends="coldbox.system.testing.BaseTestCase" {
 
     function init() {
-        cacheStorage    = getInstance('cachebox:coldboxStorage');
-        incomeService   = getInstance('services.income');
-        q               = getInstance('provider:QueryBuilder@qb');
-        securityService = getInstance('services.security');
+        cacheStorage    = getInstance("cachebox:coldboxStorage");
+        incomeService   = getInstance("services.income");
+        q               = getInstance("provider:QueryBuilder@qb");
+        securityService = getInstance("services.security");
     }
 
     /**
@@ -28,7 +28,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
     struct function mock(
         required numeric userid,
         required date date,
-        string description = '',
+        string description = "",
         numeric pay        = -1,
         numeric extra      = 0,
         numeric amount     = -1
@@ -54,12 +54,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
         var extraAmount = extra;
 
         var curr = q
-            .from('income')
-            .returning('id')
+            .from("income")
+            .returning("id")
             .insert({
-                date  : {value: incomeDate, cfsqltype: 'date'},
-                userid: {value: userid, cfsqltype: 'numeric'},
-                pay   : {value: securityService.encryptValue(payAmount), cfsqltype: 'varchar'}
+                date  : {value: incomeDate, cfsqltype: "date"},
+                userid: {value: userid, cfsqltype: "numeric"},
+                pay   : {value: securityService.encryptValue(payAmount), cfsqltype: "varchar"}
             })
             .result
             .id;
@@ -69,13 +69,13 @@ component extends="coldbox.system.testing.BaseTestCase" {
         // Extra income lives in its own table and keeps the supplied date (any day in the month)
         if(extraAmount > 0) {
             var extraId = q
-                .from('income_extra')
-                .returning('id')
+                .from("income_extra")
+                .returning("id")
                 .insert({
-                    date       : {value: date, cfsqltype: 'date'},
-                    amount     : {value: securityService.encryptValue(extraAmount), cfsqltype: 'varchar'},
-                    description: {value: description.len() ? description : 'Extra income', cfsqltype: 'varchar'},
-                    userid     : {value: userid, cfsqltype: 'numeric'}
+                    date       : {value: date, cfsqltype: "date"},
+                    amount     : {value: securityService.encryptValue(extraAmount), cfsqltype: "varchar"},
+                    description: {value: description.len() ? description : "Extra income", cfsqltype: "varchar"},
+                    userid     : {value: userid, cfsqltype: "numeric"}
                 })
                 .result
                 .id;
@@ -86,8 +86,8 @@ component extends="coldbox.system.testing.BaseTestCase" {
         result.extraSum += extraAmount;
         result.sum += (payAmount + extraAmount);
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|income');
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|income");
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|widget");
         return result;
     }
 

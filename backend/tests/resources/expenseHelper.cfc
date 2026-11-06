@@ -1,9 +1,9 @@
 component extends="coldbox.system.testing.BaseTestCase" {
 
     function init() {
-        cacheStorage    = getInstance('cachebox:coldboxStorage');
-        q               = getInstance('provider:QueryBuilder@qb');
-        securityService = getInstance('services.security');
+        cacheStorage    = getInstance("cachebox:coldboxStorage");
+        q               = getInstance("provider:QueryBuilder@qb");
+        securityService = getInstance("services.security");
     }
 
     /**
@@ -16,7 +16,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required date date,
         required string description,
         required numeric categoryid,
-        string receipt = '',
+        string receipt = "",
         numeric amount = -1
     ) {
         var result = {sum: 0, ids: []};
@@ -25,15 +25,15 @@ component extends="coldbox.system.testing.BaseTestCase" {
             var expenseAmount = amount < 0 ? round(randRange(1, 100) + (randRange(1, 99) / 100), 2) : amount;
 
             var curr = q
-                .from('expense')
-                .returning('id')
+                .from("expense")
+                .returning("id")
                 .insert({
-                    date       : {value: date, cfsqltype: 'date'},
-                    amount     : {value: securityService.encryptValue(expenseAmount), cfsqltype: 'varchar'},
-                    description: {value: description, cfsqltype: 'varchar'},
-                    categoryid : {value: categoryid, cfsqltype: 'numeric'},
-                    receipt    : {value: receipt, cfsqltype: 'varchar'},
-                    userid     : {value: userid, cfsqltype: 'numeric'}
+                    date       : {value: date, cfsqltype: "date"},
+                    amount     : {value: securityService.encryptValue(expenseAmount), cfsqltype: "varchar"},
+                    description: {value: description, cfsqltype: "varchar"},
+                    categoryid : {value: categoryid, cfsqltype: "numeric"},
+                    receipt    : {value: receipt, cfsqltype: "varchar"},
+                    userid     : {value: userid, cfsqltype: "numeric"}
                 })
                 .result
                 .id;
@@ -42,8 +42,8 @@ component extends="coldbox.system.testing.BaseTestCase" {
             result.sum += expenseAmount;
         }
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|expense');
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|expense");
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|widget");
         return result;
     }
 
@@ -52,8 +52,8 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     numeric function count(required numeric userid) {
         return q
-            .from('expense')
-            .where('userid', '=', userid)
+            .from("expense")
+            .where("userid", "=", userid)
             .count();
     }
 
@@ -70,7 +70,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric pageSize,
         required numeric page
     ) {
-        expect(response.getFormat()).toBe('json');
+        expect(response.getFormat()).toBe("json");
         expect(response.getStatusCode()).toBe(200);
         expect(response.getError()).toBeFalse();
 
@@ -110,16 +110,16 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric pageSize,
         required numeric page
     ) {
-        expect(paginateResponse).toHaveKey('totalRecords');
+        expect(paginateResponse).toHaveKey("totalRecords");
         expect(paginateResponse.totalRecords).toBe(totalRecords);
 
-        expect(paginateResponse).toHaveKey('filteredRecords');
+        expect(paginateResponse).toHaveKey("filteredRecords");
         expect(paginateResponse.filteredRecords).toBe(filteredRecords);
 
-        expect(paginateResponse).toHaveKey('offset');
+        expect(paginateResponse).toHaveKey("offset");
         expect(paginateResponse.offset).toBe(pageSize * (page - 1));
 
-        expect(paginateResponse).toHaveKey('page');
+        expect(paginateResponse).toHaveKey("page");
         expect(paginateResponse.page).toBe(page);
     }
 
@@ -139,20 +139,20 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric filteredSum,
         required numeric recordsReturned
     ) {
-        expect(dataResponse).toHaveKey('expenses');
+        expect(dataResponse).toHaveKey("expenses");
         expect(dataResponse.expenses).toBeArray();
         expect(dataResponse.expenses.len()).toBe(recordsReturned);
 
-        expect(dataResponse).toHaveKey('totalSum');
+        expect(dataResponse).toHaveKey("totalSum");
         expect(dataResponse.totalSum).toBe(
             totalSum,
-            'Total sum mismatch. Expected: #totalSum#, Got: #dataResponse.totalSum#'
+            "Total sum mismatch. Expected: #totalSum#, Got: #dataResponse.totalSum#"
         );
 
-        expect(dataResponse).toHaveKey('filteredSum');
+        expect(dataResponse).toHaveKey("filteredSum");
         expect(dataResponse.filteredSum).toBe(
             filteredSum,
-            'Filtered sum mismatch. Expected: #filteredSum#, Got: #dataResponse.filteredSum#'
+            "Filtered sum mismatch. Expected: #filteredSum#, Got: #dataResponse.filteredSum#"
         );
     }
 

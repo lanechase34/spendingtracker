@@ -15,19 +15,19 @@ component extends="coldbox.system.Interceptor" hint="Reject tokens issued before
      */
     function cbSecurity_onJWTValidAuthentication(event, data, buffer, rc, prc) {
         var payload = data?.payload ?: {};
-        if(!payload.keyExists('sub') || !payload.keyExists('iat')) {
+        if(!payload.keyExists("sub") || !payload.keyExists("iat")) {
             return;
         }
 
         // Always the real user - pending 2FA tokens are revoked too
         var user      = userService.retrieveUserById(id = payload.sub, checkPending = false);
         var changedAt = user.getPassword_changed_at();
-        if(isNull(changedAt) || !isValid('date', changedAt)) {
+        if(isNull(changedAt) || !isValid("date", changedAt)) {
             return;
         }
 
         // The jwt library decodes iat to a date - comparing that to an epoch would reject every token
-        var issuedAt = reFind('^\d+$', payload.iat) ? payload.iat : jwtService.toEpoch(payload.iat);
+        var issuedAt = reFind("^\d+$", payload.iat) ? payload.iat : jwtService.toEpoch(payload.iat);
         if(issuedAt > jwtService.toEpoch(changedAt)) {
             return;
         }
@@ -37,17 +37,17 @@ component extends="coldbox.system.Interceptor" hint="Reject tokens issued before
         }
 
         // Drop it from storage so any later parse in this or another request fails on its own
-        if(payload.keyExists('jti')) {
+        if(payload.keyExists("jti")) {
             jwtService.getTokenStorage().clear(payload.jti);
         }
 
         // Undo what parseToken/authenticate cached for this request
-        prc.delete('jwt_token');
-        prc.delete('jwt_payload');
+        prc.delete("jwt_token");
+        prc.delete("jwt_payload");
         prc.delete(jwtService.getSettings().authentication.prcUserVariable);
         cbauth.logout(quiet = true);
 
-        throw(message = 'Token was issued before the last password change', type = 'TokenRejectionException');
+        throw(message = "Token was issued before the last password change", type = "TokenRejectionException");
     }
 
 }

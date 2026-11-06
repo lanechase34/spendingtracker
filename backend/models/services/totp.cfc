@@ -21,21 +21,21 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         var record = getUserTOTPRecord(user.getId());
 
         if(record.totp_enabled) {
-            throw(type = 'TOTP.AlreadyEnabled', message = '2FA is already enabled for this user.');
+            throw(type = "TOTP.AlreadyEnabled", message = "2FA is already enabled for this user.");
         }
 
         var config = totp.generate(email = user.getEmail(), issuer = getAppName());
 
         // Store the encrypted secret as pending - not fully enabled yet
-        q.from('users')
+        q.from("users")
             .where(
-                'id',
-                '=',
-                {value: user.getId(), cfsqltype: 'numeric'}
+                "id",
+                "=",
+                {value: user.getId(), cfsqltype: "numeric"}
             )
             .update({
-                totp_secret : {value: securityService.encryptTOTPSecret(config.secret), cfsqltype: 'varchar'},
-                totp_enabled: {value: false, cfsqltype: 'boolean'}
+                totp_secret : {value: securityService.encryptTOTPSecret(config.secret), cfsqltype: "varchar"},
+                totp_enabled: {value: false, cfsqltype: "boolean"}
             });
 
         return {
@@ -60,18 +60,18 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         var record = getUserTOTPRecord(user.getId());
 
         if(isNull(record.totp_secret) || !record.totp_secret.len()) {
-            throw(type = 'TOTP.NotInitiated', message = 'TOTP setup has not been initiated for this user.');
+            throw(type = "TOTP.NotInitiated", message = "TOTP setup has not been initiated for this user.");
         }
 
         if(record.totp_enabled) {
-            throw(type = 'TOTP.AlreadyEnabled', message = '2FA is already enabled for this user.');
+            throw(type = "TOTP.AlreadyEnabled", message = "2FA is already enabled for this user.");
         }
 
         // confirmSetup only accepts a TOTP code, not a recovery code, since they haven't been generated at this point
         var secret = securityService.decryptTOTPSecret(record.totp_secret);
 
         if(!totp.verifyCode(secret = secret, code = code)) {
-            throw(type = 'TOTP.InvalidCode', message = 'Invalid or expired verification code.');
+            throw(type = "TOTP.InvalidCode", message = "Invalid or expired verification code.");
         }
 
         // Generate recovery codes
@@ -79,19 +79,19 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         var hashedCodes = hashRecoveryCodes(plainCodes);
 
         // Activate 2FA
-        q.from('users')
+        q.from("users")
             .where(
-                'id',
-                '=',
-                {value: user.getId(), cfsqltype: 'numeric'}
+                "id",
+                "=",
+                {value: user.getId(), cfsqltype: "numeric"}
             )
             .update({
-                totp_enabled       : {value: true, cfsqltype: 'boolean'},
-                totp_recovery_codes: {value: serializeJSON(hashedCodes), cfsqltype: 'other'}
+                totp_enabled       : {value: true, cfsqltype: "boolean"},
+                totp_recovery_codes: {value: serializeJSON(hashedCodes), cfsqltype: "other"}
             });
 
         // Invalidate user cache
-        cacheStorage.clearByKeySnippet(keySnippet = 'user_#user.getId()#');
+        cacheStorage.clearByKeySnippet(keySnippet = "user_#user.getId()#");
 
         // Return plain codes - shown once only
         return {recoveryCodes: plainCodes};
@@ -110,7 +110,7 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         var record = getUserTOTPRecord(user.getId());
 
         if(!record.totp_enabled) {
-            throw(type = 'TOTP.NotEnabled', message = '2FA is not enabled for this user.');
+            throw(type = "TOTP.NotEnabled", message = "2FA is not enabled for this user.");
         }
 
         verifyCode(user = user, code = code, record = record);
@@ -131,25 +131,25 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         var record = getUserTOTPRecord(user.getId());
 
         if(!record.totp_enabled) {
-            throw(type = 'TOTP.NotEnabled', message = '2FA is not enabled for this user.');
+            throw(type = "TOTP.NotEnabled", message = "2FA is not enabled for this user.");
         }
 
         verifyCode(user = user, code = code, record = record);
 
-        q.from('users')
+        q.from("users")
             .where(
-                'id',
-                '=',
-                {value: user.getId(), cfsqltype: 'numeric'}
+                "id",
+                "=",
+                {value: user.getId(), cfsqltype: "numeric"}
             )
             .update({
-                totp_secret        : {value: '', null: true},
-                totp_enabled       : {value: false, cfsqltype: 'boolean'},
-                totp_recovery_codes: q.raw('NULL')
+                totp_secret        : {value: "", null: true},
+                totp_enabled       : {value: false, cfsqltype: "boolean"},
+                totp_recovery_codes: q.raw("NULL")
             });
 
         // Invalidate user cache
-        cacheStorage.clearByKeySnippet(keySnippet = 'user_#user.getId()#');
+        cacheStorage.clearByKeySnippet(keySnippet = "user_#user.getId()#");
         return;
     }
 
@@ -181,7 +181,7 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         var secret = securityService.decryptTOTPSecret(record.totp_secret);
 
         if(!totp.verifyCode(secret = secret, code = code)) {
-            throw(type = 'TOTP.InvalidCode', message = 'Invalid or expired verification code.');
+            throw(type = "TOTP.InvalidCode", message = "Invalid or expired verification code.");
         }
 
         return;
@@ -194,18 +194,18 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
      */
     private struct function getUserTOTPRecord(required numeric userid) {
         var result = q
-            .from('users')
-            .where('id', '=', {value: userid, cfsqltype: 'numeric'})
+            .from("users")
+            .where("id", "=", {value: userid, cfsqltype: "numeric"})
             .select([
-                'id',
-                'totp_secret',
-                'totp_enabled',
-                'totp_recovery_codes'
+                "id",
+                "totp_secret",
+                "totp_enabled",
+                "totp_recovery_codes"
             ])
             .first();
 
         if(isNull(result) || result.isEmpty()) {
-            throw(type = 'EntityNotFound', message = 'User not found.');
+            throw(type = "EntityNotFound", message = "User not found.");
         }
 
         if(!isNull(result.totp_recovery_codes)) {
@@ -233,7 +233,7 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
      * @code incoming recovery code to check
      */
     private boolean function isRecoveryCode(required string code) {
-        return reFind('^[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$', code) > 0;
+        return reFind("^[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$", code) > 0;
     }
 
     /**
@@ -250,7 +250,7 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
         required struct  record
     ) {
         if(isNull(record.totp_recovery_codes) || !record.totp_recovery_codes.len()) {
-            throw(type = 'TOTP.InvalidCode', message = 'Invalid recovery code.');
+            throw(type = "TOTP.InvalidCode", message = "Invalid recovery code.");
         }
 
         var hashedCodes = record.totp_recovery_codes;
@@ -266,19 +266,19 @@ component singleton accessors="true" hint="Service for managing TOTP two-factor 
             }
 
             if(!matchIndex) {
-                throw(type = 'TOTP.InvalidCode', message = 'Invalid recovery code.');
+                throw(type = "TOTP.InvalidCode", message = "Invalid recovery code.");
             }
 
             // Consume the code - remove it so it can never be used again
             hashedCodes.deleteAt(matchIndex);
 
-            q.from('users')
-                .where('id', '=', {value: userid, cfsqltype: 'numeric'})
-                .update({totp_recovery_codes: {value: serializeJSON(hashedCodes), cfsqltype: 'other'}});
+            q.from("users")
+                .where("id", "=", {value: userid, cfsqltype: "numeric"})
+                .update({totp_recovery_codes: {value: serializeJSON(hashedCodes), cfsqltype: "other"}});
         }
 
         // Invalidate user cache
-        cacheStorage.clearByKeySnippet(keySnippet = 'user_#userid#');
+        cacheStorage.clearByKeySnippet(keySnippet = "user_#userid#");
         return;
     }
 

@@ -1,12 +1,12 @@
 component extends="base" hint="User Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {
-        getProfile   : 'GET',
-        updateProfile: 'PATCH',
-        view         : 'GET',
-        setup2fa     : 'POST',
-        confirm2fa   : 'POST',
-        disable2fa   : 'POST'
+        getProfile   : "GET",
+        updateProfile: "PATCH",
+        view         : "GET",
+        setup2fa     : "POST",
+        confirm2fa   : "POST",
+        disable2fa   : "POST"
     };
 
     property name="securityService" inject="services.security";
@@ -44,7 +44,7 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @response-401 ~errors/401.json
      */
     function updateProfile(event, rc, prc) {
-        if(rc.keyExists('settings')) {
+        if(rc.keyExists("settings")) {
             try {
                 rc.settings         = deserializeJSON(rc.settings);
                 rc.settings.updated = true;
@@ -52,21 +52,21 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
             catch(any e) {
                 event
                     .getResponse()
-                    .setErrorMessage('Invalid Parameters.')
+                    .setErrorMessage("Invalid Parameters.")
                     .setStatusCode(400);
                 return;
             }
         }
 
         // A new password needs the current one, so a stolen session can't take over the account
-        var newPassword = rc?.password ?: '';
+        var newPassword = rc?.password ?: "";
         if(
             newPassword.len()
-            && !userService.checkCurrentPassword(id = prc.userid, password = rc?.currentPassword ?: '')
+            && !userService.checkCurrentPassword(id = prc.userid, password = rc?.currentPassword ?: "")
         ) {
             event
                 .getResponse()
-                .setErrorMessage('Current password is incorrect.')
+                .setErrorMessage("Current password is incorrect.")
                 .setStatusCode(400);
             return;
         }
@@ -84,14 +84,14 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
             securityService.deleteTokenCookies();
             event
                 .getResponse()
-                .addMessage('Password updated. Please log in again.')
+                .addMessage("Password updated. Please log in again.")
                 .setStatusCode(200);
             return;
         }
 
         event
             .getResponse()
-            .addMessage('Successfully updated')
+            .addMessage("Successfully updated")
             .setStatusCode(200);
     }
 
@@ -116,17 +116,17 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
             userid   = prc.userid,
             page     = rc.page,
             records  = rc.records,
-            search   = rc?.search ?: '',
-            orderCol = rc?.orderCol ?: '',
-            orderDir = rc?.orderDir ?: ''
+            search   = rc?.search ?: "",
+            orderCol = rc?.orderCol ?: "",
+            orderDir = rc?.orderDir ?: ""
         );
 
         event
             .getResponse()
             .setDataWithPagination(
                 data          = prc.data,
-                resultsKey    = 'results',
-                paginationKey = 'pagination'
+                resultsKey    = "results",
+                paginationKey = "pagination"
             )
             .setStatusCode(200);
     }
@@ -151,7 +151,7 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
         event
             .getResponse()
             .setData({qrCode: result.qrCode, secret: result.secret})
-            .addMessage('Scan the QR code with your authenticator app then confirm with a valid code.')
+            .addMessage("Scan the QR code with your authenticator app then confirm with a valid code.")
             .setStatusCode(200);
     }
 
@@ -176,7 +176,7 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
         event
             .getResponse()
             .setData({recoveryCodes: result.recoveryCodes})
-            .addMessage('Two-factor authentication has been enabled. Store your recovery codes somewhere safe - they will not be shown again.')
+            .addMessage("Two-factor authentication has been enabled. Store your recovery codes somewhere safe - they will not be shown again.")
             .setStatusCode(200);
     }
 
@@ -199,7 +199,7 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
 
         event
             .getResponse()
-            .addMessage('Two-factor authentication has been disabled.')
+            .addMessage("Two-factor authentication has been disabled.")
             .setStatusCode(200);
     }
 

@@ -15,9 +15,9 @@ component {
              * - custom : Any other service that adheres to our IAuthService interface
              */
             authentication: {
-                provider       : 'authenticationService@cbauth', // The WireBox ID of the authentication service to use which must adhere to the cbsecurity.interfaces.IAuthService interface.
-                userService    : '', // WireBox ID of the user service to use when leveraging user authentication, we default this to whatever is set by cbauth or basic authentication. (Optional)
-                prcUserVariable: 'authUser' // The name of the variable to use to store an authenticated user in prc scope on all incoming authenticated requests
+                provider       : "authenticationService@cbauth", // The WireBox ID of the authentication service to use which must adhere to the cbsecurity.interfaces.IAuthService interface.
+                userService    : "", // WireBox ID of the user service to use when leveraging user authentication, we default this to whatever is set by cbauth or basic authentication. (Optional)
+                prcUserVariable: "authUser" // The name of the variable to use to store an authenticated user in prc scope on all incoming authenticated requests
             },
             /**
              * --------------------------------------------------------------------------
@@ -28,7 +28,7 @@ component {
              * your service of choice alongside the `BasicAuthValidator`
              */
             basicAuth: {
-                hashAlgorithm : 'SHA-512', // Hashing algorithm to use
+                hashAlgorithm : "SHA-512", // Hashing algorithm to use
                 hashIterations: 5, // Iterates the number of times the hash is computed to create a more computationally intensive hash.
                 users         : {} // User storage: The `key` is the username. The value is the user credentials that can include { roles: "", permissions : "", firstName : "", lastName : "", password : "" }
             },
@@ -41,18 +41,18 @@ component {
             csrf: {
                 enableAutoVerifier: true, // By default we load up an interceptor that verifies all non-GET incoming requests against the token validations
                 verifyExcludes    : [
-                    'auth.login',
-                    'auth.register',
-                    'auth.verify',
-                    'auth.resendVerificationCode',
-                    'auth.logout',
-                    'auth.verify2fa',
-                    'echo.*',
-                    'cbsecurity:jwt'
+                    "auth.login",
+                    "auth.register",
+                    "auth.verify",
+                    "auth.resendVerificationCode",
+                    "auth.logout",
+                    "auth.verify2fa",
+                    "echo.*",
+                    "cbsecurity:jwt"
                 ], // A list of events to exclude from csrf verification, regex allowed: e.g. stripe\..*
                 rotationTimeout       : 30, // By default, all csrf tokens have a life-span of 30 minutes. After 30 minutes, they expire and we aut-generate new ones.
                 enableEndpoint        : false, // Enable the /cbcsrf/generate endpoint to generate cbcsrf tokens for secured users.
-                cacheStorage          : 'CacheStorage@cbstorages', // The WireBox mapping to use for the CacheStorage
+                cacheStorage          : "CacheStorage@cbstorages", // The WireBox mapping to use for the CacheStorage
                 enableAuthTokenRotator: true // Enable/Disable the cbAuth login/logout listener in order to rotate keys
             },
             /**
@@ -65,17 +65,17 @@ component {
              */
             firewall: {
                 autoLoadFirewall           : true, // Auto load the global security firewall automatically, else you can load it a-la-carte via the `Security` interceptor
-                validator                  : 'JwtAuthValidator@cbsecurity', // The Global validator is an object that will validate the firewall rules and annotations and provide feedback on either authentication or authorization issues.
+                validator                  : "JwtAuthValidator@cbsecurity", // The Global validator is an object that will validate the firewall rules and annotations and provide feedback on either authentication or authorization issues.
                 handlerAnnotationSecurity  : true, // Activate handler/action based annotation security
-                invalidAuthenticationEvent : 'echo.unauthorized', // The global invalid authentication event or URI or URL to go if an invalid authentication occurs
-                defaultAuthenticationAction: 'override', // Default Auhtentication Action: override or redirect when a user has not logged in
-                invalidAuthorizationEvent  : 'echo.unauthorized', // The global invalid authorization event or URI or URL to go if an invalid authorization occurs
-                defaultAuthorizationAction : 'override', // Default Authorization Action: override or redirect when a user does not have enough permissions to access something
+                invalidAuthenticationEvent : "echo.unauthorized", // The global invalid authentication event or URI or URL to go if an invalid authentication occurs
+                defaultAuthenticationAction: "override", // Default Auhtentication Action: override or redirect when a user has not logged in
+                invalidAuthorizationEvent  : "echo.unauthorized", // The global invalid authorization event or URI or URL to go if an invalid authorization occurs
+                defaultAuthorizationAction : "override", // Default Authorization Action: override or redirect when a user does not have enough permissions to access something
                 logs                       : {
                     enabled   : true, // Firewall database event logs.
-                    dsn       : '',
-                    schema    : '',
-                    table     : 'cbsecurity_logs',
+                    dsn       : "",
+                    schema    : "",
+                    table     : "cbsecurity_logs",
                     autoCreate: true
                 },
                 rules: {
@@ -86,7 +86,7 @@ component {
                     // If you don't store the rules inline, then you can use a provider to load the rules
                     // The source can be a json file, an xml file, model, db
                     // Each provider can have it's appropriate properties as well. Please see the documentation for each provider.
-                    provider: {'source': '', 'properties': {}}
+                    provider: {"source": "", "properties": {}}
                 }
             },
             /**
@@ -123,18 +123,18 @@ component {
                     // Disabled by defautl as it is totally customizable
                     enabled: false,
                     // The custom policy to use, by default we don't include any
-                    policy : ''
+                    policy : ""
                 },
                 // The X-Content-Type-Options response HTTP header is a marker used by the server to indicate that the MIME types advertised in
                 // the Content-Type headers should be followed and not be changed => X-Content-Type-Options: nosniff
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
-                contentTypeOptions: {'enabled': true},
+                contentTypeOptions: {"enabled": true},
                 customHeaders     : {
                     // Name : value pairs as you see fit.
                 },
                 // Disable Click jacking: X-Frame-Options: DENY OR SAMEORIGIN
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
-                frameOptions: {'enabled': true, 'value': 'SAMEORIGIN'},
+                frameOptions: {"enabled": true, "value": "SAMEORIGIN"},
                 // HTTP Strict Transport Security (HSTS)
                 // The HTTP Strict-Transport-Security response header (often abbreviated as HSTS)
                 // informs browsers that the site should only be accessed using HTTPS, and that any future attempts to access it
@@ -142,7 +142,7 @@ component {
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security,
                 hsts        : {
                     enabled          : true,
-                    max              : '31536000', // The time, in seconds, that the browser should remember that a site is only to be accessed using HTTPS, 1 year is the default
+                    max              : "31536000", // The time, in seconds, that the browser should remember that a site is only to be accessed using HTTPS, 1 year is the default
                     preload          : false, // See Preloading Strict Transport Security for details. Not part of the specification.
                     includeSubDomains: false // If this optional parameter is specified, this rule applies to all of the site's subdomains as well.
                 },
@@ -150,24 +150,24 @@ component {
                 hostHeaderValidation: {
                     enabled     : false,
                     // Allowed hosts list
-                    allowedHosts: ''
+                    allowedHosts: ""
                 },
                 // Validates the ip address of the incoming request
                 ipValidation: {
                     enabled   : false,
                     // Allowed IP list
-                    allowedIPs: ''
+                    allowedIPs: ""
                 },
                 // The Referrer-Policy HTTP header controls how much referrer information (sent with the Referer header) should be included with requests.
                 // Aside from the HTTP header, you can set this policy in HTML.
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
-                referrerPolicy    : {'enabled': true, 'policy': 'same-origin'},
+                referrerPolicy    : {"enabled": true, "policy": "same-origin"},
                 // Detect if the incoming requests are NON-SSL and if enabled, redirect with SSL
-                secureSSLRedirects: {'enabled': false},
+                secureSSLRedirects: {"enabled": false},
                 // Some browsers have built in support for filtering out reflected XSS attacks. Not foolproof, but it assists in XSS protection.
                 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection,
                 // X-XSS-Protection: 1; mode=block
-                xssProtection     : {'enabled': true, 'mode': 'block'}
+                xssProtection     : {"enabled": true, "mode": "block"}
             },
             /**
              * --------------------------------------------------------------------------
@@ -178,30 +178,30 @@ component {
              * validator of choice; either globally or at the module level.
              */
             jwt: {
-                issuer                    : 'SpendingTracker', // The issuer authority for the tokens, placed in the `iss` claim
-                secretKey                 : getSystemSetting('JWT_SECRET', ''), // The jwt secret encoding key, defaults to getSystemEnv( "JWT_SECRET", "" )
-                customAuthHeader          : 'x-auth-token', // by default it uses the authorization bearer header, but you can also pass a custom one as well.
+                issuer                    : "SpendingTracker", // The issuer authority for the tokens, placed in the `iss` claim
+                secretKey                 : getSystemSetting("JWT_SECRET", ""), // The jwt secret encoding key, defaults to getSystemEnv( "JWT_SECRET", "" )
+                customAuthHeader          : "x-auth-token", // by default it uses the authorization bearer header, but you can also pass a custom one as well.
                 expiration                : 30, // The expiration in minutes for the jwt tokens
                 enableRefreshTokens       : true, // If true, enables refresh tokens, longer lived tokens (not implemented yet)
                 refreshExpiration         : 43200, // 30 days in minutes, matches settings.refreshTokenTTL (cookie)
-                customRefreshHeader       : 'x-refresh-token', // The Custom header to inspect for refresh tokens
+                customRefreshHeader       : "x-refresh-token", // The Custom header to inspect for refresh tokens
                 // If enabled, the JWT validator will inspect the request for refresh tokens and expired access tokens
                 // It will then automatically refresh them for you and return them back as
                 // response headers in the same request according to the customRefreshHeader and customAuthHeader
                 enableAutoRefreshValidator: true,
                 enableRefreshEndpoint     : true, // Enable the POST > /cbsecurity/refreshtoken API endpoint
-                algorithm                 : 'HS512', // encryption algorithm to use, valid algorithms are: HS256, HS384, and HS512
+                algorithm                 : "HS512", // encryption algorithm to use, valid algorithms are: HS256, HS384, and HS512
                 requiredClaims            : [], // Which claims neds to be present on the jwt token or `TokenInvalidException` upon verification and decoding
                 // The token storage settings
                 tokenStorage              : {
                     // enable or not, default is true
                     enabled   : true,
                     // A cache key prefix to use when storing the tokens
-                    keyPrefix : 'cbjwt_',
+                    keyPrefix : "cbjwt_",
                     // The driver to use: db, cachebox or a WireBox ID
-                    driver    : 'cachebox',
+                    driver    : "cachebox",
                     // Driver specific properties
-                    properties: {cacheName: 'jwtStorage'}
+                    properties: {cacheName: "jwtStorage"}
                 }
             }
         }

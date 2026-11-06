@@ -24,10 +24,10 @@ component {
                 useLastAccessTimeouts         : true,
                 reapFrequency                 : 5,
                 freeMemoryPercentageThreshold : 0,
-                evictionPolicy                : 'LRU',
+                evictionPolicy                : "LRU",
                 evictCount                    : 1,
                 maxObjects                    : 300,
-                objectStore                   : 'ConcurrentStore', // guaranteed objects
+                objectStore                   : "ConcurrentStore", // guaranteed objects
                 coldboxEnabled                : true
             },
             /**
@@ -46,91 +46,91 @@ component {
 				 * other internal facilities that might require a more elastic cache.
 				 */
                 template: {
-                    provider  : 'coldbox.system.cache.providers.CacheBoxColdBoxProvider',
+                    provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
                     properties: {
                         objectDefaultTimeout          : 120,
                         objectDefaultLastAccessTimeout: 30,
                         useLastAccessTimeouts         : true,
                         freeMemoryPercentageThreshold : 0,
                         reapFrequency                 : 5,
-                        evictionPolicy                : 'LRU',
+                        evictionPolicy                : "LRU",
                         evictCount                    : 2,
                         maxObjects                    : 300,
-                        objectStore                   : 'ConcurrentSoftReferenceStore' // memory sensitive
+                        objectStore                   : "ConcurrentSoftReferenceStore" // memory sensitive
                     }
                 },
                 userRequestStorage: {
-                    provider  : 'coldbox.system.cache.providers.CacheBoxColdBoxProvider',
+                    provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
                     properties: {
                         objectDefaultTimeout          : 120,
                         objectDefaultLastAccessTimeout: 30,
                         useLastAccessTimeouts         : true,
                         freeMemoryPercentageThreshold : 0,
                         reapFrequency                 : 5,
-                        evictionPolicy                : 'LRU',
+                        evictionPolicy                : "LRU",
                         evictCount                    : 2,
                         maxObjects                    : 300,
-                        objectStore                   : 'ConcurrentStore',
+                        objectStore                   : "ConcurrentStore",
                         resetTimeoutOnAccess          : true
                     }
                 },
                 coldboxStorage: {
-                    provider  : 'coldbox.system.cache.providers.CacheBoxColdBoxProvider',
+                    provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
                     properties: {
                         objectDefaultTimeout          : 30,
                         objectDefaultLastAccessTimeout: 30,
                         useLastAccessTimeouts         : true,
                         freeMemoryPercentageThreshold : 0,
                         reapFrequency                 : 5,
-                        evictionPolicy                : 'LRU',
+                        evictionPolicy                : "LRU",
                         evictCount                    : 2,
                         maxObjects                    : 300,
-                        objectStore                   : 'ConcurrentStore',
+                        objectStore                   : "ConcurrentStore",
                         resetTimeoutOnAccess          : true
                     }
                 },
                 jwtStorage: {
-                    provider  : 'coldbox.system.cache.providers.CacheBoxColdBoxProvider',
+                    provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
                     properties: {
                         objectDefaultTimeout          : 30,
                         objectDefaultLastAccessTimeout: 30,
                         useLastAccessTimeouts         : true,
                         freeMemoryPercentageThreshold : 0,
                         reapFrequency                 : 1,
-                        evictionPolicy                : 'LRU',
+                        evictionPolicy                : "LRU",
                         evictCount                    : 2,
                         maxObjects                    : 300,
-                        objectStore                   : 'ConcurrentStore',
+                        objectStore                   : "ConcurrentStore",
                         resetTimeoutOnAccess          : false
                     }
                 },
                 rateStorage: {
-                    provider  : 'coldbox.system.cache.providers.CacheBoxColdBoxProvider',
+                    provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
                     properties: {
                         objectDefaultTimeout          : 30,
                         objectDefaultLastAccessTimeout: 30,
                         useLastAccessTimeouts         : false,
                         freeMemoryPercentageThreshold : 0,
                         reapFrequency                 : 1,
-                        evictionPolicy                : 'LRU',
+                        evictionPolicy                : "LRU",
                         evictCount                    : 2,
                         maxObjects                    : 20000,
-                        objectStore                   : 'ConcurrentStore',
+                        objectStore                   : "ConcurrentStore",
                         resetTimeoutOnAccess          : false
                     }
                 },
                 wsStorage: {
-                    provider  : 'coldbox.system.cache.providers.CacheBoxColdBoxProvider',
+                    provider  : "coldbox.system.cache.providers.CacheBoxColdBoxProvider",
                     properties: {
                         objectDefaultTimeout          : 30,
                         objectDefaultLastAccessTimeout: 30,
                         useLastAccessTimeouts         : true,
                         freeMemoryPercentageThreshold : 0,
                         reapFrequency                 : 1,
-                        evictionPolicy                : 'LRU',
+                        evictionPolicy                : "LRU",
                         evictCount                    : 2,
                         maxObjects                    : 300,
-                        objectStore                   : 'ConcurrentStore',
+                        objectStore                   : "ConcurrentStore",
                         resetTimeoutOnAccess          : true
                     }
                 }

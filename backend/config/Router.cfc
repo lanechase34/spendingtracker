@@ -4,87 +4,87 @@ component {
         setFullRewrites(true);
 
         // Healthcheck
-        route('/healthcheck').to('echo.healthCheck');
+        route("/healthcheck").to("echo.healthCheck");
 
         // Unauthorized
-        route('/unauthorized').to('echo.unauthorized');
+        route("/unauthorized").to("echo.unauthorized");
 
         // Warmup
-        route('/warmup').to('echo.warmup');
+        route("/warmup").to("echo.warmup");
 
         // API V1
-        group({pattern: '/api/v1'}, () => {
+        group({pattern: "/api/v1"}, () => {
             // Expense
-            route('/expenses/import').withAction({POST: 'import'}).toHandler('expense');
-            route('/expenses/export').withAction({POST: 'export'}).toHandler('expense');
-            route('/expenses/bulk').withAction({POST: 'bulkSave'}).toHandler('expense');
-            route('/expenses/:id-numeric/receipt').withAction({GET: 'receipt'}).toHandler('expense');
-            route('/expenses/:id-numeric').withAction({DELETE: 'remove'}).toHandler('expense');
-            route('/expenses').withAction({GET: 'view', POST: 'save'}).toHandler('expense');
-            route('/receipts/export').withAction({POST: 'exportReceipts'}).toHandler('expense');
+            route("/expenses/import").withAction({POST: "import"}).toHandler("expense");
+            route("/expenses/export").withAction({POST: "export"}).toHandler("expense");
+            route("/expenses/bulk").withAction({POST: "bulkSave"}).toHandler("expense");
+            route("/expenses/:id-numeric/receipt").withAction({GET: "receipt"}).toHandler("expense");
+            route("/expenses/:id-numeric").withAction({DELETE: "remove"}).toHandler("expense");
+            route("/expenses").withAction({GET: "view", POST: "save"}).toHandler("expense");
+            route("/receipts/export").withAction({POST: "exportReceipts"}).toHandler("expense");
 
             // Subscription
-            route('/subscriptions/:id-numeric')
-                .withAction({PATCH: 'toggle', DELETE: 'remove'})
-                .toHandler('subscription');
-            route('/subscriptions').withAction({GET: 'view', POST: 'save'}).toHandler('subscription');
+            route("/subscriptions/:id-numeric")
+                .withAction({PATCH: "toggle", DELETE: "remove"})
+                .toHandler("subscription");
+            route("/subscriptions").withAction({GET: "view", POST: "save"}).toHandler("subscription");
 
             // Category
-            route('/categories').withAction({GET: 'view'}).toHandler('category');
+            route("/categories").withAction({GET: "view"}).toHandler("category");
 
             // Widget
-            route('/widgets/stackedBarChart').withAction({GET: 'stackedBarChart'}).toHandler('widget');
-            route('/widgets/donutChart').withAction({GET: 'donutChart'}).toHandler('widget');
-            route('/widgets/lineChart').withAction({GET: 'lineChart'}).toHandler('widget');
-            route('/widgets/heatMap').withAction({GET: 'heatMap'}).toHandler('widget');
-            route('/widgets/incomeWaterfall').withAction({GET: 'incomeWaterFall'}).toHandler('widget');
+            route("/widgets/stackedBarChart").withAction({GET: "stackedBarChart"}).toHandler("widget");
+            route("/widgets/donutChart").withAction({GET: "donutChart"}).toHandler("widget");
+            route("/widgets/lineChart").withAction({GET: "lineChart"}).toHandler("widget");
+            route("/widgets/heatMap").withAction({GET: "heatMap"}).toHandler("widget");
+            route("/widgets/incomeWaterfall").withAction({GET: "incomeWaterFall"}).toHandler("widget");
 
             // Income
-            route('/income/extra/:id-numeric').withAction({DELETE: 'removeExtra'}).toHandler('income');
-            route('/income/extra').withAction({GET: 'viewExtra', POST: 'saveExtra'}).toHandler('income');
-            route('/income').withAction({GET: 'view', PUT: 'save'}).toHandler('income');
+            route("/income/extra/:id-numeric").withAction({DELETE: "removeExtra"}).toHandler("income");
+            route("/income/extra").withAction({GET: "viewExtra", POST: "saveExtra"}).toHandler("income");
+            route("/income").withAction({GET: "view", PUT: "save"}).toHandler("income");
 
             // Authentication
-            route('/login').withAction({POST: 'login'}).toHandler('auth');
-            route('/verify2fa').withAction({POST: 'verify2fa'}).toHandler('auth');
-            route('/register').withAction({POST: 'register'}).toHandler('auth');
-            route('/verify').withAction({POST: 'verify'}).toHandler('auth');
-            route('/resendverificationcode').withAction({POST: 'resendVerificationCode'}).toHandler('auth');
+            route("/login").withAction({POST: "login"}).toHandler("auth");
+            route("/verify2fa").withAction({POST: "verify2fa"}).toHandler("auth");
+            route("/register").withAction({POST: "register"}).toHandler("auth");
+            route("/verify").withAction({POST: "verify"}).toHandler("auth");
+            route("/resendverificationcode").withAction({POST: "resendVerificationCode"}).toHandler("auth");
 
             // Get CSRF Token
-            route('/csrf').withAction({GET: 'generateCSRF'}).toHandler('auth');
+            route("/csrf").withAction({GET: "generateCSRF"}).toHandler("auth");
 
             // These endpoints will receive refresh token cookie
-            route('/security/logout').withAction({POST: 'logout'}).toHandler('auth');
-            route('/security/refreshtoken').withAction({POST: 'refreshToken'}).toHandler('cbsecurity:jwt');
+            route("/security/logout").withAction({POST: "logout"}).toHandler("auth");
+            route("/security/refreshtoken").withAction({POST: "refreshToken"}).toHandler("cbsecurity:jwt");
 
             // User
             // 2fa endpoints
-            route('/me/2fa/setup').withAction({POST: 'setup2fa'}).toHandler('user');
-            route('/me/2fa/confirm').withAction({POST: 'confirm2fa'}).toHandler('user');
-            route('/me/2fa/disable').withAction({POST: 'disable2fa'}).toHandler('user');
+            route("/me/2fa/setup").withAction({POST: "setup2fa"}).toHandler("user");
+            route("/me/2fa/confirm").withAction({POST: "confirm2fa"}).toHandler("user");
+            route("/me/2fa/disable").withAction({POST: "disable2fa"}).toHandler("user");
 
-            route('/me').withAction({GET: 'getProfile', PATCH: 'updateProfile'}).toHandler('user');
-            route('/users').withAction({GET: 'view'}).toHandler('user');
+            route("/me").withAction({GET: "getProfile", PATCH: "updateProfile"}).toHandler("user");
+            route("/users").withAction({GET: "view"}).toHandler("user");
 
             // Admin
-            route('/admin/audits').withAction({GET: 'viewAudits'}).toHandler('admin');
-            route('/admin/bugs').withAction({GET: 'viewBugs'}).toHandler('admin');
-            route('/admin/metrics').withAction({GET: 'metrics'}).toHandler('admin');
-            route('/admin/diagnostics').withAction({GET: 'diagnostics'}).toHandler('admin');
-            route('/admin/cachedata').withAction({GET: 'cacheData'}).toHandler('admin');
-            route('/admin/taskdata').withAction({GET: 'taskData'}).toHandler('admin');
-            route('/admin/logs/:filename').withAction({GET: 'readLog'}).toHandler('admin');
-            route('/admin/logs').withAction({GET: 'viewLogs'}).toHandler('admin');
+            route("/admin/audits").withAction({GET: "viewAudits"}).toHandler("admin");
+            route("/admin/bugs").withAction({GET: "viewBugs"}).toHandler("admin");
+            route("/admin/metrics").withAction({GET: "metrics"}).toHandler("admin");
+            route("/admin/diagnostics").withAction({GET: "diagnostics"}).toHandler("admin");
+            route("/admin/cachedata").withAction({GET: "cacheData"}).toHandler("admin");
+            route("/admin/taskdata").withAction({GET: "taskData"}).toHandler("admin");
+            route("/admin/logs/:filename").withAction({GET: "readLog"}).toHandler("admin");
+            route("/admin/logs").withAction({GET: "viewLogs"}).toHandler("admin");
 
             // Generics
-            route('/healthcheck').withAction({GET: 'healthCheck', HEAD: 'healthCheck'}).toHandler('echo');
-            route('/unauthorized').withAction({GET: 'unauthorized'}).toHandler('echo');
-            route('/status').withAction({GET: 'status', HEAD: 'status'}).toHandler('echo');
-            route('{wildcard}').to('echo.healthCheck');
+            route("/healthcheck").withAction({GET: "healthCheck", HEAD: "healthCheck"}).toHandler("echo");
+            route("/unauthorized").withAction({GET: "unauthorized"}).toHandler("echo");
+            route("/status").withAction({GET: "status", HEAD: "status"}).toHandler("echo");
+            route("{wildcard}").to("echo.healthCheck");
         });
 
-        route('{wildcard}').to('echo.healthCheck');
+        route("{wildcard}").to("echo.healthCheck");
     }
 
 }

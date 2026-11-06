@@ -1,13 +1,13 @@
 component extends="base" hint="Auth Endpoints" {
 
     this.allowedMethods = {
-        login                 : 'POST',
-        verify2fa             : 'POST',
-        logout                : 'POST',
-        register              : 'POST',
-        verify                : 'POST',
-        resendVerificationCode: 'POST',
-        generateCSRF          : 'GET'
+        login                 : "POST",
+        verify2fa             : "POST",
+        logout                : "POST",
+        register              : "POST",
+        verify                : "POST",
+        resendVerificationCode: "POST",
+        generateCSRF          : "GET"
     };
 
     property name="csrfService"     inject="cbcsrf@cbcsrf";
@@ -37,7 +37,7 @@ component extends="base" hint="Auth Endpoints" {
             // Verification Exception only thrown after email/password validated
             event
                 .getResponse()
-                .addMessage('Please verify your email. Email is not verified.')
+                .addMessage("Please verify your email. Email is not verified.")
                 .setStatusCode(403);
             return;
         }
@@ -45,7 +45,7 @@ component extends="base" hint="Auth Endpoints" {
             securityService.deleteTokenCookies(); // force delete any lingering cookies
             event
                 .getResponse()
-                .setErrorMessage('Invalid Login.')
+                .setErrorMessage("Invalid Login.")
                 .setStatusCode(401);
             return;
         }
@@ -54,14 +54,14 @@ component extends="base" hint="Auth Endpoints" {
         var user = userService.retrieveUserByUsername(rc.email);
         if(user.getTotp_Enabled()) {
             // Issue a short lived Pending2FA token
-            var pendingUser = getInstance('objects.userobj');
+            var pendingUser = getInstance("objects.userobj");
 
             var pendingToken = jwtService.fromUser(
                 user         = pendingUser,
                 customClaims = {
                     pending2fa: true,
                     rememberMe: rc.rememberMe,
-                    scope     : 'Pending2FA',
+                    scope     : "Pending2FA",
                     sub       : user.getId(),
                     exp       : int(getTickCount() / 1000) + 300 // 5 minutes
                 }
@@ -69,7 +69,7 @@ component extends="base" hint="Auth Endpoints" {
             event
                 .getResponse()
                 .setData({access_token: pendingToken.access_token, mfa_required: true})
-                .addMessage('Please complete two-factor authentication.')
+                .addMessage("Please complete two-factor authentication.")
                 .setStatusCode(200);
             return;
         }
@@ -84,7 +84,7 @@ component extends="base" hint="Auth Endpoints" {
         event
             .getResponse()
             .setData({access_token: token.access_token})
-            .addMessage('Bearer token created and it expires in #jwtService.getSettings().jwt.expiration# minutes')
+            .addMessage("Bearer token created and it expires in #jwtService.getSettings().jwt.expiration# minutes")
             .setStatusCode(200);
     }
 
@@ -108,7 +108,7 @@ component extends="base" hint="Auth Endpoints" {
         catch('TOTP.InvalidCode' e) {
             event
                 .getResponse()
-                .setErrorMessage('Invalid or expired code.')
+                .setErrorMessage("Invalid or expired code.")
                 .setStatusCode(400);
             return;
         }
@@ -125,7 +125,7 @@ component extends="base" hint="Auth Endpoints" {
         event
             .getResponse()
             .setData({access_token: token.access_token})
-            .addMessage('Bearer token created and it expires in #jwtService.getSettings().jwt.expiration# minutes')
+            .addMessage("Bearer token created and it expires in #jwtService.getSettings().jwt.expiration# minutes")
             .setStatusCode(200);
     }
 
@@ -151,8 +151,8 @@ component extends="base" hint="Auth Endpoints" {
 
         // Revoke any refresh tokens too
         try {
-            if(len(rc['x-refresh-token'] ?: '')) {
-                jwtService.invalidate(rc['x-refresh-token']);
+            if(len(rc["x-refresh-token"] ?: "")) {
+                jwtService.invalidate(rc["x-refresh-token"]);
             }
         }
         catch(any e) {
@@ -166,7 +166,7 @@ component extends="base" hint="Auth Endpoints" {
 
         event
             .getResponse()
-            .addMessage('Successfully logged out')
+            .addMessage("Successfully logged out")
             .setStatusCode(200);
     }
 
@@ -192,7 +192,7 @@ component extends="base" hint="Auth Endpoints" {
 
         event
             .getResponse()
-            .addMessage('Check your email for a verification code.')
+            .addMessage("Check your email for a verification code.")
             .setStatusCode(200);
     }
 
@@ -220,7 +220,7 @@ component extends="base" hint="Auth Endpoints" {
             event
                 .getResponse()
                 .setStatusCode(400)
-                .setErrorMessage('Invalid or expired verification code.');
+                .setErrorMessage("Invalid or expired verification code.");
             return;
         }
         catch(UserAlreadyVerified e) {
@@ -228,7 +228,7 @@ component extends="base" hint="Auth Endpoints" {
             event
                 .getResponse()
                 .setStatusCode(400)
-                .setErrorMessage('Account already verified. Please log in.');
+                .setErrorMessage("Account already verified. Please log in.");
             return;
         }
 
@@ -241,7 +241,7 @@ component extends="base" hint="Auth Endpoints" {
             .getResponse()
             .setData({access_token: token.access_token})
             .setStatusCode(200)
-            .addMessage('Successfully verified!');
+            .addMessage("Successfully verified!");
     }
 
     /**
@@ -260,17 +260,17 @@ component extends="base" hint="Auth Endpoints" {
         var result = userService.resendVerificationCode(email = rc.email, password = rc.password);
 
         // Cooldown is only reported to someone who knows the password
-        if(result == 'cooldown') {
+        if(result == "cooldown") {
             event
                 .getResponse()
-                .setErrorMessage('Please wait before requesting another verification email.')
+                .setErrorMessage("Please wait before requesting another verification email.")
                 .setStatusCode(429);
             return;
         }
 
         event
             .getResponse()
-            .addMessage('If your account needs verifying, a new code has been sent.')
+            .addMessage("If your account needs verifying, a new code has been sent.")
             .setStatusCode(200);
     }
 
@@ -289,7 +289,7 @@ component extends="base" hint="Auth Endpoints" {
         event
             .getResponse()
             .setData({csrf_token: prc.csrfToken})
-            .addMessage('CSRF token created and it expires in #csrfService.getSettings().rotationTimeout# minutes')
+            .addMessage("CSRF token created and it expires in #csrfService.getSettings().rotationTimeout# minutes")
             .setStatusCode(200);
     }
 

@@ -37,7 +37,7 @@ component
     /**
      * Mementifier
      */
-    this.memento = {defaultIncludes: ['email', 'permissions'], neverInclude: ['id', 'password']};
+    this.memento = {defaultIncludes: ["email", "permissions"], neverInclude: ["id", "password"]};
 
     /**
 	 * --------------------------------------------------------------------------
@@ -47,7 +47,7 @@ component
 	 */
     this.population = {
         include: [], // if empty, tries to include them all
-        exclude: ['permissions', 'initializedDate'] // These are not mass assignable
+        exclude: ["permissions", "initializedDate"] // These are not mass assignable
     }
 
     /**
@@ -55,11 +55,11 @@ component
 	 */
     function init() {
         variables.id                   = -1;
-        variables.email                = '';
-        variables.password             = '';
+        variables.email                = "";
+        variables.password             = "";
         variables.security_level       = -1;
         variables.permissions          = [];
-        variables.dir                  = '';
+        variables.dir                  = "";
         variables.verified             = false;
         variables.verificationSentDate = createDateTime(2000, 1, 1, 0, 0, 0);
         variables.initializedDate      = now();

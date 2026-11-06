@@ -8,7 +8,7 @@ component accessors="true" singleton hint="Validator for checking a category exi
      * Init validator
      */
     function init() {
-        this.name = 'categoryCheck';
+        this.name = "categoryCheck";
     }
 
     /**
@@ -37,10 +37,10 @@ component accessors="true" singleton hint="Validator for checking a category exi
         any validationData
     ) {
         var errorStruct = {
-            message       : '',
+            message       : "",
             field         : arguments.field,
             validationType: getName(),
-            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ''),
+            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ""),
             validationData: arguments.validationData
         };
 
@@ -60,26 +60,26 @@ component accessors="true" singleton hint="Validator for checking a category exi
 
         // Attempt to load this category by PK or category name
         var results = q
-            .from('category')
+            .from("category")
             .when(
                 condition = isPk,
                 onTrue    = (q1) => q1.where(
-                    'id',
-                    '=',
-                    {value: targetValue, cfsqltype: 'numeric'}
+                    "id",
+                    "=",
+                    {value: targetValue, cfsqltype: "numeric"}
                 ),
                 onFalse = (q1) => q1.where(
-                    'name',
-                    '=',
-                    {value: ucFirst(targetValue), cfsqltype: 'varchar'}
+                    "name",
+                    "=",
+                    {value: ucFirst(targetValue), cfsqltype: "varchar"}
                 )
             )
             .andWhere((q1) => {
-                q1.whereNull('userid')
+                q1.whereNull("userid")
                     .orWhere(
-                        'userid',
-                        '=',
-                        {value: userid, cfsqltype: 'numeric'}
+                        "userid",
+                        "=",
+                        {value: userid, cfsqltype: "numeric"}
                     );
             })
             .get();
@@ -90,8 +90,8 @@ component accessors="true" singleton hint="Validator for checking a category exi
         }
 
         errorStruct.message = isPk
-         ? 'Categoryid not valid.'
-         : 'Category name already exists. Use the existing category or choose a different name.';
+         ? "Categoryid not valid."
+         : "Category name already exists. Use the existing category or choose a different name.";
 
         validationResult.addError(
             validationResult

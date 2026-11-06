@@ -3,9 +3,9 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        categoryService = getInstance('services.category');
-        cacheStorage    = getInstance('cachebox:coldboxStorage');
-        mockUser        = getInstance('tests.resources.mockuser');
+        categoryService = getInstance("services.category");
+        cacheStorage    = getInstance("cachebox:coldboxStorage");
+        mockUser        = getInstance("tests.resources.mockuser");
 
         user = mockUser.make();
         jwt  = mockUser.login(user);
@@ -27,12 +27,12 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('GET /categories', () => {
+        describe("GET /categories", () => {
             beforeEach(() => {
                 setup();
             });
 
-            it('Can return paginated pages with the correct counts', () => {
+            it("Can return paginated pages with the correct counts", () => {
                 var n = randRange(10, 19);
                 totalRecords += n;
 
@@ -41,8 +41,8 @@ component extends="tests.resources.baseTest" {
                 // Verify page 1
                 var pageSize = 10;
                 var event    = get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {page: 1, records: pageSize}
                 );
 
@@ -57,8 +57,8 @@ component extends="tests.resources.baseTest" {
                 // Verify page 2 returns the next slice
                 setup();
                 event = get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {page: 2, records: pageSize}
                 );
 
@@ -71,7 +71,7 @@ component extends="tests.resources.baseTest" {
                 );
             });
 
-            it('Only returns system categories and categories owned by the requesting user', () => {
+            it("Only returns system categories and categories owned by the requesting user", () => {
                 // Create a second user and add categories exclusively for them
                 var user2      = mockUser.make();
                 var user2Count = randRange(5, 9);
@@ -80,8 +80,8 @@ component extends="tests.resources.baseTest" {
                 // user1 must not see user2's categories - totalRecords is unchanged
                 var pageSize = 10;
                 var event    = get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {page: 1, records: pageSize}
                 );
 
@@ -96,28 +96,28 @@ component extends="tests.resources.baseTest" {
                 mockUser.delete(user2);
             });
 
-            it('Caches results for requests without a search term', () => {
+            it("Caches results for requests without a search term", () => {
                 var pageSize = 10;
-                var cacheKey = 'userid=#user.getId()#|category.paginate|page=1|records=#pageSize#';
+                var cacheKey = "userid=#user.getId()#|category.paginate|page=1|records=#pageSize#";
 
                 // Ensure cache is empty before the call
-                cacheStorage.clearByKeySnippet(keySnippet = 'userid=#user.getId()#|category');
-                expect(isNull(cacheStorage.get(cacheKey))).toBeTrue('Cache should be empty before first request');
+                cacheStorage.clearByKeySnippet(keySnippet = "userid=#user.getId()#|category");
+                expect(isNull(cacheStorage.get(cacheKey))).toBeTrue("Cache should be empty before first request");
 
                 // First call - should populate the cache
                 get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {page: 1, records: pageSize}
                 );
 
-                expect(isNull(cacheStorage.get(cacheKey))).toBeFalse('Cache should be populated after a non-search request');
+                expect(isNull(cacheStorage.get(cacheKey))).toBeFalse("Cache should be populated after a non-search request");
 
                 // Second call with identical params - hits the cache and returns the same response
                 setup();
                 var event = get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {page: 1, records: pageSize}
                 );
 
@@ -130,30 +130,30 @@ component extends="tests.resources.baseTest" {
                 );
             });
 
-            it('Does not cache results when a search term is provided', () => {
+            it("Does not cache results when a search term is provided", () => {
                 var pageSize = 10;
-                var cacheKey = 'userid=#user.getId()#|category.paginate|page=1|records=#pageSize#';
+                var cacheKey = "userid=#user.getId()#|category.paginate|page=1|records=#pageSize#";
 
                 // Clear cache then issue a search request
-                cacheStorage.clearByKeySnippet(keySnippet = 'userid=#user.getId()#|category');
+                cacheStorage.clearByKeySnippet(keySnippet = "userid=#user.getId()#|category");
 
                 get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {
                         page   : 1,
                         records: pageSize,
-                        search : 'food'
+                        search : "food"
                     }
                 );
 
                 // The standard (non-search) cache key must still be absent
-                expect(isNull(cacheStorage.get(cacheKey))).toBeTrue('Search requests must not populate the non-search cache key');
+                expect(isNull(cacheStorage.get(cacheKey))).toBeTrue("Search requests must not populate the non-search cache key");
             });
 
-            it('Can filter results by search term', () => {
+            it("Can filter results by search term", () => {
                 // Use a UUID-derived prefix that cannot collide with system or pre-existing categories
-                var searchPrefix  = 'ZZCat_#left(createUUID().replace('-', '', 'all'), 8)#';
+                var searchPrefix  = "ZZCat_#left(createUUID().replace("-", "", "all"), 8)#";
                 var uniqueRecords = randRange(5, 9);
                 totalRecords += uniqueRecords;
 
@@ -165,8 +165,8 @@ component extends="tests.resources.baseTest" {
 
                 var pageSize = 10;
                 var event    = get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {
                         page   : 1,
                         records: pageSize,
@@ -186,8 +186,8 @@ component extends="tests.resources.baseTest" {
                 // Verify a non-search request still shows the full un-filtered total
                 setup();
                 event = get(
-                    route   = '/api/v1/categories',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/categories",
+                    headers = {"x-auth-token": jwt},
                     params  = {page: 1, records: pageSize}
                 );
 

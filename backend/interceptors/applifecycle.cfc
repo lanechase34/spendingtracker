@@ -14,7 +14,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
      * Configuration
      */
     function configure() {
-        this.queryLogPath = environment == 'development' ? '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/q.html' : '';
+        this.queryLogPath = environment == "development" ? "#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/q.html" : "";
     }
 
     /**
@@ -28,28 +28,28 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
 
         // Check DB
         try {
-            queryExecute('SELECT 1', []);
+            queryExecute("SELECT 1", []);
         }
         catch(any e) {
             throw(
-                type    = 'DatabaseConnectionError',
-                message = 'Cannot connect to database',
+                type    = "DatabaseConnectionError",
+                message = "Cannot connect to database",
                 detail  = e.message
             );
         }
 
         // Verify ImageMagick
-        if(environment == 'production') {
+        if(environment == "production") {
             imageService.verifyImageMagick();
         }
 
         // Verify mail server
-        if(environment == 'production' && !emailService.verifyConnection()) {
-            throw('Cannot connect to email server');
+        if(environment == "production" && !emailService.verifyConnection()) {
+            throw("Cannot connect to email server");
         }
 
         // Create query log file in development
-        if(environment == 'development') {
+        if(environment == "development") {
             // Clear existing file
             try {
                 fileDelete(this.queryLogPath);
@@ -58,7 +58,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
             }
             finally {
                 // Create new file
-                fileWrite(this.queryLogPath, '');
+                fileWrite(this.queryLogPath, "");
             }
         }
 
@@ -83,18 +83,18 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for application
      */
     function postQBExecute(event, data, buffer, rc, prc, interceptData) {
         if(!(data?.pretend ?: false)) {
-            metricsService.recordQuery(sql = data?.sql ?: '', ms = data?.executionTime ?: 0);
+            metricsService.recordQuery(sql = data?.sql ?: "", ms = data?.executionTime ?: 0);
         }
 
         if(
-            environment == 'development'
-            && getSetting('logQueries')
+            environment == "development"
+            && getSetting("logQueries")
         ) {
             async.newFuture(() => {
                 lock name="queryLogLock" timeout="10" type="exclusive" throwOnTimeout=false {
                     writeDump(
-                        var    = {sql: interceptData?.sql ?: '', result: interceptData?.result ?: ''},
-                        format = 'html',
+                        var    = {sql: interceptData?.sql ?: "", result: interceptData?.result ?: ""},
+                        format = "html",
                         output = this.queryLogPath
                     );
                 }

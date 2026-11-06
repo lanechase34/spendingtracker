@@ -5,7 +5,7 @@ component {
 	 * https://coldbox.ortusbooks.com/getting-started/configuration
 	 */
     function configure() {
-        var logPath = getPageContext().getServletContext().getRealPath('/WEB-INF/');
+        var logPath = getPageContext().getServletContext().getRealPath("/WEB-INF/");
 
         /**
 		 * --------------------------------------------------------------------------
@@ -18,36 +18,36 @@ component {
 		 */
         coldbox = {
             // Application Setup
-            appName                 : 'SpendingTracker',
-            eventName               : 'event',
+            appName                 : "SpendingTracker",
+            eventName               : "event",
             // Development Settings
-            reinitPassword          : len(getSystemSetting('REINITKEY', '')) ? getSystemSetting('REINITKEY') : 'disabled_#generateSecretKey('AES', 256)##generateSecretKey('AES', 256)#',
-            reinitKey               : 'fwreinit',
+            reinitPassword          : len(getSystemSetting("REINITKEY", "")) ? getSystemSetting("REINITKEY") : "disabled_#generateSecretKey("AES", 256)##generateSecretKey("AES", 256)#",
+            reinitKey               : "fwreinit",
             handlersIndexAutoReload : false,
             implicitViews           : true,
             // Implicit Events
-            defaultEvent            : 'echo.healthcheck',
-            requestStartHandler     : '',
-            requestEndHandler       : '',
-            applicationStartHandler : '',
-            applicationEndHandler   : '',
-            sessionStartHandler     : '',
-            sessionEndHandler       : '',
-            missingTemplateHandler  : 'echo.missingTemplate',
+            defaultEvent            : "echo.healthcheck",
+            requestStartHandler     : "",
+            requestEndHandler       : "",
+            applicationStartHandler : "",
+            applicationEndHandler   : "",
+            sessionStartHandler     : "",
+            sessionEndHandler       : "",
+            missingTemplateHandler  : "echo.missingTemplate",
             // Extension Points
-            applicationHelper       : '',
-            viewsHelper             : '',
+            applicationHelper       : "",
+            viewsHelper             : "",
             modulesExternalLocation : [],
-            viewsExternalLocation   : '',
-            layoutsExternalLocation : '',
-            handlersExternalLocation: '',
-            requestContextDecorator : '',
-            controllerDecorator     : '',
+            viewsExternalLocation   : "",
+            layoutsExternalLocation : "",
+            handlersExternalLocation: "",
+            requestContextDecorator : "",
+            controllerDecorator     : "",
             // Error/Exception Handling
-            invalidHTTPMethodHandler: 'echo.invalidHTTPMethod',
-            exceptionHandler        : 'echo.onException',
-            invalidEventHandler     : 'echo.invalidEvent',
-            customErrorTemplate     : '/views/error.cfm',
+            invalidHTTPMethodHandler: "echo.invalidHTTPMethod",
+            exceptionHandler        : "echo.onException",
+            invalidEventHandler     : "echo.invalidEvent",
+            customErrorTemplate     : "/views/error.cfm",
             // Application Aspects
             handlerCaching          : true,
             eventCaching            : false,
@@ -64,7 +64,7 @@ component {
 		 * --------------------------------------------------------------------------
 		 */
         settings = {
-            appName: 'SpendingTracker',
+            appName: "SpendingTracker",
             audit  : {
                 urlpathLength       : 500,
                 methodLength        : 10,
@@ -74,39 +74,39 @@ component {
                 maxSlowRequests     : 25
             },
             authTokenTTL: 1800, // 30 minutes in seconds (for cookie), matches jwt.expiration
-            basePath    : replace(expandPath('/'), '\', '/', 'all'),
+            basePath    : replace(expandPath("/"), "\", "/", "all"),
             concurrency : {
                 activeRequests: 0,
                 maxRequests   : 0,
                 slowRequests  : []
             },
-            contactEmail   : 'spendingtracker@chaselane.dev',
-            dateMask       : 'mm-dd-yyyy',
+            contactEmail   : "spendingtracker@chaselane.dev",
+            dateMask       : "mm-dd-yyyy",
             debugging      : false,
-            encryptionKey  : getSystemSetting('ENCRYPTIONKEY'),
-            fromEmail      : 'spendingtracker@chaselane.dev',
+            encryptionKey  : getSystemSetting("ENCRYPTIONKEY"),
+            fromEmail      : "spendingtracker@chaselane.dev",
             guestOnlyRoutes: [
-                'auth.login',
-                'auth.register',
-                'auth.verify',
-                'auth.resendverificationcode'
+                "auth.login",
+                "auth.register",
+                "auth.verify",
+                "auth.resendverificationcode"
             ],
             healthCheck    : true,
-            imageExtension : '.webp',
-            imageMagickPath: getSystemSetting('IMAGEMAGICKPATH'),
+            imageExtension : ".webp",
+            imageMagickPath: getSystemSetting("IMAGEMAGICKPATH"),
             impersonation  : false,
-            jwt_secret     : getSystemSetting('JWT_SECRET'),
+            jwt_secret     : getSystemSetting("JWT_SECRET"),
             logPath        : logPath,
             logQueries     : false,
             logRequests    : true,
-            maxThreads     : createObject('java', 'java.lang.Runtime').getRuntime().availableProcessors(),
+            maxThreads     : createObject("java", "java.lang.Runtime").getRuntime().availableProcessors(),
             metrics        : {
                 slowQueryThreshold: 250, // ms
                 maxSlowQueries    : 25,
                 sqlLength         : 1000,
                 diagnosticsTTL    : 30 // seconds the diagnostics snapshot is cached for
             },
-            port: getSystemSetting('HTTP_PORT'),
+            port: getSystemSetting("HTTP_PORT"),
             /**
              * Per event rate limits, every rule for the event is counted - any one exceeded blocks the request
              *
@@ -120,68 +120,68 @@ component {
              * refundOnFailure : don't count the hit when the request fails (>= 400), optional
              */
             rateLimits: {
-                'auth.login': [
-                    {by: 'ip', limit: 20, window: 15},
+                "auth.login": [
+                    {by: "ip", limit: 20, window: 15},
                     {
-                        by            : 'ip,email',
+                        by            : "ip,email",
                         limit         : 10,
                         window        : 5,
                         resetOnSuccess: true
                     },
                     // Credential stuffing against one account from many ips
-                    {by: 'email', limit: 20, window: 15}
+                    {by: "email", limit: 20, window: 15}
                 ],
-                'auth.register': [
-                    {by: 'ip', limit: 3, window: 30},
+                "auth.register": [
+                    {by: "ip", limit: 3, window: 30},
                     // Each attempt emails the address - stop flooding one inbox from many ips
-                    {by: 'email', limit: 3, window: 60}
+                    {by: "email", limit: 3, window: 60}
                 ],
-                'auth.verify': [
-                    {by: 'ip', limit: 10, window: 10},
+                "auth.verify": [
+                    {by: "ip", limit: 10, window: 10},
                     // Guessing one account's code from many ips
-                    {by: 'email', limit: 5, window: 10},
-                    {by: 'email', limit: 20, window: 1440}
+                    {by: "email", limit: 5, window: 10},
+                    {by: "email", limit: 20, window: 1440}
                 ],
-                'auth.resendverificationcode': [
-                    {by: 'ip', limit: 5, window: 10},
-                    {by: 'email', limit: 3, window: 10}
+                "auth.resendverificationcode": [
+                    {by: "ip", limit: 5, window: 10},
+                    {by: "email", limit: 3, window: 10}
                 ],
-                'auth.verify2fa': [
-                    {by: 'ip', limit: 5, window: 10},
+                "auth.verify2fa": [
+                    {by: "ip", limit: 5, window: 10},
                     // Brute forcing one account's code from many ips
-                    {by: 'user', limit: 10, window: 10}
+                    {by: "user", limit: 10, window: 10}
                 ],
-                'expense.export': [
+                "expense.export": [
                     {
-                        by             : 'user',
+                        by             : "user",
                         limit          : 1,
                         window         : 1,
                         refundOnFailure: true
                     }
                 ],
-                'expense.exportreceipts': [
+                "expense.exportreceipts": [
                     {
-                        by             : 'user',
+                        by             : "user",
                         limit          : 1,
                         window         : 3,
                         refundOnFailure: true
                     }
                 ],
                 // Changing the password checks the current one - limit guessing it with a stolen session
-                'user.updateprofile': [{by: 'user', limit: 20, window: 10}],
-                'user.setup2fa'     : [{by: 'user', limit: 5, window: 60}],
-                'user.confirm2fa'   : [{by: 'user', limit: 5, window: 10}],
-                'user.disable2fa'   : [{by: 'user', limit: 3, window: 10}]
+                "user.updateprofile": [{by: "user", limit: 20, window: 10}],
+                "user.setup2fa"     : [{by: "user", limit: 5, window: 60}],
+                "user.confirm2fa"   : [{by: "user", limit: 5, window: 10}],
+                "user.disable2fa"   : [{by: "user", limit: 3, window: 10}]
             },
-            receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
+            receiptUploads      : ["expense.save", "subscription.save"], // endpoints that allow receipt uploads
             recoveryCodeCount   : 8, // number of recovery codes to provide for TOTP
             refreshTokenTTL     : 2592000, // 30 days in seconds
-            testEmailPath       : '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/_testemails',
-            uploadPath          : '#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads',
+            testEmailPath       : "#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads/_testemails",
+            uploadPath          : "#getDirectoryFromPath(getCurrentTemplatePath())#/../../../stuploads",
             useRateLimiter      : true,
             verificationCooldown: 10, // only send a verification code every 10 minutes
             verificationLifespan: 60, // verification codes last 60 minutes
-            version             : '1.0.3',
+            version             : "1.0.3",
             warmedUp            : false
         };
 
@@ -209,10 +209,10 @@ component {
             // Asynchronous rolling file logger
             appenders: {
                 appLog: {
-                    class     : 'coldbox.system.logging.appenders.RollingFileAppender',
+                    class     : "coldbox.system.logging.appenders.RollingFileAppender",
                     properties: {
-                        filePath       : '#logPath#/../logs',
-                        filename       : 'app',
+                        filePath       : "#logPath#/../logs",
+                        filename       : "app",
                         autoExpand     : false,
                         fileMaxSize    : 10000,
                         fileMaxArchives: 10,
@@ -222,35 +222,35 @@ component {
             },
             // Root Logger
             root: {
-                levelMin : 'FATAL',
-                levelMax : 'WARN',
-                appenders: 'appLog'
+                levelMin : "FATAL",
+                levelMax : "WARN",
+                appenders: "appLog"
             },
             categories: {
-                'coldbox.system': {
-                    levelMin : 'FATAL',
-                    levelMax : 'INFO',
-                    appenders: 'appLog'
+                "coldbox.system": {
+                    levelMin : "FATAL",
+                    levelMax : "INFO",
+                    appenders: "appLog"
                 },
-                'WebSocket': {
-                    levelMin : 'FATAL',
-                    levelMax : 'WARN',
-                    appenders: 'appLog'
+                "WebSocket": {
+                    levelMin : "FATAL",
+                    levelMax : "WARN",
+                    appenders: "appLog"
                 },
-                'Email': {
-                    levelMin : 'FATAL',
-                    levelMax : 'WARN',
-                    appenders: 'appLog'
+                "Email": {
+                    levelMin : "FATAL",
+                    levelMax : "WARN",
+                    appenders: "appLog"
                 },
-                'Admin': {
-                    levelMin : 'FATAL',
-                    levelMax : 'WARN',
-                    appenders: 'appLog'
+                "Admin": {
+                    levelMin : "FATAL",
+                    levelMax : "WARN",
+                    appenders: "appLog"
                 },
-                'Image': {
-                    levelMin : 'FATAL',
-                    levelMax : 'WARN',
-                    appenders: 'appLog'
+                "Image": {
+                    levelMin : "FATAL",
+                    levelMax : "WARN",
+                    appenders: "appLog"
                 }
             }
         };
@@ -260,14 +260,14 @@ component {
 		 * Layout Settings
 		 * --------------------------------------------------------------------------
 		 */
-        layoutSettings = {defaultLayout: '', defaultView: ''};
+        layoutSettings = {defaultLayout: "", defaultView: ""};
 
         /**
 		 * --------------------------------------------------------------------------
 		 * Custom Interception Points
 		 * --------------------------------------------------------------------------
 		 */
-        interceptorSettings = {customInterceptionPoints: ['onIdentifier']};
+        interceptorSettings = {customInterceptionPoints: ["onIdentifier"]};
 
         /**
 		 * --------------------------------------------------------------------------
@@ -277,43 +277,43 @@ component {
 		 */
         interceptors = [
             {
-                class     : 'interceptors.appLifeCycle',
-                name      : 'appLifeCycleInterceptor',
+                class     : "interceptors.appLifeCycle",
+                name      : "appLifeCycleInterceptor",
                 properties: {}
             },
             {
-                class     : 'interceptors.exception',
-                name      : 'exceptionInterceptor',
+                class     : "interceptors.exception",
+                name      : "exceptionInterceptor",
                 properties: {}
             },
             {
-                class     : 'interceptors.mail',
-                name      : 'mailInterceptor',
+                class     : "interceptors.mail",
+                name      : "mailInterceptor",
                 properties: {}
             },
             {
-                class     : 'interceptors.apiResponse',
-                name      : 'apiResponseInterceptor',
+                class     : "interceptors.apiResponse",
+                name      : "apiResponseInterceptor",
                 properties: {}
             },
             {
-                class     : 'interceptors.requestAudit',
-                name      : 'requestAuditInterceptor',
+                class     : "interceptors.requestAudit",
+                name      : "requestAuditInterceptor",
                 properties: {}
             },
             {
-                class     : 'interceptors.guestOnly',
-                name      : 'guestOnlyInterceptor',
+                class     : "interceptors.guestOnly",
+                name      : "guestOnlyInterceptor",
                 properties: {}
             },
             {
-                class     : 'interceptors.ratelimiter',
-                name      : 'rateLimiterInterceptor',
+                class     : "interceptors.ratelimiter",
+                name      : "rateLimiterInterceptor",
                 properties: {}
             },
             {
-                class     : 'interceptors.tokenRevocation',
-                name      : 'tokenRevocationInterceptor',
+                class     : "interceptors.tokenRevocation",
+                name      : "tokenRevocationInterceptor",
                 properties: {}
             }
         ];
@@ -340,7 +340,7 @@ component {
 		 * The available scopes are : session, client, cluster, ColdBoxCache, or a full instantiation CFC path
 		 */
         flash = {
-            scope       : 'cache',
+            scope       : "cache",
             properties  : {}, // constructor properties for the flash scope implementation
             inflateToRC : true, // automatically inflate flash data into the RC scope
             inflateToPRC: false, // automatically inflate flash data into the PRC scope
@@ -354,11 +354,11 @@ component {
 		 * --------------------------------------------------------------------------
 		 */
         conventions = {
-            handlersLocation: 'handlers',
-            viewsLocation   : 'views',
-            layoutsLocation : '',
-            modelsLocation  : 'models',
-            eventAction     : ''
+            handlersLocation: "handlers",
+            viewsLocation   : "views",
+            layoutsLocation : "",
+            modelsLocation  : "models",
+            eventAction     : ""
         };
     }
 
@@ -370,24 +370,24 @@ component {
         coldbox.handlerCaching          = false;
         coldbox.eventCaching            = false;
         coldbox.viewCaching             = false;
-        coldbox.reinitPassword          = '';
+        coldbox.reinitPassword          = "";
         coldbox.debugMode               = true;
 
-        settings.appName = 'SpendingTracker (DEV)';
+        settings.appName = "SpendingTracker (DEV)";
 
         /**
          * Begin dev flags, use your .env to change these
          */
-        settings.impersonation  = getSystemSetting('IMPERSONATION', true);
-        settings.debugging      = getSystemSetting('DEBUGGING', true);
-        settings.useRateLimiter = getSystemSetting('USERATELIMITER', false);
-        settings.logQueries     = getSystemSetting('LOGQUERIES', true);
-        settings.logRequests    = getSystemSetting('LOGREQUESTS', true);
+        settings.impersonation  = getSystemSetting("IMPERSONATION", true);
+        settings.debugging      = getSystemSetting("DEBUGGING", true);
+        settings.useRateLimiter = getSystemSetting("USERATELIMITER", false);
+        settings.logQueries     = getSystemSetting("LOGQUERIES", true);
+        settings.logRequests    = getSystemSetting("LOGREQUESTS", true);
 
         // Lower bcrypt workfactor for faster performance
         moduleSettings = {bcrypt: {workFactor: 4}};
 
-        logBox.root.levelmax = 'DEBUG';
+        logBox.root.levelmax = "DEBUG";
     }
 
     /**
@@ -396,7 +396,7 @@ component {
     function test() {
         settings.impersonation  = true;
         settings.useRateLimiter = false;
-        settings.appName        = 'SpendingTracker (TEST)';
+        settings.appName        = "SpendingTracker (TEST)";
 
         moduleSettings = {bcrypt: {workFactor: 4}};
     }

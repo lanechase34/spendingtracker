@@ -9,28 +9,28 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('Default Behaviors', () => {
+        describe("Default Behaviors", () => {
             beforeEach((currentSpec) => {
                 setup(); // Setup as a new ColdBox request
             });
 
-            it('Ping database', () => {
-                var sysdate = queryExecute('select current_timestamp').current_timestamp;
-                expect(dateDiff('s', now(), sysdate)).toBeBetween(0, 5);
+            it("Ping database", () => {
+                var sysdate = queryExecute("select current_timestamp").current_timestamp;
+                expect(dateDiff("s", now(), sysdate)).toBeBetween(0, 5);
             });
 
-            it('Can load /healthcheck', () => {
-                var event = get(route = '/healthcheck');
+            it("Can load /healthcheck", () => {
+                var event = get(route = "/healthcheck");
                 expect(event.getResponse().getStatusCode()).toBe(200);
-                expect(event.getResponse().getData()).toBe('Ok!');
+                expect(event.getResponse().getData()).toBe("Ok!");
             });
 
-            describe('Test addition', () => {
-                it('Can add two numbers', () => {
+            describe("Test addition", () => {
+                it("Can add two numbers", () => {
                     expect(sum(1, 2)).toBe(3);
                 });
 
-                it('Can add two negative numbers', () => {
+                it("Can add two negative numbers", () => {
                     expect(sum(-1, -2)).toBe(-3);
                 });
             });

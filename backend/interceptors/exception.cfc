@@ -5,8 +5,8 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
     property name="emailService" inject="provider:services.email";
 
     // Events and exception types that are expected and shouldn't be logged as bugs
-    variables.EXCLUDED_EVENTS = {'cbsecurity:jwt.refreshtoken': true, 'auth.logout': true};
-    variables.EXCLUDED_TYPES  = {'tokenmismatchexception': true};
+    variables.EXCLUDED_EVENTS = {"cbsecurity:jwt.refreshtoken": true, "auth.logout": true};
+    variables.EXCLUDED_TYPES  = {"tokenmismatchexception": true};
 
     /**
      * Generic exception interceptor
@@ -24,7 +24,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         /**
          * Check if this specific error type is excluded
          */
-        var currType = lCase(interceptData?.exception?.type ?: '');
+        var currType = lCase(interceptData?.exception?.type ?: "");
         if(EXCLUDED_TYPES.keyExists(currType)) {
             return;
         }
@@ -35,7 +35,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         var bugSnapshot = buildBugSnapshot(
             event  = event,
             prc    = prc,
-            detail = 'onException',
+            detail = "onException",
             stack  = interceptData
         );
 
@@ -51,13 +51,13 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
          * Dump detail in development environment
          */
         if(
-            getSetting('environment') == 'development'
-            && (url.keyExists('debug') || getSetting('debugging'))
+            getSetting("environment") == "development"
+            && (url.keyExists("debug") || getSetting("debugging"))
         ) {
             cfsavecontent(variable = "local.dump") {
                 writeDump(var = interceptData.exception);
             }
-            event.renderData(type = 'HTML', data = local.dump);
+            event.renderData(type = "HTML", data = local.dump);
         }
     }
 
@@ -69,7 +69,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
         var bugSnapshot = buildBugSnapshot(
             event  = event,
             prc    = prc,
-            detail = 'onValidationException',
+            detail = "onValidationException",
             stack  = interceptData
         );
 
@@ -94,10 +94,10 @@ component extends="coldbox.system.Interceptor" hint="Interceptor for handling ex
     ) {
         // Fallbacks when requestAudit.preProcess didn't run (e.g. an earlier interceptor threw)
         var snapshot = {
-            ip     : '-1',
+            ip     : "-1",
             urlpath: event.getFullPath(),
             method : event.getHTTPMethod(),
-            agent  : ''
+            agent  : ""
         };
 
         snapshot.append(prc?.requestAudit ?: {}, true);

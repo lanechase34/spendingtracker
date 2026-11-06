@@ -5,7 +5,7 @@ component {
         boolean storeInContext,
         boolean authenticate
     ) {
-        throw(type = 'SomeUnexpectedException', message = 'Simulated infrastructure failure');
+        throw(type = "SomeUnexpectedException", message = "Simulated infrastructure failure");
     }
 
 }

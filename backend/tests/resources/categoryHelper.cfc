@@ -1,8 +1,8 @@
 component extends="coldbox.system.testing.BaseTestCase" {
 
     function init() {
-        cacheStorage = getInstance('cachebox:coldboxStorage');
-        q            = getInstance('provider:QueryBuilder@qb');
+        cacheStorage = getInstance("cachebox:coldboxStorage");
+        q            = getInstance("provider:QueryBuilder@qb");
     }
 
     /**
@@ -12,22 +12,22 @@ component extends="coldbox.system.testing.BaseTestCase" {
     array function mock(
         required numeric userid,
         required numeric count,
-        string namePrefix = 'TestCategory'
+        string namePrefix = "TestCategory"
     ) {
         var names = [];
 
         for(var i = 1; i <= count; i++) {
-            var name = '#namePrefix#_#left(createUUID().replace('-', '', 'all'), 8)#';
-            q.from('category')
+            var name = "#namePrefix#_#left(createUUID().replace("-", "", "all"), 8)#";
+            q.from("category")
                 .insert({
-                    name  : {value: name, cfsqltype: 'varchar'},
-                    color : {value: 'AABBCC', cfsqltype: 'varchar'},
-                    userid: {value: userid, cfsqltype: 'numeric'}
+                    name  : {value: name, cfsqltype: "varchar"},
+                    color : {value: "AABBCC", cfsqltype: "varchar"},
+                    userid: {value: userid, cfsqltype: "numeric"}
                 });
             names.append(name);
         }
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|category');
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|category");
         return names;
     }
 
@@ -36,8 +36,8 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     numeric function countSystem() {
         return q
-            .from('category')
-            .whereNull('userid')
+            .from("category")
+            .whereNull("userid")
             .count();
     }
 
@@ -46,11 +46,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     numeric function count(required numeric userid) {
         return q
-            .from('category')
+            .from("category")
             .where(
-                'userid',
-                '=',
-                {value: userid, cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userid, cfsqltype: "numeric"}
             )
             .count();
     }
@@ -65,7 +65,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric pageSize,
         required numeric page
     ) {
-        expect(response.getFormat()).toBe('json');
+        expect(response.getFormat()).toBe("json");
         expect(response.getStatusCode()).toBe(200);
         expect(response.getError()).toBeFalse();
 
@@ -87,12 +87,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
         expect(dataResponse).toBeArray();
         expect(dataResponse.len()).toBe(
             recordsReturned,
-            'Records returned mismatch. Expected: #recordsReturned#, Got: #dataResponse.len()#'
+            "Records returned mismatch. Expected: #recordsReturned#, Got: #dataResponse.len()#"
         );
 
         if(dataResponse.len() > 0) {
-            expect(dataResponse[1]).toHaveKey('id');
-            expect(dataResponse[1]).toHaveKey('name');
+            expect(dataResponse[1]).toHaveKey("id");
+            expect(dataResponse[1]).toHaveKey("name");
         }
     }
 
@@ -106,19 +106,19 @@ component extends="coldbox.system.testing.BaseTestCase" {
         required numeric pageSize,
         required numeric page
     ) {
-        expect(paginateResponse).toHaveKey('totalRecords');
+        expect(paginateResponse).toHaveKey("totalRecords");
         expect(paginateResponse.totalRecords).toBe(
             totalRecords,
-            'Total records mismatch. Expected: #totalRecords#, Got: #paginateResponse.totalRecords#'
+            "Total records mismatch. Expected: #totalRecords#, Got: #paginateResponse.totalRecords#"
         );
 
-        expect(paginateResponse).toHaveKey('offset');
+        expect(paginateResponse).toHaveKey("offset");
         expect(paginateResponse.offset).toBe(
             pageSize * (page - 1),
-            'Offset mismatch. Expected: #pageSize * (page - 1)#, Got: #paginateResponse.offset#'
+            "Offset mismatch. Expected: #pageSize * (page - 1)#, Got: #paginateResponse.offset#"
         );
 
-        expect(paginateResponse).toHaveKey('page');
+        expect(paginateResponse).toHaveKey("page");
         expect(paginateResponse.page).toBe(page);
     }
 

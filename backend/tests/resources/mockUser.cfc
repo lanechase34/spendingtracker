@@ -10,14 +10,14 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * Returns the mock userObj
      */
     public component function make(
-        string email            = '',
-        string password         = '',
+        string email            = "",
+        string password         = "",
         boolean verified        = true,
         numeric security_level  = 10,
         numeric salary          = 12,
         numeric monthlyTakeHome = 1
     ) {
-        var uEmail    = email.len() ? email : 'TEST_#left(createUUID().replace('-', '', 'all'), 10)#@gmail.com';
+        var uEmail    = email.len() ? email : "TEST_#left(createUUID().replace("-", "", "all"), 10)#@gmail.com";
         var uPassword = password.len() ? password : createUUID();
 
         userService.register(
@@ -32,19 +32,19 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
         // Bypass verification step and set to verified
         var securityLevel = arguments.verified ? arguments.security_level : 0;
-        q.from('users')
+        q.from("users")
             .where(
-                'id',
-                '=',
-                {value: user.getId(), cfsqltype: 'numeric'}
+                "id",
+                "=",
+                {value: user.getId(), cfsqltype: "numeric"}
             )
             .when(
                 condition = verified,
                 onTrue    = (q) => {
-                    q.addUpdate({'verified': {value: true, cfsqltype: 'boolean'}})
+                    q.addUpdate({"verified": {value: true, cfsqltype: "boolean"}})
                 }
             )
-            .addUpdate({'security_level': {value: securityLevel, cfsqltype: 'numeric'}})
+            .addUpdate({"security_level": {value: securityLevel, cfsqltype: "numeric"}})
             .update();
 
         return userService.retrieveUserByUsername(uEmail);
@@ -54,11 +54,11 @@ component extends="coldbox.system.testing.BaseTestCase" {
      * Login the user and return a valid JWT
      */
     public string function login(required component userObj) {
-        expect(cbauth.isLoggedIn()).toBeFalse('Cannot call login() when a user is already logged in currently.');
+        expect(cbauth.isLoggedIn()).toBeFalse("Cannot call login() when a user is already logged in currently.");
         setup();
 
         var event = post(
-            route  = '/api/v1/login',
+            route  = "/api/v1/login",
             params = {
                 email     : userObj.getEmail(),
                 password  : createUUID(),
@@ -69,10 +69,10 @@ component extends="coldbox.system.testing.BaseTestCase" {
         var response = event.getResponse();
         expect(response.getStatusCode()).toBe(200);
         expect(response.getError()).toBeFalse();
-        expect(response.getMessages()[1]).toInclude('Bearer token');
+        expect(response.getMessages()[1]).toInclude("Bearer token");
 
         // Verify we receive an auth token
-        expect(response.getData()).toHaveKey('access_token');
+        expect(response.getData()).toHaveKey("access_token");
 
         // Validate the JWT
         var token   = response.getData().access_token;
@@ -83,7 +83,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
         // Make sure token expiration is set correctly
         expect(decoded.exp).toBeGTE(
             dateAdd(
-                'n',
+                "n",
                 jwtService.getSettings().jwt.expiration,
                 decoded.iat
             )
@@ -99,15 +99,15 @@ component extends="coldbox.system.testing.BaseTestCase" {
      */
     public string function getCSRF(required string jwt) {
         setup();
-        var event = get(route = '/api/v1/csrf', headers = {'x-auth-token': jwt});
+        var event = get(route = "/api/v1/csrf", headers = {"x-auth-token": jwt});
 
         var response = event.getResponse();
         expect(response.getStatusCode()).toBe(200);
         expect(response.getError()).toBeFalse();
-        expect(response.getMessages()[1]).toInclude('CSRF token created and it expires in ');
+        expect(response.getMessages()[1]).toInclude("CSRF token created and it expires in ");
 
         // Verify we receive the CSRF token
-        expect(response.getData()).toHaveKey('csrf_token');
+        expect(response.getData()).toHaveKey("csrf_token");
         return response.getData().csrf_token;
     }
 
@@ -118,12 +118,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
         expect(cbauth.isLoggedIn()).toBeTrue();
         setup();
 
-        var event = post(route = '/api/v1/security/logout', headers = {'x-auth-token': jwt});
+        var event = post(route = "/api/v1/security/logout", headers = {"x-auth-token": jwt});
 
         var response = event.getResponse();
         expect(response.getStatusCode()).toBe(200);
         expect(response.getError()).toBeFalse();
-        expect(response.getMessages()[1]).toInclude('Successfully logged out');
+        expect(response.getMessages()[1]).toInclude("Successfully logged out");
 
         expect(cbauth.isLoggedIn()).toBeFalse();
         return;
@@ -137,60 +137,60 @@ component extends="coldbox.system.testing.BaseTestCase" {
         return;
 
         // skipping db deletes for now
-        q.from('audit')
+        q.from("audit")
             .where(
-                'userid',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
-        q.from('bug')
+        q.from("bug")
             .where(
-                'userid',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
-        q.from('expense')
+        q.from("expense")
             .where(
-                'userid',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
-        q.from('subscription')
+        q.from("subscription")
             .where(
-                'userid',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
-        q.from('category')
+        q.from("category")
             .where(
-                'userid',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
-        q.from('income_extra')
+        q.from("income_extra")
             .where(
-                'userid',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
-        q.from('income')
+        q.from("income")
             .where(
-                'userid',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
-        q.from('users')
+        q.from("users")
             .where(
-                'id',
-                '=',
-                {value: userObj.getId(), cfsqltype: 'numeric'}
+                "id",
+                "=",
+                {value: userObj.getId(), cfsqltype: "numeric"}
             )
             .delete();
         return;

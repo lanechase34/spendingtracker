@@ -3,8 +3,8 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        categoryService = getInstance('services.category');
-        mockUser        = getInstance('tests.resources.mockuser');
+        categoryService = getInstance("services.category");
+        mockUser        = getInstance("tests.resources.mockuser");
 
         /**
          * Setup user to be shared throughout the test suite
@@ -21,7 +21,7 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('POST /expenses', () => {
+        describe("POST /expenses", () => {
             beforeEach(() => {
                 setup();
 
@@ -31,16 +31,16 @@ component extends="tests.resources.baseTest" {
                 expenseCount = expenseHelper.count(user.getId());
             });
 
-            it('Can POST expense to expense.save', () => {
+            it("Can POST expense to expense.save", () => {
                 var event = post(
-                    route   = '/api/v1/expenses',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/expenses",
+                    headers = {"x-auth-token": jwt},
                     params  = {
                         date       : now(),
                         amount     : randRange(1, 100),
-                        description: 'Posting to /expenses #createUUID()#',
+                        description: "Posting to /expenses #createUUID()#",
                         categoryid : 1,
-                        receipt    : ''
+                        receipt    : ""
                     }
                 );
 
@@ -48,14 +48,14 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
                 expect(response.getError()).toBeFalse();
-                expect(response.getMessages()[1]).toBe('Successfully saved expense.');
+                expect(response.getMessages()[1]).toBe("Successfully saved expense.");
 
                 // Verify expense saved
                 expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
             });
 
-            describe('Category integration', () => {
-                it('Save expense with a new category', () => {
+            describe("Category integration", () => {
+                it("Save expense with a new category", () => {
                     var newCategory = left(createUUID(), 30);
                     var beforeCheck = categoryService.getFromName(newCategory);
                     expect(beforeCheck).toBeStruct();
@@ -63,14 +63,14 @@ component extends="tests.resources.baseTest" {
 
                     // Post expense with the new category
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : randRange(1, 100),
-                            description: 'Posting new category to /expenses #createUUID()#',
+                            description: "Posting new category to /expenses #createUUID()#",
                             category   : newCategory,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
@@ -78,7 +78,7 @@ component extends="tests.resources.baseTest" {
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Successfully saved expense.');
+                    expect(response.getMessages()[1]).toBe("Successfully saved expense.");
 
                     // Verify expense saved
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
@@ -86,34 +86,34 @@ component extends="tests.resources.baseTest" {
                     // Verify new category made
                     var afterCheck = categoryService.getFromName(newCategory);
                     expect(afterCheck).toBeStruct();
-                    expect(afterCheck).toHaveKey('id');
+                    expect(afterCheck).toHaveKey("id");
                     expect(afterCheck.id).toBeGT(1);
                 });
 
-                it('Prevents saving expense with an invalid new category (too long)', () => {
+                it("Prevents saving expense with an invalid new category (too long)", () => {
                     var newCategory = left(createUUID(), 31);
                     var beforeCheck = categoryService.getFromName(newCategory);
                     expect(beforeCheck).toBeStruct();
                     expect(beforeCheck).toBeEmpty();
 
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : randRange(1, 100),
-                            description: 'Posting invalid category to expense.save #createUUID()#',
+                            description: "Posting invalid category to expense.save #createUUID()#",
                             category   : newCategory,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
                     // Verify JSON response
                     var response = event.getResponse();
-                    expect(response.getFormat()).toBe('json');
+                    expect(response.getFormat()).toBe("json");
                     expect(response.getStatusCode()).toBe(400); // bad request
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toBe('Invalid Parameters. The ''category'' value is not in the required size range (3..30)');
+                    expect(response.getMessages()[1]).toBe("Invalid Parameters. The 'category' value is not in the required size range (3..30)");
 
                     // Verify no expense nor category was made
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount);
@@ -122,67 +122,67 @@ component extends="tests.resources.baseTest" {
                     expect(afterCheck).toBeEmpty();
                 });
 
-                it('Prevents saving expense with a category that is already made', () => {
+                it("Prevents saving expense with a category that is already made", () => {
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : randRange(1, 100),
-                            description: 'Posting invalid category to expense.save #createUUID()#',
-                            category   : 'Grocery',
-                            receipt    : ''
+                            description: "Posting invalid category to expense.save #createUUID()#",
+                            category   : "Grocery",
+                            receipt    : ""
                         }
                     );
 
                     // Verify JSON response
                     var response = event.getResponse();
-                    expect(response.getFormat()).toBe('json');
+                    expect(response.getFormat()).toBe("json");
                     expect(response.getStatusCode()).toBe(400); // bad request
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toInclude('Invalid Parameters. Category name already exists.');
+                    expect(response.getMessages()[1]).toInclude("Invalid Parameters. Category name already exists.");
 
                     // Verify no expense made
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount);
                 });
             });
 
-            describe('Category ownership (categoryid)', () => {
-                it('Allows saving expense using own custom category', () => {
+            describe("Category ownership (categoryid)", () => {
+                it("Allows saving expense using own custom category", () => {
                     var ownCategoryId = categoryService.save(
-                        name   = 'Own Category #left(createUUID(), 10)#',
+                        name   = "Own Category #left(createUUID(), 10)#",
                         userid = user.getId()
                     );
 
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : randRange(1, 100),
-                            description: 'Expense with own category #createUUID()#',
+                            description: "Expense with own category #createUUID()#",
                             categoryid : ownCategoryId,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Successfully saved expense.');
+                    expect(response.getMessages()[1]).toBe("Successfully saved expense.");
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
                 });
 
-                it('Allows saving expense using a system category (userid IS NULL)', () => {
+                it("Allows saving expense using a system category (userid IS NULL)", () => {
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : randRange(1, 100),
-                            description: 'Expense with system category #createUUID()#',
+                            description: "Expense with system category #createUUID()#",
                             categoryid : 1,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
@@ -192,31 +192,31 @@ component extends="tests.resources.baseTest" {
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
                 });
 
-                it('Prevents saving expense using another user''s private category', () => {
+                it("Prevents saving expense using another user's private category", () => {
                     // Create private category
                     var otherUser       = mockUser.make();
                     var otherCategoryId = categoryService.save(
-                        name   = 'Private #left(createUUID(), 10)#',
+                        name   = "Private #left(createUUID(), 10)#",
                         userid = otherUser.getId()
                     );
 
                     // Attempt to use that category as a different user
                     var event = post(
-                        route   = '/api/v1/expenses',
-                        headers = {'x-auth-token': jwt},
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
                         params  = {
                             date       : now(),
                             amount     : randRange(1, 100),
-                            description: 'Expense with stolen categoryid #createUUID()#',
+                            description: "Expense with stolen categoryid #createUUID()#",
                             categoryid : otherCategoryId,
-                            receipt    : ''
+                            receipt    : ""
                         }
                     );
 
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toBe('Invalid Parameters. Categoryid not valid.');
+                    expect(response.getMessages()[1]).toBe("Invalid Parameters. Categoryid not valid.");
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount);
                 });
             });

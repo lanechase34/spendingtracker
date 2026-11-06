@@ -34,9 +34,9 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
             arguments.event.getResponse();
             // prepare argument execution
             var actionArgs = {
-                'event': arguments.event,
-                'rc'   : arguments.rc,
-                'prc'  : arguments.prc
+                "event": arguments.event,
+                "rc"   : arguments.rc,
+                "prc"  : arguments.prc
             };
             structAppend(actionArgs, arguments.eventArguments);
             // Incoming Format Detection
@@ -54,7 +54,7 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
              * If any error(s), throw error and this will be caught in base.onValidationException
              */
             if(prc.validation.hasErrors()) {
-                throw(type = 'ValidationException', message = '#prc.currEvent# | #now()#');
+                throw(type = "ValidationException", message = "#prc.currEvent# | #now()#");
             }
 
             /**
@@ -64,20 +64,20 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
              * If successful, returns receipt path, empty string is an error
              */
             if(receiptUploads.contains(prc.currEvent)) {
-                prc.receipt = '';
+                prc.receipt = "";
 
                 // User attempting to upload receipt
-                if(rc.keyExists('receipt') && rc.receipt.len()) {
+                if(rc.keyExists("receipt") && rc.receipt.len()) {
                     try {
-                        prc.receipt = expenseService.receiptUpload(formField = 'receipt', userDir = prc.userDir);
+                        prc.receipt = expenseService.receiptUpload(formField = "receipt", userDir = prc.userDir);
 
                         if(!prc.receipt.len()) {
-                            throw(type = 'ReceiptValidationError', message = '#prc.currEvent# | #now()#');
+                            throw(type = "ReceiptValidationError", message = "#prc.currEvent# | #now()#");
                         }
                     }
                     catch(any e) {
                         // Validation failed
-                        throw(type = 'ReceiptValidationError', message = '#prc.currEvent# | #now()#');
+                        throw(type = "ReceiptValidationError", message = "#prc.currEvent# | #now()#");
                     }
                 }
             }
@@ -128,22 +128,22 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         // TOTP Exceptions
         catch('TOTP.NotInitiated' e) {
             arguments.exception = e;
-            arguments.msg       = '2FA setup has not been initiated. Please call setup first.';
+            arguments.msg       = "2FA setup has not been initiated. Please call setup first.";
             this.onTOTPError(argumentCollection = arguments);
         }
         catch('TOTP.AlreadyEnabled' e) {
             arguments.exception = e;
-            arguments.msg       = '2FA is already enabled on this account.';
+            arguments.msg       = "2FA is already enabled on this account.";
             this.onTOTPError(argumentCollection = arguments);
         }
         catch('TOTP.InvalidCode' e) {
             arguments.exception = e;
-            arguments.msg       = 'Invalid or expired verification code.';
+            arguments.msg       = "Invalid or expired verification code.";
             this.onTOTPError(argumentCollection = arguments);
         }
         catch('TOTP.NotEnabled' e) {
             arguments.exception = e;
-            arguments.msg       = '2FA is not enabled for this user.';
+            arguments.msg       = "2FA is not enabled for this user.";
             this.onTOTPError(argumentCollection = arguments);
         }
         // Global Catch
@@ -155,10 +155,10 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         // Development additions
         if(inDebugMode()) {
             arguments.prc.response
-                .addHeader('x-current-route', arguments.event.getCurrentRoute())
-                .addHeader('x-current-routed-url', arguments.event.getCurrentRoutedURL())
-                .addHeader('x-current-routed-namespace', arguments.event.getCurrentRoutedNamespace())
-                .addHeader('x-current-event', arguments.event.getCurrentEvent());
+                .addHeader("x-current-route", arguments.event.getCurrentRoute())
+                .addHeader("x-current-routed-url", arguments.event.getCurrentRoutedURL())
+                .addHeader("x-current-routed-namespace", arguments.event.getCurrentRoutedNamespace())
+                .addHeader("x-current-event", arguments.event.getCurrentEvent());
         }
 
         // end timer
@@ -190,7 +190,7 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         }
 
         // Global Response Headers
-        arguments.prc.response.addHeader('x-response-time', arguments.prc.response.getResponseTime());
+        arguments.prc.response.addHeader("x-response-time", arguments.prc.response.getResponseTime());
 
         // Output the response headers
         for(var thisHeader in arguments.prc.response.getHeaders()) {
@@ -216,7 +216,7 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         prc,
         eventArguments,
         exception = {},
-        msg       = ''
+        msg       = ""
     ) {
         // Setup response
         arguments.event
@@ -248,47 +248,47 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
 	 */
     function onAnyOtherException(event, rc, prc, eventArguments, exception = {}) {
         // Param due to inconsistencies with safe navigation operators in all CFML engines
-        param arguments.exception.type = '';
+        param arguments.exception.type = "";
 
         // Handle a convention of on{type}Exception() in your base handler
         if(
-            len(arguments.exception.type) && structKeyExists(this, 'on#arguments.exception.type#Exception') && isCustomFunction(
-                this['on#arguments.exception.type#Exception']
+            len(arguments.exception.type) && structKeyExists(this, "on#arguments.exception.type#Exception") && isCustomFunction(
+                this["on#arguments.exception.type#Exception"]
             )
         ) {
-            this['on#arguments.exception.type#Exception'](argumentCollection = arguments);
+            this["on#arguments.exception.type#Exception"](argumentCollection = arguments);
             return;
         }
 
         // Log Exception
         log.error(
-            'Error calling #arguments.event.getCurrentEvent()#: #arguments.exception.message# #arguments.exception.detail#',
-            {'_stacktrace': arguments.exception.stacktrace, 'httpData': getHTTPRequestData(false)}
+            "Error calling #arguments.event.getCurrentEvent()#: #arguments.exception.message# #arguments.exception.detail#",
+            {"_stacktrace": arguments.exception.stacktrace, "httpData": getHTTPRequestData(false)}
         );
 
         // Announce exception
-        announce('onException', {'exception': arguments.exception});
+        announce("onException", {"exception": arguments.exception});
 
         // Setup General Error Response
         arguments.prc.response
             .setError(true)
             .setData(
                 inDebugMode() ? {
-                    'environment': {
-                        'currentRoute'    : arguments.event.getCurrentRoute(),
-                        'currentRoutedUrl': arguments.event.getCurrentRoutedUrl(),
-                        'currentEvent'    : arguments.event.getCurrentEvent(),
-                        'timestamp'       : getIsoTime()
+                    "environment": {
+                        "currentRoute"    : arguments.event.getCurrentRoute(),
+                        "currentRoutedUrl": arguments.event.getCurrentRoutedUrl(),
+                        "currentEvent"    : arguments.event.getCurrentEvent(),
+                        "timestamp"       : getIsoTime()
                     },
-                    'exception': {
-                        'stack'       : arguments.exception.tagContext.map((item) => item.template & ':' & item.line),
-                        'type'        : arguments.exception.type,
-                        'detail'      : arguments.exception.detail,
-                        'extendedInfo': arguments.exception.extendedInfo
+                    "exception": {
+                        "stack"       : arguments.exception.tagContext.map((item) => item.template & ":" & item.line),
+                        "type"        : arguments.exception.type,
+                        "detail"      : arguments.exception.detail,
+                        "extendedInfo": arguments.exception.extendedInfo
                     }
                 } : {}
             )
-            .addMessage('An exception occurred please try again.')
+            .addMessage("An exception occurred please try again.")
             .setStatusCode(arguments.event.STATUS.INTERNAL_ERROR);
     }
 
@@ -307,18 +307,18 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         param name="arguments.exception.message"      default="";
         param name="arguments.exception.extendedInfo" default="";
 
-        var validationResult = prc?.validation?.getAllErrors() ?: '';
+        var validationResult = prc?.validation?.getAllErrors() ?: "";
 
         // Announce exception
-        announce('onValidationException', {exception: arguments.exception, validationResult: validationResult});
+        announce("onValidationException", {exception: arguments.exception, validationResult: validationResult});
 
         // Log it
-        log.warn('onValidationException of (#event.getCurrentEvent()#)', arguments.exception?.extendedInfo ?: '');
+        log.warn("onValidationException of (#event.getCurrentEvent()#)", arguments.exception?.extendedInfo ?: "");
 
         // Setup response
         arguments.event
             .getResponse()
-            .setErrorMessage('Invalid Parameters. #prc.validation.getAllErrors().toList('; ')#')
+            .setErrorMessage("Invalid Parameters. #prc.validation.getAllErrors().toList("; ")#")
             .setStatusCode(400);
 
         // Render Error Out
@@ -347,15 +347,15 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         param name="arguments.exception.extendedInfo" default="";
 
         // Announce exception
-        announce('onValidationException', {exception: arguments.exception, validationResult: {}});
+        announce("onValidationException", {exception: arguments.exception, validationResult: {}});
 
         // Log it
-        log.warn('onValidationException of (#event.getCurrentEvent()#)', arguments.exception?.extendedInfo ?: '');
+        log.warn("onValidationException of (#event.getCurrentEvent()#)", arguments.exception?.extendedInfo ?: "");
 
         // Setup response
         arguments.event
             .getResponse()
-            .setErrorMessage('Invalid Receipt upload.')
+            .setErrorMessage("Invalid Receipt upload.")
             .setStatusCode(415);
 
         // Render Error Out
@@ -383,7 +383,7 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
         event,
         rc,
         prc,
-        faultAction    = '',
+        faultAction    = "",
         exception      = {},
         eventArguments = {}
     ) {
@@ -394,27 +394,27 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
 
         // Log Locally
         log.error(
-            'Error in base handler (#arguments.faultAction#): #arguments.exception.message# #arguments.exception.detail#',
-            {'_stacktrace': arguments.exception.stacktrace, 'httpData': getHTTPRequestData(false)}
+            "Error in base handler (#arguments.faultAction#): #arguments.exception.message# #arguments.exception.detail#",
+            {"_stacktrace": arguments.exception.stacktrace, "httpData": getHTTPRequestData(false)}
         );
 
         // Announce exception
-        announce('onException', {'exception': arguments.exception});
+        announce("onException", {"exception": arguments.exception});
 
         // Setup General Error Response
         arguments.event
             .getResponse()
             .setError(true)
             .setData({})
-            .addMessage('An exception occurred please try again.')
+            .addMessage("An exception occurred please try again.")
             .setStatusCode(arguments.event.STATUS.INTERNAL_ERROR);
 
         // Development additions Great for Testing
         if(inDebugMode()) {
             prc.response
-                .setData(structKeyExists(arguments.exception, 'tagContext') ? arguments.exception.tagContext : {})
-                .addMessage('Detail: #arguments.exception.detail#')
-                .addMessage('StackTrace: #arguments.exception.stacktrace#');
+                .setData(structKeyExists(arguments.exception, "tagContext") ? arguments.exception.tagContext : {})
+                .addMessage("Detail: #arguments.exception.detail#")
+                .addMessage("StackTrace: #arguments.exception.stacktrace#");
         }
 
         // Render Error Out

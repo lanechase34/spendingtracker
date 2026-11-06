@@ -8,8 +8,8 @@ component accessors="true" singleton hint="Validator for checking a date is insi
      * Init validator
      */
     function init() {
-        this.name     = 'dateRangeCheck';
-        this.datePart = 'd';
+        this.name     = "dateRangeCheck";
+        this.datePart = "d";
         this.maxRange = 365; // 1 year
         this.minRange = 0;
     }
@@ -42,10 +42,10 @@ component accessors="true" singleton hint="Validator for checking a date is insi
         any validationData
     ) {
         var errorStruct = {
-            message       : '',
+            message       : "",
             field         : arguments.field,
             validationType: getName(),
-            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ''),
+            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ""),
             validationData: arguments.validationData
         };
 
@@ -53,11 +53,11 @@ component accessors="true" singleton hint="Validator for checking a date is insi
         // startDate must also be present
         if(
             isNull(arguments.targetValue) ||
-            !isValid('date', arguments.targetValue) ||
+            !isValid("date", arguments.targetValue) ||
             isNull(arguments.target.getStartDate()) ||
-            !isValid('date', arguments.target.getStartDate())
+            !isValid("date", arguments.target.getStartDate())
         ) {
-            errorStruct.message = 'Invalid date range. startDate and endDate must both be valid dates';
+            errorStruct.message = "Invalid date range. startDate and endDate must both be valid dates";
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)
@@ -67,9 +67,9 @@ component accessors="true" singleton hint="Validator for checking a date is insi
         }
 
         // Verify the startDate and endDate are within the range supplied
-        var datePart = arguments.validationData.keyExists('datePart') ? arguments.validationData.datePart : this.datePart;
-        var maxRange = arguments.validationData.keyExists('maxRange') ? arguments.validationData.maxRange : this.maxRange;
-        var minRange = arguments.validationData.keyExists('minRange') ? arguments.validationData.minRange : this.minRange;
+        var datePart = arguments.validationData.keyExists("datePart") ? arguments.validationData.datePart : this.datePart;
+        var maxRange = arguments.validationData.keyExists("maxRange") ? arguments.validationData.maxRange : this.maxRange;
+        var minRange = arguments.validationData.keyExists("minRange") ? arguments.validationData.minRange : this.minRange;
         var check    = dateDiff(
             datePart,
             arguments.target.getStartDate(),
@@ -77,7 +77,7 @@ component accessors="true" singleton hint="Validator for checking a date is insi
         );
 
         if(check > maxRange || check < 0) {
-            errorStruct.message = 'The startDate and endDate range is over the maximum allowed. The maximum allowed is #maxRange# #datePart#(s)';
+            errorStruct.message = "The startDate and endDate range is over the maximum allowed. The maximum allowed is #maxRange# #datePart#(s)";
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)
@@ -87,7 +87,7 @@ component accessors="true" singleton hint="Validator for checking a date is insi
         }
 
         if(check < minRange) {
-            errorStruct.message = 'The startDate and endDate range is not over the minimum allowed. The minimum allowed is #minRange# #datePart#(s)';
+            errorStruct.message = "The startDate and endDate range is not over the minimum allowed. The minimum allowed is #minRange# #datePart#(s)";
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)

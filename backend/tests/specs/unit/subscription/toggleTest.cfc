@@ -3,7 +3,7 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        mockUser = getInstance('tests.resources.mockuser');
+        mockUser = getInstance("tests.resources.mockuser");
 
         /**
          * Setup user to be shared throughout the test suite
@@ -20,24 +20,24 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('subscription.toggle', () => {
+        describe("subscription.toggle", () => {
             beforeEach(() => {
                 setup();
             });
 
-            it('Can toggle a subscription inactive', () => {
+            it("Can toggle a subscription inactive", () => {
                 var currSubscriptionId = subscriptionHelper.insert(
                     data = subscriptionHelper.mock(
-                        date     = dateAdd('d', randRange(-31, -2), dateAdd('m', -1, now())),
-                        interval = 'M',
+                        date     = dateAdd("d", randRange(-31, -2), dateAdd("m", -1, now())),
+                        interval = "M",
                         userid   = user.getId()
                     ),
                     active = true
                 );
 
                 var event = patch(
-                    route   = '/api/v1/subscriptions/#currSubscriptionId#',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/subscriptions/#currSubscriptionId#",
+                    headers = {"x-auth-token": jwt},
                     params  = {active: false}
                 );
 
@@ -45,19 +45,19 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
                 expect(response.getError()).toBeFalse();
-                expect(response.getMessages()[1]).toBe('Successfully inactivated subscription.');
+                expect(response.getMessages()[1]).toBe("Successfully inactivated subscription.");
 
                 // Verify it's now inactive
                 var curr = subscriptionHelper.load(currSubscriptionId);
                 expect(curr.active).toBeFalse();
             });
 
-            it('Updates the updated timestamp when a subscription is toggled', () => {
+            it("Updates the updated timestamp when a subscription is toggled", () => {
                 // Mock subscription, making the updated column to be far in the past
                 var currSubscriptionId = subscriptionHelper.insert(
                     data = subscriptionHelper.mock(
-                        date     = dateAdd('d', randRange(-31, -2), dateAdd('m', -1, now())),
-                        interval = 'M',
+                        date     = dateAdd("d", randRange(-31, -2), dateAdd("m", -1, now())),
+                        interval = "M",
                         userid   = user.getId()
                     ),
                     active      = true,
@@ -67,22 +67,22 @@ component extends="tests.resources.baseTest" {
                 var updatedAtInsert = subscriptionHelper.load(currSubscriptionId).updated;
 
                 patch(
-                    route   = '/api/v1/subscriptions/#currSubscriptionId#',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/subscriptions/#currSubscriptionId#",
+                    headers = {"x-auth-token": jwt},
                     params  = {active: false}
                 );
 
                 var curr = subscriptionHelper.load(currSubscriptionId);
                 expect(curr.updated > updatedAtInsert).toBeTrue(
-                    'updated timestamp should advance after toggle, expected > #updatedAtInsert# but got #curr.updated#'
+                    "updated timestamp should advance after toggle, expected > #updatedAtInsert# but got #curr.updated#"
                 );
             });
 
-            it('Can toggle a subscription active', () => {
+            it("Can toggle a subscription active", () => {
                 var currSubscriptionId = subscriptionHelper.insert(
                     data = subscriptionHelper.mock(
-                        date     = dateAdd('d', randRange(-31, -2), dateAdd('m', -1, now())),
-                        interval = 'M',
+                        date     = dateAdd("d", randRange(-31, -2), dateAdd("m", -1, now())),
+                        interval = "M",
                         userid   = user.getId()
                     ),
                     active = false
@@ -93,8 +93,8 @@ component extends="tests.resources.baseTest" {
                 expect(curr.active).toBeFalse();
 
                 var event = patch(
-                    route   = '/api/v1/subscriptions/#currSubscriptionId#',
-                    headers = {'x-auth-token': jwt},
+                    route   = "/api/v1/subscriptions/#currSubscriptionId#",
+                    headers = {"x-auth-token": jwt},
                     params  = {active: true}
                 );
 
@@ -102,7 +102,7 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(200);
                 expect(response.getError()).toBeFalse();
-                expect(response.getMessages()[1]).toBe('Successfully activated subscription.');
+                expect(response.getMessages()[1]).toBe("Successfully activated subscription.");
 
                 // Verify it's now active
                 curr = subscriptionHelper.load(currSubscriptionId);

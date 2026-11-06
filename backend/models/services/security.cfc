@@ -10,13 +10,13 @@ component singleton accessors="true" {
      * Return the Request's IP
      */
     public string function getRequestIP() {
-        var ipAddress = '';
-        if(getEnvironment() == 'production') {
-            ipAddress = getHeaderValue('CF-Connecting-IP'); // cloudflare injected header
+        var ipAddress = "";
+        if(getEnvironment() == "production") {
+            ipAddress = getHeaderValue("CF-Connecting-IP"); // cloudflare injected header
         }
 
         if(!ipAddress.len()) {
-            ipAddress = getHeaderValue('X-Forwarded-For').listFirst().trim();
+            ipAddress = getHeaderValue("X-Forwarded-For").listFirst().trim();
         }
 
         if(!ipAddress.len()) {
@@ -30,7 +30,7 @@ component singleton accessors="true" {
      * Return the request's user agent
      */
     public string function getUserAgent() {
-        return cgi?.http_user_agent ?: 'Unknown';
+        return cgi?.http_user_agent ?: "Unknown";
     }
 
     /**
@@ -39,7 +39,7 @@ component singleton accessors="true" {
     private string function getHeaderValue(required string headername) {
         var headers = getHTTPRequestData(false).headers;
         if(!headers.keyExists(headername)) {
-            return '';
+            return "";
         }
 
         var value = headers[headername];
@@ -52,7 +52,7 @@ component singleton accessors="true" {
         return value
             .reduce((acc, key, item) => {
                 return acc.listAppend(item);
-            }, '')
+            }, "")
             .trim();
     }
 
@@ -79,7 +79,7 @@ component singleton accessors="true" {
      * Invalidate the cookies by setting maxAge to 0
      */
     public void function deleteTokenCookies() {
-        setRefreshTokenCookie(token = 'delete', maxAge = 0);
+        setRefreshTokenCookie(token = "delete", maxAge = 0);
     }
 
     /**
@@ -94,7 +94,7 @@ component singleton accessors="true" {
             toEncrypt   = toString(cents);
         }
 
-        return encrypt(toEncrypt, getEncryptionKey(), 'AES', 'Base64');
+        return encrypt(toEncrypt, getEncryptionKey(), "AES", "Base64");
     }
 
     /**
@@ -103,22 +103,22 @@ component singleton accessors="true" {
      * @toDecrypt the encrypted AES value
      * @type      string / numeric
      */
-    public string function decryptValue(required string toDecrypt, string type = 'string') {
+    public string function decryptValue(required string toDecrypt, string type = "string") {
         if(!len(trim(toDecrypt))) {
-            return type == 'string' ? '' : 0;
+            return type == "string" ? "" : 0;
         }
 
         try {
-            var decrypted = decrypt(toDecrypt, getEncryptionKey(), 'AES', 'Base64');
+            var decrypted = decrypt(toDecrypt, getEncryptionKey(), "AES", "Base64");
 
-            if(type == 'numeric') {
+            if(type == "numeric") {
                 return int(decrypted);
             }
 
             return decrypted;
         }
         catch(any e) {
-            return type == 'string' ? '' : 0;
+            return type == "string" ? "" : 0;
         }
     }
 
@@ -151,8 +151,8 @@ component singleton accessors="true" {
         return encrypt(
             secret,
             getEncryptionKey(),
-            'AES/CBC/PKCS5Padding',
-            'Base64'
+            "AES/CBC/PKCS5Padding",
+            "Base64"
         );
     }
 
@@ -165,8 +165,8 @@ component singleton accessors="true" {
         return decrypt(
             encryptedSecret,
             getEncryptionKey(),
-            'AES/CBC/PKCS5Padding',
-            'Base64'
+            "AES/CBC/PKCS5Padding",
+            "Base64"
         );
     }
 

@@ -7,18 +7,18 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to populate jwt
      * Setup and use custom apiResponseObj
 	 */
     function preProcess(event, data, buffer, rc, prc) {
-        if(cookie.keyExists('x-auth-token') && len(trim(cookie['x-auth-token']))) {
-            rc['x-auth-token'] = trim(cookie['x-auth-token']);
+        if(cookie.keyExists("x-auth-token") && len(trim(cookie["x-auth-token"]))) {
+            rc["x-auth-token"] = trim(cookie["x-auth-token"]);
         }
 
-        if(cookie.keyExists('x-refresh-token') && len(trim(cookie['x-refresh-token']))) {
-            rc['x-refresh-token'] = trim(cookie['x-refresh-token']);
+        if(cookie.keyExists("x-refresh-token") && len(trim(cookie["x-refresh-token"]))) {
+            rc["x-refresh-token"] = trim(cookie["x-refresh-token"]);
         }
 
         /**
          * Set up API Response obj
          */
-        prc.response = getInstance('objects.apiresponseobj');
+        prc.response = getInstance("objects.apiresponseobj");
     }
 
     /**
@@ -34,7 +34,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to populate jwt
      */
     function preEvent(event, data, buffer, rc, prc) {
         prc.userid  = prc?.authUser?.getId() ?: -1;
-        prc.userDir = prc?.authUser?.getDir() ?: '';
+        prc.userDir = prc?.authUser?.getDir() ?: "";
     }
 
     /**
@@ -42,10 +42,10 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to populate jwt
      */
     function postProcess(event, data, buffer, rc, prc) {
         if(
-            prc.keyExists('newTokens')
-            && lCase(event.getCurrentEvent()) == 'cbsecurity:jwt.refreshtoken'
-            && prc.newTokens.keyExists('access_token')
-            && prc.newTokens.keyExists('refresh_token')
+            prc.keyExists("newTokens")
+            && lCase(event.getCurrentEvent()) == "cbsecurity:jwt.refreshtoken"
+            && prc.newTokens.keyExists("access_token")
+            && prc.newTokens.keyExists("refresh_token")
         ) {
             securityService.setRefreshTokenCookie(token = prc.newTokens.refresh_token);
         }

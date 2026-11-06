@@ -3,7 +3,7 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        mockUser = getInstance('tests.resources.mockuser');
+        mockUser = getInstance("tests.resources.mockuser");
     }
 
     function afterAll() {
@@ -11,8 +11,8 @@ component extends="tests.resources.baseTest" {
     }
 
     function run() {
-        describe('User Endpoints', () => {
-            describe('GET /api/v1/me', () => {
+        describe("User Endpoints", () => {
+            describe("GET /api/v1/me", () => {
                 beforeEach(() => {
                     setup();
 
@@ -29,41 +29,41 @@ component extends="tests.resources.baseTest" {
                     mockUser.delete(user);
                 });
 
-                it('Returns 200 with user profile data for a verified user', () => {
-                    var event    = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                it("Returns 200 with user profile data for a verified user", () => {
+                    var event    = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
                     var response = event.getResponse();
 
                     expect(response.getStatusCode()).toBe(200);
-                    expect(response.getData()).toHaveKey('role');
-                    expect(response.getData()).toHaveKey('salary');
-                    expect(response.getData()).toHaveKey('monthlytakehome');
-                    expect(response.getData()).toHaveKey('settings');
+                    expect(response.getData()).toHaveKey("role");
+                    expect(response.getData()).toHaveKey("salary");
+                    expect(response.getData()).toHaveKey("monthlytakehome");
+                    expect(response.getData()).toHaveKey("settings");
                 });
 
-                it('Returns 401 with no token', () => {
-                    var event    = get(route = '/api/v1/me');
+                it("Returns 401 with no token", () => {
+                    var event    = get(route = "/api/v1/me");
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(401);
                     expect(response.getError()).toBeTrue();
                 });
 
-                it('Returns 401 with an invalid token', () => {
-                    var event    = get(route = '/api/v1/me', headers = {'x-auth-token': 'not.a.real.token'});
+                it("Returns 401 with an invalid token", () => {
+                    var event    = get(route = "/api/v1/me", headers = {"x-auth-token": "not.a.real.token"});
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(401);
                     expect(response.getError()).toBeTrue();
                 });
 
-                it('Returns the correct role for the authenticated user', () => {
-                    var event    = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                it("Returns the correct role for the authenticated user", () => {
+                    var event    = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
                     var response = event.getResponse();
 
                     expect(response.getStatusCode()).toBe(200);
-                    expect(response.getData().role).toBeIn(['USER', 'ADMIN']);
+                    expect(response.getData().role).toBeIn(["USER", "ADMIN"]);
                 });
             });
 
-            describe('PATCH /api/v1/me', () => {
+            describe("PATCH /api/v1/me", () => {
                 beforeEach(() => {
                     setup();
 
@@ -80,146 +80,146 @@ component extends="tests.resources.baseTest" {
                     mockUser.delete(user);
                 });
 
-                it('Returns 400 when updating password without currentPassword', () => {
+                it("Returns 400 when updating password without currentPassword", () => {
                     var event = patch(
-                        route   = '/api/v1/me',
-                        params  = {password: 'NewPassword123!'},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {password: "NewPassword123!"},
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
 
                     expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toBe('Current password is incorrect.');
+                    expect(response.getMessages()[1]).toBe("Current password is incorrect.");
                 });
 
-                it('Returns 200 when updating salary', () => {
+                it("Returns 200 when updating salary", () => {
                     var event = patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {salary: 90000},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
-                    expect(response.getMessages()[1]).toInclude('Successfully updated');
+                    expect(response.getMessages()[1]).toInclude("Successfully updated");
                 });
 
-                it('Returns 200 when updating monthlyTakeHome', () => {
+                it("Returns 200 when updating monthlyTakeHome", () => {
                     var event = patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {monthlyTakeHome: 6000},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
-                    expect(response.getMessages()[1]).toInclude('Successfully updated');
+                    expect(response.getMessages()[1]).toInclude("Successfully updated");
                 });
 
-                it('Returns 200 when updating settings', () => {
+                it("Returns 200 when updating settings", () => {
                     var event = patch(
-                        route   = '/api/v1/me',
-                        params  = {settings: serializeJSON({theme: 'dark'})},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {settings: serializeJSON({theme: "dark"})},
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
-                    expect(response.getMessages()[1]).toInclude('Successfully updated');
+                    expect(response.getMessages()[1]).toInclude("Successfully updated");
 
                     setup();
-                    var user = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                    var user = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
 
                     var userResponse = user.getResponse();
                     expect(userResponse.getStatusCode()).toBe(200);
 
                     var userRecord = userResponse.getData();
-                    expect(userRecord).toHaveKey('settings');
-                    expect(userRecord.settings).toHaveKey('theme');
-                    expect(userRecord.settings.theme).toBe('dark');
-                    expect(userRecord.settings).notToHaveKey('updated');
+                    expect(userRecord).toHaveKey("settings");
+                    expect(userRecord.settings).toHaveKey("theme");
+                    expect(userRecord.settings.theme).toBe("dark");
+                    expect(userRecord.settings).notToHaveKey("updated");
                 });
 
-                it('Persists multiple settings keys correctly', () => {
+                it("Persists multiple settings keys correctly", () => {
                     patch(
-                        route  = '/api/v1/me',
+                        route  = "/api/v1/me",
                         params = {
                             settings: serializeJSON({
-                                theme   : 'light',
-                                fontSize: 'large',
+                                theme   : "light",
+                                fontSize: "large",
                                 sidebar : true
                             })
                         },
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var settings = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .settings;
 
-                    expect(settings.theme).toBe('light');
-                    expect(settings.fontSize).toBe('large');
+                    expect(settings.theme).toBe("light");
+                    expect(settings.fontSize).toBe("large");
                     expect(settings.sidebar).toBeTrue();
-                    expect(settings).notToHaveKey('updated');
+                    expect(settings).notToHaveKey("updated");
                 });
 
-                it('Replaces settings entirely on second update - does not merge', () => {
+                it("Replaces settings entirely on second update - does not merge", () => {
                     patch(
-                        route   = '/api/v1/me',
-                        params  = {settings: serializeJSON({theme: 'dark', fontSize: 'small'})},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {settings: serializeJSON({theme: "dark", fontSize: "small"})},
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
                     patch(
-                        route   = '/api/v1/me',
-                        params  = {settings: serializeJSON({theme: 'light'})},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {settings: serializeJSON({theme: "light"})},
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var settings = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .settings;
 
-                    expect(settings.theme).toBe('light');
-                    expect(settings).notToHaveKey('fontSize');
+                    expect(settings.theme).toBe("light");
+                    expect(settings).notToHaveKey("fontSize");
                 });
 
-                it('Does not update settings when settings param is omitted', () => {
+                it("Does not update settings when settings param is omitted", () => {
                     patch(
-                        route   = '/api/v1/me',
-                        params  = {settings: serializeJSON({theme: 'dark'})},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {settings: serializeJSON({theme: "dark"})},
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {salary: 75000},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var settings = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .settings;
 
-                    expect(settings.theme).toBe('dark');
+                    expect(settings.theme).toBe("dark");
                 });
 
-                it('Stores a value containing a single quote as a literal - not SQL injection', () => {
-                    var maliciousValue = 'O''Brien';
+                it("Stores a value containing a single quote as a literal - not SQL injection", () => {
+                    var maliciousValue = "O'Brien";
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {settings: serializeJSON({name: maliciousValue})},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var settings = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .settings;
@@ -227,32 +227,32 @@ component extends="tests.resources.baseTest" {
                     expect(settings.name).toBe(maliciousValue);
                 });
 
-                it('Stores a SQL DDL injection payload as a literal string - does not execute', () => {
-                    var maliciousValue = '''; DROP TABLE users; --';
+                it("Stores a SQL DDL injection payload as a literal string - does not execute", () => {
+                    var maliciousValue = "'; DROP TABLE users; --";
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {settings: serializeJSON({theme: maliciousValue})},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var meResponse = get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse();
+                    var meResponse = get(route = "/api/v1/me", headers = {"x-auth-token": jwt}).getResponse();
 
                     // Users table must still exist and the request must succeed
                     expect(meResponse.getStatusCode()).toBe(200);
                     expect(meResponse.getData().settings.theme).toBe(maliciousValue);
                 });
 
-                it('Stores a SQL UNION injection payload as a literal string', () => {
-                    var maliciousValue = 'dark'' UNION SELECT password FROM users--';
+                it("Stores a SQL UNION injection payload as a literal string", () => {
+                    var maliciousValue = "dark' UNION SELECT password FROM users--";
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {settings: serializeJSON({theme: maliciousValue})},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var settings = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .settings;
@@ -260,29 +260,29 @@ component extends="tests.resources.baseTest" {
                     expect(settings.theme).toBe(maliciousValue);
                 });
 
-                it('Stores JSON structural characters as a plain string - does not expand into JSONB object', () => {
-                    var maliciousValue = '{"injected":true}';
+                it("Stores JSON structural characters as a plain string - does not expand into JSONB object", () => {
+                    var maliciousValue = "{""injected"":true}";
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {settings: serializeJSON({theme: maliciousValue, updated: true})},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var settings = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var settings = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .settings;
 
                     expect(settings.theme).toBe(maliciousValue);
-                    expect(settings).notToHaveKey('injected');
+                    expect(settings).notToHaveKey("injected");
                 });
 
-                it('Returns an error when settings is not valid JSON', () => {
+                it("Returns an error when settings is not valid JSON", () => {
                     var event = patch(
-                        route   = '/api/v1/me',
-                        params  = {settings: 'not-valid-json'},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {settings: "not-valid-json"},
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
 
@@ -290,97 +290,97 @@ component extends="tests.resources.baseTest" {
                     expect(response.getError()).toBeTrue();
                 });
 
-                it('Persists salary update - GET /me reflects new value', () => {
+                it("Persists salary update - GET /me reflects new value", () => {
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {salary: 80000},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var event    = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                    var event    = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getData().salary).toBe(80000);
                 });
 
-                it('Persists monthlyTakeHome update - GET /me reflects new value', () => {
+                it("Persists monthlyTakeHome update - GET /me reflects new value", () => {
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {monthlyTakeHome: 5500},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var event    = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                    var event    = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getData().monthlytakehome).toBe(5500);
                 });
 
-                it('Returns 401 with no token', () => {
-                    var event    = patch(route = '/api/v1/me', params = {salary: 90000});
+                it("Returns 401 with no token", () => {
+                    var event    = patch(route = "/api/v1/me", params = {salary: 90000});
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(401);
                     expect(response.getError()).toBeTrue();
                 });
 
-                it('Ignores salary update when value is 0 or negative', () => {
+                it("Ignores salary update when value is 0 or negative", () => {
                     // Get current salary first
-                    var beforeEvent  = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                    var beforeEvent  = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
                     var originalData = beforeEvent.getResponse().getData();
 
                     setup();
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {salary: -1},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var afterEvent = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                    var afterEvent = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
                     expect(afterEvent.getResponse().getData().salary).toBe(originalData.salary);
                 });
             });
 
-            describe('PATCH /api/v1/me - changing password', () => {
+            describe("PATCH /api/v1/me - changing password", () => {
                 beforeEach(() => {
                     setup();
 
                     cbauth.logout();
-                    getInstance('JwtService@cbsecurity').getTokenStorage().clearAll();
+                    getInstance("JwtService@cbsecurity").getTokenStorage().clearAll();
 
                     // checkCurrentPassword always checks the real password, even with impersonation on
-                    currentPassword = 'CurrentPassword123!';
-                    newPassword     = 'NewPassword456!';
+                    currentPassword = "CurrentPassword123!";
+                    newPassword     = "NewPassword456!";
                     user            = mockUser.make(password = currentPassword);
                     jwt             = mockUser.login(user);
 
-                    storedImpersonation = getInstance('services.user').getImpersonation();
+                    storedImpersonation = getInstance("services.user").getImpersonation();
                     setup();
                 });
 
                 afterEach(() => {
-                    getInstance('services.user').setImpersonation(storedImpersonation);
+                    getInstance("services.user").setImpersonation(storedImpersonation);
 
                     // The token may be revoked by now, so don't go through /logout
                     cbauth.logout();
-                    getInstance('JwtService@cbsecurity').getTokenStorage().clearAll();
+                    getInstance("JwtService@cbsecurity").getTokenStorage().clearAll();
                     mockUser.delete(user);
                 });
 
-                it('Returns 400 and changes nothing without currentPassword', () => {
+                it("Returns 400 and changes nothing without currentPassword", () => {
                     var before = getPasswordRecord(user.getId());
 
                     var event = patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {password: newPassword},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toBe('Current password is incorrect.');
+                    expect(response.getMessages()[1]).toBe("Current password is incorrect.");
 
                     var after = getPasswordRecord(user.getId());
                     expect(after.password).toBe(before.password);
@@ -388,23 +388,23 @@ component extends="tests.resources.baseTest" {
 
                     // Token still works
                     setup();
-                    expect(get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse().getStatusCode()).toBe(
+                    expect(get(route = "/api/v1/me", headers = {"x-auth-token": jwt}).getResponse().getStatusCode()).toBe(
                         200
                     );
                 });
 
-                it('Returns 400 and changes nothing with a wrong currentPassword', () => {
+                it("Returns 400 and changes nothing with a wrong currentPassword", () => {
                     var before = getPasswordRecord(user.getId());
 
                     var event = patch(
-                        route   = '/api/v1/me',
-                        params  = {password: newPassword, currentPassword: 'WrongPassword999!'},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {password: newPassword, currentPassword: "WrongPassword999!"},
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
-                    expect(response.getMessages()[1]).toBe('Current password is incorrect.');
+                    expect(response.getMessages()[1]).toBe("Current password is incorrect.");
 
                     var after = getPasswordRecord(user.getId());
                     expect(after.password).toBe(before.password);
@@ -412,149 +412,149 @@ component extends="tests.resources.baseTest" {
 
                     // Token still works
                     setup();
-                    expect(get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse().getStatusCode()).toBe(
+                    expect(get(route = "/api/v1/me", headers = {"x-auth-token": jwt}).getResponse().getStatusCode()).toBe(
                         200
                     );
                 });
 
-                it('Does not apply other fields sent with a rejected password change', () => {
+                it("Does not apply other fields sent with a rejected password change", () => {
                     setup();
-                    var originalSalary = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var originalSalary = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .salary;
 
                     setup();
                     patch(
-                        route  = '/api/v1/me',
+                        route  = "/api/v1/me",
                         params = {
                             password       : newPassword,
-                            currentPassword: 'WrongPassword999!',
+                            currentPassword: "WrongPassword999!",
                             salary         : 123456
                         },
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
 
                     setup();
-                    var salary = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                    var salary = get(route = "/api/v1/me", headers = {"x-auth-token": jwt})
                         .getResponse()
                         .getData()
                         .salary;
                     expect(salary).toBe(originalSalary);
                 });
 
-                it('Returns 400 when the new password is too short', () => {
+                it("Returns 400 when the new password is too short", () => {
                     var event = patch(
-                        route   = '/api/v1/me',
-                        params  = {password: 'short', currentPassword: currentPassword},
-                        headers = {'x-auth-token': jwt}
+                        route   = "/api/v1/me",
+                        params  = {password: "short", currentPassword: currentPassword},
+                        headers = {"x-auth-token": jwt}
                     );
                     expect(event.getResponse().getStatusCode()).toBe(400);
                     expect(getPasswordRecord(user.getId()).changed).toBeFalse();
                 });
 
-                it('Updates salary without currentPassword and keeps the token valid', () => {
+                it("Updates salary without currentPassword and keeps the token valid", () => {
                     var event = patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {salary: 91000},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     expect(event.getResponse().getStatusCode()).toBe(200);
-                    expect(event.getResponse().getMessages()[1]).toInclude('Successfully updated');
+                    expect(event.getResponse().getMessages()[1]).toInclude("Successfully updated");
                     expect(getPasswordRecord(user.getId()).changed).toBeFalse();
 
                     setup();
-                    var meEvent = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                    var meEvent = get(route = "/api/v1/me", headers = {"x-auth-token": jwt});
                     expect(meEvent.getResponse().getStatusCode()).toBe(200);
                     expect(meEvent.getResponse().getData().salary).toBe(91000);
                 });
 
-                it('Returns 200 and asks to log in again with the right currentPassword', () => {
+                it("Returns 200 and asks to log in again with the right currentPassword", () => {
                     var before = getPasswordRecord(user.getId());
 
                     var event = patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {password: newPassword, currentPassword: currentPassword},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(200);
                     expect(response.getError()).toBeFalse();
-                    expect(response.getMessages()[1]).toBe('Password updated. Please log in again.');
+                    expect(response.getMessages()[1]).toBe("Password updated. Please log in again.");
 
                     var after = getPasswordRecord(user.getId());
                     expect(after.password).notToBe(before.password);
                     expect(after.changed).toBeTrue();
                 });
 
-                it('Rejects the old token on secured routes after the password changes', () => {
+                it("Rejects the old token on secured routes after the password changes", () => {
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {password: newPassword, currentPassword: currentPassword},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     // A real next request starts logged out - request scope carries over between test requests
                     cbauth.logout();
 
                     setup();
-                    var meResponse = get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse();
+                    var meResponse = get(route = "/api/v1/me", headers = {"x-auth-token": jwt}).getResponse();
                     expect(meResponse.getStatusCode()).toBe(401);
                     expect(meResponse.getError()).toBeTrue();
 
                     setup();
                     var patchResponse = patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {salary: 1000},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     ).getResponse();
                     expect(patchResponse.getStatusCode()).toBe(401);
                 });
 
-                it('Rejects the old token when the rate limiter loads the user before the firewall', () => {
+                it("Rejects the old token when the rate limiter loads the user before the firewall", () => {
                     // The rate limiter authenticates the token first and swallows the rejection -
                     // the revoked token must still be refused by the firewall afterwards
                     var rateLimiter = application.cbController
                         .getInterceptorService()
-                        .getInterceptor('rateLimiterInterceptor');
-                    rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = true);
-                    getInstance('cachebox:rateStorage').clearAll();
+                        .getInterceptor("rateLimiterInterceptor");
+                    rateLimiter.injectPropertyMixin(propertyName = "useRateLimiter", propertyValue = true);
+                    getInstance("cachebox:rateStorage").clearAll();
 
                     try {
                         patch(
-                            route   = '/api/v1/me',
+                            route   = "/api/v1/me",
                             params  = {password: newPassword, currentPassword: currentPassword},
-                            headers = {'x-auth-token': jwt}
+                            headers = {"x-auth-token": jwt}
                         );
                         cbauth.logout();
 
                         // user.updateprofile has a per-user rate limit, so the limiter loads the user from the token
                         setup();
                         var patchResponse = patch(
-                            route   = '/api/v1/me',
+                            route   = "/api/v1/me",
                             params  = {salary: 1000},
-                            headers = {'x-auth-token': jwt}
+                            headers = {"x-auth-token": jwt}
                         ).getResponse();
                         expect(patchResponse.getStatusCode()).toBe(401);
                     }
                     finally {
-                        rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = false);
+                        rateLimiter.injectPropertyMixin(propertyName = "useRateLimiter", propertyValue = false);
                     }
                 });
 
-                it('Logs in with the new password, not the old one, after changing it', () => {
+                it("Logs in with the new password, not the old one, after changing it", () => {
                     patch(
-                        route   = '/api/v1/me',
+                        route   = "/api/v1/me",
                         params  = {password: newPassword, currentPassword: currentPassword},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     cbauth.logout();
 
                     // Real password checks for login
-                    getInstance('services.user').setImpersonation(false);
+                    getInstance("services.user").setImpersonation(false);
 
                     setup();
                     var oldLogin = post(
-                        route  = '/api/v1/login',
+                        route  = "/api/v1/login",
                         params = {
                             email     : user.getEmail(),
                             password  : currentPassword,
@@ -568,7 +568,7 @@ component extends="tests.resources.baseTest" {
 
                     setup();
                     var newLogin = post(
-                        route  = '/api/v1/login',
+                        route  = "/api/v1/login",
                         params = {
                             email     : user.getEmail(),
                             password  : newPassword,
@@ -580,13 +580,13 @@ component extends="tests.resources.baseTest" {
 
                     // The new token is issued after the change, so it works
                     setup();
-                    expect(get(route = '/api/v1/me', headers = {'x-auth-token': newJwt}).getResponse().getStatusCode()).toBe(
+                    expect(get(route = "/api/v1/me", headers = {"x-auth-token": newJwt}).getResponse().getStatusCode()).toBe(
                         200
                     );
                 });
             });
 
-            describe('GET /api/v1/users', () => {
+            describe("GET /api/v1/users", () => {
                 beforeEach(() => {
                     setup();
 
@@ -603,23 +603,23 @@ component extends="tests.resources.baseTest" {
                     mockUser.delete(adminUser);
                 });
 
-                it('Returns 401 with no token', () => {
-                    var event    = get(route = '/api/v1/users');
+                it("Returns 401 with no token", () => {
+                    var event    = get(route = "/api/v1/users");
                     var response = event.getResponse();
                     expect(response.getStatusCode()).toBe(401);
                     expect(response.getError()).toBeTrue();
                 });
 
-                it('Returns 403 for a non-admin User role', () => {
+                it("Returns 403 for a non-admin User role", () => {
                     // Create regular user
                     cbauth.logout();
                     user = mockUser.make();
                     jwt  = mockUser.login(user);
 
                     var event = get(
-                        route   = '/api/v1/users',
+                        route   = "/api/v1/users",
                         params  = {page: 1, records: 10},
-                        headers = {'x-auth-token': jwt}
+                        headers = {"x-auth-token": jwt}
                     );
                     var response = event.getResponse();
 
@@ -628,29 +628,29 @@ component extends="tests.resources.baseTest" {
                     expect(response.getError()).toBeTrue();
                 });
 
-                it('Returns 200 with paginated results for an Admin user', () => {
+                it("Returns 200 with paginated results for an Admin user", () => {
                     var event = get(
-                        route   = '/api/v1/users',
+                        route   = "/api/v1/users",
                         params  = {page: 1, records: 10},
-                        headers = {'x-auth-token': adminJwt}
+                        headers = {"x-auth-token": adminJwt}
                     );
                     var response = event.getResponse();
 
                     expect(response.getStatusCode()).toBe(200);
-                    expect(response.getData()).toHaveKey('users');
+                    expect(response.getData()).toHaveKey("users");
 
                     var pagination = response.getPagination();
-                    expect(pagination).toHaveKey('totalRecords');
-                    expect(pagination).toHaveKey('filteredRecords');
-                    expect(pagination).toHaveKey('page');
-                    expect(pagination).toHaveKey('offset');
+                    expect(pagination).toHaveKey("totalRecords");
+                    expect(pagination).toHaveKey("filteredRecords");
+                    expect(pagination).toHaveKey("page");
+                    expect(pagination).toHaveKey("offset");
                 });
 
-                it('Returns correct page and offset for page 2', () => {
+                it("Returns correct page and offset for page 2", () => {
                     var event = get(
-                        route   = '/api/v1/users',
+                        route   = "/api/v1/users",
                         params  = {page: 2, records: 10},
-                        headers = {'x-auth-token': adminJwt}
+                        headers = {"x-auth-token": adminJwt}
                     );
                     var response   = event.getResponse();
                     var pagination = response.getPagination();
@@ -660,15 +660,15 @@ component extends="tests.resources.baseTest" {
                     expect(pagination.offset).toBe(10);
                 });
 
-                it('Filters results by email search term', () => {
+                it("Filters results by email search term", () => {
                     var event = get(
-                        route  = '/api/v1/users',
+                        route  = "/api/v1/users",
                         params = {
                             page   : 1,
                             records: 10,
                             search : adminUser.getEmail()
                         },
-                        headers = {'x-auth-token': adminJwt}
+                        headers = {"x-auth-token": adminJwt}
                     );
                     var response = event.getResponse();
 
@@ -677,15 +677,15 @@ component extends="tests.resources.baseTest" {
                     expect(response.getData().users[1].email).toBe(lCase(adminUser.getEmail()));
                 });
 
-                it('Returns empty results for a search term that matches nothing', () => {
+                it("Returns empty results for a search term that matches nothing", () => {
                     var event = get(
-                        route  = '/api/v1/users',
+                        route  = "/api/v1/users",
                         params = {
                             page   : 1,
                             records: 10,
-                            search : 'zzznomatch#createUUID()#'
+                            search : "zzznomatch#createUUID()#"
                         },
-                        headers = {'x-auth-token': adminJwt}
+                        headers = {"x-auth-token": adminJwt}
                     );
                     var response = event.getResponse();
 
@@ -694,11 +694,11 @@ component extends="tests.resources.baseTest" {
                     expect(response.getPagination().filteredRecords).toBe(0);
                 });
 
-                it('Returns results ordered by lastlogin desc by default', () => {
+                it("Returns results ordered by lastlogin desc by default", () => {
                     var event = get(
-                        route   = '/api/v1/users',
+                        route   = "/api/v1/users",
                         params  = {page: 1, records: 10},
-                        headers = {'x-auth-token': adminJwt}
+                        headers = {"x-auth-token": adminJwt}
                     );
                     var response = event.getResponse();
                     var users    = response.getData().users;
@@ -715,11 +715,11 @@ component extends="tests.resources.baseTest" {
                     }
                 });
 
-                it('Maps security_level to role string in returned records', () => {
+                it("Maps security_level to role string in returned records", () => {
                     var event = get(
-                        route   = '/api/v1/users',
+                        route   = "/api/v1/users",
                         params  = {page: 1, records: 50},
-                        headers = {'x-auth-token': adminJwt}
+                        headers = {"x-auth-token": adminJwt}
                     );
                     var response = event.getResponse();
                     var users    = response.getData().users;
@@ -727,7 +727,7 @@ component extends="tests.resources.baseTest" {
                     expect(response.getStatusCode()).toBe(200);
 
                     users.each((u) => {
-                        expect(u.security_level).toBeIn(['UNVERIFIED', 'USER', 'ADMIN']);
+                        expect(u.security_level).toBeIn(["UNVERIFIED", "USER", "ADMIN"]);
                     });
                 });
             });
@@ -739,9 +739,9 @@ component extends="tests.resources.baseTest" {
      */
     private struct function getPasswordRecord(required numeric id) {
         return queryExecute(
-            'SELECT password, password_changed_at IS NOT NULL AS changed FROM users WHERE id = :id',
-            {id: {value: id, cfsqltype: 'integer'}},
-            {returnType: 'array'}
+            "SELECT password, password_changed_at IS NOT NULL AS changed FROM users WHERE id = :id",
+            {id: {value: id, cfsqltype: "integer"}},
+            {returnType: "array"}
         )[1];
     }
 

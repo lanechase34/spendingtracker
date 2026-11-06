@@ -16,34 +16,34 @@ component singleton accessors="true" {
         required numeric page,
         required numeric records,
         required numeric userid,
-        required string search   = '',
-        required string orderCol = '',
-        required string orderDir = '',
-        required string interval = ''
+        required string search   = "",
+        required string orderCol = "",
+        required string orderDir = "",
+        required string interval = ""
     ) {
         /**
          * Base Query
          */
         var base = q
-            .from('subscription')
+            .from("subscription")
             .join(
-                'category',
-                'subscription.categoryid',
-                '=',
-                'category.id'
+                "category",
+                "subscription.categoryid",
+                "=",
+                "category.id"
             )
-            .where('subscription.userid', '=', userid)
+            .where("subscription.userid", "=", userid)
             .andWhere((q1) => {
                 q1.whereLike(
-                        q.raw('lower(subscription.description)'),
-                        {value: '%#lCase(search)#%', cfsqltype: 'varchar'}
+                        q.raw("lower(subscription.description)"),
+                        {value: "%#lCase(search)#%", cfsqltype: "varchar"}
                     )
-                    .orWhereLike(q.raw('lower(category.name)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
+                    .orWhereLike(q.raw("lower(category.name)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
             })
             .when(
                 condition = interval.len(),
                 onTrue    = (q1) => {
-                    q1.andWhere('subscription.interval', '=', interval)
+                    q1.andWhere("subscription.interval", "=", interval)
                 }
             );
 
@@ -52,9 +52,9 @@ component singleton accessors="true" {
          */
         var filtered = base
             .select([
-                'subscription.id',
-                'subscription.active',
-                'subscription.amount'
+                "subscription.id",
+                "subscription.active",
+                "subscription.amount"
             ])
             .get();
         var filteredRecords = filtered.len();
@@ -66,7 +66,7 @@ component singleton accessors="true" {
         var asyncFilteredSum = async.newFuture(() => {
             var curr = filtered.reduce((prev, record) => {
                 if(!record.active) return prev;
-                return prev + securityService.decryptValue(record.amount, 'numeric');
+                return prev + securityService.decryptValue(record.amount, "numeric");
             }, 0);
             return securityService.intToFloat(curr);
         });
@@ -77,8 +77,8 @@ component singleton accessors="true" {
 
         var asyncData = async.newFuture(() => {
             // Amount sorting must be performed after loading all rows into memory
-            var isAmountSort = orderCol == 'amount' && orderDir.len();
-            var cacheKey     = 'userid=#userid#|subscription.paginate|orderCol=amount|search=#search#';
+            var isAmountSort = orderCol == "amount" && orderDir.len();
+            var cacheKey     = "userid=#userid#|subscription.paginate|orderCol=amount|search=#search#";
             var rows         = isAmountSort ? duplicate(cacheStorage.get(cacheKey)) : null;
 
             if(isNull(rows)) {
@@ -87,24 +87,24 @@ component singleton accessors="true" {
                         // Only apply DB-level ordering when NOT sorting by amount
                         condition = !isAmountSort && orderCol.len() && orderDir.len(),
                         onTrue    = (q1) => {
-                            q1.orderBy('subscription.active', 'desc')
+                            q1.orderBy("subscription.active", "desc")
                                 .orderBy(orderCol, orderDir)
-                                .orderBy('subscription.id', orderDir);
+                                .orderBy("subscription.id", orderDir);
                         },
                         onFalse = (q1) => {
                             if(!isAmountSort) {
-                                q1.orderBy('subscription.active desc, subscription.next_charge_date asc, subscription.id asc');
+                                q1.orderBy("subscription.active desc, subscription.next_charge_date asc, subscription.id asc");
                             }
                         }
                     )
                     .select([
-                        'subscription.id',
-                        'subscription.next_charge_date as nextChargeDate',
-                        'subscription.amount',
-                        'subscription.description',
-                        'category.name as category',
-                        'subscription.interval',
-                        'subscription.active'
+                        "subscription.id",
+                        "subscription.next_charge_date as nextChargeDate",
+                        "subscription.amount",
+                        "subscription.description",
+                        "category.name as category",
+                        "subscription.interval",
+                        "subscription.active"
                     ]);
 
                 // For amount sorting, fetch ALL filtered rows so we can perform sorting in memory
@@ -116,8 +116,8 @@ component singleton accessors="true" {
 
                 rows = rows.map(
                     (value) => {
-                        value.nextChargeDate = dateFormat(value.nextChargeDate, 'yyyy-mm-dd');
-                        var amountDecrypted  = securityService.decryptValue(value.amount, 'numeric'); // raw cents int
+                        value.nextChargeDate = dateFormat(value.nextChargeDate, "yyyy-mm-dd");
+                        var amountDecrypted  = securityService.decryptValue(value.amount, "numeric"); // raw cents int
                         value.amount         = securityService.intToFloat(amountDecrypted);
 
                         // Need the int cents value to sort
@@ -144,7 +144,7 @@ component singleton accessors="true" {
                     // Inactive subscriptions always sort to the end regardless of direction
                     if(a.active && !b.active) return -1;
                     if(!a.active && b.active) return 1;
-                    return orderDir == 'asc'
+                    return orderDir == "asc"
                      ? a.amountDecrypted - b.amountDecrypted
                      : b.amountDecrypted - a.amountDecrypted;
                 });
@@ -154,7 +154,7 @@ component singleton accessors="true" {
 
                 // Clean up the temp field
                 rows = rows.map((value) => {
-                    value.delete('amountDecrypted');
+                    value.delete("amountDecrypted");
                     return value;
                 });
             }
@@ -190,22 +190,22 @@ component singleton accessors="true" {
      * Get the total active subscription records and the sum of amount
      */
     private struct function getTotalInfo(required numeric userid) {
-        var cacheKey = 'userid=#userid#|subscription.getTotalInfo';
+        var cacheKey = "userid=#userid#|subscription.getTotalInfo";
         var total    = cacheStorage.get(cacheKey);
         if(isNull(total)) {
             var result = queryExecute(
-                '
+                "
                 select amount
                 from subscription
                 where userid = :userid
                 and active = true
-                ',
-                {userid: {value: userid, cfsqltype: 'numeric'}}
+                ",
+                {userid: {value: userid, cfsqltype: "numeric"}}
             );
 
             // Decrypt and sum amounts
             var totalAmount = result.reduce((prev, row) => {
-                return prev + securityService.decryptValue(row.amount, 'numeric');
+                return prev + securityService.decryptValue(row.amount, "numeric");
             }, 0);
 
             total = {count: result.recordCount(), amount: securityService.intToFloat(totalAmount)};
@@ -230,23 +230,23 @@ component singleton accessors="true" {
         required numeric userid
     ) {
         var data = {
-            next_charge_date: {value: nextChargeDate, cfsqltype: 'date'},
-            amount          : {value: securityService.encryptValue(amount), cfsqltype: 'varchar'},
-            description     : {value: description, cfsqltype: 'varchar'},
-            interval        : {value: interval, cfsqltype: 'varchar'},
-            active          : {value: true, cfsqltype: 'boolean'},
-            categoryid      : {value: categoryid, cfsqltype: 'numeric'},
+            next_charge_date: {value: nextChargeDate, cfsqltype: "date"},
+            amount          : {value: securityService.encryptValue(amount), cfsqltype: "varchar"},
+            description     : {value: description, cfsqltype: "varchar"},
+            interval        : {value: interval, cfsqltype: "varchar"},
+            active          : {value: true, cfsqltype: "boolean"},
+            categoryid      : {value: categoryid, cfsqltype: "numeric"},
             receipt         : receipt,
-            userid          : {value: userid, cfsqltype: 'numeric'}
+            userid          : {value: userid, cfsqltype: "numeric"}
         };
 
         var newSubscription = q
-            .from('subscription')
-            .returning('id')
+            .from("subscription")
+            .returning("id")
             .insert(data);
 
         // If the start date has passed for the current interval, charge for every period passed
-        if(dateCompare(nextChargeDate, now(), 'd') <= 0) {
+        if(dateCompare(nextChargeDate, now(), "d") <= 0) {
             var datePart    = getDatePartFromInterval(interval);
             var chargeCount = dateDiff(datePart, nextChargeDate, now());
             var futures     = [];
@@ -273,16 +273,16 @@ component singleton accessors="true" {
                 .get();
 
             // Advance past all back-charged periods in a single update
-            q.from('subscription')
+            q.from("subscription")
                 .where(
-                    'id',
-                    '=',
-                    {value: newSubscription.result.id, cfsqltype: 'numeric'}
+                    "id",
+                    "=",
+                    {value: newSubscription.result.id, cfsqltype: "numeric"}
                 )
-                .update({next_charge_date: {value: dateAdd(datePart, chargeCount + 1, nextChargeDate), cfsqltype: 'date'}});
+                .update({next_charge_date: {value: dateAdd(datePart, chargeCount + 1, nextChargeDate), cfsqltype: "date"}});
         }
 
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|subscription');
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|subscription");
         return;
     }
 
@@ -291,12 +291,12 @@ component singleton accessors="true" {
      */
     public boolean function delete(required numeric id, required numeric userid) {
         var qResult = q
-            .from('subscription')
-            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+            .from("subscription")
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
             .andWhere(
-                'userid',
-                '=',
-                {value: userid, cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userid, cfsqltype: "numeric"}
             )
             .delete();
 
@@ -304,7 +304,7 @@ component singleton accessors="true" {
 
         if(success) {
             // Clear user subscription cache
-            cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|subscription');
+            cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|subscription");
         }
 
         return success;
@@ -318,44 +318,44 @@ component singleton accessors="true" {
      */
     public void function charge(numeric subscriptionid = -1) {
         var charges = q
-            .from('subscription')
+            .from("subscription")
             .where(
-                'subscription.next_charge_date',
-                '<=',
-                {value: now(), cfsqltype: 'date'}
+                "subscription.next_charge_date",
+                "<=",
+                {value: now(), cfsqltype: "date"}
             )
             .andWhere(
-                'active',
-                '=',
-                {value: true, cfsqltype: 'boolean'}
+                "active",
+                "=",
+                {value: true, cfsqltype: "boolean"}
             )
             .when(
                 condition = subscriptionid > 0,
                 onTrue    = (q1) => {
                     q1.andWhere(
-                        'subscription.id',
-                        '=',
-                        {value: subscriptionid, cfsqltype: 'numeric'}
+                        "subscription.id",
+                        "=",
+                        {value: subscriptionid, cfsqltype: "numeric"}
                     )
                 },
                 withoutScoping = true
             )
             .select([
-                'subscription.id',
-                'subscription.next_charge_date',
-                'subscription.amount',
-                'subscription.description',
-                'subscription.categoryid',
-                'subscription.receipt',
-                'subscription.interval',
-                'subscription.userid'
+                "subscription.id",
+                "subscription.next_charge_date",
+                "subscription.amount",
+                "subscription.description",
+                "subscription.categoryid",
+                "subscription.receipt",
+                "subscription.interval",
+                "subscription.userid"
             ])
             .get();
 
         charges.each(
             (row) => {
                 var datePart        = getDatePartFromInterval(row.interval);
-                var decryptedAmount = securityService.intToFloat(securityService.decryptValue(row.amount, 'numeric'));
+                var decryptedAmount = securityService.intToFloat(securityService.decryptValue(row.amount, "numeric"));
                 transaction {
                     try {
                         // Create new expense on next_charge_date
@@ -370,18 +370,18 @@ component singleton accessors="true" {
                         );
 
                         // Update next charge date
-                        q.from('subscription')
-                            .where('id', '=', {value: row.id, cfsqltype: 'numeric'})
+                        q.from("subscription")
+                            .where("id", "=", {value: row.id, cfsqltype: "numeric"})
                             .update({next_charge_date: dateAdd(datePart, 1, row.next_charge_date)});
                     }
                     catch(any e) {
                         transactionRollback();
                         auditService.audit(
-                            ip      = 'localhost',
-                            urlpath = 'subscriptionService.charge',
-                            method  = '',
-                            agent   = '',
-                            detail  = 'Failed to charge a subscription | #e.message#'
+                            ip      = "localhost",
+                            urlpath = "subscriptionService.charge",
+                            method  = "",
+                            agent   = "",
+                            detail  = "Failed to charge a subscription | #e.message#"
                         );
                     }
                 }
@@ -397,9 +397,9 @@ component singleton accessors="true" {
      * Return cf date part based on interval
      */
     private string function getDatePartFromInterval(required string interval) {
-        if(interval == 'Y') return 'yyyy';
-        if(interval == 'M') return 'm';
-        return 'd';
+        if(interval == "Y") return "yyyy";
+        if(interval == "M") return "m";
+        return "d";
     }
 
     /**
@@ -414,24 +414,24 @@ component singleton accessors="true" {
         var result = {error: true};
 
         var qResult = q
-            .from('subscription')
-            .returning(['next_charge_date'])
-            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+            .from("subscription")
+            .returning(["next_charge_date"])
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
             .andWhere(
-                'userid',
-                '=',
-                {value: userid, cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userid, cfsqltype: "numeric"}
             )
-            .update({active: {value: active, cfsqltype: 'boolean'}});
+            .update({active: {value: active, cfsqltype: "boolean"}});
 
         var success = qResult.result.recordCount == 1;
 
         if(success) {
             result.error    = false;
-            result.nextDate = dateTimeFormat(qResult.result.next_charge_date, 'iso8601');
+            result.nextDate = dateTimeFormat(qResult.result.next_charge_date, "iso8601");
 
             // Clear subscription cache
-            cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|subscription');
+            cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|subscription");
         }
 
         return result;

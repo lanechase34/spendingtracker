@@ -1,10 +1,10 @@
 component extends="base" hint="Widget Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {
-        stackedBarChart: 'GET',
-        donutChart     : 'GET',
-        lineChart      : 'GET',
-        heatMap        : 'GET'
+        stackedBarChart: "GET",
+        donutChart     : "GET",
+        lineChart      : "GET",
+        heatMap        : "GET"
     };
 
     property name="chartService" inject="services.chart";

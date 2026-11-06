@@ -17,8 +17,8 @@ component singleton accessors="true" {
      * Clear every cached income result for the user, along with widgets built from income
      */
     private void function clearIncomeCache(required numeric userid) {
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|income');
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|income");
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|widget");
         return;
     }
 
@@ -37,9 +37,9 @@ component singleton accessors="true" {
         var formattedEndDate   = formatIncomeDate(endDate);
 
         return queryExecute(
-            '
+            "
             SELECT
-                ''pay'' AS type,
+                'pay' AS type,
                 date,
                 pay AS amount
             FROM income
@@ -49,19 +49,19 @@ component singleton accessors="true" {
             UNION ALL
 
             SELECT
-                ''extra'' AS type,
+                'extra' AS type,
                 date,
                 amount
             FROM income_extra
             WHERE userid = :userid
             AND date >= :startDate
             AND date < :endDateExclusive
-        ',
+        ",
             {
-                userid          : {value: userid, cfsqltype: 'numeric'},
-                startDate       : {value: formattedStartDate, cfsqltype: 'date'},
-                endDate         : {value: formattedEndDate, cfsqltype: 'date'},
-                endDateExclusive: {value: dateAdd('m', 1, formattedEndDate), cfsqltype: 'date'}
+                userid          : {value: userid, cfsqltype: "numeric"},
+                startDate       : {value: formattedStartDate, cfsqltype: "date"},
+                endDate         : {value: formattedEndDate, cfsqltype: "date"},
+                endDateExclusive: {value: dateAdd("m", 1, formattedEndDate), cfsqltype: "date"}
             }
         );
     }
@@ -77,7 +77,7 @@ component singleton accessors="true" {
         var formattedStartDate = formatIncomeDate(startDate);
         var formattedEndDate   = formatIncomeDate(endDate);
 
-        var cacheKey = 'userid=#userid#|income.getTotal|startDate=#formattedStartDate#|endDate=#formattedEndDate#';
+        var cacheKey = "userid=#userid#|income.getTotal|startDate=#formattedStartDate#|endDate=#formattedEndDate#";
         var total    = cacheStorage.get(cacheKey);
         if(isNull(total)) {
             var result = getIncomeRows(
@@ -89,7 +89,7 @@ component singleton accessors="true" {
             // Decrypt and sum the amounts
             var totals = {pay: 0, extra: 0};
             result.each((row) => {
-                totals[row.type] += securityService.decryptValue(row.amount, 'numeric');
+                totals[row.type] += securityService.decryptValue(row.amount, "numeric");
             });
 
             total = {pay: securityService.intToFloat(totals.pay), extra: securityService.intToFloat(totals.extra)};
@@ -108,24 +108,24 @@ component singleton accessors="true" {
         var currMonth = arguments.month;
 
         var users = q
-            .from('users')
-            .leftJoin('income', (q1) => {
-                q1.on('users.id', '=', 'income.userid')
+            .from("users")
+            .leftJoin("income", (q1) => {
+                q1.on("users.id", "=", "income.userid")
                     .where(
-                        'income.date',
-                        '=',
-                        {value: currMonth, cfsqltype: 'date'}
+                        "income.date",
+                        "=",
+                        {value: currMonth, cfsqltype: "date"}
                     );
             })
-            .whereNull('income.id')
+            .whereNull("income.id")
             .andWhere(
-                'users.verified',
-                '=',
-                {value: true, cfsqltype: 'boolean'}
+                "users.verified",
+                "=",
+                {value: true, cfsqltype: "boolean"}
             )
             .select([
-                'users.id as userid',
-                'users.monthlytakehome as monthlyTakeHome'
+                "users.id as userid",
+                "users.monthlytakehome as monthlyTakeHome"
             ])
             .get();
 
@@ -133,7 +133,7 @@ component singleton accessors="true" {
             (row) => {
                 // Decrypt the monthlytakehome
                 var toPayMonthly = securityService.intToFloat(
-                    securityService.decryptValue(row.monthlyTakeHome, 'numeric')
+                    securityService.decryptValue(row.monthlyTakeHome, "numeric")
                 );
 
                 pay(
@@ -157,11 +157,11 @@ component singleton accessors="true" {
         required numeric userid,
         required numeric pay
     ) {
-        q.from('income')
+        q.from("income")
             .insert({
-                date  : {value: formatIncomeDate(date), cfsqltype: 'date'},
-                userid: {value: userid, cfsqltype: 'numeric'},
-                pay   : {value: securityService.encryptValue(pay), cfsqltype: 'varchar'}
+                date  : {value: formatIncomeDate(date), cfsqltype: "date"},
+                userid: {value: userid, cfsqltype: "numeric"},
+                pay   : {value: securityService.encryptValue(pay), cfsqltype: "varchar"}
             });
         return;
     }
@@ -176,17 +176,17 @@ component singleton accessors="true" {
         required numeric pay
     ) {
         queryExecute(
-            '
+            "
             INSERT INTO income (date, userid, pay)
             VALUES (:date, :userid, :pay)
             ON CONFLICT (userid, date)
             DO UPDATE SET
                 pay = excluded.pay
-        ',
+        ",
             {
-                date  : {value: formatIncomeDate(date), cfsqltype: 'date'},
-                userid: {value: userid, cfsqltype: 'numeric'},
-                pay   : {value: securityService.encryptValue(pay), cfsqltype: 'varchar'}
+                date  : {value: formatIncomeDate(date), cfsqltype: "date"},
+                userid: {value: userid, cfsqltype: "numeric"},
+                pay   : {value: securityService.encryptValue(pay), cfsqltype: "varchar"}
             }
         );
 
@@ -207,7 +207,7 @@ component singleton accessors="true" {
         var formattedStartDate = formatIncomeDate(startDate);
         var formattedEndDate   = formatIncomeDate(endDate);
 
-        var cacheKey = 'userid=#userid#|income.getMonthlyTotals|startDate=#formattedStartDate#|endDate=#formattedEndDate#';
+        var cacheKey = "userid=#userid#|income.getMonthlyTotals|startDate=#formattedStartDate#|endDate=#formattedEndDate#";
         var totals   = cacheStorage.get(cacheKey);
         if(isNull(totals)) {
             var result = getIncomeRows(
@@ -218,11 +218,11 @@ component singleton accessors="true" {
 
             totals = result
                 .reduce((acc, row) => {
-                    var bucket = dateFormat(row.date, 'yyyy-mm');
+                    var bucket = dateFormat(row.date, "yyyy-mm");
                     if(!acc.keyExists(bucket)) {
                         acc[bucket] = {pay: 0, extra: 0};
                     }
-                    acc[bucket][row.type] += securityService.decryptValue(row.amount, 'numeric');
+                    acc[bucket][row.type] += securityService.decryptValue(row.amount, "numeric");
                     return acc;
                 }, {})
                 .map((bucket, bucketTotals) => {
@@ -251,36 +251,36 @@ component singleton accessors="true" {
         var formattedStartDate = formatIncomeDate(startDate);
         var formattedEndDate   = formatIncomeDate(endDate);
 
-        var cacheKey = 'userid=#userid#|income.getExtra|startDate=#formattedStartDate#|endDate=#formattedEndDate#';
+        var cacheKey = "userid=#userid#|income.getExtra|startDate=#formattedStartDate#|endDate=#formattedEndDate#";
         var extras   = cacheStorage.get(cacheKey);
         if(isNull(extras)) {
             var result = q
-                .from('income_extra')
-                .select(['id', 'date', 'amount', 'description'])
+                .from("income_extra")
+                .select(["id", "date", "amount", "description"])
                 .where(
-                    'userid',
-                    '=',
-                    {value: userid, cfsqltype: 'numeric'}
+                    "userid",
+                    "=",
+                    {value: userid, cfsqltype: "numeric"}
                 )
                 .andWhere(
-                    'date',
-                    '>=',
-                    {value: formattedStartDate, cfsqltype: 'date'}
+                    "date",
+                    ">=",
+                    {value: formattedStartDate, cfsqltype: "date"}
                 )
                 .andWhere(
-                    'date',
-                    '<',
-                    {value: dateAdd('m', 1, formattedEndDate), cfsqltype: 'date'}
+                    "date",
+                    "<",
+                    {value: dateAdd("m", 1, formattedEndDate), cfsqltype: "date"}
                 )
-                .orderBy('date', 'desc')
-                .orderBy('id', 'desc')
+                .orderBy("date", "desc")
+                .orderBy("id", "desc")
                 .get();
 
             extras = result.reduce((acc, row) => {
                 acc.append({
                     id         : row.id,
-                    date       : dateFormat(row.date, 'yyyy-mm-dd'),
-                    amount     : securityService.intToFloat(securityService.decryptValue(row.amount, 'numeric')),
+                    date       : dateFormat(row.date, "yyyy-mm-dd"),
+                    amount     : securityService.intToFloat(securityService.decryptValue(row.amount, "numeric")),
                     description: row.description
                 });
                 return acc;
@@ -304,13 +304,13 @@ component singleton accessors="true" {
         required numeric userid
     ) {
         var qResult = q
-            .from('income_extra')
-            .returning('id')
+            .from("income_extra")
+            .returning("id")
             .insert({
-                date       : {value: date, cfsqltype: 'date'},
-                amount     : {value: securityService.encryptValue(amount), cfsqltype: 'varchar'},
-                description: {value: description, cfsqltype: 'varchar'},
-                userid     : {value: userid, cfsqltype: 'numeric'}
+                date       : {value: date, cfsqltype: "date"},
+                amount     : {value: securityService.encryptValue(amount), cfsqltype: "varchar"},
+                description: {value: description, cfsqltype: "varchar"},
+                userid     : {value: userid, cfsqltype: "numeric"}
             });
 
         clearIncomeCache(userid);
@@ -322,12 +322,12 @@ component singleton accessors="true" {
      */
     public boolean function deleteExtra(required numeric id, required numeric userid) {
         var qResult = q
-            .from('income_extra')
-            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+            .from("income_extra")
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
             .andWhere(
-                'userid',
-                '=',
-                {value: userid, cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userid, cfsqltype: "numeric"}
             )
             .delete();
 

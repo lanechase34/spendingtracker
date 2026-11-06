@@ -19,20 +19,20 @@ component singleton accessors="true" {
         numeric delta      = -1
     ) {
         var data = {
-            ip        : {value: ip, cfsqltype: 'varchar'},
-            urlpath   : {value: urlpath, cfsqltype: 'varchar'},
-            method    : {value: method, cfsqltype: 'varchar'},
-            agent     : {value: agent, cfsqltype: 'varchar'},
-            detail    : {value: detail, cfsqltype: 'varchar'},
-            statuscode: {value: statuscode, cfsqltype: 'numeric'},
-            delta     : {value: delta, cfsqltype: 'numeric'}
+            ip        : {value: ip, cfsqltype: "varchar"},
+            urlpath   : {value: urlpath, cfsqltype: "varchar"},
+            method    : {value: method, cfsqltype: "varchar"},
+            agent     : {value: agent, cfsqltype: "varchar"},
+            detail    : {value: detail, cfsqltype: "varchar"},
+            statuscode: {value: statuscode, cfsqltype: "numeric"},
+            delta     : {value: delta, cfsqltype: "numeric"}
         };
 
         if(userid > 0) {
-            data.userid = {value: userid, cfsqltype: 'numeric'};
+            data.userid = {value: userid, cfsqltype: "numeric"};
         }
 
-        q.from('audit').insert(data);
+        q.from("audit").insert(data);
         return;
     }
 
@@ -46,40 +46,40 @@ component singleton accessors="true" {
         required numeric userid,
         required numeric page,
         required numeric records,
-        required string search   = '',
-        required string orderCol = '',
-        required string orderDir = ''
+        required string search   = "",
+        required string orderCol = "",
+        required string orderDir = ""
     ) {
         /**
          * Base query
          */
         var base = q
-            .from('audit')
-            .leftJoin('users', 'audit.userid', '=', 'users.id')
+            .from("audit")
+            .leftJoin("users", "audit.userid", "=", "users.id")
             .where(
-                'audit.created',
-                '>=',
-                {value: startDate, cfsqltype: 'date'}
+                "audit.created",
+                ">=",
+                {value: startDate, cfsqltype: "date"}
             )
             .andWhere(
-                'audit.created',
-                '<',
-                {value: dateAdd('d', 1, endDate), cfsqltype: 'date'}
+                "audit.created",
+                "<",
+                {value: dateAdd("d", 1, endDate), cfsqltype: "date"}
             )
             .andWhere((q1) => {
-                q1.whereLike(q.raw('lower(audit.urlpath)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(audit.method)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(audit.agent)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(audit.detail)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(audit.ip)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(users.email)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
+                q1.whereLike(q.raw("lower(audit.urlpath)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(audit.method)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(audit.agent)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(audit.detail)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(audit.ip)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(users.email)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
                     .when(
                         condition = isDate(search),
                         onTrue    = (q2) => {
                             q2.orWhere(
-                                'audit.created',
-                                '=',
-                                {value: search, cfsqltype: 'date'}
+                                "audit.created",
+                                "=",
+                                {value: search, cfsqltype: "date"}
                             );
                         },
                         withoutScoping = true
@@ -88,9 +88,9 @@ component singleton accessors="true" {
                         condition = isNumeric(search),
                         onTrue    = (q2) => {
                             q2.orWhere(
-                                'audit.statuscode',
-                                '=',
-                                {value: search, cfsqltype: 'numeric'}
+                                "audit.statuscode",
+                                "=",
+                                {value: search, cfsqltype: "numeric"}
                             );
                         },
                         withoutScoping = true
@@ -101,7 +101,7 @@ component singleton accessors="true" {
          * Total info
          */
         var offset          = (page - 1) * records;
-        var filteredRecords = base.count('audit.id');
+        var filteredRecords = base.count("audit.id");
 
         var asyncTotal = async.newFuture(() => {
             return getTotalRecords(startDate = startDate, endDate = endDate);
@@ -112,30 +112,30 @@ component singleton accessors="true" {
                 .when(
                     orderCol.len() && orderDir.len(),
                     (q1) => {
-                        q1.orderBy(orderCol, orderDir).orderBy('audit.id', orderDir);
+                        q1.orderBy(orderCol, orderDir).orderBy("audit.id", orderDir);
                     },
                     (q1) => {
-                        q1.orderBy('audit.created', 'desc').orderBy('audit.id', 'desc');
+                        q1.orderBy("audit.created", "desc").orderBy("audit.id", "desc");
                     }
                 )
                 .limit(records)
                 .offset(offset)
                 .select([
-                    'audit.id',
-                    'audit.created',
-                    'audit.ip',
-                    'audit.urlpath',
-                    'audit.method',
-                    'audit.agent',
-                    'audit.detail',
-                    'audit.statuscode',
-                    'audit.delta',
-                    'users.email'
+                    "audit.id",
+                    "audit.created",
+                    "audit.ip",
+                    "audit.urlpath",
+                    "audit.method",
+                    "audit.agent",
+                    "audit.detail",
+                    "audit.statuscode",
+                    "audit.delta",
+                    "users.email"
                 ])
                 .get()
                 .map(
                     (value) => {
-                        value.created = dateTimeFormat(value.created, 'yyyy-mm-dd HH:nn:ss');
+                        value.created = dateTimeFormat(value.created, "yyyy-mm-dd HH:nn:ss");
                         return value;
                     },
                     true,
@@ -165,16 +165,16 @@ component singleton accessors="true" {
      * Get the total count of records of audits in the date range
      */
     private numeric function getTotalRecords(required date startDate, required date endDate) {
-        var cacheKey = 'audit.getTotalRecords|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "audit.getTotalRecords|startDate=#startDate#|endDate=#endDate#";
         var total    = cacheStorage.get(cacheKey);
         if(isNull(total)) {
             var base = queryExecute(
-                '
+                "
                 select count(id) as count
                 from audit
                 where created between :startDate and :endDate
-                ',
-                {startDate: {value: startDate, cfsqltype: 'date'}, endDate: {value: endDate, cfsqltype: 'date'}}
+                ",
+                {startDate: {value: startDate, cfsqltype: "date"}, endDate: {value: endDate, cfsqltype: "date"}}
             );
 
             total = base.count;

@@ -1,14 +1,14 @@
 component extends="base" hint="Expense Endpoints" secured="User,Admin" {
 
     this.allowedMethods = {
-        view          : 'GET',
-        save          : 'POST',
-        remove        : 'DELETE',
-        receipt       : 'GET',
-        import        : 'POST',
-        bulkSave      : 'POST',
-        export        : 'POST',
-        exportReceipts: 'POST'
+        view          : "GET",
+        save          : "POST",
+        remove        : "DELETE",
+        receipt       : "GET",
+        import        : "POST",
+        bulkSave      : "POST",
+        export        : "POST",
+        exportReceipts: "POST"
     };
 
     property name="categoryService" inject="services.category";
@@ -39,17 +39,17 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
             userid    = prc.userid,
             page      = rc.page,
             records   = rc.records,
-            search    = rc?.search ?: '',
-            orderCol  = rc?.orderCol ?: '',
-            orderDir  = rc?.orderDir ?: ''
+            search    = rc?.search ?: "",
+            orderCol  = rc?.orderCol ?: "",
+            orderDir  = rc?.orderDir ?: ""
         );
 
         event
             .getResponse()
             .setDataWithPagination(
                 data          = prc.data,
-                resultsKey    = 'results',
-                paginationKey = 'pagination'
+                resultsKey    = "results",
+                paginationKey = "pagination"
             )
             .setStatusCode(200);
     }
@@ -68,7 +68,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      */
     function save(event, rc, prc) {
         // Create category if needed
-        prc.categoryid = (rc.keyExists('categoryid') && isNumeric(rc.categoryid))
+        prc.categoryid = (rc.keyExists("categoryid") && isNumeric(rc.categoryid))
          ? parseNumber(rc.categoryid)
          : categoryService.save(name = ucFirst(rc.category), userid = prc.userid);
 
@@ -83,7 +83,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
 
         event
             .getResponse()
-            .setMessages(['Successfully saved expense.'])
+            .setMessages(["Successfully saved expense."])
             .setStatusCode(200);
     }
 
@@ -109,13 +109,13 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
         if(prc.success) {
             event
                 .getResponse()
-                .setMessages(['Successfully deleted expense.'])
+                .setMessages(["Successfully deleted expense."])
                 .setStatusCode(200);
         }
         else {
             event
                 .getResponse()
-                .setErrorMessage('Not found.')
+                .setErrorMessage("Not found.")
                 .setStatusCode(404);
         }
     }
@@ -142,8 +142,8 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
         event
             .sendFile(
                 file        = prc.receipt,
-                mimeType    = 'image/webp',
-                disposition = 'inline'
+                mimeType    = "image/webp",
+                disposition = "inline"
             )
             .noRender();
     }
@@ -161,7 +161,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @response-401 ~errors/401.json
      */
     function import(event, rc, prc) {
-        prc.result = expenseService.processExpenseData(rc?.expenseFile ?: '');
+        prc.result = expenseService.processExpenseData(rc?.expenseFile ?: "");
         if(!prc.result.valid) {
             event
                 .getResponse()
@@ -190,20 +190,20 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      */
     function bulkSave(event, rc, prc) {
         // The expenses object is a json string of array of expense rows
-        if(!rc.keyExists('expenses') || !isJSON(rc.expenses)) {
+        if(!rc.keyExists("expenses") || !isJSON(rc.expenses)) {
             event
                 .getResponse()
-                .setErrorMessage('Invalid Parameters.')
+                .setErrorMessage("Invalid Parameters.")
                 .setStatusCode(400);
             return;
         }
 
         rc.expenses    = deserializeJSON(rc.expenses);
-        prc.validation = validate(target = rc, constraints = 'expense.bulksavehandler');
+        prc.validation = validate(target = rc, constraints = "expense.bulksavehandler");
         if(prc.validation.hasErrors()) {
             event
                 .getResponse()
-                .setErrorMessage('Invalid Parameters. #prc.validation.getAllErrors().toList('; ')#')
+                .setErrorMessage("Invalid Parameters. #prc.validation.getAllErrors().toList("; ")#")
                 .setStatusCode(400);
             return;
         }
@@ -219,14 +219,14 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
              */
             rc.expenses.each(
                 (expense) => {
-                    var currCategoryId = '';
-                    var currReceipt    = '';
+                    var currCategoryId = "";
+                    var currReceipt    = "";
 
                     // Check if receipt exists
-                    if(rc.keyExists('receipt_#expense.id#')) {
+                    if(rc.keyExists("receipt_#expense.id#")) {
                         try {
                             currReceipt = expenseService.receiptUpload(
-                                formField = 'receipt_#expense.id#', // dynamic form field generated
+                                formField = "receipt_#expense.id#", // dynamic form field generated
                                 userDir   = prc.userDir
                             );
                         }
@@ -235,13 +235,13 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
                         }
 
                         if(!currReceipt.len()) {
-                            errors['expense_#expense.id#'] = 'Invalid receipt upload.';
+                            errors["expense_#expense.id#"] = "Invalid receipt upload.";
                             continue;
                         }
                     }
 
                     // Category ID
-                    if(expense.keyExists('categoryid') && isNumeric(expense.categoryid)) {
+                    if(expense.keyExists("categoryid") && isNumeric(expense.categoryid)) {
                         currCategoryId = parseNumber(expense.categoryid);
                     }
                     // New Category
@@ -274,13 +274,13 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
                     );
                 },
                 true,
-                getSetting('maxThreads')
+                getSetting("maxThreads")
             );
 
             event
                 .getResponse()
                 .setData(errors)
-                .setMessages([errors.count() ? 'Error saving expenses' : 'Successfully saved expenses'])
+                .setMessages([errors.count() ? "Error saving expenses" : "Successfully saved expenses"])
                 .setStatusCode(errors.count() ? 400 : 200)
                 .setError(errors.count());
         }
@@ -307,18 +307,18 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
             userid    = prc.userid
         );
 
-        prc.fileName = 'expenses_#dateFormat(rc.startDate, 'yyyy-mm-dd')#_to_#dateFormat(rc.endDate, 'yyyy-mm-dd')#.csv';
+        prc.fileName = "expenses_#dateFormat(rc.startDate, "yyyy-mm-dd")#_to_#dateFormat(rc.endDate, "yyyy-mm-dd")#.csv";
 
         event
             .renderData(
-                type        = 'text',
+                type        = "text",
                 data        = prc.csvString,
-                contentType = 'text/csv',
-                encoding    = 'utf-8',
+                contentType = "text/csv",
+                encoding    = "utf-8",
                 statusCode  = 200,
-                statusText  = 'OK'
+                statusText  = "OK"
             )
-            .setHTTPHeader(name = 'Content-Disposition', value = 'attachment; filename="#prc.fileName#"');
+            .setHTTPHeader(name = "Content-Disposition", value = "attachment; filename=""#prc.fileName#""");
     }
 
     /**
@@ -348,9 +348,9 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
 
             event.sendFile(
                 file        = prc.filePath,
-                name        = 'receipts_#dateFormat(rc.startDate, 'yyyy-mm-dd')#_to_#dateFormat(rc.endDate, 'yyyy-mm-dd')#.zip',
-                disposition = 'attachment',
-                mimeType    = 'application/zip',
+                name        = "receipts_#dateFormat(rc.startDate, "yyyy-mm-dd")#_to_#dateFormat(rc.endDate, "yyyy-mm-dd")#.zip",
+                disposition = "attachment",
+                mimeType    = "application/zip",
                 deleteFile  = true
             );
         }

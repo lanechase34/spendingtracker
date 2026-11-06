@@ -7,7 +7,7 @@ component accessors="true" singleton hint="Validator for checking if a field is 
      * Init validator
      */
     function init() {
-        this.name = 'uniqueDatabaseField';
+        this.name = "uniqueDatabaseField";
     }
 
     /**
@@ -34,10 +34,10 @@ component accessors="true" singleton hint="Validator for checking if a field is 
         any validationData
     ) {
         var errorStruct = {
-            message       : '',
+            message       : "",
             field         : arguments.field,
             validationType: getName(),
-            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ''),
+            rejectedValue : (isSimpleValue(arguments.targetValue) ? arguments.targetValue : ""),
             validationData: arguments.validationData
         };
 
@@ -46,10 +46,10 @@ component accessors="true" singleton hint="Validator for checking if a field is 
             isNull(arguments.targetValue) ||
             !isSimpleValue(arguments.targetValue) ||
             !arguments.targetValue.len() ||
-            !arguments.validationData.keyExists('table') ||
-            !arguments.validationData.keyExists('column')
+            !arguments.validationData.keyExists("table") ||
+            !arguments.validationData.keyExists("column")
         ) {
-            errorStruct.message = 'Invalid unique database field call.';
+            errorStruct.message = "Invalid unique database field call.";
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)
@@ -60,16 +60,16 @@ component accessors="true" singleton hint="Validator for checking if a field is 
 
         // Run query to make sure value is unique in column in table
         var check = q
-            .from('#validationData.table#')
+            .from("#validationData.table#")
             .whereRaw(
-                'upper(#validationData.column#) = ?',
-                [{value: uCase(arguments.targetValue), cfsqltype: 'varchar'}]
+                "upper(#validationData.column#) = ?",
+                [{value: uCase(arguments.targetValue), cfsqltype: "varchar"}]
             )
             .get();
 
         // Already taken
         if(check.len()) {
-            errorStruct.message = 'The #validationData.column# is already taken.';
+            errorStruct.message = "The #validationData.column# is already taken.";
             validationResult.addError(
                 validationResult
                     .newError(argumentCollection = errorStruct)

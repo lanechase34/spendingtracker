@@ -32,7 +32,7 @@ component extends="coldbox.system.Interceptor" hint="Block authenticated users f
         try {
             var authUser = jwtService.getUser();
             if(!isNull(authUser) && authUser.isLoaded()) {
-                var message = 'You are already authenticated.';
+                var message = "You are already authenticated.";
                 event
                     .getResponse()
                     .setErrorMessage(message)
@@ -41,7 +41,7 @@ component extends="coldbox.system.Interceptor" hint="Block authenticated users f
                 event.renderData(
                     data       = {error: true, messages: [message]},
                     statusCode = 400,
-                    type       = 'json'
+                    type       = "json"
                 );
 
                 // Stop execution of the current request - the response is handled above

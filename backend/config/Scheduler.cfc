@@ -29,9 +29,9 @@ component {
          * These do not need increased timeouts since they aren't normal CF threads
 		 */
 
-        task('chargeSubscriptions')
+        task("chargeSubscriptions")
             .before((task) => {
-                task.overviewStruct.urlpath = 'chargeSubscriptions';
+                task.overviewStruct.urlpath = "chargeSubscriptions";
             })
             .call(() => {
                 subscriptionService.charge();
@@ -42,11 +42,11 @@ component {
             .onSuccess((task, results) => {
                 callbackOnSuccess(task);
             })
-            .everyDayAt('05:00');
+            .everyDayAt("05:00");
 
-        task('payMonthly')
+        task("payMonthly")
             .before((task) => {
-                task.overviewStruct.urlpath = 'payMonthly';
+                task.overviewStruct.urlpath = "payMonthly";
             })
             .call(() => {
                 incomeService.payMonthly();
@@ -57,11 +57,11 @@ component {
             .onSuccess((task, results) => {
                 callbackOnSuccess(task);
             })
-            .everyDayAt('07:00');
+            .everyDayAt("07:00");
 
-        task('metricsSubscription')
+        task("metricsSubscription")
             .before((task) => {
-                task.overviewStruct.urlpath = 'metricsSubscription';
+                task.overviewStruct.urlpath = "metricsSubscription";
             })
             .call(() => {
                 /**
@@ -73,7 +73,7 @@ component {
                      * Post metrics response message to topic/metrics
                      */
                     var metrics = metricsService.getMetrics();
-                    application.ws.send('topic/metrics', {data: metrics, error: false});
+                    application.ws.send("topic/metrics", {data: metrics, error: false});
                 }
 
                 /**
@@ -84,11 +84,11 @@ component {
             .onFailure((task, exception) => {
                 callbackOnFailure(task, exception);
             })
-            .every(5, 'seconds');
+            .every(5, "seconds");
     }
 
     function callbackOnFailure(required struct task, struct exception = {}) {
-        task.overviewStruct.detail = 'Task Error (Callback)';
+        task.overviewStruct.detail = "Task Error (Callback)";
         task.overviewStruct.stack  = exception;
         task.overviewStruct.delta  = getTickCount() - task.overviewStruct.startTick;
         auditService.audit(argumentCollection = task.overviewStruct);
@@ -96,7 +96,7 @@ component {
     }
 
     function callbackOnSuccess(required struct task) {
-        task.overviewStruct.detail = 'Task Success (Callback)';
+        task.overviewStruct.detail = "Task Success (Callback)";
         task.overviewStruct.delta  = getTickCount() - task.overviewStruct.startTick;
         auditService.audit(argumentCollection = task.overviewStruct);
     }
@@ -139,10 +139,10 @@ component {
 	 */
     function beforeAnyTask(required task) {
         task.overviewStruct = {
-            ip       : 'localhost',
-            urlpath  : '',
-            method   : 'Task',
-            agent    : 'Scheduled Task User',
+            ip       : "localhost",
+            urlpath  : "",
+            method   : "Task",
+            agent    : "Scheduled Task User",
             startTick: getTickCount()
         };
     }

@@ -55,7 +55,7 @@
   "property.multiline.min_length": 1000,
   "strings.attributes.quote": "double",
   "strings.convertNestedQuotes": true,
-  "strings.quote": "single",
+  "strings.quote": "double",
   "struct.empty_padding": false,
   "struct.multiline.comma_dangle": false,
   "struct.multiline.element_count": 3,

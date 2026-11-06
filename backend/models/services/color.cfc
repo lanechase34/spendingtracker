@@ -5,12 +5,12 @@ component singleton accessors="true" hint="Service layer for generating colors u
      */
     public string function generateColor() {
         var rgb = hsvToRgb(
-            h = randRange(0, 359, 'SHA1PRNG'),
+            h = randRange(0, 359, "SHA1PRNG"),
             s = .5, // saturation
             v = .95 // base value (lightness)
         )
 
-        return '#toHex(rgb[1])##toHex(rgb[2])##toHex(rgb[3])#';
+        return "#toHex(rgb[1])##toHex(rgb[2])##toHex(rgb[3])#";
     }
 
     /**
@@ -19,7 +19,7 @@ component singleton accessors="true" hint="Service layer for generating colors u
      * @num rgb number
      */
     private string function toHex(required numeric num) {
-        return right('00#formatBaseN(num, 16)#', 2);
+        return right("00#formatBaseN(num, 16)#", 2);
     }
 
     /**

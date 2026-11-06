@@ -9,7 +9,7 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
     }
 
     function run() {
-        describe('interceptors.mail', () => {
+        describe("interceptors.mail", () => {
             beforeEach(() => {
                 setup();
 
@@ -17,33 +17,33 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 futures   = [];
                 mockAsync = createStub();
                 mockAsync.$(
-                    method   = 'newFuture',
+                    method   = "newFuture",
                     callback = function() {
                         futures.append(arguments[1]);
                     }
                 );
 
-                mockBugService = createStub().$('log');
+                mockBugService = createStub().$("log");
 
-                interceptor.$property(propertyName = 'async', mock = mockAsync);
-                interceptor.$property(propertyName = 'bugService', mock = mockBugService);
+                interceptor.$property(propertyName = "async", mock = mockAsync);
+                interceptor.$property(propertyName = "bugService", mock = mockBugService);
 
                 prc = {};
             });
 
-            it('Should configure correctly', () => {
+            it("Should configure correctly", () => {
                 interceptor.configure();
                 expect(interceptor).toBeComponent();
             });
 
-            describe('postMailSend', () => {
-                it('Should log a bug when the mail failed to send', () => {
-                    var result = {error: true, messages: ['SMTP down']};
+            describe("postMailSend", () => {
+                it("Should log a bug when the mail failed to send", () => {
+                    var result = {error: true, messages: ["SMTP down"]};
 
                     interceptor.postMailSend(
                         event  = getMockRequestContext(),
                         data   = {result: result},
-                        buffer = '',
+                        buffer = "",
                         rc     = {},
                         prc    = prc
                     );
@@ -52,27 +52,27 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                     result.messages = [];
                     futures.each((task) => task());
 
-                    expect(mockBugService.$once('log')).toBeTrue();
+                    expect(mockBugService.$once("log")).toBeTrue();
                     var logCall = mockBugService.$callLog().log[1];
-                    expect(logCall.detail).toBe('Failed to send email');
-                    expect(logCall.urlpath).toBe('cbMailQueue');
-                    expect(logCall.stack.messages).toBe(['SMTP down']);
+                    expect(logCall.detail).toBe("Failed to send email");
+                    expect(logCall.urlpath).toBe("cbMailQueue");
+                    expect(logCall.stack.messages).toBe(["SMTP down"]);
 
                     // Nothing is left on prc
                     expect(prc).toBeEmpty();
                 });
 
-                it('Should not log when the mail sent', () => {
+                it("Should not log when the mail sent", () => {
                     interceptor.postMailSend(
                         event  = getMockRequestContext(),
                         data   = {result: {error: false}},
-                        buffer = '',
+                        buffer = "",
                         rc     = {},
                         prc    = prc
                     );
 
                     expect(futures).toBeEmpty();
-                    expect(mockBugService.$never('log')).toBeTrue();
+                    expect(mockBugService.$never("log")).toBeTrue();
                 });
             });
         });

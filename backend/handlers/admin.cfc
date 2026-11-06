@@ -1,14 +1,14 @@
 component extends="base" hint="Admin Endpoints" secured="Admin" {
 
     this.allowedMethods = {
-        viewAudits : 'GET',
-        viewBugs   : 'GET',
-        metrics    : 'GET',
-        diagnostics: 'GET',
-        cacheData  : 'GET',
-        taskData   : 'GET',
-        viewLogs   : 'GET',
-        readLog    : 'GET'
+        viewAudits : "GET",
+        viewBugs   : "GET",
+        metrics    : "GET",
+        diagnostics: "GET",
+        cacheData  : "GET",
+        taskData   : "GET",
+        viewLogs   : "GET",
+        readLog    : "GET"
     };
 
     property name="adminService"   inject="services.admin";
@@ -41,17 +41,17 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
             userid    = prc.userid,
             page      = rc.page,
             records   = rc.records,
-            search    = rc?.search ?: '',
-            orderCol  = rc?.orderCol ?: '',
-            orderDir  = rc?.orderDir ?: ''
+            search    = rc?.search ?: "",
+            orderCol  = rc?.orderCol ?: "",
+            orderDir  = rc?.orderDir ?: ""
         );
 
         event
             .getResponse()
             .setDataWithPagination(
                 data          = prc.data,
-                resultsKey    = 'results',
-                paginationKey = 'pagination'
+                resultsKey    = "results",
+                paginationKey = "pagination"
             )
             .setStatusCode(200);
     }
@@ -81,17 +81,17 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
             userid    = prc.userid,
             page      = rc.page,
             records   = rc.records,
-            search    = rc?.search ?: '',
-            orderCol  = rc?.orderCol ?: '',
-            orderDir  = rc?.orderDir ?: ''
+            search    = rc?.search ?: "",
+            orderCol  = rc?.orderCol ?: "",
+            orderDir  = rc?.orderDir ?: ""
         );
 
         event
             .getResponse()
             .setDataWithPagination(
                 data          = prc.data,
-                resultsKey    = 'results',
-                paginationKey = 'pagination'
+                resultsKey    = "results",
+                paginationKey = "pagination"
             )
             .setStatusCode(200);
     }
@@ -187,7 +187,7 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
 
         event
             .getResponse()
-            .setData(prc.data.deleteColumn('directory'))
+            .setData(prc.data.deleteColumn("directory"))
             .setStatusCode(200);
     }
 
@@ -210,7 +210,7 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
         prc.data = adminService.readLog(
             filename = rc.filename,
             lines    = val(rc?.lines ?: 200),
-            search   = rc?.search ?: '',
+            search   = rc?.search ?: "",
             all      = rc?.all ?: false
         );
 

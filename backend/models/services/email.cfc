@@ -13,18 +13,18 @@ component singleton accessors="true" hint="Service layer for sending email" {
         var env = new coldbox.system.core.delegates.Env();
 
         try {
-            admin action = 'verifyMailServer'
-            type         = 'server'
-            password     = '#env.getEnv('CFCONFIG_ADMINPASSWORD')#'
-            hostname     = '#env.getEnv('EMAIL_SERVER')#'
-            port         = '#env.getEnv('EMAIL_PORT')#'
-            mailusername = '#env.getEnv('EMAIL_USERNAME')#'
-            mailpassword = '#env.getEnv('EMAIL_PASSWORD')#';
+            admin action = "verifyMailServer"
+            type         = "server"
+            password     = "#env.getEnv("CFCONFIG_ADMINPASSWORD")#"
+            hostname     = "#env.getEnv("EMAIL_SERVER")#"
+            port         = "#env.getEnv("EMAIL_PORT")#"
+            mailusername = "#env.getEnv("EMAIL_USERNAME")#"
+            mailpassword = "#env.getEnv("EMAIL_PASSWORD")#";
 
             return true;
         }
         catch(any e) {
-            emailLog.error('Error verifying email connection: #serializeJSON(e)#');
+            emailLog.error("Error verifying email connection: #serializeJSON(e)#");
         }
         return false;
     }
@@ -47,11 +47,11 @@ component singleton accessors="true" hint="Service layer for sending email" {
             .newMail(
                 to     : to,
                 from   : fromEmail,
-                subject: 'SpendingTracker Verification',
-                type   : 'html'
+                subject: "SpendingTracker Verification",
+                type   : "html"
             )
             .setView(
-                view: 'email/verification',
+                view: "email/verification",
                 args: {
                     to                  : to,
                     code                : code,
@@ -72,10 +72,10 @@ component singleton accessors="true" hint="Service layer for sending email" {
             .newMail(
                 to     : contactEmail,
                 from   : fromEmail,
-                subject: 'BUG Found',
-                type   : 'html'
+                subject: "BUG Found",
+                type   : "html"
             )
-            .setView(view: 'email/bug', args: {bugInfo: bugInfo})
+            .setView(view: "email/bug", args: {bugInfo: bugInfo})
             .queue();
     }
 
@@ -87,11 +87,11 @@ component singleton accessors="true" hint="Service layer for sending email" {
             .newMail(
                 to     : contactEmail,
                 from   : fromEmail,
-                subject: 'Sending a test email!'
+                subject: "Sending a test email!"
             )
-            .setBody('
+            .setBody("
                 Sending an email from the testing server! #now()# #createUUID()#
-            ')
+            ")
             .send();
     }
 

@@ -16,7 +16,7 @@ component singleton accessors="true" {
     property name="headers" type="array";
     property name="maxRows" type="numeric";
     function init() {
-        setHeaders(['Date', 'Amount', 'Description']);
+        setHeaders(["Date", "Amount", "Description"]);
         setMaxRows(100); // limit to 100 rows for performance
     }
 
@@ -30,37 +30,37 @@ component singleton accessors="true" {
         required numeric userid,
         required numeric page,
         required numeric records,
-        string search   = '',
-        string orderCol = '',
-        string orderDir = ''
+        string search   = "",
+        string orderCol = "",
+        string orderDir = ""
     ) {
         /**
          * Base Query
          */
         var base = q
-            .from('expense')
+            .from("expense")
             .join(
-                'category',
-                'expense.categoryid',
-                '=',
-                'category.id'
+                "category",
+                "expense.categoryid",
+                "=",
+                "category.id"
             )
-            .where('expense.userid', '=', userid)
+            .where("expense.userid", "=", userid)
             .andWhereBetween(
-                'expense.date',
-                {value: startDate, cfsqltype: 'date'},
-                {value: endDate, cfsqltype: 'date'}
+                "expense.date",
+                {value: startDate, cfsqltype: "date"},
+                {value: endDate, cfsqltype: "date"}
             )
             .andWhere((q1) => {
-                q1.whereLike(q.raw('lower(expense.description)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
-                    .orWhereLike(q.raw('lower(category.name)'), {value: '%#lCase(search)#%', cfsqltype: 'varchar'})
+                q1.whereLike(q.raw("lower(expense.description)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
+                    .orWhereLike(q.raw("lower(category.name)"), {value: "%#lCase(search)#%", cfsqltype: "varchar"})
                     .when(
                         condition = isDate(search),
                         onTrue    = (q2) => {
                             q2.orWhere(
-                                'expense.date',
-                                '=',
-                                {value: search, cfsqltype: 'date'}
+                                "expense.date",
+                                "=",
+                                {value: search, cfsqltype: "date"}
                             );
                         },
                         withoutScoping = true
@@ -70,7 +70,7 @@ component singleton accessors="true" {
         /**
          * Calculated the filtered total expense sum and the number of records
          */
-        var filtered        = base.select(['expense.id', 'expense.amount']).get();
+        var filtered        = base.select(["expense.id", "expense.amount"]).get();
         var filteredRecords = filtered.len();
 
         /**
@@ -79,7 +79,7 @@ component singleton accessors="true" {
         var offset           = (page - 1) * records;
         var asyncFilteredSum = async.newFuture(() => {
             var curr = filtered.reduce((prev, record) => {
-                return prev + securityService.decryptValue(record.amount, 'numeric');
+                return prev + securityService.decryptValue(record.amount, "numeric");
             }, 0);
             return securityService.intToFloat(curr);
         });
@@ -94,8 +94,8 @@ component singleton accessors="true" {
 
         var asyncData = async.newFuture(() => {
             // Amount sorting must be performed after loading all rows into memory
-            var isAmountSort = orderCol == 'amount' && orderDir.len();
-            var cacheKey     = 'userid=#userid#|expense.paginate|orderCol=amount|startDate=#startDate#|endDate=#endDate#|search=#search#';
+            var isAmountSort = orderCol == "amount" && orderDir.len();
+            var cacheKey     = "userid=#userid#|expense.paginate|orderCol=amount|startDate=#startDate#|endDate=#endDate#|search=#search#";
             var rows         = isAmountSort ? duplicate(cacheStorage.get(cacheKey)) : null;
 
             if(isNull(rows)) {
@@ -104,22 +104,22 @@ component singleton accessors="true" {
                         // Only apply DB-level ordering when NOT sorting by amount
                         condition = !isAmountSort && orderCol.len() && orderDir.len(),
                         onTrue    = (q1) => {
-                            q1.orderBy(orderCol, orderDir).orderBy('expense.id', orderDir);
+                            q1.orderBy(orderCol, orderDir).orderBy("expense.id", orderDir);
                         },
                         onFalse = (q1) => {
                             if(!isAmountSort) {
-                                q1.orderBy('expense.date', 'desc').orderBy('expense.id', 'desc');
+                                q1.orderBy("expense.date", "desc").orderBy("expense.id", "desc");
                             }
                         }
                     )
                     .select([
-                        'expense.id',
-                        'expense.date',
-                        'expense.amount',
-                        'expense.description',
-                        'category.name as category'
+                        "expense.id",
+                        "expense.date",
+                        "expense.amount",
+                        "expense.description",
+                        "category.name as category"
                     ])
-                    .selectRaw('expense.receipt is not null as receipt');
+                    .selectRaw("expense.receipt is not null as receipt");
 
                 // For amount sorting, fetch ALL filtered rows so we can perform sorting in memory
                 if(!isAmountSort) {
@@ -130,8 +130,8 @@ component singleton accessors="true" {
 
                 rows = rows.map(
                     (value) => {
-                        value.date          = dateFormat(value.date, 'yyyy-mm-dd');
-                        var amountDecrypted = securityService.decryptValue(value.amount, 'numeric'); // raw cents int
+                        value.date          = dateFormat(value.date, "yyyy-mm-dd");
+                        var amountDecrypted = securityService.decryptValue(value.amount, "numeric"); // raw cents int
                         value.amount        = securityService.intToFloat(amountDecrypted);
 
                         // Need the int cents value to sort
@@ -155,7 +155,7 @@ component singleton accessors="true" {
             if(isAmountSort) {
                 // Perform amount sort using int cents
                 rows.sort((a, b) => {
-                    return orderDir == 'asc'
+                    return orderDir == "asc"
                      ? a.amountDecrypted - b.amountDecrypted
                      : b.amountDecrypted - a.amountDecrypted;
                 });
@@ -175,7 +175,7 @@ component singleton accessors="true" {
 
                 // Clean up the temp field
                 rows = rows.map((value) => {
-                    value.delete('amountDecrypted');
+                    value.delete("amountDecrypted");
                     return value;
                 });
             }
@@ -215,26 +215,26 @@ component singleton accessors="true" {
         required date endDate,
         required numeric userid
     ) {
-        var cacheKey = 'userid=#userid#|expense.getTotalInfo|startDate=#startDate#|endDate=#endDate#';
+        var cacheKey = "userid=#userid#|expense.getTotalInfo|startDate=#startDate#|endDate=#endDate#";
         var total    = cacheStorage.get(cacheKey);
         if(isNull(total)) {
             var result = queryExecute(
-                '
+                "
                 select amount
                 from expense
                 where userid = :userid
                 and date between :startDate and :endDate
-                ',
+                ",
                 {
-                    userid   : {value: userid, cfsqltype: 'numeric'},
-                    startDate: {value: startDate, cfsqltype: 'date'},
-                    endDate  : {value: endDate, cfsqltype: 'date'}
+                    userid   : {value: userid, cfsqltype: "numeric"},
+                    startDate: {value: startDate, cfsqltype: "date"},
+                    endDate  : {value: endDate, cfsqltype: "date"}
                 }
             );
 
             // Decrypt and sum amounts
             var totalAmount = result.reduce((prev, row) => {
-                return prev + securityService.decryptValue(row.amount, 'numeric');
+                return prev + securityService.decryptValue(row.amount, "numeric");
             }, 0);
 
             total = {count: result.recordCount(), amount: securityService.intToFloat(totalAmount)};
@@ -258,23 +258,23 @@ component singleton accessors="true" {
         numeric subscriptionid = -1
     ) {
         var data = {
-            date       : {value: date, cfsqltype: 'date'},
-            amount     : {value: securityService.encryptValue(amount), cfsqltype: 'varchar'},
-            description: {value: description, cfsqltype: 'varchar'},
-            categoryid : {value: categoryid, cfsqltype: 'numeric'},
+            date       : {value: date, cfsqltype: "date"},
+            amount     : {value: securityService.encryptValue(amount), cfsqltype: "varchar"},
+            description: {value: description, cfsqltype: "varchar"},
+            categoryid : {value: categoryid, cfsqltype: "numeric"},
             receipt    : receipt,
-            userid     : {value: userid, cfsqltype: 'numeric'}
+            userid     : {value: userid, cfsqltype: "numeric"}
         };
 
         if(subscriptionid > 0) {
-            data.subscriptionid = {value: subscriptionid, cfsqltype: 'numeric'};
+            data.subscriptionid = {value: subscriptionid, cfsqltype: "numeric"};
         }
 
-        q.from('expense').insert(data);
+        q.from("expense").insert(data);
 
         // Clear user expense cache
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|expense');
-        cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|expense");
+        cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|widget");
         return;
     }
 
@@ -289,13 +289,13 @@ component singleton accessors="true" {
         required numeric userid
     ) {
         var qResult = q
-            .from('expense')
-            .returning(['receipt', 'subscriptionid'])
-            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+            .from("expense")
+            .returning(["receipt", "subscriptionid"])
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
             .andWhere(
-                'userid',
-                '=',
-                {value: userid, cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userid, cfsqltype: "numeric"}
             )
             .delete();
 
@@ -304,7 +304,7 @@ component singleton accessors="true" {
         if(success) {
             // If this expense had a receipt and was not charged by a subscription, delete it
             if(
-                qResult.result.keyExists('receipt')
+                qResult.result.keyExists("receipt")
                 && qResult.result.receipt.len()
                 && isNull(qResult.result.subscriptionid)
             ) {
@@ -312,8 +312,8 @@ component singleton accessors="true" {
             }
 
             // Clear user expense cache
-            cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|expense');
-            cacheStorage.clearByKeySnippet(keySnippet = 'userid=#userid#|widget');
+            cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|expense");
+            cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|widget");
         }
 
         return success;
@@ -329,26 +329,26 @@ component singleton accessors="true" {
         boolean return404 = true
     ) {
         var receiptRecord = q
-            .from('expense')
-            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+            .from("expense")
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
             .andWhere(
-                'userid',
-                '=',
-                {value: userid, cfsqltype: 'numeric'}
+                "userid",
+                "=",
+                {value: userid, cfsqltype: "numeric"}
             )
-            .select(['receipt'])
+            .select(["receipt"])
             .first();
 
         // Make sure record and file exists
         if(
-            !receiptRecord.keyExists('receipt') // Not a valid record
+            !receiptRecord.keyExists("receipt") // Not a valid record
             || isNull(receiptRecord.receipt) // Record never had a receipt
             || !receiptRecord.receipt.len() // Invalid receipt
             || !fileExists(
                 getReceiptPath(receipt = receiptRecord.receipt, userDir = userDir) // Check the receipt still exists
             )
         ) {
-            return return404 ? '#getBasePath()#/views/404.webp' : '';
+            return return404 ? "#getBasePath()#/views/404.webp" : "";
         }
 
         return getReceiptPath(receipt = receiptRecord.receipt, userDir = userDir);
@@ -358,7 +358,7 @@ component singleton accessors="true" {
      * Gets the absolute path of receipt supplied in the userdir
      */
     private string function getReceiptPath(required string receipt, required string userDir) {
-        return '#userDir#/#receipt#.webp';
+        return "#userDir#/#receipt#.webp";
     }
 
     /**
@@ -375,7 +375,7 @@ component singleton accessors="true" {
     public struct function processExpenseData(required string expenseFile) {
         var result = {
             valid  : true,
-            message: '',
+            message: "",
             data   : [],
             errors : []
         };
@@ -387,12 +387,12 @@ component singleton accessors="true" {
                 .intoAnArray()
                 .withFirstRowIsHeader()
                 .withAllowMissingColumnNames(false)
-                .withDelimiter(',')
+                .withDelimiter(",")
                 .execute();
         }
         catch(any e) {
             result.valid   = false;
-            result.message = 'Error loading file. Please use the template provided';
+            result.message = "Error loading file. Please use the template provided";
         }
 
         if(!result.valid) return result;
@@ -402,7 +402,7 @@ component singleton accessors="true" {
         for(var i = 1; i <= getHeaders().len(); i++) {
             if(arrayLen(columns) < getHeaders().len() || getHeaders()[i] != columns[i]) {
                 result.valid   = false;
-                result.message = 'Please verify columns match exactly: #getHeaders().toList(', ')#';
+                result.message = "Please verify columns match exactly: #getHeaders().toList(", ")#";
                 break;
             }
         }
@@ -411,7 +411,7 @@ component singleton accessors="true" {
 
         if(import.data.len() > getMaxRows()) {
             result.valid   = false;
-            result.message = 'Error file contains too many rows. Please limit to a maximum of #getMaxRows()# rows';
+            result.message = "Error file contains too many rows. Please limit to a maximum of #getMaxRows()# rows";
             return result;
         }
 
@@ -427,18 +427,18 @@ component singleton accessors="true" {
                 /**
                  * Validate each row
                  */
-                var validation = validationManager.validate(target = rowData, constraints = 'expenseDataRow');
+                var validation = validationManager.validate(target = rowData, constraints = "expenseDataRow");
                 if(!validation.hasErrors()) {
                     rowData.amount = parseNumber(rowData.amount); // Safely parse amount as number after validating
                     result.data.append(rowData);
                 }
                 else {
                     // +1 for header row
-                    result.errors.append({row: index + 1, message: validation.getAllErrors().toList('; ')});
+                    result.errors.append({row: index + 1, message: validation.getAllErrors().toList("; ")});
                 }
             }
             catch(any e) {
-                result.errors.append({row: index + 1, message: 'Error importing row. Please try again.'});
+                result.errors.append({row: index + 1, message: "Error importing row. Please try again."});
             }
         });
 
@@ -472,8 +472,8 @@ component singleton accessors="true" {
 
         records.each(
             (expense) => {
-                expense.delete('id');
-                expense.delete('receipt');
+                expense.delete("id");
+                expense.delete("receipt");
             },
             true,
             maxThreads
@@ -495,19 +495,19 @@ component singleton accessors="true" {
         required numeric userid
     ) {
         return q
-            .from('expense')
-            .where('expense.userid', '=', userid)
+            .from("expense")
+            .where("expense.userid", "=", userid)
             .andWhereBetween(
-                'expense.date',
-                {value: startDate, cfsqltype: 'date'},
-                {value: endDate, cfsqltype: 'date'}
+                "expense.date",
+                {value: startDate, cfsqltype: "date"},
+                {value: endDate, cfsqltype: "date"}
             )
-            .andWhereNotNull('expense.receipt')
+            .andWhereNotNull("expense.receipt")
             .select([
-                'expense.id',
-                'expense.receipt',
-                'expense.date',
-                'expense.description'
+                "expense.id",
+                "expense.receipt",
+                "expense.date",
+                "expense.description"
             ])
             .get();
     }
@@ -531,18 +531,18 @@ component singleton accessors="true" {
 
         // No receipts
         if(!expensesWithReceipt.len()) {
-            throw(message = 'No Receipts found within date range.', type = 'NoReceiptsFound');
+            throw(message = "No Receipts found within date range.", type = "NoReceiptsFound");
         }
 
         // Over 100 receipts, too large
         if(expensesWithReceipt.len() > 100) {
             throw(
-                message = 'Too many receipts within date range. Maximum of 100 allowed per export.',
-                type    = 'TooManyReceipts'
+                message = "Too many receipts within date range. Maximum of 100 allowed per export.",
+                type    = "TooManyReceipts"
             );
         }
 
-        var filePath = getTempDirectory() & 'receipts_#userid#_#dateFormat(startDate, 'yyyy-mm-dd')#_to_#dateFormat(endDate, 'yyyy-mm-dd')#.zip';
+        var filePath = getTempDirectory() & "receipts_#userid#_#dateFormat(startDate, "yyyy-mm-dd")#_to_#dateFormat(endDate, "yyyy-mm-dd")#.zip";
 
         // Attempt to create zip file
         try {
@@ -552,16 +552,16 @@ component singleton accessors="true" {
                 overwrite = true
             ) {
                 expensesWithReceipt.each((expense) => {
-                    var receiptPath = '#userdir#/#expense.receipt#.webp';
+                    var receiptPath = "#userdir#/#expense.receipt#.webp";
 
-                    var safeDesc = reReplace(expense.description, '[\\/:*?"<>|]', '_', 'all');
-                    var fileName = '#dateFormat(expense.date, 'yyyy-mm-dd')#_#left(safeDesc, 50)#.webp';
+                    var safeDesc = reReplace(expense.description, "[\\/:*?""<>|]", "_", "all");
+                    var fileName = "#dateFormat(expense.date, "yyyy-mm-dd")#_#left(safeDesc, 50)#.webp";
                     cfzipparam(source = receiptPath, entryPath = fileName);
                 });
             }
         }
         catch(any e) {
-            throw(message = 'Error aggregating receipts. Please try again later.', type = 'ZipError')
+            throw(message = "Error aggregating receipts. Please try again later.", type = "ZipError")
         }
 
         return filePath;
@@ -577,11 +577,11 @@ component singleton accessors="true" {
      * @return The UUID of the converted image
      */
     public string function receiptUpload(required string formField, required string userDir) {
-        var receipt = imageService.validateUpload(formField = 'receipt', outputs = [{uploadDir: userDir, type: 'webp'}]);
+        var receipt = imageService.validateUpload(formField = "receipt", outputs = [{uploadDir: userDir, type: "webp"}]);
 
         imageService.convert(
-            path       = '#userDir#/#receipt#.webp',
-            outputPath = '#userDir#/#receipt#.webp',
+            path       = "#userDir#/#receipt#.webp",
+            outputPath = "#userDir#/#receipt#.webp",
             quality    = 50,
             resize     = 750
         );
