@@ -40,7 +40,6 @@ After the file sync, SSHs into the instance and runs the following in sequence:
 
 ```
 sudo box server stop
-sudo box update --force  # Update dependencies
 sudo box install --production  # Install new production dependencies
 sudo box migrate up  # Run any pending migrations
 sudo box server start

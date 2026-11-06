@@ -35,7 +35,7 @@ import { type SubmitEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BASE_FORMAT } from 'utils/dates';
 import { getErrorInfo } from 'utils/errorInfo';
-import { validateMoney } from 'validators/validateMoney';
+import { validateMoney, validateNonNegativeMoney } from 'validators/validateMoney';
 
 interface EditIncomeProps {
     date: Dayjs;
@@ -124,9 +124,10 @@ export default function EditIncome({ date }: EditIncomeProps) {
     const minMonth = dayjs().subtract(2, 'year');
     const maxMonth = dayjs().add(1, 'year');
 
+    // Pay can be $0 (e.g. a month without work)
     const payField = useFormField({
         initialValue: '',
-        validator: validateMoney,
+        validator: validateNonNegativeMoney,
     });
 
     /**
@@ -188,18 +189,19 @@ export default function EditIncome({ date }: EditIncomeProps) {
      * Tracks which month's data has already been used to pre-fill the pay field, so a
      * background refetch while the dialog stays open (e.g. after React Query revalidates)
      * doesn't stomp whatever the user has typed since. Cleared on close so reopening always
-     * pre-fills fresh, and re-fires on its own if the user changes the month mid-dialog.
+     * pre-fills fresh (also from cached data, hence the open dep), and re-fires on its own if the
+     * user changes the month mid-dialog.
      * resetTo makes the saved pay the baseline, so payField.isDirty reflects an actual edit
      */
     const prefilledDateRef = useRef<string | null>(null);
 
     useEffect(() => {
-        if (incomeData && prefilledDateRef.current !== formattedDate) {
+        if (open && incomeData && prefilledDateRef.current !== formattedDate) {
             payField.resetTo(incomeData.pay.toString());
             prefilledDateRef.current = formattedDate;
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- pre-fill only when new income data arrives (see prefilledDateRef)
-    }, [incomeData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- pre-fill only when the dialog opens or new income data arrives (see prefilledDateRef)
+    }, [incomeData, open]);
 
     /**
      * Saved entries that haven't been removed, plus pending entries, newest first
@@ -290,6 +292,9 @@ export default function EditIncome({ date }: EditIncomeProps) {
         setFormLoading(false);
         setPendingAdds([]);
         setPendingRemovals([]);
+        setDateErrorCode(null);
+        // Drop any abandoned pay edit, reopening pre-fills from the saved / cached value
+        payField.reset();
         prefilledDateRef.current = null;
     };
 

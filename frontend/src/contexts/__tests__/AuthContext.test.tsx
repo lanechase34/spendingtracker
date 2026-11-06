@@ -3,7 +3,12 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { AuthContextProvider } from 'contexts/AuthContext';
 import useAuthContext from 'hooks/useAuthContext';
 import type { ReactNode } from 'react';
+import { clearCategoryCache } from 'utils/categoryCache';
 import { API_BASE_URL } from 'utils/constants';
+
+jest.mock('utils/categoryCache', () => ({
+    clearCategoryCache: jest.fn(),
+}));
 
 // Mock useLocalStorage hook
 const mockSetWasAuthenticated: jest.Mock = jest.fn();
@@ -63,7 +68,7 @@ describe('AuthContext', () => {
             // Should not make any fetch calls
             expect(mockFetch).not.toHaveBeenCalled();
             expect(result.current.authToken).toBeNull();
-            expect(result.current.isAuthenticated()).toBe(false);
+            expect(result.current.authToken).toBeNull();
         });
     });
 
@@ -122,8 +127,8 @@ describe('AuthContext', () => {
 
             // Verify state
             expect(result.current.authToken).toBe('new-access-token');
-            expect(result.current.csrfToken).toBe('new-csrf-token');
-            expect(result.current.isAuthenticated()).toBe(true);
+            await expect(result.current.getCsrfToken('new-access-token')).resolves.toBe('new-csrf-token');
+            expect(mockFetch).toHaveBeenCalledTimes(2); // cached, no extra fetch
             expect(mockSetWasAuthenticated).toHaveBeenCalledWith(true);
         });
 
@@ -147,7 +152,7 @@ describe('AuthContext', () => {
             });
 
             expect(result.current.authToken).toBeNull();
-            expect(result.current.isAuthenticated()).toBe(false);
+            expect(result.current.authToken).toBeNull();
 
             // Verify wasAuthenticated was cleared
             expect(mockSetWasAuthenticated).toHaveBeenCalledWith(false);
@@ -238,7 +243,7 @@ describe('AuthContext', () => {
             );
 
             expect(result.current.authToken).toBe('login-token-456');
-            expect(result.current.csrfToken).toBe('csrf-token-123');
+            await expect(result.current.getCsrfToken('login-token-456')).resolves.toBe('csrf-token-123');
             expect(result.current.userJustLoggedIn).toBe(true);
             expect(mockSetWasAuthenticated).toHaveBeenCalledWith(true);
         });
@@ -274,12 +279,12 @@ describe('AuthContext', () => {
                 expect(result.current.authToken).toBe('token');
             });
 
-            // Set pending token
+            // Set pending verification credentials
             act(() => {
-                result.current.setPendingToken('pending-token');
+                result.current.setPendingVerification({ email: 'a@b.co', password: 'pw', codeSent: true });
             });
 
-            expect(result.current.pendingToken).toBe('pending-token');
+            expect(result.current.pendingVerification).toEqual({ email: 'a@b.co', password: 'pw', codeSent: true });
 
             // Logout
             act(() => {
@@ -287,8 +292,8 @@ describe('AuthContext', () => {
             });
 
             expect(result.current.authToken).toBeNull();
-            expect(result.current.csrfToken).toBeNull();
-            expect(result.current.pendingToken).toBeNull();
+            expect(result.current.pendingVerification).toBeNull();
+            expect(clearCategoryCache).toHaveBeenCalled();
             expect(result.current.userJustLoggedIn).toBe(false);
             expect(mockSetWasAuthenticated).toHaveBeenCalledWith(false);
         });
@@ -331,6 +336,44 @@ describe('AuthContext', () => {
 
             expect(csrfToken).toBe('cached-csrf');
             expect(mockFetch).toHaveBeenCalledTimes(1); // No additional call
+        });
+
+        it('Should not reuse a CSRF token issued for a different JWT', async () => {
+            mockWasAuthenticated.current = false;
+
+            const { result } = renderHook(() => useAuthContext(), {
+                wrapper: createWrapper(),
+            });
+
+            await waitFor(() => {
+                expect(result.current.isInitializing()).toBe(false);
+            });
+
+            mockFetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => ({ error: false, data: { csrf_token: 'pending-csrf' } }),
+            });
+            mockFetch.mockResolvedValueOnce({
+                ok: true,
+                json: () => ({ error: false, data: { csrf_token: 'real-csrf' } }),
+            });
+
+            // CSRF cached for the pending 2FA token
+            await act(async () => {
+                await result.current.getCsrfToken('pending-token');
+            });
+
+            // Completing login with the real JWT fetches a CSRF token for it
+            await act(async () => {
+                await result.current.complete2FALogin('real-token');
+            });
+
+            expect(mockFetch).toHaveBeenCalledTimes(2);
+            expect(mockFetch).toHaveBeenLastCalledWith(
+                `${API_BASE_URL}/csrf`,
+                expect.objectContaining({ headers: { 'x-auth-token': 'real-token' } })
+            );
+            await expect(result.current.getCsrfToken('real-token')).resolves.toBe('real-csrf');
         });
 
         it('Should force fetch new CSRF token when forceNew is true', async () => {
@@ -531,7 +574,7 @@ describe('AuthContext', () => {
 
             expect(token).toBe('refreshed-token');
             expect(result.current.authToken).toBe('refreshed-token');
-            expect(result.current.csrfToken).toBe('refreshed-csrf');
+            await expect(result.current.getCsrfToken('refreshed-token')).resolves.toBe('refreshed-csrf');
         });
 
         it('Should deduplicate concurrent refresh requests', async () => {
@@ -643,7 +686,7 @@ describe('AuthContext', () => {
             expect(result.current.getLatestAuthToken()).toBe('latest-token');
         });
 
-        it('Should manage pendingToken state', async () => {
+        it('Should manage pendingVerification state in memory only', async () => {
             mockWasAuthenticated.current = false;
 
             const { result } = renderHook(() => useAuthContext(), {
@@ -654,13 +697,75 @@ describe('AuthContext', () => {
                 expect(result.current.isInitializing()).toBe(false);
             });
 
-            expect(result.current.pendingToken).toBeNull();
+            expect(result.current.pendingVerification).toBeNull();
 
             act(() => {
-                result.current.setPendingToken('pending-123');
+                result.current.setPendingVerification({ email: 'a@b.co', password: 'secretpassword', codeSent: true });
             });
 
-            expect(result.current.pendingToken).toBe('pending-123');
+            expect(result.current.pendingVerification).toEqual({
+                email: 'a@b.co',
+                password: 'secretpassword',
+                codeSent: true,
+            });
+
+            // Credentials are never written to browser storage
+            expect(
+                Object.keys(localStorage)
+                    .map((key) => localStorage.getItem(key))
+                    .join(' ')
+            ).not.toContain('secretpassword');
+            expect(
+                Object.keys(sessionStorage)
+                    .map((key) => sessionStorage.getItem(key))
+                    .join(' ')
+            ).not.toContain('secretpassword');
+        });
+    });
+
+    describe('logout during refresh', () => {
+        it('Should discard a refresh that resolves after logout', async () => {
+            mockWasAuthenticated.current = false;
+
+            const { result } = renderHook(() => useAuthContext(), {
+                wrapper: createWrapper(),
+            });
+
+            await waitFor(() => {
+                expect(result.current.isInitializing()).toBe(false);
+            });
+
+            let resolveRefresh: (value: unknown) => void = () => {
+                /* replaced below */
+            };
+            mockFetch.mockReturnValueOnce(
+                new Promise((resolve) => {
+                    resolveRefresh = resolve;
+                })
+            );
+
+            let refreshPromise: Promise<string | null> = Promise.resolve(null);
+            act(() => {
+                refreshPromise = result.current.refreshToken();
+            });
+
+            // User logs out while the refresh is in flight
+            act(() => {
+                result.current.logout();
+            });
+
+            let token: string | null = 'unset';
+            await act(async () => {
+                resolveRefresh({
+                    ok: true,
+                    json: () => ({ error: false, data: { access_token: 'late-token' } }),
+                });
+                token = await refreshPromise;
+            });
+
+            expect(token).toBeNull();
+            expect(result.current.authToken).toBeNull();
+            expect(mockFetch).toHaveBeenCalledTimes(1); // no CSRF fetch for the discarded token
         });
     });
 });

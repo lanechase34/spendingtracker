@@ -1,5 +1,5 @@
 import { renderHook } from '@test-utils';
-import usePendingFetch, { usePending2FAFetch } from 'hooks/usePendingFetch';
+import { usePending2FAFetch } from 'hooks/usePendingFetch';
 import type { AuthContextType } from 'types/AuthContext.type';
 
 global.fetch = jest.fn();
@@ -16,16 +16,7 @@ function fetchInit(call = 0): RequestInit & { headers: Record<string, string> } 
     return args[1];
 }
 
-/**
- * Both hooks share the same fetch logic, they only differ in which token they read and clear
- */
 describe.each([
-    {
-        name: 'usePendingFetch',
-        hook: usePendingFetch,
-        tokenKey: 'pendingToken',
-        clearKey: 'setPendingToken',
-    },
     {
         name: 'usePending2FAFetch',
         hook: usePending2FAFetch,

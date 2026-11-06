@@ -50,6 +50,9 @@ export default function useFetchImage({ url }: FetchImage): UseFetchImageReturn 
             if (!response.ok) throw new Error('Invalid network response');
 
             const result = await response.blob();
+
+            // Superseded or unmounted while reading, don't create a URL nothing will revoke
+            if (abortController.signal.aborted) return;
             const objectUrl = URL.createObjectURL(result);
 
             // Revoke previous URL if it exists
@@ -57,16 +60,29 @@ export default function useFetchImage({ url }: FetchImage): UseFetchImageReturn 
                 if (prev) URL.revokeObjectURL(prev);
                 return objectUrl;
             });
-
-            setLoading(false);
         } catch (err: unknown) {
             const errorInfo = getErrorInfo(err);
             if (errorInfo.name !== 'AbortError') {
                 setError(errorInfo.message ?? 'Failed to load image');
+            }
+        } finally {
+            // Only the latest request owns loading, an aborted one was superseded (or unmounted)
+            if (abortControllerRef.current === abortController) {
+                abortControllerRef.current = null;
                 setLoading(false);
             }
         }
     }, [url, authFetch]);
+
+    /**
+     * Abort any in-flight request on unmount
+     */
+    useEffect(() => {
+        return () => {
+            abortControllerRef.current?.abort();
+            abortControllerRef.current = null;
+        };
+    }, []);
 
     /**
      * Cleanup object URL on unmount or when URL changes

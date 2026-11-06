@@ -4,5 +4,5 @@
         "composite": true,
         "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
     },
-    "include": ["vite.config.ts", "playwright.config.ts", "eslint.config.ts"]
+    "include": ["vite.config.ts", "playwright.config.ts", "playwright.prod.config.ts", "eslint.config.ts"]
 }

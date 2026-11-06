@@ -6,15 +6,20 @@ import { APIError } from 'utils/apiError';
 
 // Mock all external dependencies
 const mockCloseVerifyDialog = jest.fn();
-const mockLogout = jest.fn();
+const mockSetPendingVerification = jest.fn();
 const mockSetToken = jest.fn();
-const mockResendVerificationCode = jest.fn();
-const mockVerify = jest.fn() as jest.Mock<Promise<string | null>, [FormData]>;
-const mockSetCooldownUntil = jest.fn() as jest.Mock<void, [number | null]>;
+const mockResendVerificationCode = jest.fn() as jest.Mock<Promise<void>, [{ email: string; password: string }]>;
+const mockVerify = jest.fn() as jest.Mock<
+    Promise<string | null>,
+    [{ email: string; password: string; verificationCode: string }]
+>;
+const mockUserService = jest.fn();
+const mockSetCooldownUntil = jest.fn() as jest.Mock<void, [number | null | ((prev: number | null) => number | null)]>;
 
 // Default hook return values - overridden per test where needed
 let mockVerifyDialogOpen = true;
-let mockPendingToken: string | null = 'pending-token-123';
+const PENDING = { email: 'test@example.com', password: 'Password123!', codeSent: true };
+let mockPendingVerification: { email: string; password: string; codeSent: boolean } | null = PENDING;
 let mockCooldownUntil: number | null = null;
 
 jest.mock('hooks/useAuthDialogContext', () => ({
@@ -29,14 +34,9 @@ jest.mock('hooks/useAuthContext', () => ({
     __esModule: true,
     default: () => ({
         login: mockSetToken,
-        pendingToken: mockPendingToken,
-        logout: mockLogout,
+        pendingVerification: mockPendingVerification,
+        setPendingVerification: mockSetPendingVerification,
     }),
-}));
-
-jest.mock('hooks/usePendingFetch', () => ({
-    __esModule: true,
-    default: () => ({ Authorization: `Bearer ${mockPendingToken ?? ''}` }),
 }));
 
 jest.mock('hooks/useLocalStorage', () => ({
@@ -47,10 +47,13 @@ jest.mock('hooks/useLocalStorage', () => ({
 }));
 
 jest.mock('schema/user', () => ({
-    userService: () => ({
-        resendVerificationCode: mockResendVerificationCode,
-        verify: mockVerify,
-    }),
+    userService: (params: unknown) => {
+        mockUserService(params);
+        return {
+            resendVerificationCode: mockResendVerificationCode,
+            verify: mockVerify,
+        };
+    },
 }));
 
 jest.mock('components/ErrorAlert', () => ({
@@ -91,7 +94,7 @@ describe('VerifyDialog', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockVerifyDialogOpen = true;
-        mockPendingToken = 'pending-token-123';
+        mockPendingVerification = PENDING;
         mockCooldownUntil = null;
 
         jest.spyOn(console, 'error').mockImplementation(() => {
@@ -144,7 +147,17 @@ describe('VerifyDialog', () => {
 
         it('Does not show resend success alert initially', () => {
             renderDialog();
-            expect(screen.queryByText(/success!/i)).not.toBeInTheDocument();
+            expect(screen.queryByText(/a new code has been sent/i)).not.toBeInTheDocument();
+        });
+
+        it('Renders the close button', () => {
+            renderDialog();
+            expect(screen.getByLabelText('close')).toBeInTheDocument();
+        });
+
+        it('Uses an unauthenticated user service', () => {
+            renderDialog();
+            expect(mockUserService).toHaveBeenCalledWith({});
         });
 
         it('Resend button is disabled on initial load', () => {
@@ -179,6 +192,13 @@ describe('VerifyDialog', () => {
             expect(mockVerify).not.toHaveBeenCalled();
         });
 
+        it('Accepts a code with whitespace and lowercase letters', async () => {
+            renderDialog();
+            await typeCode(' abcd 1234 ');
+            fireEvent.blur(getVerifyCodeInput());
+            expect(screen.queryByText(/please enter a valid code/i)).not.toBeInTheDocument();
+        });
+
         it('Clears validation error after entering a valid code', async () => {
             mockVerify.mockResolvedValue('new-token');
             renderDialog();
@@ -190,7 +210,7 @@ describe('VerifyDialog', () => {
     });
 
     describe('Verify submission', () => {
-        it('Calls verify API with entered code', async () => {
+        it('Calls verify API with the stored credentials and entered code', async () => {
             mockVerify.mockResolvedValue('new-token');
             renderDialog();
             await typeCode('ABCD1234');
@@ -198,19 +218,46 @@ describe('VerifyDialog', () => {
             await waitFor(() => {
                 expect(mockVerify).toHaveBeenCalledTimes(1);
             });
-            const formData = at(mockVerify.mock.calls, 0)[0];
-            expect(formData.get('verificationcode')).toBe('ABCD1234');
+            expect(at(mockVerify.mock.calls, 0)[0]).toEqual({
+                email: 'test@example.com',
+                password: 'Password123!',
+                verificationCode: 'ABCD1234',
+            });
         });
 
-        it('Calls setToken and closes dialog on success', async () => {
+        it('Sends the code without whitespace and uppercased', async () => {
+            mockVerify.mockResolvedValue('new-token');
+            renderDialog();
+            await typeCode(' abcd 1234 ');
+            await userEvent.click(getVerifyButton());
+            await waitFor(() => {
+                expect(mockVerify).toHaveBeenCalledTimes(1);
+            });
+            expect(at(mockVerify.mock.calls, 0)[0].verificationCode).toBe('ABCD1234');
+        });
+
+        it('Calls setToken, clears the stored credentials and closes dialog on success', async () => {
             mockVerify.mockResolvedValue('new-token-abc');
             renderDialog();
             await typeCode('ABCD1234');
             await userEvent.click(getVerifyButton());
             await waitFor(() => {
                 expect(mockSetToken).toHaveBeenCalledWith('new-token-abc');
+                expect(mockSetPendingVerification).toHaveBeenCalledWith(null);
                 expect(mockCloseVerifyDialog).toHaveBeenCalled();
             });
+        });
+
+        it('Shows the already verified message from the API', async () => {
+            mockVerify.mockRejectedValue(new APIError('Account already verified. Please log in.', 400));
+            renderDialog();
+            await typeCode('ABCD1234');
+            await userEvent.click(getVerifyButton());
+            await waitFor(() => {
+                expect(screen.getByText('Account already verified. Please log in.')).toBeInTheDocument();
+            });
+            expect(mockSetPendingVerification).not.toHaveBeenCalled();
+            expect(mockSetToken).not.toHaveBeenCalled();
         });
 
         it('Shows error alert on APIError', async () => {
@@ -275,12 +322,16 @@ describe('VerifyDialog', () => {
     });
 
     describe('Resend verification code', () => {
-        it('Calls resendVerificationCode API when button clicked', async () => {
+        it('Calls resendVerificationCode API with the stored credentials when button clicked', async () => {
             mockResendVerificationCode.mockResolvedValue(undefined);
             renderDialog();
             await userEvent.click(getResendButton());
             await waitFor(() => {
                 expect(mockResendVerificationCode).toHaveBeenCalledTimes(1);
+            });
+            expect(mockResendVerificationCode).toHaveBeenCalledWith({
+                email: 'test@example.com',
+                password: 'Password123!',
             });
         });
 
@@ -289,7 +340,9 @@ describe('VerifyDialog', () => {
             renderDialog();
             await userEvent.click(getResendButton());
             await waitFor(() => {
-                expect(screen.getByText(/success! please check your email/i)).toBeInTheDocument();
+                expect(
+                    screen.getByText(/if your account needs verifying, a new code has been sent/i)
+                ).toBeInTheDocument();
             });
         });
 
@@ -310,10 +363,11 @@ describe('VerifyDialog', () => {
             renderDialog();
             await userEvent.click(getResendButton());
             await waitFor(() => {
-                expect(screen.getByText(/success!/i)).toBeInTheDocument();
+                expect(screen.getByText(/a new code has been sent/i)).toBeInTheDocument();
             });
-            await userEvent.click(screen.getByLabelText(/close/i));
-            expect(screen.queryByText(/success!/i)).not.toBeInTheDocument();
+            // The alert's close button (the dialog's close button is lowercase 'close')
+            await userEvent.click(screen.getByLabelText('Close'));
+            expect(screen.queryByText(/a new code has been sent/i)).not.toBeInTheDocument();
         });
 
         it('Shows error on 429 rate limit response', async () => {
@@ -356,6 +410,41 @@ describe('VerifyDialog', () => {
 
         afterEach(() => {
             jest.useRealTimers();
+        });
+
+        it('Does not start the cooldown while mounted closed (page load)', () => {
+            mockVerifyDialogOpen = false;
+            renderDialog();
+            expect(mockSetCooldownUntil).not.toHaveBeenCalled();
+        });
+
+        it('Does not start the cooldown when opened after an unverified login (no code sent)', () => {
+            mockVerifyDialogOpen = false;
+            mockPendingVerification = { ...PENDING, codeSent: false };
+            const { rerender } = renderDialog();
+
+            mockVerifyDialogOpen = true;
+            rerender(<VerifyDialog />);
+
+            expect(mockSetCooldownUntil).not.toHaveBeenCalled();
+            expect(getResendButton()).not.toBeDisabled();
+        });
+
+        it('Starts the cooldown when the dialog opens, since a code was just sent', () => {
+            mockVerifyDialogOpen = false;
+            const { rerender } = renderDialog();
+            expect(mockSetCooldownUntil).not.toHaveBeenCalled();
+
+            mockVerifyDialogOpen = true;
+            rerender(<VerifyDialog />);
+
+            expect(mockSetCooldownUntil).toHaveBeenCalledTimes(1);
+            const update = at(mockSetCooldownUntil.mock.calls, 0)[0];
+            if (typeof update !== 'function') throw new Error('Expected an updater');
+            expect(update(null)).toBe(Date.now() + 10 * 60 * 1000);
+            // An active, longer cooldown is kept
+            const later = Date.now() + 20 * 60 * 1000;
+            expect(update(later)).toBe(later);
         });
 
         it('Resend button is enabled when no cooldown is active', () => {
@@ -409,27 +498,58 @@ describe('VerifyDialog', () => {
         });
     });
 
-    describe('Forced logout when pending token becomes null', () => {
-        it('Calls logout and closeVerifyDialog when dialog is open and pendingToken becomes null', () => {
-            mockPendingToken = null;
-            mockVerifyDialogOpen = true;
+    describe('Closing the dialog', () => {
+        it('Clears the stored credentials and closes when the close button is clicked', async () => {
             renderDialog();
-            expect(mockLogout).toHaveBeenCalled();
+            await userEvent.click(screen.getByLabelText('close'));
+            expect(mockSetPendingVerification).toHaveBeenCalledWith(null);
             expect(mockCloseVerifyDialog).toHaveBeenCalled();
         });
 
-        it('Does not logout when dialog is open and pendingToken is valid', () => {
-            mockPendingToken = 'valid-token';
+        it('Disables the close button while verifying', async () => {
+            mockVerify.mockReturnValue(
+                new Promise(() => {
+                    // empty, never finishes
+                })
+            );
+            renderDialog();
+            await typeCode('ABCD1234');
+            await userEvent.click(getVerifyButton());
+            await waitFor(() => {
+                expect(screen.getByLabelText('close')).toBeDisabled();
+            });
+        });
+    });
+
+    describe('Forced close when pending credentials become null', () => {
+        it('Calls closeVerifyDialog when dialog is open and pendingVerification is null', () => {
+            mockPendingVerification = null;
             mockVerifyDialogOpen = true;
             renderDialog();
-            expect(mockLogout).not.toHaveBeenCalled();
+            expect(mockCloseVerifyDialog).toHaveBeenCalled();
         });
 
-        it('Does not logout when dialog is closed even if pendingToken is null', () => {
-            mockPendingToken = null;
+        it('Does not close when dialog is open and pendingVerification is set', () => {
+            mockVerifyDialogOpen = true;
+            renderDialog();
+            expect(mockCloseVerifyDialog).not.toHaveBeenCalled();
+        });
+
+        it('Does not close when dialog is closed even if pendingVerification is null', () => {
+            mockPendingVerification = null;
             mockVerifyDialogOpen = false;
             renderDialog();
-            expect(mockLogout).not.toHaveBeenCalled();
+            expect(mockCloseVerifyDialog).not.toHaveBeenCalled();
+        });
+
+        it('Does not call verify or resend without pending credentials', async () => {
+            mockPendingVerification = null;
+            renderDialog();
+            await typeCode('ABCD1234');
+            await userEvent.click(getVerifyButton());
+            await userEvent.click(getResendButton());
+            expect(mockVerify).not.toHaveBeenCalled();
+            expect(mockResendVerificationCode).not.toHaveBeenCalled();
         });
     });
 });

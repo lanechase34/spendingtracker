@@ -1,5 +1,5 @@
 import useAuthFetch from 'hooks/useAuthFetch';
-import useExpenseContext from 'hooks/useExpenseContext';
+import useExpenseSummary from 'hooks/useExpenseSummary';
 import useFileUpload from 'hooks/useFileUpload';
 import { useInvalidateWidgets } from 'hooks/useInvalidateWidgets';
 import useToastContext from 'hooks/useToastContext';
@@ -18,6 +18,7 @@ import { validateExpenseRow } from 'validators/validateExpenseRow';
 import BulkImportControls from './BulkImportControls';
 import BulkImportDialog from './BulkImportDialog';
 
+// validateFile also accepts a .csv reported as application/vnd.ms-excel or with no type
 const CSV_MIME_TYPES = ['text/csv'];
 const CSV_MAX_FILE_SIZE = 50 * 1024 * 1024;
 
@@ -33,7 +34,7 @@ export default function BulkImport() {
 
     const authFetch = useAuthFetch();
     const { showToast } = useToastContext();
-    const { refetch: refetchExpenses } = useExpenseContext();
+    const { refetch: refetchExpenses } = useExpenseSummary();
     const invalidateWidgets = useInvalidateWidgets();
 
     /**
@@ -70,7 +71,11 @@ export default function BulkImport() {
                 method: 'POST',
                 body: formData,
             });
-            if (!response) return;
+            // No session (user was logged out), close the dialog rather than leave it open and empty
+            if (!response) {
+                dispatch({ type: 'SET_SHOWIMPORTDIALOG', payload: false });
+                return;
+            }
 
             // Validate response
             const json = await safeJson(response);
@@ -215,6 +220,7 @@ export default function BulkImport() {
             if (!response.ok) throw new Error('Server error');
             showToast('Expenses imported successfully!', 'success');
 
+            // Saving is done, release the dialog before refetching
             dispatch({ type: 'SET_SAVING', payload: false });
 
             // Refetch expense list
@@ -231,6 +237,8 @@ export default function BulkImport() {
         } catch (err: unknown) {
             console.error('Network error:', err);
             showToast('Server Error. Some records failed to save. Please try again.', 'error');
+        } finally {
+            // Always release saving, including when there is no response (no session)
             dispatch({ type: 'SET_SAVING', payload: false });
         }
     }, [authFetch, dispatch, invalidateWidgets, refetchExpenses, resetDialog, showToast, state.saving]);

@@ -1,9 +1,12 @@
+import dayjs from 'dayjs';
 import { DateRangeTypeSchema } from 'types/DateRange.type';
 import type { ExpenseDataRow } from 'types/Expense.type';
 import { NoDataAPIResponseSchema, validateAPIResponse } from 'validators/validateAPIResponse';
 import { validateEmail } from 'validators/validateEmail';
-import { getErrorFor, validateExpenseRow } from 'validators/validateExpenseRow';
-import { validateMoney } from 'validators/validateMoney';
+import { getErrorFor, validateExpenseDate, validateExpenseRow } from 'validators/validateExpenseRow';
+import { validateFile } from 'validators/validateFile';
+import { validateMoney, validateNonNegativeMoney } from 'validators/validateMoney';
+import { normalize2FACode, validate2FACode } from 'validators/validateTOTP';
 import { z } from 'zod';
 
 describe('validateMoney', () => {
@@ -24,6 +27,73 @@ describe('validateMoney', () => {
 
     it.each(['0', '0.00', '000'])('Should reject %p as not positive', (value) => {
         expect(validateMoney(value)).toBe('Enter a positive amount greater than zero');
+    });
+
+    it.each(['0', '0.00', '000'])('Should accept %p with allowZero', (value) => {
+        expect(validateMoney(value, { allowZero: true })).toBeNull();
+    });
+});
+
+describe('validateNonNegativeMoney', () => {
+    it.each(['0', '0.00', '1', '12.34'])('Should accept %p', (value) => {
+        expect(validateNonNegativeMoney(value)).toBeNull();
+    });
+
+    it('Should still require a value', () => {
+        expect(validateNonNegativeMoney('')).toBe('Field is required');
+    });
+
+    it.each(['-1', '1.234', 'abc'])('Should reject %p as an invalid amount', (value) => {
+        expect(validateNonNegativeMoney(value)).toBe('Enter a valid amount with up to 2 decimal places');
+    });
+});
+
+describe('validateFile', () => {
+    const csvTypes = ['text/csv'];
+    const max = 1024;
+
+    it.each([
+        ['text/csv', 'a.csv'],
+        ['application/vnd.ms-excel', 'a.csv'],
+        ['', 'a.CSV'],
+    ])('Should accept a CSV reported as %p (%s)', (type, name) => {
+        const file = new File(['x'], name, { type });
+        expect(validateFile(file, csvTypes, max)).toEqual({ file, error: null });
+    });
+
+    it.each([
+        ['application/vnd.ms-excel', 'a.xls'],
+        ['', 'a.txt'],
+        ['', 'csv'],
+        ['text/plain', 'a.csv'],
+    ])('Should reject %p (%s)', (type, name) => {
+        expect(validateFile(new File(['x'], name, { type }), csvTypes, max).error).toBe('Invalid file type.');
+    });
+
+    it('Should not accept an untyped .csv when CSV is not an allowed type', () => {
+        expect(validateFile(new File(['x'], 'a.csv', { type: '' }), ['image/png'], max).error).toBe(
+            'Invalid file type.'
+        );
+    });
+});
+
+describe('validate2FACode', () => {
+    it.each([
+        ['123456', '123456'],
+        [' 123 456 ', '123456'],
+        ['ABCD-1234-EFGH-5678', 'abcd-1234-efgh-5678'],
+        ['abcd-1234-efgh-5678\n', 'abcd-1234-efgh-5678'],
+    ])('Should normalize and accept %p', (value, normalized) => {
+        expect(normalize2FACode(value)).toBe(normalized);
+        expect(validate2FACode(value)).toBeNull();
+    });
+
+    it.each(['', '   '])('Should require a code for %p', (value) => {
+        expect(validate2FACode(value)).toBe('Please enter your code.');
+    });
+
+    it.each(['12345', 'abcd-1234', '1234567'])('Should reject %p', (value) => {
+        expect(validate2FACode(value)).toBe('Enter a 6-digit code or recovery code (xxxx-xxxx-xxxx-xxxx).');
     });
 });
 
@@ -47,7 +117,7 @@ describe('validateEmail', () => {
 describe('validateExpenseRow', () => {
     const validRow: ExpenseDataRow = {
         id: '1',
-        date: '01/15/2026',
+        date: dayjs().format('MM/DD/YYYY'),
         amount: 12.5,
         description: 'Groceries',
         categoryid: 3,
@@ -103,6 +173,38 @@ describe('validateExpenseRow', () => {
 
     it('Should return an empty string from getErrorFor when the field has no error', () => {
         expect(getErrorFor('date', validateExpenseRow(validRow))).toBe('');
+    });
+
+    it.each([
+        ['missing', '', 'Date is required'],
+        ['invalid', 'Invalid Date', 'Your date is not valid'],
+        [
+            'before the range',
+            dayjs().subtract(1, 'year').subtract(1, 'day').format('MM/DD/YYYY'),
+            'Please select a date within a 1-year range',
+        ],
+        [
+            'after the range',
+            dayjs().add(1, 'year').add(1, 'day').format('MM/DD/YYYY'),
+            'Please select a date within a 1-year range',
+        ],
+    ])('Should reject a date that is %s', (_label, date, message) => {
+        expect(getErrorFor('date', validateExpenseRow({ ...validRow, date }))).toBe(message);
+    });
+});
+
+describe('validateExpenseDate', () => {
+    it.each([
+        ['today', dayjs().format('MM/DD/YYYY')],
+        ['the first day of the range', dayjs().subtract(1, 'year').format('MM/DD/YYYY')],
+        ['the last day of the range', dayjs().add(1, 'year').format('MM/DD/YYYY')],
+        ['a Date object', new Date()],
+    ])('Should accept %s', (_label, date) => {
+        expect(validateExpenseDate(date)).toBeNull();
+    });
+
+    it.each([null, undefined])('Should require a date for %p', (date) => {
+        expect(validateExpenseDate(date)).toBe('Date is required');
     });
 });
 

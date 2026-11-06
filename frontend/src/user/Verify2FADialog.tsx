@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
 import { parseApiValidationError } from 'utils/parseApiValidationError';
-import { validate2FACode } from 'validators/validateTOTP';
+import { normalize2FACode, validate2FACode } from 'validators/validateTOTP';
 
 /**
  * Dialog for completing 2FA verification during login.
@@ -94,7 +94,7 @@ export default function Verify2FADialog() {
 
         // Build the form data packet
         const formData = new FormData();
-        formData.append('code', codeField.value);
+        formData.append('code', normalize2FACode(codeField.value));
 
         try {
             // Verify2FA endpoints returns new valid JWT

@@ -13,7 +13,12 @@ export const validateFile = (
         // Manually check if this is HEIC because not supported by browsers (rigorous check will happen in backend)
         const extension = file.name.split('.').pop() ?? '';
         const isValidHEIC = validMimeTypes.includes('image/heic') && ['HEIC', 'HEIF'].includes(extension.toUpperCase());
-        if (!isValidHEIC) {
+        // Windows (Excel installed) reports .csv as application/vnd.ms-excel, some browsers / OSes report no type at all
+        const isValidCSV =
+            validMimeTypes.includes('text/csv') &&
+            file.name.toLowerCase().endsWith('.csv') &&
+            ['', 'application/vnd.ms-excel'].includes(file.type.toLowerCase());
+        if (!isValidHEIC && !isValidCSV) {
             return { file: null, error: 'Invalid file type.' };
         }
     }

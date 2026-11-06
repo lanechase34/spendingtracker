@@ -16,6 +16,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import useAuthContext from 'hooks/useAuthContext';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useFormField from 'hooks/useFormField';
 import useToastContext from 'hooks/useToastContext';
@@ -23,6 +24,7 @@ import useUserContext from 'hooks/useUserContext';
 import { type SubmitEvent } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
+import { APIError } from 'utils/apiError';
 import { validateMoney } from 'validators/validateMoney';
 
 import Disable2FADialog from './Disable2FADialog';
@@ -44,6 +46,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
 
     const { user, updateUser } = useUserContext();
     const { showToast } = useToastContext();
+    const { logout } = useAuthContext();
     const authFetch = useAuthFetch();
     const userAPI = useMemo(() => userService({ authFetch: authFetch }), [authFetch]);
 
@@ -65,6 +68,14 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         },
     });
 
+    const currentPasswordField = useFormField({
+        initialValue: '',
+        validator: (value: string) => {
+            if (!value || value.trim().length === 0) return 'Please enter your current password';
+            return null;
+        },
+    });
+
     const salaryField = useFormField({
         initialValue: user?.salary?.toString() ?? '',
         validator: validateMoney,
@@ -78,9 +89,10 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
     const handleExited = useCallback(() => {
         passwordField.reset();
         confirmPasswordField.reset();
+        currentPasswordField.reset();
         salaryField.reset();
         monthlyTakeHomeField.reset();
-    }, [passwordField, confirmPasswordField, salaryField, monthlyTakeHomeField]);
+    }, [passwordField, confirmPasswordField, currentPasswordField, salaryField, monthlyTakeHomeField]);
 
     /**
      * Whether the user has made any changes worth saving
@@ -88,7 +100,7 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
     const hasChanges = passwordField.value.trim().length > 0 || salaryField.isDirty || monthlyTakeHomeField.isDirty;
 
     /**
-     * Whether a password is being changed - controls confirm field visibility
+     * Whether a password is being changed - controls confirm and current password field visibility
      */
     const isChangingPassword = passwordField.value.trim().length > 0;
 
@@ -100,8 +112,9 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         salaryField.error == null &&
         monthlyTakeHomeField.error == null &&
         passwordField.error == null &&
-        // If changing password, confirm must match
-        (!isChangingPassword || confirmPasswordField.value === passwordField.value);
+        // If changing password, confirm must match and the current password is required
+        (!isChangingPassword ||
+            (confirmPasswordField.value === passwordField.value && currentPasswordField.value.trim().length > 0));
 
     const handleSubmit = async (event: SubmitEvent) => {
         event.preventDefault();
@@ -114,11 +127,9 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
             password: passwordField.validateField(),
             salary: salaryField.validateField(),
             monthlyTakeHome: monthlyTakeHomeField.validateField(),
+            confirmPassword: isChangingPassword ? confirmPasswordField.validateField() : null,
+            currentPassword: isChangingPassword ? currentPasswordField.validateField() : null,
         };
-
-        if (isChangingPassword) {
-            newErrors.password = confirmPasswordField.validateField();
-        }
 
         // Don't submit if error(s) exist
         const hasErrors = Object.values(newErrors).some(Boolean);
@@ -130,20 +141,35 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
         try {
             await userAPI.updateProfile({
                 password: passwordField.value,
+                currentPassword: isChangingPassword ? currentPasswordField.value : '',
                 salary: salaryField.value,
                 monthlyTakeHome: monthlyTakeHomeField.value,
             });
+
+            // Changing the password revokes all of the user's tokens server side - log out locally
+            if (isChangingPassword) {
+                showToast('Password updated. Please log in again.', 'success');
+                onClose({}, 'doneLoading');
+                logout();
+                return;
+            }
 
             salaryField.resetTo(salaryField.value);
             monthlyTakeHomeField.resetTo(monthlyTakeHomeField.value);
             passwordField.reset();
             confirmPasswordField.reset();
+            currentPasswordField.reset();
 
             showToast('Successfully saved!', 'success');
             onClose({}, 'doneLoading');
         } catch (err: unknown) {
             console.error('Network error:', err);
-            showToast('Server Error. Please try again.', 'error');
+            // 400 carries a user facing message (ie. incorrect current password)
+            if (err instanceof APIError && err.statusCode === 400) {
+                showToast(err.message, 'error');
+            } else {
+                showToast('Server Error. Please try again.', 'error');
+            }
         } finally {
             setSaving(false);
         }
@@ -237,6 +263,22 @@ export default function UserSettings({ open, onClose }: UserSettingsProps) {
                                     onBlur={confirmPasswordField.handleBlur}
                                     error={!(confirmPasswordField.error == null)}
                                     helperText={confirmPasswordField.error ?? ' '}
+                                />
+                            )}
+
+                            {/* Current password - required to change the password */}
+                            {isChangingPassword && (
+                                <TextField
+                                    required
+                                    id="inputCurrentPassword"
+                                    label="Current Password"
+                                    name="currentPassword"
+                                    type="password"
+                                    value={currentPasswordField.value}
+                                    onChange={currentPasswordField.handleChange}
+                                    onBlur={currentPasswordField.handleBlur}
+                                    error={!(currentPasswordField.error == null)}
+                                    helperText={currentPasswordField.error ?? ' '}
                                 />
                             )}
 

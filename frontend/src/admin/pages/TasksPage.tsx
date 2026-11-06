@@ -16,6 +16,18 @@ import { TaskResponseSchema } from 'types/TaskResponse.type';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 
+/**
+ * Data grid slots
+ * Defined at module level so the grid doesn't remount them (and drop search focus) on every render
+ */
+function ToolbarSlot() {
+    return <SearchToolbar title="Scheduled Tasks" />;
+}
+
+function NoRowsSlot() {
+    return <Typography sx={{ p: 2, textAlign: 'center' }}>No Tasks Found</Typography>;
+}
+
 export default function TasksPage() {
     const authFetch = useAuthFetch();
 
@@ -216,10 +228,8 @@ export default function TasksPage() {
                         showToolbar
                         getRowId={(row) => row.name}
                         slots={{
-                            toolbar: () => <SearchToolbar title="Scheduled Tasks" />,
-                            noRowsOverlay: () => (
-                                <Typography sx={{ p: 2, textAlign: 'center' }}>No Tasks Found</Typography>
-                            ),
+                            toolbar: ToolbarSlot,
+                            noRowsOverlay: NoRowsSlot,
                         }}
                         slotProps={{
                             basePagination: {

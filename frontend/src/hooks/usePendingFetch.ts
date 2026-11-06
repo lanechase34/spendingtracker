@@ -12,7 +12,6 @@ interface PendingFetchParams {
 
 /**
  * Core fetch logic for pending token based requests.
- * Shared between usePendingFetch and usePending2FAFetch.
  * Returns null if no token defined yet
  */
 function usePendingTokenFetch(
@@ -21,7 +20,7 @@ function usePendingTokenFetch(
     getCsrfToken: (token: string) => Promise<string | null>
 ) {
     /**
-     * Fetch for 'unverfied' and 'pending2FAF' user secured API endpoints. Add's the users token to the header for the request
+     * Fetch for 'pending2FA' user secured API endpoints. Add's the users token to the header for the request
      * useCallback for stable function reference
      * @url secured url
      * @method http method
@@ -65,20 +64,6 @@ function usePendingTokenFetch(
         },
         [token, getCsrfToken, clearToken]
     );
-}
-
-/**
- * Fetch for unverified user secured endpoints using pendingToken.
- * Returns null if no pending token defined.
- */
-export default function usePendingFetch() {
-    const { pendingToken, getCsrfToken, setPendingToken } = useAuthContext();
-
-    const clearToken = useCallback(() => {
-        setPendingToken(null);
-    }, [setPendingToken]);
-
-    return usePendingTokenFetch(pendingToken, clearToken, getCsrfToken);
 }
 
 /**

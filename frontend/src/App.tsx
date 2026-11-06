@@ -20,7 +20,7 @@ import { UserContextProvider } from 'contexts/UserContext';
 import About from 'pages/About';
 import type { ReactNode } from 'react';
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Outlet, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Outlet, Route, Routes, useMatch } from 'react-router-dom';
 import { ROLES } from 'types/Roles.type';
 
 // Admin pages
@@ -72,8 +72,6 @@ const CONTEXT_MAP = [
     AdminDrawerContextProvider,
     UserContextProvider,
     DateRangeContextProvider,
-    ExpenseContextProvider,
-    SubscriptionContextProvider,
 ];
 
 function Providers({ children }: { children: ReactNode }) {
@@ -86,6 +84,20 @@ function Providers({ children }: { children: ReactNode }) {
             <CssBaseline enableColorScheme />
             {wrapped}
         </ThemeProvider>
+    );
+}
+
+/**
+ * Expense and subscription data is only shown on the dashboard
+ * The providers stay mounted everywhere (the navbar's expense form uses them) but only fetch on the dashboard
+ */
+function DashboardDataProviders({ children }: { children: ReactNode }) {
+    const isDashboard = useMatch('/dashboard') != null;
+
+    return (
+        <ExpenseContextProvider enabled={isDashboard}>
+            <SubscriptionContextProvider enabled={isDashboard}>{children}</SubscriptionContextProvider>
+        </ExpenseContextProvider>
     );
 }
 
@@ -133,15 +145,17 @@ function AppRouter() {
 export default function App() {
     return (
         <QueryClientProvider client={queryClient}>
-            <Providers>
-                <Router basename={import.meta.env.BASE_URL}>
-                    <Navbar />
-                    <PostLoginRedirect />
-                    <Suspense fallback={<PageLoader />}>
-                        <AppRouter />
-                    </Suspense>
-                </Router>
-            </Providers>
+            <Router basename={import.meta.env.BASE_URL}>
+                <Providers>
+                    <DashboardDataProviders>
+                        <Navbar />
+                        <PostLoginRedirect />
+                        <Suspense fallback={<PageLoader />}>
+                            <AppRouter />
+                        </Suspense>
+                    </DashboardDataProviders>
+                </Providers>
+            </Router>
         </QueryClientProvider>
     );
 }

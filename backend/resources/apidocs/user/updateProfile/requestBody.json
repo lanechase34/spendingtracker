@@ -12,6 +12,12 @@
                         "format": "password",
                         "example": "newsecretpassword"
                     },
+                    "currentPassword": {
+                        "type": "string",
+                        "format": "password",
+                        "description": "Required when password is sent.",
+                        "example": "secretpassword"
+                    },
                     "salary": { "type": "number", "minimum": 1, "example": 75000 },
                     "monthlyTakeHome": { "type": "number", "minimum": 1, "example": 4500 },
                     "settings": {

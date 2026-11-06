@@ -220,6 +220,22 @@ describe('Disable2FADialog', () => {
             });
         });
 
+        it.each([
+            ['a TOTP code with spaces', ' 123 456 ', '123456'],
+            ['an uppercase recovery code', 'ABCD-1234-EF56-7890', 'abcd-1234-ef56-7890'],
+        ])('Normalizes %s before sending', async (_label, typed, sent) => {
+            renderComponent();
+
+            fireEvent.change(screen.getByLabelText(/authentication code/i), {
+                target: { value: typed },
+            });
+            await user.click(screen.getByRole('button', { name: /disable 2fa/i }));
+
+            await waitFor(() => {
+                expect(mockDisable2fa).toHaveBeenCalledWith(sent);
+            });
+        });
+
         it('Calls onDisabled after successful disable', async () => {
             renderComponent();
 

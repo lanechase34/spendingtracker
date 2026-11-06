@@ -65,7 +65,10 @@ export default function useAuthFetch() {
 
             // Unauthorized - attempt refresh
             if (response.status === 401) {
-                const newToken = await refreshToken();
+                // If another request already refreshed the JWT since this one started, reuse it instead of refreshing again
+                const latestToken = getLatestAuthToken();
+                const newToken =
+                    latestToken != null && latestToken !== currentAuthToken ? latestToken : await refreshToken();
 
                 // Refresh failed
                 if (newToken == null) {
@@ -96,7 +99,8 @@ export default function useAuthFetch() {
             // 403 - Check if CSRF error
             else if (response.status === 403 && useCsrf) {
                 // If CSRF error, retry the CSRF token
-                const json = await safeJson(response);
+                // Read a clone so the caller can still read the body of a non-CSRF 403
+                const json = await safeJson(response.clone());
                 const parsed = NoDataAPIResponseSchema.safeParse(json);
 
                 // Invalid response or not csrf error

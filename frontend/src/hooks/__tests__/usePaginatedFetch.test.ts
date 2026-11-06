@@ -329,8 +329,7 @@ describe('usePaginatedFetch', () => {
 
         const controllers = abortControllerMock.mock.results.map((r) => r.value as MockAbortController);
 
-        // Each re-run of the effect cleans up the previous one by calling abort on
-        // the controller it closed over - not via the ref
+        // Each re-run of the effect cleans up the previous request by aborting the in-flight controller
         expect(at(controllers, 0).abort).toHaveBeenCalledTimes(1);
         expect(at(controllers, 1).abort).toHaveBeenCalledTimes(1);
         expect(at(controllers, 2).abort).toHaveBeenCalledTimes(1);
@@ -498,27 +497,135 @@ describe('usePaginatedFetch', () => {
         expect(firstCall?.[1]?.signal).toBeInstanceOf(EventTarget);
     });
 
-    it('Should pass signal to fetch when refetch is called with an external signal', async () => {
+    it('Should abort an in-flight fetch when refetch is called and ignore its late response', async () => {
+        let resolveStale: (value: unknown) => void = () => {
+            /* replaced below */
+        };
+        const staleResponse = { error: false, data: [{ id: 99, name: 'Stale' }], pagination };
+        const freshResponse = { error: false, data: [{ id: 1, name: 'Fresh' }], pagination };
+
         mockFetch
-            .mockResolvedValueOnce({ ok: true, json: () => simpleMockResponse })
-            .mockResolvedValueOnce({ ok: true, json: () => simpleMockResponse });
+            .mockReturnValueOnce(
+                new Promise((resolve) => {
+                    resolveStale = resolve;
+                })
+            )
+            .mockResolvedValueOnce({ ok: true, json: () => freshResponse });
 
         const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+
+        // Mount fetch is still in flight - refetch supersedes it
+        await act(async () => {
+            await result.current.refetch();
+        });
+
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+
+        // The superseded response lands last but must not overwrite the fresh data
+        await act(async () => {
+            resolveStale({ ok: true, json: () => staleResponse });
+            await Promise.resolve();
+        });
+
+        expect(result.current.data).toEqual(freshResponse.data);
+        expect(result.current.loading).toBe(false);
+    });
+
+    it('Should keep a stable refetch reference across grid changes', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: () => simpleMockResponse });
+
+        const { result } = renderHook(() => usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema }));
+        const initialRefetch = result.current.refetch;
+
+        act(() => {
+            result.current.handlePaginationModelChange({ page: 1, pageSize: 10 });
+        });
 
         await waitFor(() => {
             expect(result.current.loading).toBe(false);
         });
 
-        const externalController = new AbortController();
+        expect(result.current.refetch).toBe(initialRefetch);
+
+        // refetch uses the latest grid state
+        await act(async () => {
+            await result.current.refetch();
+        });
+        expect(mockFetch).toHaveBeenLastCalledWith(expect.stringContaining('page=2'), expect.anything());
+    });
+
+    it('Should not fetch while disabled and fetch once enabled', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: () => simpleMockResponse });
+
+        const { result, rerender } = renderHook(
+            ({ enabled }: { enabled: boolean }) =>
+                usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema, enabled }),
+            { initialProps: { enabled: false } }
+        );
+
+        expect(mockFetch).not.toHaveBeenCalled();
+
+        rerender({ enabled: true });
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('Should not refetch while disabled', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: () => simpleMockResponse });
+
+        const { result, rerender } = renderHook(
+            ({ enabled }: { enabled: boolean }) =>
+                usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema, enabled }),
+            { initialProps: { enabled: false } }
+        );
 
         await act(async () => {
-            await result.current.refetch(externalController.signal);
+            await result.current.refetch();
+        });
+        expect(mockFetch).not.toHaveBeenCalled();
+
+        // Once enabled, refetch fetches again
+        rerender({ enabled: true });
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
+        });
+        mockFetch.mockClear();
+
+        await act(async () => {
+            await result.current.refetch();
+        });
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('Should reset to the first page when additionalParams change', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: () => simpleMockResponse });
+
+        const { result, rerender } = renderHook(
+            ({ params }: { params: Record<string, string> }) =>
+                usePaginatedFetch({ endpoint: endpoint, validator: SimpleMockSchema, additionalParams: params }),
+            { initialProps: { params: { startDate: '2026-01-01' } } }
+        );
+
+        act(() => {
+            result.current.handlePaginationModelChange({ page: 4, pageSize: 10 });
+        });
+        expect(result.current.paginationModel.page).toBe(4);
+
+        mockFetch.mockClear();
+        rerender({ params: { startDate: '2026-02-01' } });
+
+        expect(result.current.paginationModel.page).toBe(0);
+
+        await waitFor(() => {
+            expect(result.current.loading).toBe(false);
         });
 
-        expect(mockFetch).toHaveBeenLastCalledWith(
-            expect.any(String),
-            expect.objectContaining({ signal: externalController.signal })
-        );
+        // Only one fetch for the new params, and it is for the first page
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('page=1&'), expect.anything());
     });
 
     it('Should use its own controller signal when refetch is called without a signal', async () => {

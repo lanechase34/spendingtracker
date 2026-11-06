@@ -128,6 +128,12 @@ export default function CategorySelect({
      */
     const loadOptions = useCallback(
         async (search: string, page: number, append: boolean) => {
+            // Cancel any ongoing request, including on a cache hit so a stale response can't overwrite it
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+                abortControllerRef.current = null;
+            }
+
             // Use cached options if exists
             const cached = getCachedCategories(search, page);
             if (cached) {
@@ -135,16 +141,13 @@ export default function CategorySelect({
                 setOptions(append ? (prev) => [...prev, ...cached] : cached);
 
                 setHasMore(cached.length > 0);
+                // The aborted request (if any) won't clear loading itself
+                setLoading(false);
                 return;
             }
 
             // No cache, begin api fetch
             setLoading(true);
-
-            // Cancel any ongoing request
-            if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
-            }
 
             // Create new abort controller for this request
             const abortController = new AbortController();
@@ -310,8 +313,9 @@ export default function CategorySelect({
                 filterOptions={(options: SelectOptionType[], params: FilterOptionsState<SelectOptionType>) => {
                     // Category must be min 3 chars, and no option(s) returned from server
                     // ask user to create this category
-                    if (!loading && params.inputValue.length >= MIN_NEW_CATEGORY_LENGTH && !options.length) {
-                        return [{ value: params.inputValue, label: `Add "${params.inputValue}"` }];
+                    const newCategory = params.inputValue.trim();
+                    if (!loading && newCategory.length >= MIN_NEW_CATEGORY_LENGTH && !options.length) {
+                        return [{ value: newCategory, label: `Add "${newCategory}"` }];
                     }
                     return options;
                 }}

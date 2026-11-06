@@ -95,6 +95,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
             var key = rateLimitService.buildKey(
                 currentEvent = prc.currEvent,
                 by           = listToArray(rule.by),
+                window       = rule.window,
                 ip           = ip,
                 userid       = userid,
                 context      = rc
@@ -180,6 +181,7 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
             var key = rateLimitService.buildKey(
                 currentEvent = prc.currEvent,
                 by           = listToArray(rule.by),
+                window       = rule.window,
                 ip           = ip,
                 userid       = userid,
                 context      = rc

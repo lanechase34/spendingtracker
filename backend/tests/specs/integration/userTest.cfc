@@ -80,7 +80,7 @@ component extends="tests.resources.baseTest" {
                     mockUser.delete(user);
                 });
 
-                it('Returns 200 with a success message when updating password', () => {
+                it('Returns 400 when updating password without currentPassword', () => {
                     var event = patch(
                         route   = '/api/v1/me',
                         params  = {password: 'NewPassword123!'},
@@ -88,15 +88,9 @@ component extends="tests.resources.baseTest" {
                     );
                     var response = event.getResponse();
 
-                    expect(response.getStatusCode()).toBe(200);
-                    expect(response.getMessages()[1]).toInclude('Successfully updated');
-
-                    setup();
-                    patch(
-                        route   = '/api/v1/me',
-                        params  = {password: 'TestPassword123!'},
-                        headers = {'x-auth-token': jwt}
-                    );
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe('Current password is incorrect.');
                 });
 
                 it('Returns 200 when updating salary', () => {
@@ -349,6 +343,249 @@ component extends="tests.resources.baseTest" {
                 });
             });
 
+            describe('PATCH /api/v1/me - changing password', () => {
+                beforeEach(() => {
+                    setup();
+
+                    cbauth.logout();
+                    getInstance('JwtService@cbsecurity').getTokenStorage().clearAll();
+
+                    // checkCurrentPassword always checks the real password, even with impersonation on
+                    currentPassword = 'CurrentPassword123!';
+                    newPassword     = 'NewPassword456!';
+                    user            = mockUser.make(password = currentPassword);
+                    jwt             = mockUser.login(user);
+
+                    storedImpersonation = getInstance('services.user').getImpersonation();
+                    setup();
+                });
+
+                afterEach(() => {
+                    getInstance('services.user').setImpersonation(storedImpersonation);
+
+                    // The token may be revoked by now, so don't go through /logout
+                    cbauth.logout();
+                    getInstance('JwtService@cbsecurity').getTokenStorage().clearAll();
+                    mockUser.delete(user);
+                });
+
+                it('Returns 400 and changes nothing without currentPassword', () => {
+                    var before = getPasswordRecord(user.getId());
+
+                    var event = patch(
+                        route   = '/api/v1/me',
+                        params  = {password: newPassword},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe('Current password is incorrect.');
+
+                    var after = getPasswordRecord(user.getId());
+                    expect(after.password).toBe(before.password);
+                    expect(after.changed).toBeFalse();
+
+                    // Token still works
+                    setup();
+                    expect(get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse().getStatusCode()).toBe(
+                        200
+                    );
+                });
+
+                it('Returns 400 and changes nothing with a wrong currentPassword', () => {
+                    var before = getPasswordRecord(user.getId());
+
+                    var event = patch(
+                        route   = '/api/v1/me',
+                        params  = {password: newPassword, currentPassword: 'WrongPassword999!'},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe('Current password is incorrect.');
+
+                    var after = getPasswordRecord(user.getId());
+                    expect(after.password).toBe(before.password);
+                    expect(after.changed).toBeFalse();
+
+                    // Token still works
+                    setup();
+                    expect(get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse().getStatusCode()).toBe(
+                        200
+                    );
+                });
+
+                it('Does not apply other fields sent with a rejected password change', () => {
+                    setup();
+                    var originalSalary = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .salary;
+
+                    setup();
+                    patch(
+                        route  = '/api/v1/me',
+                        params = {
+                            password       : newPassword,
+                            currentPassword: 'WrongPassword999!',
+                            salary         : 123456
+                        },
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    setup();
+                    var salary = get(route = '/api/v1/me', headers = {'x-auth-token': jwt})
+                        .getResponse()
+                        .getData()
+                        .salary;
+                    expect(salary).toBe(originalSalary);
+                });
+
+                it('Returns 400 when the new password is too short', () => {
+                    var event = patch(
+                        route   = '/api/v1/me',
+                        params  = {password: 'short', currentPassword: currentPassword},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    expect(event.getResponse().getStatusCode()).toBe(400);
+                    expect(getPasswordRecord(user.getId()).changed).toBeFalse();
+                });
+
+                it('Updates salary without currentPassword and keeps the token valid', () => {
+                    var event = patch(
+                        route   = '/api/v1/me',
+                        params  = {salary: 91000},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    expect(event.getResponse().getStatusCode()).toBe(200);
+                    expect(event.getResponse().getMessages()[1]).toInclude('Successfully updated');
+                    expect(getPasswordRecord(user.getId()).changed).toBeFalse();
+
+                    setup();
+                    var meEvent = get(route = '/api/v1/me', headers = {'x-auth-token': jwt});
+                    expect(meEvent.getResponse().getStatusCode()).toBe(200);
+                    expect(meEvent.getResponse().getData().salary).toBe(91000);
+                });
+
+                it('Returns 200 and asks to log in again with the right currentPassword', () => {
+                    var before = getPasswordRecord(user.getId());
+
+                    var event = patch(
+                        route   = '/api/v1/me',
+                        params  = {password: newPassword, currentPassword: currentPassword},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(200);
+                    expect(response.getError()).toBeFalse();
+                    expect(response.getMessages()[1]).toBe('Password updated. Please log in again.');
+
+                    var after = getPasswordRecord(user.getId());
+                    expect(after.password).notToBe(before.password);
+                    expect(after.changed).toBeTrue();
+                });
+
+                it('Rejects the old token on secured routes after the password changes', () => {
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {password: newPassword, currentPassword: currentPassword},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    // A real next request starts logged out - request scope carries over between test requests
+                    cbauth.logout();
+
+                    setup();
+                    var meResponse = get(route = '/api/v1/me', headers = {'x-auth-token': jwt}).getResponse();
+                    expect(meResponse.getStatusCode()).toBe(401);
+                    expect(meResponse.getError()).toBeTrue();
+
+                    setup();
+                    var patchResponse = patch(
+                        route   = '/api/v1/me',
+                        params  = {salary: 1000},
+                        headers = {'x-auth-token': jwt}
+                    ).getResponse();
+                    expect(patchResponse.getStatusCode()).toBe(401);
+                });
+
+                it('Rejects the old token when the rate limiter loads the user before the firewall', () => {
+                    // The rate limiter authenticates the token first and swallows the rejection -
+                    // the revoked token must still be refused by the firewall afterwards
+                    var rateLimiter = application.cbController
+                        .getInterceptorService()
+                        .getInterceptor('rateLimiterInterceptor');
+                    rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = true);
+                    getInstance('cachebox:rateStorage').clearAll();
+
+                    try {
+                        patch(
+                            route   = '/api/v1/me',
+                            params  = {password: newPassword, currentPassword: currentPassword},
+                            headers = {'x-auth-token': jwt}
+                        );
+                        cbauth.logout();
+
+                        // user.updateprofile has a per-user rate limit, so the limiter loads the user from the token
+                        setup();
+                        var patchResponse = patch(
+                            route   = '/api/v1/me',
+                            params  = {salary: 1000},
+                            headers = {'x-auth-token': jwt}
+                        ).getResponse();
+                        expect(patchResponse.getStatusCode()).toBe(401);
+                    }
+                    finally {
+                        rateLimiter.injectPropertyMixin(propertyName = 'useRateLimiter', propertyValue = false);
+                    }
+                });
+
+                it('Logs in with the new password, not the old one, after changing it', () => {
+                    patch(
+                        route   = '/api/v1/me',
+                        params  = {password: newPassword, currentPassword: currentPassword},
+                        headers = {'x-auth-token': jwt}
+                    );
+                    cbauth.logout();
+
+                    // Real password checks for login
+                    getInstance('services.user').setImpersonation(false);
+
+                    setup();
+                    var oldLogin = post(
+                        route  = '/api/v1/login',
+                        params = {
+                            email     : user.getEmail(),
+                            password  : currentPassword,
+                            rememberMe: false
+                        }
+                    );
+                    expect(oldLogin.getResponse().getStatusCode()).toBe(401);
+
+                    // Tokens issued in the same second as the change are revoked too (iat <= password_changed_at)
+                    sleep(1100);
+
+                    setup();
+                    var newLogin = post(
+                        route  = '/api/v1/login',
+                        params = {
+                            email     : user.getEmail(),
+                            password  : newPassword,
+                            rememberMe: false
+                        }
+                    );
+                    expect(newLogin.getResponse().getStatusCode()).toBe(200);
+                    var newJwt = newLogin.getResponse().getData().access_token;
+
+                    // The new token is issued after the change, so it works
+                    setup();
+                    expect(get(route = '/api/v1/me', headers = {'x-auth-token': newJwt}).getResponse().getStatusCode()).toBe(
+                        200
+                    );
+                });
+            });
+
             describe('GET /api/v1/users', () => {
                 beforeEach(() => {
                     setup();
@@ -495,6 +732,17 @@ component extends="tests.resources.baseTest" {
                 });
             });
         });
+    }
+
+    /**
+     * Read the user's password hash and whether password_changed_at is set, straight from the database
+     */
+    private struct function getPasswordRecord(required numeric id) {
+        return queryExecute(
+            'SELECT password, password_changed_at IS NOT NULL AS changed FROM users WHERE id = :id',
+            {id: {value: id, cfsqltype: 'integer'}},
+            {returnType: 'array'}
+        )[1];
     }
 
 }

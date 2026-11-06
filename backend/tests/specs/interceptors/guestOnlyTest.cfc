@@ -213,6 +213,74 @@ component extends="tests.resources.baseTest" {
                 });
             });
 
+            describe('POST /verify and /resendverificationcode - guest only', () => {
+                it('Allows unauthenticated users to access /verify', () => {
+                    var event = post(
+                        route  = '/api/v1/verify',
+                        params = {
+                            email           : 'nobody_#createUUID()#@example.com',
+                            password        : 'TestPassword123!',
+                            verificationCode: 'ABCD2345'
+                        }
+                    );
+
+                    // 400 with the handler's message means it reached the handler - not blocked by interceptor
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getMessages()[1]).toBe('Invalid or expired verification code.');
+                });
+
+                it('Allows unauthenticated users to access /resendverificationcode', () => {
+                    var event = post(
+                        route  = '/api/v1/resendverificationcode',
+                        params = {email: 'nobody_#createUUID()#@example.com', password: 'TestPassword123!'}
+                    );
+
+                    expect(event.getResponse().getStatusCode()).toBe(200);
+                });
+
+                it('Blocks authenticated users from accessing /verify', () => {
+                    user = mockUser.make();
+                    jwt  = mockUser.login(user);
+
+                    setup();
+
+                    var event = post(
+                        route  = '/api/v1/verify',
+                        params = {
+                            email           : user.getEmail(),
+                            password        : 'TestPassword123!',
+                            verificationCode: 'ABCD2345'
+                        },
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe('You are already authenticated.');
+                    expect(response.getHasData()).toBeFalse();
+                });
+
+                it('Blocks authenticated users from accessing /resendverificationcode', () => {
+                    user = mockUser.make();
+                    jwt  = mockUser.login(user);
+
+                    setup();
+
+                    var event = post(
+                        route   = '/api/v1/resendverificationcode',
+                        params  = {email: user.getEmail(), password: 'TestPassword123!'},
+                        headers = {'x-auth-token': jwt}
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe('You are already authenticated.');
+                });
+            });
+
             describe('Non guest-only routes are unaffected', () => {
                 it('Does not block authenticated users from accessing protected routes', () => {
                     user = mockUser.make();

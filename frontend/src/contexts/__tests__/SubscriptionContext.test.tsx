@@ -268,7 +268,7 @@ describe('SubscriptionContextProvider', () => {
             expect(mockRefetch).toHaveBeenCalledTimes(1);
         });
 
-        it('Passes the same AbortSignal to both the API call and refetch', async () => {
+        it('Passes an AbortSignal to the API call and refetches afterwards', async () => {
             let capturedSignal: AbortSignal | undefined;
             mockToggleSubscription.mockImplementation((_row: Subscription, signal: AbortSignal) => {
                 capturedSignal = signal;
@@ -281,7 +281,7 @@ describe('SubscriptionContextProvider', () => {
             });
 
             expect(capturedSignal).toBeInstanceOf(AbortSignal);
-            expect(mockRefetch).toHaveBeenCalledWith(capturedSignal);
+            expect(mockRefetch).toHaveBeenCalledWith();
         });
 
         it('Shows error toast and does not call refetch when API throws', async () => {

@@ -282,6 +282,32 @@ describe('Verify2FADialog', () => {
             });
         });
 
+        it('Sends an uppercase recovery code lowercased', async () => {
+            renderComponent();
+
+            await userEvent.type(screen.getByLabelText(/Authentication Code/i), 'ABCD-1234-EF56-7890');
+            await userEvent.click(screen.getByRole('button', { name: /verify/i }));
+
+            await waitFor(() => {
+                expect(mockVerify2fa).toHaveBeenCalledTimes(1);
+            });
+            const formData = at(mockVerify2fa.mock.calls as [FormData][], 0)[0];
+            expect(formData.get('code')).toBe('abcd-1234-ef56-7890');
+        });
+
+        it('Sends a TOTP code typed with a space without the space', async () => {
+            renderComponent();
+
+            await userEvent.type(screen.getByLabelText(/Authentication Code/i), '123 456');
+            await userEvent.click(screen.getByRole('button', { name: /verify/i }));
+
+            await waitFor(() => {
+                expect(mockVerify2fa).toHaveBeenCalledTimes(1);
+            });
+            const formData = at(mockVerify2fa.mock.calls as [FormData][], 0)[0];
+            expect(formData.get('code')).toBe('123456');
+        });
+
         it('Closes the dialog after successful recovery code verification', async () => {
             renderComponent();
 

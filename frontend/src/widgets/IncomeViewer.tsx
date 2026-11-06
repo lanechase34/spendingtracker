@@ -7,7 +7,7 @@ import ErrorCard from 'components/ErrorCard';
 import LoadingCard from 'components/LoadingCard';
 import useCurrencyFormatter from 'hooks/useCurrencyFormatter';
 import useDateRangeContext from 'hooks/useDateRangeContext';
-import useExpenseContext from 'hooks/useExpenseContext';
+import useExpenseSummary from 'hooks/useExpenseSummary';
 import { useFetchIncome } from 'hooks/useIncomeQuery';
 
 import EditIncome from './EditIncome';
@@ -20,7 +20,7 @@ import EditIncome from './EditIncome';
 export default function IncomeViewer() {
     const { formatCurrency } = useCurrencyFormatter({});
     const { startDate, formattedStartDate, formattedEndDate } = useDateRangeContext();
-    const { totalSum } = useExpenseContext();
+    const { totalSum } = useExpenseSummary();
 
     /**
      * Tanstack Query hook to fetch income when start/end date change

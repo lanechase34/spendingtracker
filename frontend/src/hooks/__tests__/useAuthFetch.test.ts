@@ -7,11 +7,34 @@ const mockFetch = global.fetch as jest.Mock;
 
 const URL = '/api/test';
 
-function mockResponse(status: number, body: unknown = { error: false, data: null, messages: [] }) {
+interface MockResponse {
+    status: number;
+    ok: boolean;
+    json: () => Promise<unknown>;
+    clone: () => MockResponse;
+}
+
+function mockResponse(status: number, body: unknown = { error: false, data: null, messages: [] }): MockResponse {
     return {
         status,
         ok: status >= 200 && status < 300,
         json: () => Promise.resolve(body),
+        clone: () => mockResponse(status, body),
+    };
+}
+
+// Response whose body can only be read once, like a real fetch Response
+function oneShotResponse(status: number, body: unknown): MockResponse {
+    let used = false;
+    return {
+        status,
+        ok: status >= 200 && status < 300,
+        json: () => {
+            if (used) return Promise.reject(new TypeError('Body has already been consumed'));
+            used = true;
+            return Promise.resolve(body);
+        },
+        clone: () => oneShotResponse(status, body),
     };
 }
 
@@ -175,6 +198,18 @@ describe('useAuthFetch', () => {
             expect(fetchInit(1).headers['x-csrf-token']).toBe('new_csrf');
         });
 
+        it('Should reuse a token refreshed by another request instead of refreshing again', async () => {
+            getLatestAuthToken.mockReturnValueOnce('token').mockReturnValue('already_refreshed');
+            mockFetch.mockResolvedValueOnce(mockResponse(401)).mockResolvedValueOnce(mockResponse(200));
+            const authFetch = setup();
+
+            const response = await authFetch({ url: URL });
+
+            expect(refreshToken).not.toHaveBeenCalled();
+            expect(fetchInit(1).headers['x-auth-token']).toBe('already_refreshed');
+            expect(response?.status).toBe(200);
+        });
+
         it('Should log out and return the 401 when refresh fails', async () => {
             refreshToken.mockResolvedValue(null);
             mockFetch.mockResolvedValueOnce(mockResponse(401));
@@ -248,7 +283,12 @@ describe('useAuthFetch', () => {
         ])('Should return the 403 without retrying for %s', async (_label, body) => {
             const response403 =
                 body === undefined
-                    ? { status: 403, ok: false, json: () => Promise.reject(new Error('not json')) }
+                    ? {
+                          status: 403,
+                          ok: false,
+                          json: () => Promise.reject(new Error('not json')),
+                          clone: () => ({ json: () => Promise.reject(new Error('not json')) }),
+                      }
                     : mockResponse(403, body);
             mockFetch.mockResolvedValueOnce(response403);
             const authFetch = setup();
@@ -258,6 +298,16 @@ describe('useAuthFetch', () => {
             expect(mockFetch).toHaveBeenCalledTimes(1);
             expect(response?.status).toBe(403);
             expect(logout).not.toHaveBeenCalled();
+        });
+
+        it('Should leave the body of a non-CSRF 403 readable by the caller', async () => {
+            const body = { error: true, messages: ['Forbidden'] };
+            mockFetch.mockResolvedValueOnce(oneShotResponse(403, body));
+            const authFetch = setup();
+
+            const response = await authFetch({ url: URL, method: 'POST' });
+
+            await expect(response?.json()).resolves.toEqual(body);
         });
 
         it('Should not treat a 403 on a GET as a CSRF error', async () => {

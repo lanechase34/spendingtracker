@@ -65,12 +65,12 @@ component singleton accessors="true" {
 
     /**
      * Sets a cookie for the Refresh Token
-     * Restrict cookie's path to only be used in the refresh endpoint
+     * Restrict cookie's path to the /security endpoints - refreshtoken uses it, and logout needs it to revoke it
      */
     public void function setRefreshTokenCookie(required string token, numeric maxAge = getRefreshTokenTTL()) {
         cfheader(
             name  = "Set-Cookie",
-            value = "x-refresh-token=#token#; Path=/spendingtracker/api/v1/security/refreshtoken; Max-Age=#maxAge#; Secure; HttpOnly"
+            value = "x-refresh-token=#token#; Path=/spendingtracker/api/v1/security; Max-Age=#maxAge#; Secure; HttpOnly"
         );
     }
 

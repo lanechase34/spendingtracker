@@ -10,7 +10,7 @@ import { APIError } from 'utils/apiError';
 
 // Mocks
 const mockLogin = jest.fn();
-const mockSetPendingToken = jest.fn();
+const mockSetPendingVerification = jest.fn();
 const mockSetPending2FAToken = jest.fn();
 
 const mockCloseLoginDialog = jest.fn();
@@ -64,7 +64,7 @@ const mockUseAuthDialogContext = useAuthDialogContext as jest.Mock;
 function buildAuthContext(overrides: Partial<AuthContextType> = {}): Partial<AuthContextType> {
     return {
         login: mockLogin,
-        setPendingToken: mockSetPendingToken,
+        setPendingVerification: mockSetPendingVerification,
         setPending2FAToken: mockSetPending2FAToken,
         ...overrides,
     };
@@ -343,21 +343,37 @@ describe('LoginDialog', () => {
     });
 
     describe('Email verification flow', () => {
-        it('Opens verify dialog and sets pending token on 403', async () => {
-            mockUserAPILogin.mockRejectedValue(new APIError('Please verify your email.', 403, 'unverified-token'));
+        it('Opens verify dialog and stores the entered credentials on 403', async () => {
+            mockUserAPILogin.mockRejectedValue(new APIError('Please verify your email.', 403));
+            renderComponent();
+
+            await fillAndSubmit('unverified@example.com', 'Unverified123!');
+
+            await waitFor(() => {
+                expect(mockOpenVerifyDialog).toHaveBeenCalledTimes(1);
+                expect(mockSetPendingVerification).toHaveBeenCalledWith({
+                    email: 'unverified@example.com',
+                    password: 'Unverified123!',
+                    codeSent: false,
+                });
+                expect(mockCloseLoginDialog).toHaveBeenCalledTimes(1);
+            });
+        });
+
+        it('Does not store pending credentials on other errors', async () => {
+            mockUserAPILogin.mockRejectedValue(new APIError('Invalid Login.', 401));
             renderComponent();
 
             await fillAndSubmit();
 
             await waitFor(() => {
-                expect(mockOpenVerifyDialog).toHaveBeenCalledTimes(1);
-                expect(mockSetPendingToken).toHaveBeenCalledWith('unverified-token');
-                expect(mockCloseLoginDialog).toHaveBeenCalledTimes(1);
+                expect(mockOpenVerifyDialog).not.toHaveBeenCalled();
             });
+            expect(mockSetPendingVerification).not.toHaveBeenCalled();
         });
 
         it('Does not show error alert on 403 - redirects instead', async () => {
-            mockUserAPILogin.mockRejectedValue(new APIError('Please verify your email.', 403, 'unverified-token'));
+            mockUserAPILogin.mockRejectedValue(new APIError('Please verify your email.', 403));
             renderComponent();
 
             await fillAndSubmit();
@@ -368,7 +384,7 @@ describe('LoginDialog', () => {
         });
 
         it('Does not call login on 403', async () => {
-            mockUserAPILogin.mockRejectedValue(new APIError('Please verify your email.', 403, 'unverified-token'));
+            mockUserAPILogin.mockRejectedValue(new APIError('Please verify your email.', 403));
             renderComponent();
 
             await fillAndSubmit();

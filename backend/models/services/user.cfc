@@ -14,6 +14,7 @@ component singleton accessors="true" {
     property name="impersonation"        inject="coldbox:setting:impersonation";
     property name="maxThreads"           inject="coldbox:setting:maxThreads";
     property name="uploadPath"           inject="coldbox:setting:uploadPath";
+    property name="verificationCooldown" inject="coldbox:setting:verificationCooldown";
     property name="verificationLifespan" inject="coldbox:setting:verificationLifespan";
 
     this.roleMap = {
@@ -34,8 +35,18 @@ component singleton accessors="true" {
         'settings',
         'salary',
         'monthlytakehome',
-        'totp_enabled'
+        'totp_enabled',
+        'password_changed_at'
     ];
+
+    // Columns the admin user table may sort by
+    this.orderCols = [
+        'email',
+        'security_level',
+        'verified',
+        'lastlogin'
+    ];
+    this.orderDirs = ['asc', 'desc'];
 
     /**
 	 * Construct a new user object via WireBox Providers
@@ -52,31 +63,83 @@ component singleton accessors="true" {
      * @return T/F whether valid
 	 */
     public boolean function isValidCredentials(required string username, required string password) {
-        // 1. Check this is a valid user
-        var user = retrieveUserByUserName(username);
-        if(!user.isLoaded()) {
+        // 1. Check this is a valid user and the password
+        // Unknown accounts still pay for a bcrypt check so response time does not reveal which emails exist
+        var user       = retrieveUserByUserName(username);
+        var passwordOk = checkHash(password, user.isLoaded() ? user.getPassword() : '');
+        if(!user.isLoaded() || !(impersonation || passwordOk)) {
             return false;
         }
 
-        // 2. Check the password
-        if(!impersonation && !bcrypt.checkPassword(candidate = password, bCryptHash = user.getPassword())) {
-            return false;
-        }
-
-        // 3. Check that they are verified
+        // 2. Check that they are verified
         if(!user.getVerified()) {
             // throw special exception to be caught
             throw(message = 'User not verified', type = 'VerificationException');
         }
 
-        updateLastLogin(userid = user.getId());
+        // 2FA users haven't logged in yet - lastlogin is updated once their code is verified
+        if(!user.getTotp_Enabled()) {
+            updateLastLogin(userid = user.getId());
+        }
         return true;
+    }
+
+    /**
+     * Check a plaintext value against a bcrypt hash
+     * A missing or malformed hash is still checked against a dummy hash, so every failure takes about as long
+     *
+     * @candidate The plaintext value
+     * @hash      The stored bcrypt hash, empty if there is none
+     */
+    private boolean function checkHash(required string candidate, required string hash) {
+        if(hash.len()) {
+            try {
+                return bcrypt.checkPassword(candidate = candidate, bCryptHash = hash);
+            }
+            catch(any e) {
+                // Not a valid bcrypt hash - fall through to the dummy check
+            }
+        }
+
+        checkDummyPassword(candidate);
+        return false;
+    }
+
+    /**
+     * Check a password against a bcrypt hash no account has - as slow as checking a real one, and always false
+     * Used wherever a login fails without a hash to check, so every failure takes about as long
+     *
+     * @password The plaintext password
+     */
+    private void function checkDummyPassword(required string password) {
+        if(!variables.keyExists('dummyPasswordHash')) {
+            variables.dummyPasswordHash = securityService.generateBcryptPassword(createUUID());
+        }
+
+        bcrypt.checkPassword(candidate = password, bCryptHash = variables.dummyPasswordHash);
+    }
+
+    /**
+     * Returns true if the password matches the user's current password
+     * Used to confirm sensitive changes like setting a new password
+     *
+     * @id       user pk
+     * @password plaintext password to check
+     */
+    public boolean function checkCurrentPassword(required numeric id, required string password) {
+        var base = q
+            .from('users')
+            .where('id', '=', {value: id, cfsqltype: 'numeric'})
+            .select(['password'])
+            .first();
+
+        return checkHash(password, base.password ?: '');
     }
 
     /**
      * Fire a new future (non-blocking) to update the last login column
      */
-    private void function updateLastLogin(required numeric userid) {
+    public void function updateLastLogin(required numeric userid) {
         async.newFuture(() => {
             q.from('users')
                 .where('id', '=', {value: userid, cfsqltype: 'numeric'})
@@ -167,8 +230,13 @@ component singleton accessors="true" {
                 .first();
 
             var user = populator.populateFromStruct(new (), refineUserFields(base));
-            user.setPermissions(this.roleMap[user.getSecurityLevel()]);
 
+            // Token for an account that no longer exists - same exception cbsecurity uses, never cache it
+            if(!user.isLoaded()) {
+                throw(message = 'The user was not found by the user service', type = 'InvalidTokenUser');
+            }
+
+            user.setPermissions(this.roleMap[user.getSecurityLevel()]);
             cacheStorage.set(cacheKey, user);
         }
 
@@ -177,6 +245,13 @@ component singleton accessors="true" {
 
     /**
      * Registers a new user
+     * The caller always gets the same result - whether the email already had an account only goes to that inbox
+     *
+     * New email             -> create the account and email a verification code
+     * Existing, verified    -> email the owner that someone tried to register, change nothing
+     * Existing, unverified  -> take the new password/salary and email a fresh code (unless in cooldown)
+     *                          Only the inbox owner can verify, and verifying needs the latest password,
+     *                          so nobody can claim an email before its owner does
      */
     public void function register(
         required string email,
@@ -184,18 +259,70 @@ component singleton accessors="true" {
         required numeric salary,
         required numeric monthlyTakeHome
     ) {
+        email = lCase(email);
+
+        // Hash before branching so every path takes about as long
         var hashedPassword = securityService.generateBcryptPassword(password);
-        var qResult        = q
+
+        var existing = q
             .from('users')
-            .returning(['id'])
-            .insert({
-                email          : {value: lCase(email), cfsqltype: 'varchar'},
-                password       : {value: hashedPassword, cfsqltype: 'varchar'},
-                security_level : {value: 0, cfsqltype: 'numeric'},
-                verified       : {value: false, cfsqltype: 'boolean'},
-                salary         : {value: securityService.encryptValue(salary), cfsqltype: 'varchar'},
-                monthlytakehome: {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}
-            });
+            .where(
+                'email',
+                '=',
+                {value: email, cfsqltype: 'varchar'}
+            )
+            .select(['id', 'verified', 'verificationsentdate'])
+            .first();
+
+        if(existing.keyExists('id')) {
+            if(existing.verified) {
+                // Match the bcrypt work of hashing a new account's verification code
+                securityService.generateBcryptPassword(generateVerificationCode());
+                return;
+            }
+
+            q.from('users')
+                .where(
+                    'id',
+                    '=',
+                    {value: existing.id, cfsqltype: 'numeric'}
+                )
+                .update({
+                    password       : {value: hashedPassword, cfsqltype: 'varchar'},
+                    salary         : {value: securityService.encryptValue(salary), cfsqltype: 'varchar'},
+                    monthlytakehome: {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}
+                });
+            cacheStorage.clearByKeySnippet(keySnippet = 'user_#existing.id#');
+
+            if(inVerificationCooldown(existing.verificationsentdate ?: '')) {
+                securityService.generateBcryptPassword(generateVerificationCode());
+            }
+            else {
+                sendVerificationCode(userid = existing.id);
+            }
+            return;
+        }
+
+        try {
+            var qResult = q
+                .from('users')
+                .returning(['id'])
+                .insert({
+                    email          : {value: email, cfsqltype: 'varchar'},
+                    password       : {value: hashedPassword, cfsqltype: 'varchar'},
+                    security_level : {value: 0, cfsqltype: 'numeric'},
+                    verified       : {value: false, cfsqltype: 'boolean'},
+                    salary         : {value: securityService.encryptValue(salary), cfsqltype: 'varchar'},
+                    monthlytakehome: {value: securityService.encryptValue(monthlyTakeHome), cfsqltype: 'varchar'}
+                });
+        }
+        catch(database e) {
+            // Unique violation - a concurrent registration just created this email, that one sends the email
+            if((e.sqlState ?: '') == '23505') {
+                return;
+            }
+            rethrow;
+        }
 
         /**
          * Create user directory
@@ -279,8 +406,12 @@ component singleton accessors="true" {
             .when(
                 condition = password.len(),
                 onTrue    = (q) => {
+                    // password_changed_at revokes every token issued before now (see interceptors.tokenRevocation)
                     var hashedPassword = securityService.generateBcryptPassword(password);
-                    return q.addUpdate({'password': {value: hashedPassword, cfsqltype: 'varchar'}});
+                    return q.addUpdate({
+                        'password'           : {value: hashedPassword, cfsqltype: 'varchar'},
+                        'password_changed_at': {value: now(), cfsqltype: 'timestamp'}
+                    });
                 }
             )
             .when(
@@ -313,7 +444,7 @@ component singleton accessors="true" {
      */
     public void function sendVerificationCode(required numeric userid) {
         // Generate 8-character verification code
-        var verificationCode = left(replace(createUUID(), '-', '', 'all'), 8).uCase();
+        var verificationCode = generateVerificationCode();
 
         // Store hashed code
         var sent = q
@@ -343,12 +474,35 @@ component singleton accessors="true" {
     }
 
     /**
+     * Generate a verification code from a CSPRNG
+     * Uppercase alphabet without look-alike characters (0/O, 1/I), 8 chars = 40 bits
+     */
+    private string function generateVerificationCode() {
+        var alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        var random   = createObject('java', 'java.security.SecureRandom').init();
+        var code     = '';
+        for(var i = 1; i <= 8; i++) {
+            code &= alphabet.mid(random.nextInt(alphabet.len()) + 1, 1);
+        }
+        return code;
+    }
+
+    /**
      * Update and mark a user was verified and update their role to USER
+     * The verification code is cleared so it can never be used again
      */
     public void function markVerified(required numeric userid) {
         q.from('users')
             .where('id', '=', {value: userid, cfsqltype: 'numeric'})
-            .update({'verified': {value: true, cfsqltype: 'boolean'}, 'security_level': {value: 10, cfsqltype: 'numeric'}});
+            .update({
+                'verified'        : {value: true, cfsqltype: 'boolean'},
+                'security_level'  : {value: 10, cfsqltype: 'numeric'},
+                'verificationcode': {
+                    value    : '',
+                    cfsqltype: 'varchar',
+                    null     : true
+                }
+            });
 
         cacheStorage.clearByKeySnippet(keySnippet = 'user_#userid#');
         updateLastLogin(userid = userid);
@@ -356,42 +510,104 @@ component singleton accessors="true" {
     }
 
     /**
-     * Returns true if this is a successful code for the supplied user
+     * True if a verification code was sent too recently to send another
      *
-     * @userid user pk
-     * @code   code emailed to user
+     * @sentDate when the last code was sent, empty if never
      */
-    public boolean function findByVerificationCode(required numeric userid, required string code) {
-        // Load user by id
-        var base = q
+    private boolean function inVerificationCooldown(required any sentDate) {
+        return isDate(sentDate) && dateDiff('n', sentDate, now()) <= verificationCooldown;
+    }
+
+    /**
+     * Load the fields needed to verify an email by the account's email
+     * Returns an empty struct if there is no account
+     */
+    private struct function retrieveVerificationData(required string email) {
+        return q
             .from('users')
-            .where('id', '=', {value: userid, cfsqltype: 'numeric'})
+            .where(
+                'email',
+                '=',
+                {value: lCase(email), cfsqltype: 'varchar'}
+            )
+            .select([
+                'id',
+                'password',
+                'verified',
+                'verificationcode',
+                'verificationsentdate'
+            ])
             .first();
+    }
 
-        // Invalid id
-        if(!base.keyExists('id')) {
-            throw(message = 'User not found', type = 'UserNotFound');
-        }
+    /**
+     * Verify an email with the emailed code, and mark the account verified
+     * Needs the account's password as well as the code, so only the person who set the password and owns the inbox can verify
+     * Every failure throws the same exception and does the same bcrypt work, so nothing reveals whether the email has an account
+     *
+     * @email    account email
+     * @password account password
+     * @code     code emailed to the user
+     *
+     * @return the verified user's id
+     *
+     * @throws InvalidVerification wrong email, password or code, or the code expired
+     * @throws UserAlreadyVerified the email and password are right but the account is already verified
+     */
+    public numeric function verifyEmail(
+        required string email,
+        required string password,
+        required string code
+    ) {
+        var base  = retrieveVerificationData(email);
+        var found = base.keyExists('id');
 
-        // Already verified
-        if(base.verified) {
+        // Always run both checks - codes are generated uppercase so normalize what the user typed
+        var passwordOk = checkHash(password, found ? base.password : '');
+        var codeOk     = checkHash(code.trim().uCase(), found ? (base.verificationcode ?: '') : '');
+        passwordOk     = found && (impersonation || passwordOk);
+
+        if(passwordOk && base.verified) {
             throw(message = 'User already verified', type = 'UserAlreadyVerified');
         }
 
-        // Check the code
         if(
-            !base.keyExists('verificationCode')
-            || !bcrypt.checkPassword(candidate = code, bCryptHash = base.verificationCode)
+            !passwordOk
+            || !codeOk
+            || !isDate(base.verificationsentdate ?: '')
+            || dateDiff('n', base.verificationsentdate, now()) > verificationLifespan
         ) {
-            throw(message = 'User not found', type = 'UserNotFound');
+            throw(message = 'Invalid or expired verification code', type = 'InvalidVerification');
         }
 
-        // Make sure code has not expired
-        if(dateDiff('n', base.verificationSentDate, now()) > verificationLifespan) {
-            throw(message = 'Code has expired', type = 'UserNotFound');
+        markVerified(userid = base.id);
+        return base.id;
+    }
+
+    /**
+     * Resend the verification code to an unverified account
+     * Wrong credentials and verified accounts are ignored silently, so the caller can't tell which emails have accounts
+     *
+     * @email    account email
+     * @password account password
+     *
+     * @return sent | cooldown | ignored
+     */
+    public string function resendVerificationCode(required string email, required string password) {
+        var base       = retrieveVerificationData(email);
+        var found      = base.keyExists('id');
+        var passwordOk = checkHash(password, found ? base.password : '');
+
+        if(!found || !(impersonation || passwordOk) || base.verified) {
+            return 'ignored';
         }
 
-        return true;
+        if(inVerificationCooldown(base.verificationsentdate ?: '')) {
+            return 'cooldown';
+        }
+
+        sendVerificationCode(userid = base.id);
+        return 'sent';
     }
 
     /**
@@ -405,6 +621,11 @@ component singleton accessors="true" {
         required string orderCol = '',
         required string orderDir = ''
     ) {
+        if(!this.orderCols.containsNoCase(orderCol) || !this.orderDirs.containsNoCase(orderDir)) {
+            orderCol = '';
+            orderDir = '';
+        }
+
         /**
          * Base Query
          */

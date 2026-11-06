@@ -1,3 +1,4 @@
+import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -7,6 +8,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import ErrorAlert from 'components/ErrorAlert';
@@ -14,7 +16,6 @@ import useAuthContext from 'hooks/useAuthContext';
 import useAuthDialogContext from 'hooks/useAuthDialogContext';
 import useCooldownAction from 'hooks/useCooldownAction';
 import useFormField from 'hooks/useFormField';
-import usePendingFetch from 'hooks/usePendingFetch';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { type SubmitEvent } from 'react';
 import { userService } from 'schema/user';
@@ -23,6 +24,11 @@ import { parseApiValidationError } from 'utils/parseApiValidationError';
 import { formatSecondsToTime } from 'utils/timeFormatter';
 
 const COOLDOWN_MS = 10 * 60 * 1000; // 10 Minutes
+
+/**
+ * Codes are 8 uppercase characters, strip whitespace (e.g. pasted from the email) and uppercase
+ */
+const normalizeCode = (value: string) => value.replace(/\s+/g, '').toUpperCase();
 
 /**
  * Account verification form inside dialog
@@ -34,13 +40,12 @@ export default function VerifyDialog() {
     const { verifyDialogOpen, closeVerifyDialog } = useAuthDialogContext();
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string[] | null>(null);
-    const { login: setToken, pendingToken, logout } = useAuthContext();
+    const { login: setToken, pendingVerification, setPendingVerification } = useAuthContext();
 
     /**
-     * Pending fetch to use pending token for unverified user
+     * Verify and resend are unauthenticated - the user's credentials are sent instead of a token
      */
-    const pendingFetch = usePendingFetch();
-    const userAPI = useMemo(() => userService({ pendingFetch: pendingFetch }), [pendingFetch]);
+    const userAPI = useMemo(() => userService({}), []);
 
     /**
      * State for when user is allowed to resend a verification code
@@ -48,30 +53,33 @@ export default function VerifyDialog() {
     const [resendAlert, setResendAlert] = useState<string | null>(null);
 
     /**
-     * If verify dialog open and pending token gets set to null (invalid state),
-     * force close the verify dialog and logout
+     * If verify dialog open and pending credentials get set to null (invalid state, ie. logout),
+     * force close the verify dialog
      */
     useEffect(() => {
-        if (verifyDialogOpen && pendingToken == null) {
-            // Reset modal state
-            // eslint-disable-next-line react-hooks/set-state-in-effect, @eslint-react/set-state-in-effect -- resets the dialog when its pending token disappears
-            setResendAlert(null);
-            // eslint-disable-next-line @eslint-react/set-state-in-effect -- resets the dialog when its pending token disappears
-            setError(null);
-            logout();
+        if (verifyDialogOpen && pendingVerification == null) {
             closeVerifyDialog();
         }
-    }, [pendingToken, verifyDialogOpen, closeVerifyDialog, logout]);
+    }, [pendingVerification, verifyDialogOpen, closeVerifyDialog]);
+
+    /**
+     * Closing the dialog discards the in-memory credentials
+     */
+    const handleClose = useCallback(() => {
+        if (loading) return;
+        setPendingVerification(null);
+        closeVerifyDialog();
+    }, [loading, setPendingVerification, closeVerifyDialog]);
 
     const {
         execute: executeResend,
         loading: resendLoading,
         isCooldownActive,
         remainingSeconds,
+        startCooldown,
     } = useCooldownAction({
         cooldownMs: COOLDOWN_MS,
         storageKey: 'verificationResendCooldownUntil',
-        setInitialCooldown: true,
     });
 
     /**
@@ -79,10 +87,14 @@ export default function VerifyDialog() {
      */
     const handleResend = async () => {
         setError(null);
+        if (pendingVerification == null) return;
         try {
             await executeResend(async () => {
-                await userAPI.resendVerificationCode();
-                setResendAlert('Success! Please check your email for a new verification code.');
+                await userAPI.resendVerificationCode({
+                    email: pendingVerification.email,
+                    password: pendingVerification.password,
+                });
+                setResendAlert('If your account needs verifying, a new code has been sent.');
             });
         } catch (err: unknown) {
             if (err instanceof APIError && err.statusCode === 429) {
@@ -96,17 +108,26 @@ export default function VerifyDialog() {
     const verificationField = useFormField({
         initialValue: '',
         validator: (value: string): string | null => {
-            if (!value.trim() || value.length !== 8) return 'Please enter a valid code.';
+            if (normalizeCode(value).length !== 8) return 'Please enter a valid code.';
             return null;
         },
     });
 
     const handleExited = useCallback(() => {
-        // Reset fields when modal finishes closing - only happens when this abruptly closes to invalid state
+        // Reset fields when modal finishes closing
         verificationField.reset();
+        setResendAlert(null);
         setError(null);
         setLoading(false);
     }, [verificationField]);
+
+    /**
+     * Start the resend cooldown when the dialog opens, but only if a code was just emailed (register)
+     * An unverified login sends no email, so the user can resend right away
+     */
+    const handleEnter = useCallback(() => {
+        if (pendingVerification?.codeSent === true) startCooldown();
+    }, [pendingVerification, startCooldown]);
 
     /**
      * Submit the verification code
@@ -124,20 +145,21 @@ export default function VerifyDialog() {
 
         // Don't submit if error(s) exist
         const hasErrors = Object.values(newErrors).some(Boolean);
-        if (hasErrors) {
+        if (hasErrors || pendingVerification == null) {
             setLoading(false);
             return;
         }
 
-        // Build the form data packet
-        const formData = new FormData();
-        formData.append('verificationcode', verificationField.value);
-
         try {
             // Verify endpoint returns new valid JWT
-            const token = await userAPI.verify(formData);
+            const token = await userAPI.verify({
+                email: pendingVerification.email,
+                password: pendingVerification.password,
+                verificationCode: normalizeCode(verificationField.value),
+            });
             if (!token) throw new Error('Invalid state');
 
+            setPendingVerification(null); // Credentials are no longer needed
             void setToken(token); // Set the JWT
             closeVerifyDialog();
         } catch (err: unknown) {
@@ -155,13 +177,14 @@ export default function VerifyDialog() {
         <Dialog
             open={verifyDialogOpen}
             onClose={() => {
-                // Dialog is non-closable
+                // Dialog is only closable via the close button
                 return;
             }}
             fullWidth={true}
             maxWidth={'sm'}
             slotProps={{
                 transition: {
+                    onEnter: handleEnter,
                     onExited: handleExited,
                 },
             }}
@@ -174,6 +197,9 @@ export default function VerifyDialog() {
                 }}
             >
                 Verify
+                <IconButton disabled={loading} aria-label="close" onClick={handleClose}>
+                    <CloseIcon />
+                </IconButton>
             </DialogTitle>
             <Divider />
             <DialogContent>

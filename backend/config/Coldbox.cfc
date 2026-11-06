@@ -21,7 +21,7 @@ component {
             appName                 : 'SpendingTracker',
             eventName               : 'event',
             // Development Settings
-            reinitPassword          : getSystemSetting('REINITKEY'),
+            reinitPassword          : len(getSystemSetting('REINITKEY', '')) ? getSystemSetting('REINITKEY') : 'disabled_#generateSecretKey('AES', 256)##generateSecretKey('AES', 256)#',
             reinitKey               : 'fwreinit',
             handlersIndexAutoReload : false,
             implicitViews           : true,
@@ -85,7 +85,12 @@ component {
             debugging      : false,
             encryptionKey  : getSystemSetting('ENCRYPTIONKEY'),
             fromEmail      : 'spendingtracker@chaselane.dev',
-            guestOnlyRoutes: ['auth.login', 'auth.register'],
+            guestOnlyRoutes: [
+                'auth.login',
+                'auth.register',
+                'auth.verify',
+                'auth.resendverificationcode'
+            ],
             healthCheck    : true,
             imageExtension : '.webp',
             imageMagickPath: getSystemSetting('IMAGEMAGICKPATH'),
@@ -126,10 +131,22 @@ component {
                     // Credential stuffing against one account from many ips
                     {by: 'email', limit: 20, window: 15}
                 ],
-                'auth.register'              : [{by: 'ip', limit: 3, window: 30}],
-                'auth.verify'                : [{by: 'user', limit: 5, window: 10}],
-                'auth.resendverificationcode': [{by: 'user', limit: 3, window: 10}],
-                'auth.verify2fa'             : [
+                'auth.register': [
+                    {by: 'ip', limit: 3, window: 30},
+                    // Each attempt emails the address - stop flooding one inbox from many ips
+                    {by: 'email', limit: 3, window: 60}
+                ],
+                'auth.verify': [
+                    {by: 'ip', limit: 10, window: 10},
+                    // Guessing one account's code from many ips
+                    {by: 'email', limit: 5, window: 10},
+                    {by: 'email', limit: 20, window: 1440}
+                ],
+                'auth.resendverificationcode': [
+                    {by: 'ip', limit: 5, window: 10},
+                    {by: 'email', limit: 3, window: 10}
+                ],
+                'auth.verify2fa': [
                     {by: 'ip', limit: 5, window: 10},
                     // Brute forcing one account's code from many ips
                     {by: 'user', limit: 10, window: 10}
@@ -150,9 +167,11 @@ component {
                         refundOnFailure: true
                     }
                 ],
-                'user.setup2fa'  : [{by: 'user', limit: 5, window: 60}],
-                'user.confirm2fa': [{by: 'user', limit: 5, window: 10}],
-                'user.disable2fa': [{by: 'user', limit: 3, window: 10}]
+                // Changing the password checks the current one - limit guessing it with a stolen session
+                'user.updateprofile': [{by: 'user', limit: 20, window: 10}],
+                'user.setup2fa'     : [{by: 'user', limit: 5, window: 60}],
+                'user.confirm2fa'   : [{by: 'user', limit: 5, window: 10}],
+                'user.disable2fa'   : [{by: 'user', limit: 3, window: 10}]
             },
             receiptUploads      : ['expense.save', 'subscription.save'], // endpoints that allow receipt uploads
             recoveryCodeCount   : 8, // number of recovery codes to provide for TOTP
@@ -290,6 +309,11 @@ component {
             {
                 class     : 'interceptors.ratelimiter',
                 name      : 'rateLimiterInterceptor',
+                properties: {}
+            },
+            {
+                class     : 'interceptors.tokenRevocation',
+                name      : 'tokenRevocationInterceptor',
                 properties: {}
             }
         ];

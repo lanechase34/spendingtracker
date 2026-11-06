@@ -28,6 +28,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 mockJwtService.$reset();
                 mockSecurityService.$reset();
                 mockUserService.$reset();
+                mockTotpService.$reset();
 
                 // Inject mocked dependencies
                 handler.$property(propertyName = 'csrfService', mock = mockCSRFService);
@@ -35,7 +36,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 handler.$property(propertyName = 'securityService', mock = mockSecurityService);
                 handler.$property(propertyName = 'totpService', mock = mockTotpService);
                 handler.$property(propertyName = 'userService', mock = mockUserService);
-                handler.$property(propertyName = 'verificationCooldown', mock = 5);
 
                 // Prepare request context
                 prepareMock(getRequestContext());
@@ -58,8 +58,12 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     expect(handler.allowedMethods.verify).toBe('POST');
                 });
 
-                it('Should only allow GET for resendVerificationCode', () => {
-                    expect(handler.allowedMethods.resendVerificationCode).toBe('GET');
+                it('Should only allow POST for resendVerificationCode', () => {
+                    expect(handler.allowedMethods.resendVerificationCode).toBe('POST');
+                });
+
+                it('Should only allow POST for verify2fa', () => {
+                    expect(handler.allowedMethods.verify2fa).toBe('POST');
                 });
 
                 it('Should only allow GET for generateCSRF', () => {
@@ -147,18 +151,16 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     expect(setRefreshCall.token).toBe('test-refresh-token');
                 });
 
-                it('Should handle VerificationException and return 403', () => {
-                    var event    = getRequestContext();
-                    var mockUser = createEmptyMock(className = 'models.objects.userobj');
-                    mockUser.$('getTotp_Enabled', false);
-                    var mockToken = {access_token: 'pending-access-token'};
+                it('Should handle VerificationException and return 403 without issuing a token', () => {
+                    var event = getRequestContext();
 
                     var rc  = {email: 'unverified@example.com', password: 'password123'};
                     var prc = {};
 
                     mockJwtService.$('attempt').$throws(type = 'VerificationException', message = 'Email not verified');
-                    mockUserService.$('retrieveUserByUsername', mockUser);
-                    mockJwtService.$('fromUser', mockToken);
+                    mockUserService.$('retrieveUserByUsername');
+                    mockJwtService.$('fromUser');
+                    mockSecurityService.$('deleteTokenCookies');
 
                     var mockResponse = createStub();
                     mockResponse.$('SetData', mockResponse);
@@ -169,13 +171,19 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.login(event, rc, prc);
 
-                    expect(mockUserService.$once('retrieveUserByUsername')).toBeTrue();
-                    expect(mockJwtService.$once('fromUser')).toBeTrue();
+                    // No pending/unverified token is ever issued
+                    expect(mockJwtService.$never('fromUser')).toBeTrue();
+                    expect(mockUserService.$never('retrieveUserByUsername')).toBeTrue();
+                    expect(mockResponse.$never('SetData')).toBeTrue();
+
                     expect(mockResponse.$once('SetStatusCode')).toBeTrue();
                     expect(mockResponse.$once('AddMessage')).toBeTrue();
 
                     var statusCodeCall = mockResponse.$callLog().setStatusCode[1];
                     expect(statusCodeCall[1]).toBe(403);
+
+                    var messageCall = mockResponse.$callLog().addMessage[1];
+                    expect(messageCall[1]).toInclude('verify your email');
                 });
 
                 it('Should handle invalid credentials and return 401', () => {
@@ -288,13 +296,84 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     expect(messageCall[1]).toBe('Successfully logged out');
                 });
 
+                it('Should revoke the refresh token from the cookie', () => {
+                    var event = getRequestContext();
+                    var rc    = {'x-refresh-token': 'cookie-refresh-token'};
+                    var prc   = {};
+
+                    mockJwtService.$('logout');
+                    mockJwtService.$('invalidate', true);
+                    mockSecurityService.$('deleteTokenCookies');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    handler.logout(event, rc, prc);
+
+                    expect(mockJwtService.$once('invalidate')).toBeTrue();
+                    expect(mockJwtService.$callLog().invalidate[1][1]).toBe('cookie-refresh-token');
+                    expect(mockSecurityService.$once('deleteTokenCookies')).toBeTrue();
+                });
+
+                it('Should not try to revoke a refresh token when there is no cookie', () => {
+                    var event = getRequestContext();
+                    var rc    = {};
+                    var prc   = {};
+
+                    mockJwtService.$('logout');
+                    mockJwtService.$('invalidate', true);
+                    mockSecurityService.$('deleteTokenCookies');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    handler.logout(event, rc, prc);
+
+                    expect(mockJwtService.$never('invalidate')).toBeTrue();
+                });
+
+                it('Should still delete the cookie when revoking the refresh token fails', () => {
+                    var event = getRequestContext();
+                    var rc    = {'x-refresh-token': 'cookie-refresh-token'};
+                    var prc   = {};
+
+                    mockJwtService.$('logout');
+                    mockJwtService.$(
+                        method         = 'invalidate',
+                        throwException = true,
+                        throwType      = 'InvalidateError'
+                    );
+                    mockSecurityService.$('deleteTokenCookies');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    expect(() => {
+                        handler.logout(event, rc, prc);
+                    }).notToThrow();
+                    expect(mockSecurityService.$once('deleteTokenCookies')).toBeTrue();
+                });
+
                 it('Should handle errors gracefully during logout', () => {
                     var event = getRequestContext();
                     var rc    = {};
                     var prc   = {};
 
                     mockJwtService.$('logout').$throws(type = 'LogoutError');
-                    mockSecurityService.$('deleteTokenCookies').$throws(type = 'DeleteError');
+                    mockSecurityService.$(
+                        method         = 'deleteTokenCookies',
+                        throwException = true,
+                        throwType      = 'DeleteError'
+                    );
 
                     var mockResponse = createStub();
                     mockResponse.$('addMessage', mockResponse);
@@ -332,11 +411,125 @@ component extends="coldbox.system.testing.BaseTestCase" {
                 });
             });
 
+            describe('verify2fa()', () => {
+                it('Should issue a full token and update lastlogin after a valid code', () => {
+                    var event        = getRequestContext();
+                    var mockUser     = createEmptyMock(className = 'models.objects.userobj');
+                    var mockToken    = {access_token: 'full-access-token', refresh_token: 'full-refresh-token'};
+                    var mockSettings = {jwt: {expiration: 60}};
+
+                    var rc  = {code: '123456'};
+                    var prc = {
+                        userid     : 42,
+                        authUser   : createStub(),
+                        jwt_payload: {rememberMe: false}
+                    };
+
+                    mockTotpService.$('verifyTOTP');
+                    mockUserService.$('retrieveUserById', mockUser);
+                    mockUserService.$('updateLastLogin');
+                    mockJwtService.$('fromUser', mockToken);
+                    mockJwtService.$('getSettings', mockSettings);
+                    mockSecurityService.$('setRefreshTokenCookie');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('SetData', mockResponse);
+                    mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    handler.verify2fa(event, rc, prc);
+
+                    expect(mockTotpService.$once('verifyTOTP')).toBeTrue();
+
+                    // Login only completes here for 2FA users, so lastlogin is updated here
+                    expect(mockUserService.$once('updateLastLogin')).toBeTrue();
+                    expect(mockUserService.$callLog().updateLastLogin[1].userid).toBe(42);
+
+                    // rememberMe false -> no refresh cookie
+                    expect(mockSecurityService.$never('setRefreshTokenCookie')).toBeTrue();
+
+                    var dataCall = mockResponse.$callLog().setData[1];
+                    expect(dataCall[1].access_token).toBe('full-access-token');
+
+                    var statusCall = mockResponse.$callLog().setStatusCode[1];
+                    expect(statusCall[1]).toBe(200);
+                });
+
+                it('Should set the refresh token cookie when rememberMe was set at login', () => {
+                    var event        = getRequestContext();
+                    var mockUser     = createEmptyMock(className = 'models.objects.userobj');
+                    var mockToken    = {access_token: 'full-access-token', refresh_token: 'full-refresh-token'};
+                    var mockSettings = {jwt: {expiration: 60}};
+
+                    var rc  = {code: '123456'};
+                    var prc = {
+                        userid     : 43,
+                        authUser   : createStub(),
+                        jwt_payload: {rememberMe: true}
+                    };
+
+                    mockTotpService.$('verifyTOTP');
+                    mockUserService.$('retrieveUserById', mockUser);
+                    mockUserService.$('updateLastLogin');
+                    mockJwtService.$('fromUser', mockToken);
+                    mockJwtService.$('getSettings', mockSettings);
+                    mockSecurityService.$('setRefreshTokenCookie');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('SetData', mockResponse);
+                    mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    handler.verify2fa(event, rc, prc);
+
+                    expect(mockSecurityService.$once('setRefreshTokenCookie')).toBeTrue();
+                    expect(mockSecurityService.$callLog().setRefreshTokenCookie[1].token).toBe('full-refresh-token');
+                });
+
+                it('Should return 400 and not update lastlogin with an invalid code', () => {
+                    var event = getRequestContext();
+
+                    var rc  = {code: '000000'};
+                    var prc = {
+                        userid     : 44,
+                        authUser   : createStub(),
+                        jwt_payload: {rememberMe: false}
+                    };
+
+                    // verifyTOTP returns void, so $throws() (a callback) never fires - use throwException instead
+                    mockTotpService.$(
+                        method         = 'verifyTOTP',
+                        throwException = true,
+                        throwType      = 'TOTP.InvalidCode',
+                        throwMessage   = 'Invalid code'
+                    );
+                    mockUserService.$('retrieveUserById');
+                    mockUserService.$('updateLastLogin');
+                    mockJwtService.$('fromUser');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('SetErrorMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    handler.verify2fa(event, rc, prc);
+
+                    expect(mockUserService.$never('updateLastLogin')).toBeTrue();
+                    expect(mockJwtService.$never('fromUser')).toBeTrue();
+
+                    var statusCall = mockResponse.$callLog().setStatusCode[1];
+                    expect(statusCall[1]).toBe(400);
+                });
+            });
+
             describe('register()', () => {
-                it('Should successfully register a new user', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'new-user-token'};
+                it('Should pass the registration fields to the user service', () => {
+                    var event = getRequestContext();
 
                     var rc = {
                         email          : 'newuser@example.com',
@@ -347,8 +540,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     var prc = {};
 
                     mockUserService.$('register');
-                    mockUserService.$('retrieveUserByUsername', mockUser);
-                    mockJwtService.$('fromUser', mockToken);
 
                     var mockResponse = createStub();
                     mockResponse.$('SetData', mockResponse);
@@ -368,22 +559,20 @@ component extends="coldbox.system.testing.BaseTestCase" {
                     expect(registerCall.monthlyTakeHome).toBe(5000);
                 });
 
-                it('Should return access token after registration', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'registration-token'};
+                it('Should return 200 with the verification message and no access token', () => {
+                    var event = getRequestContext();
 
                     var rc = {
                         email          : 'test@test.com',
-                        password       : 'pass',
+                        password       : 'password1234',
                         salary         : 50000,
                         monthlyTakeHome: 4000
                     };
                     var prc = {};
 
                     mockUserService.$('register');
-                    mockUserService.$('retrieveUserByUsername', mockUser);
-                    mockJwtService.$('fromUser', mockToken);
+                    mockUserService.$('retrieveUserByUsername');
+                    mockJwtService.$('fromUser');
 
                     var mockResponse = createStub();
                     mockResponse.$('SetData', mockResponse);
@@ -394,90 +583,36 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.register(event, rc, prc);
 
-                    var dataCall = mockResponse.$callLog().setData[1];
-                    expect(dataCall[1].access_token).toBe('registration-token');
+                    // Registration never issues a token or looks up the account
+                    expect(mockJwtService.$never('fromUser')).toBeTrue();
+                    expect(mockUserService.$never('retrieveUserByUsername')).toBeTrue();
+                    expect(mockResponse.$never('SetData')).toBeTrue();
 
                     var statusCall = mockResponse.$callLog().setStatusCode[1];
                     expect(statusCall[1]).toBe(200);
-                });
-
-                it('Should retrieve user after registration', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'token'};
-
-                    var rc = {
-                        email          : 'retrieve@test.com',
-                        password       : 'pass',
-                        salary         : 60000,
-                        monthlyTakeHome: 4500
-                    };
-                    var prc = {};
-
-                    mockUserService.$('register');
-                    mockUserService.$('retrieveUserByUsername', mockUser);
-                    mockJwtService.$('fromUser', mockToken);
-
-                    var mockResponse = createStub();
-                    mockResponse.$('SetData', mockResponse);
-                    mockResponse.$('addMessage', mockResponse);
-                    mockResponse.$('SetStatusCode', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.register(event, rc, prc);
-
-                    expect(mockUserService.$once('retrieveUserByUsername')).toBeTrue();
-
-                    var retrieveCall = mockUserService.$callLog().retrieveUserByUsername[1];
-                    expect(retrieveCall[1]).toBe('retrieve@test.com');
-                });
-
-                it('Should include verification message in response', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'token'};
-
-                    var rc = {
-                        email          : 'user@test.com',
-                        password       : 'password',
-                        salary         : 70000,
-                        monthlyTakeHome: 5500
-                    };
-                    var prc = {};
-
-                    mockUserService.$('register');
-                    mockUserService.$('retrieveUserByUsername', mockUser);
-                    mockJwtService.$('fromUser', mockToken);
-
-                    var mockResponse = createStub();
-                    mockResponse.$('SetData', mockResponse);
-                    mockResponse.$('addMessage', mockResponse);
-                    mockResponse.$('SetStatusCode', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.register(event, rc, prc);
 
                     var messageCall = mockResponse.$callLog().addMessage[1];
-                    expect(messageCall[1]).toInclude('verification code');
+                    expect(messageCall[1]).toBe('Check your email for a verification code.');
                 });
             });
 
             describe('verify()', () => {
-                it('Should successfully verify a user with valid code', () => {
+                it('Should verify with email, password and code and return a new token', () => {
                     var event     = getRequestContext();
                     var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'verified-token', refresh_token: 'verified-refresh'};
+                    var mockToken = {access_token: 'verified-access', refresh_token: 'verified-refresh'};
 
-                    var rc  = {verificationCode: '123456'};
-                    var prc = {userid: 42};
+                    var rc = {
+                        email           : 'verify@example.com',
+                        password        : 'password1234',
+                        verificationCode: 'ABCD2345'
+                    };
+                    var prc = {};
 
-                    mockUserService.$('findByVerificationCode', true);
-                    mockUserService.$('markVerified');
+                    mockUserService.$('verifyEmail', 42);
                     mockUserService.$('retrieveUserById', mockUser);
                     mockJwtService.$('fromUser', mockToken);
-                    mockSecurityService.$('SetRefreshTokenCookie');
+                    mockSecurityService.$('setRefreshTokenCookie');
 
                     var mockResponse = createStub();
                     mockResponse.$('SetData', mockResponse);
@@ -488,23 +623,43 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.verify(event, rc, prc);
 
-                    expect(mockUserService.$once('findByVerificationCode')).toBeTrue();
-                    expect(mockUserService.$once('markVerified')).toBeTrue();
-                    expect(mockSecurityService.$once('SetRefreshTokenCookie')).toBeTrue();
+                    expect(mockUserService.$once('verifyEmail')).toBeTrue();
+                    var verifyCall = mockUserService.$callLog().verifyEmail[1];
+                    expect(verifyCall.email).toBe('verify@example.com');
+                    expect(verifyCall.password).toBe('password1234');
+                    expect(verifyCall.code).toBe('ABCD2345');
+
+                    // Token is built for the id returned by the service, not from prc
+                    var retrieveCall = mockUserService.$callLog().retrieveUserById[1];
+                    expect(retrieveCall.id).toBe(42);
+                    expect(retrieveCall.checkPending).toBeFalse();
+
+                    var dataCall = mockResponse.$callLog().setData[1];
+                    expect(dataCall[1].access_token).toBe('verified-access');
+
+                    expect(mockSecurityService.$once('setRefreshTokenCookie')).toBeTrue();
+                    var cookieCall = mockSecurityService.$callLog().setRefreshTokenCookie[1];
+                    expect(cookieCall.token).toBe('verified-refresh');
 
                     var statusCall = mockResponse.$callLog().setStatusCode[1];
                     expect(statusCall[1]).toBe(200);
                 });
 
-                it('Should handle UserNotFound exception', () => {
+                it('Should return 400 on InvalidVerification without issuing a token', () => {
                     var event = getRequestContext();
 
-                    var rc  = {verificationCode: 'invalid'};
-                    var prc = {userid: 99};
+                    var rc = {
+                        email           : 'verify@example.com',
+                        password        : 'password1234',
+                        verificationCode: 'WRONGCDE'
+                    };
+                    var prc = {};
 
                     mockUserService
-                        .$('findByVerificationCode')
-                        .$throws(type = 'UserNotFound', message = 'User not found');
+                        .$('verifyEmail')
+                        .$throws(type = 'InvalidVerification', message = 'Invalid or expired verification code');
+                    mockJwtService.$('fromUser');
+                    mockSecurityService.$('setRefreshTokenCookie');
 
                     var mockResponse = createStub();
                     mockResponse.$('SetStatusCode', mockResponse);
@@ -514,22 +669,28 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.verify(event, rc, prc);
 
+                    expect(mockJwtService.$never('fromUser')).toBeTrue();
+                    expect(mockSecurityService.$never('setRefreshTokenCookie')).toBeTrue();
+
                     var statusCall = mockResponse.$callLog().setStatusCode[1];
                     expect(statusCall[1]).toBe(400);
 
                     var errorCall = mockResponse.$callLog().setErrorMessage[1];
-                    expect(errorCall[1]).toInclude('Invalid or expired');
+                    expect(errorCall[1]).toBe('Invalid or expired verification code.');
                 });
 
-                it('Should handle UserAlreadyVerified exception', () => {
+                it('Should return 400 on UserAlreadyVerified without issuing a token', () => {
                     var event = getRequestContext();
 
-                    var rc  = {verificationCode: '123456'};
-                    var prc = {userid: 50};
+                    var rc = {
+                        email           : 'verified@example.com',
+                        password        : 'password1234',
+                        verificationCode: 'ABCD2345'
+                    };
+                    var prc = {};
 
-                    mockUserService
-                        .$('findByVerificationCode')
-                        .$throws(type = 'UserAlreadyVerified', message = 'Already verified');
+                    mockUserService.$('verifyEmail').$throws(type = 'UserAlreadyVerified', message = 'Already verified');
+                    mockJwtService.$('fromUser');
 
                     var mockResponse = createStub();
                     mockResponse.$('SetStatusCode', mockResponse);
@@ -539,112 +700,24 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.verify(event, rc, prc);
 
+                    expect(mockJwtService.$never('fromUser')).toBeTrue();
+
                     var statusCall = mockResponse.$callLog().setStatusCode[1];
                     expect(statusCall[1]).toBe(400);
 
                     var errorCall = mockResponse.$callLog().setErrorMessage[1];
-                    expect(errorCall[1]).toInclude('already verified');
-                });
-
-                it('Should pass correct userid to findByVerificationCode', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'token', refresh_token: 'refresh'};
-
-                    var rc  = {verificationCode: 'ABC123'};
-                    var prc = {userid: 777};
-
-                    mockUserService.$('findByVerificationCode', true);
-                    mockUserService.$('markVerified');
-                    mockUserService.$('retrieveUserById', mockUser);
-                    mockJwtService.$('fromUser', mockToken);
-                    mockSecurityService.$('SetRefreshTokenCookie');
-
-                    var mockResponse = createStub();
-                    mockResponse.$('SetData', mockResponse);
-                    mockResponse.$('SetStatusCode', mockResponse);
-                    mockResponse.$('addMessage', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.verify(event, rc, prc);
-
-                    var findCall = mockUserService.$callLog().findByVerificationCode[1];
-                    expect(findCall.userid).toBe(777);
-                    expect(findCall.code).toBe('ABC123');
-                });
-
-                it('Should mark user as verified after code validation', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'token', refresh_token: 'refresh'};
-
-                    var rc  = {verificationCode: '654321'};
-                    var prc = {userid: 100};
-
-                    mockUserService.$('findByVerificationCode', true);
-                    mockUserService.$('markVerified');
-                    mockUserService.$('retrieveUserById', mockUser);
-                    mockUserService.$('updateLastLogin');
-                    mockJwtService.$('fromUser', mockToken);
-                    mockSecurityService.$('SetRefreshTokenCookie');
-
-                    var mockResponse = createStub();
-                    mockResponse.$('SetData', mockResponse);
-                    mockResponse.$('SetStatusCode', mockResponse);
-                    mockResponse.$('addMessage', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.verify(event, rc, prc);
-
-                    var markCall = mockUserService.$callLog().markVerified[1];
-                    expect(markCall.userid).toBe(100);
-                });
-
-                it('Should return new tokens after verification', () => {
-                    var event     = getRequestContext();
-                    var mockUser  = createEmptyMock(className = 'models.objects.userobj');
-                    var mockToken = {access_token: 'new-verified-access', refresh_token: 'new-verified-refresh'};
-
-                    var rc  = {verificationCode: '999999'};
-                    var prc = {userid: 200};
-
-                    mockUserService.$('findByVerificationCode', true);
-                    mockUserService.$('markVerified');
-                    mockUserService.$('retrieveUserById', mockUser);
-                    mockJwtService.$('fromUser', mockToken);
-                    mockSecurityService.$('SetRefreshTokenCookie');
-
-                    var mockResponse = createStub();
-                    mockResponse.$('SetData', mockResponse);
-                    mockResponse.$('SetStatusCode', mockResponse);
-                    mockResponse.$('addMessage', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.verify(event, rc, prc);
-
-                    var dataCall = mockResponse.$callLog().setData[1];
-                    expect(dataCall[1].access_token).toBe('new-verified-access');
-
-                    var cookieCall = mockSecurityService.$callLog().setRefreshTokenCookie[1];
-                    expect(cookieCall.token).toBe('new-verified-refresh');
+                    expect(errorCall[1]).toBe('Account already verified. Please log in.');
                 });
             });
 
             describe('resendVerificationCode()', () => {
-                it('Should successfully resend verification code when cooldown has passed', () => {
-                    var event        = getRequestContext();
-                    var mockAuthUser = createStub();
+                it('Should pass email and password to the user service', () => {
+                    var event = getRequestContext();
 
-                    // Set verification sent date to 10 minutes ago (cooldown is 5 minutes)
-                    mockAuthUser.$('getVerificationSentDate', dateAdd('n', -10, now()));
+                    var rc  = {email: 'resend@example.com', password: 'password1234'};
+                    var prc = {};
 
-                    var rc  = {};
-                    var prc = {userid: 123, authUser: mockAuthUser};
-
-                    mockUserService.$('SendVerificationCode');
+                    mockUserService.$('resendVerificationCode', 'sent');
 
                     var mockResponse = createStub();
                     mockResponse.$('addMessage', mockResponse);
@@ -654,26 +727,68 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.resendVerificationCode(event, rc, prc);
 
-                    expect(mockUserService.$once('SendVerificationCode')).toBeTrue();
+                    expect(mockUserService.$once('resendVerificationCode')).toBeTrue();
+                    var resendCall = mockUserService.$callLog().resendVerificationCode[1];
+                    expect(resendCall.email).toBe('resend@example.com');
+                    expect(resendCall.password).toBe('password1234');
+                });
+
+                it('Should return 200 with the generic message when a code was sent', () => {
+                    var event = getRequestContext();
+
+                    var rc  = {email: 'resend@example.com', password: 'password1234'};
+                    var prc = {};
+
+                    mockUserService.$('resendVerificationCode', 'sent');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    handler.resendVerificationCode(event, rc, prc);
 
                     var statusCall = mockResponse.$callLog().setStatusCode[1];
                     expect(statusCall[1]).toBe(200);
 
                     var messageCall = mockResponse.$callLog().addMessage[1];
-                    expect(messageCall[1]).toInclude('resent');
+                    expect(messageCall[1]).toBe('If your account needs verifying, a new code has been sent.');
                 });
 
-                it('Should return 429 when cooldown has not passed', () => {
-                    var event        = getRequestContext();
-                    var mockAuthUser = createStub();
+                it('Should return the same 200 response when the request was ignored', () => {
+                    var event = getRequestContext();
 
-                    // Set verification sent date to 2 minutes ago (cooldown is 5 minutes)
-                    mockAuthUser.$('getVerificationSentDate', dateAdd('n', -2, now()));
+                    var rc  = {email: 'unknown@example.com', password: 'password1234'};
+                    var prc = {};
 
-                    var rc  = {};
-                    var prc = {userid: 456, authUser: mockAuthUser};
+                    mockUserService.$('resendVerificationCode', 'ignored');
 
                     var mockResponse = createStub();
+                    mockResponse.$('addMessage', mockResponse);
+                    mockResponse.$('SetStatusCode', mockResponse);
+
+                    prepareMock(event).$('getResponse', mockResponse);
+
+                    handler.resendVerificationCode(event, rc, prc);
+
+                    var statusCall = mockResponse.$callLog().setStatusCode[1];
+                    expect(statusCall[1]).toBe(200);
+
+                    var messageCall = mockResponse.$callLog().addMessage[1];
+                    expect(messageCall[1]).toBe('If your account needs verifying, a new code has been sent.');
+                });
+
+                it('Should return 429 only when the service reports a cooldown', () => {
+                    var event = getRequestContext();
+
+                    var rc  = {email: 'resend@example.com', password: 'password1234'};
+                    var prc = {};
+
+                    mockUserService.$('resendVerificationCode', 'cooldown');
+
+                    var mockResponse = createStub();
+                    mockResponse.$('addMessage', mockResponse);
                     mockResponse.$('SetErrorMessage', mockResponse);
                     mockResponse.$('SetStatusCode', mockResponse);
 
@@ -681,110 +796,13 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
                     handler.resendVerificationCode(event, rc, prc);
 
-                    expect(mockUserService.$never('SendVerificationCode')).toBeTrue();
+                    expect(mockResponse.$never('addMessage')).toBeTrue();
 
                     var statusCall = mockResponse.$callLog().setStatusCode[1];
                     expect(statusCall[1]).toBe(429);
 
                     var errorCall = mockResponse.$callLog().setErrorMessage[1];
                     expect(errorCall[1]).toInclude('wait');
-                });
-
-                it('Should send code when verification date is null', () => {
-                    var event        = getRequestContext();
-                    var mockAuthUser = createStub();
-
-                    mockAuthUser.$('getVerificationSentDate').$results(javacast('null', ''));
-
-                    var rc  = {};
-                    var prc = {userid: 789, authUser: mockAuthUser};
-
-                    mockUserService.$('SendVerificationCode');
-
-                    var mockResponse = createStub();
-                    mockResponse.$('addMessage', mockResponse);
-                    mockResponse.$('SetStatusCode', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.resendVerificationCode(event, rc, prc);
-
-                    expect(mockUserService.$once('SendVerificationCode')).toBeTrue();
-                });
-
-                it('Should respect verificationCooldown setting', () => {
-                    handler.$property(propertyName = 'verificationCooldown', mock = 10); // 10 minutes
-
-                    var event        = getRequestContext();
-                    var mockAuthUser = createStub();
-
-                    // Set to 8 minutes ago - should be blocked with 10 min cooldown
-                    mockAuthUser.$('getVerificationSentDate', dateAdd('n', -8, now()));
-
-                    var rc  = {};
-                    var prc = {userid: 999, authUser: mockAuthUser};
-
-                    var mockResponse = createStub();
-                    mockResponse.$('SetErrorMessage', mockResponse);
-                    mockResponse.$('SetStatusCode', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.resendVerificationCode(event, rc, prc);
-
-                    var statusCall = mockResponse.$callLog().setStatusCode[1];
-                    expect(statusCall[1]).toBe(429);
-
-                    // Reset
-                    handler.$property(propertyName = 'verificationCooldown', mock = 5);
-                });
-
-                it('Should pass correct userid to sendVerificationCode', () => {
-                    var event        = getRequestContext();
-                    var mockAuthUser = createStub();
-
-                    mockAuthUser.$('getVerificationSentDate', dateAdd('n', -20, now()));
-
-                    var rc  = {};
-                    var prc = {userid: 555, authUser: mockAuthUser};
-
-                    mockUserService.$('SendVerificationCode');
-
-                    var mockResponse = createStub();
-                    mockResponse.$('addMessage', mockResponse);
-                    mockResponse.$('setStatusCode', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.resendVerificationCode(event, rc, prc);
-
-                    var sendCall = mockUserService.$callLog().sendVerificationCode[1];
-                    expect(sendCall.userid).toBe(555);
-                });
-
-                it('Should handle exactly at cooldown boundary and block it still', () => {
-                    var event        = getRequestContext();
-                    var mockAuthUser = createStub();
-
-                    // Exactly 5 minutes ago (exactly at cooldown)
-                    mockAuthUser.$('getVerificationSentDate', dateAdd('n', -5, now()));
-
-                    var rc  = {};
-                    var prc = {userid: 111, authUser: mockAuthUser};
-
-                    mockUserService.$('SendVerificationCode');
-
-                    var mockResponse = createStub();
-                    mockResponse.$('addMessage', mockResponse);
-                    mockResponse.$('setErrorMessage', mockResponse);
-                    mockResponse.$('setStatusCode', mockResponse);
-
-                    prepareMock(event).$('getResponse', mockResponse);
-
-                    handler.resendVerificationCode(event, rc, prc);
-                    // - Should still be blocked
-                    var statusCall = mockResponse.$callLog().setStatusCode[1];
-                    expect(statusCall[1]).toBe(429);
                 });
             });
 

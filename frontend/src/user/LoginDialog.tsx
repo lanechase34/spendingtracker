@@ -34,7 +34,7 @@ export default function LoginDialog() {
     const [error, setError] = useState<string[] | null>(null);
     const [rememberMe, setRememberMe] = useState<boolean>(false);
 
-    const { login: setToken, setPending2FAToken, setPendingToken } = useAuthContext();
+    const { login: setToken, setPending2FAToken, setPendingVerification } = useAuthContext();
     const userAPI = useMemo(() => userService({}), []);
 
     const handleClose = useCallback(
@@ -106,8 +106,10 @@ export default function LoginDialog() {
         } catch (err: unknown) {
             if (err instanceof APIError) {
                 if (err.statusCode === 403) {
+                    // Unverified account - keep the credentials in memory so the verify dialog can send them
+                    // Login doesn't email a code, so the user can resend right away
+                    setPendingVerification({ email: emailField.value, password: passwordField.value, codeSent: false });
                     openVerifyDialog(); // Show the verify dialog
-                    setPendingToken(err.data); // set the pending user JWT
                     closeLoginDialog();
                 } else {
                     setError(parseApiValidationError(err.message));

@@ -1,7 +1,11 @@
 /**
  * Validate the textField is valid money
+ * @allowZero - accept $0 (e.g. income fields), otherwise the amount must be greater than zero
  */
-export const validateMoney = (value: string | null): string | null => {
+export const validateMoney = (
+    value: string | null,
+    { allowZero = false }: { allowZero?: boolean } = {}
+): string | null => {
     if (value === null || value === '') return 'Field is required';
 
     const trimmed = value.trim();
@@ -12,6 +16,12 @@ export const validateMoney = (value: string | null): string | null => {
     }
 
     const num = Number(trimmed);
-    if (num <= 0) return 'Enter a positive amount greater than zero';
+    if (!allowZero && num <= 0) return 'Enter a positive amount greater than zero';
     return null;
 };
+
+/**
+ * Validate the textField is valid money, allowing $0
+ */
+export const validateNonNegativeMoney = (value: string | null): string | null =>
+    validateMoney(value, { allowZero: true });

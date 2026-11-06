@@ -6,16 +6,15 @@ component extends="base" hint="Auth Endpoints" {
         logout                : 'POST',
         register              : 'POST',
         verify                : 'POST',
-        resendVerificationCode: 'GET',
+        resendVerificationCode: 'POST',
         generateCSRF          : 'GET'
     };
 
-    property name="csrfService"          inject="cbcsrf@cbcsrf";
-    property name="jwtService"           inject="JwtService@cbsecurity";
-    property name="securityService"      inject="services.security";
-    property name="totpService"          inject="services.totp";
-    property name="userService"          inject="services.user";
-    property name="verificationCooldown" inject="coldbox:setting:verificationCooldown";
+    property name="csrfService"     inject="cbcsrf@cbcsrf";
+    property name="jwtService"      inject="JwtService@cbsecurity";
+    property name="securityService" inject="services.security";
+    property name="totpService"     inject="services.totp";
+    property name="userService"     inject="services.user";
 
     /**
      * Login a user and return a JWT access token
@@ -27,7 +26,7 @@ component extends="base" hint="Auth Endpoints" {
      * @requestBody  ~auth/login/requestBody.json
      * @response-200 { "description": "Authenticated successfully. Returns access_token. If 2FA required, also returns mfa_required: true." }
      * @response-400 ~errors/400.json
-     * @response-403 { "description": "Email not verified. Returns access_token to use with /verify endpoints." }
+     * @response-403 { "description": "Email not verified. Verify with /verify using the same email and password." }
      * @response-429 ~errors/429.json
      */
     function login(event, rc, prc) {
@@ -36,10 +35,8 @@ component extends="base" hint="Auth Endpoints" {
         }
         catch(VerificationException e) {
             // Verification Exception only thrown after email/password validated
-            var token = jwtService.fromUser(user = userService.retrieveUserByUsername(rc.email));
             event
                 .getResponse()
-                .setData({access_token: token.access_token})
                 .addMessage('Please verify your email. Email is not verified.')
                 .setStatusCode(403);
             return;
@@ -116,8 +113,9 @@ component extends="base" hint="Auth Endpoints" {
             return;
         }
 
-        // Issue full JWT now that 2FA is confirmed
+        // Issue full JWT now that 2FA is confirmed - this is when the login actually completes
         var token = jwtService.fromUser(user = userService.retrieveUserById(id = prc.userid, checkPending = false));
+        userService.updateLastLogin(userid = prc.userid);
 
         // Set refresh token if remember me was checked in login
         if(prc?.jwt_payload?.rememberMe ?: false) {
@@ -151,6 +149,15 @@ component extends="base" hint="Auth Endpoints" {
         catch(any e) {
         }
 
+        // Revoke any refresh tokens too
+        try {
+            if(len(rc['x-refresh-token'] ?: '')) {
+                jwtService.invalidate(rc['x-refresh-token']);
+            }
+        }
+        catch(any e) {
+        }
+
         try {
             securityService.deleteTokenCookies();
         }
@@ -169,9 +176,9 @@ component extends="base" hint="Auth Endpoints" {
      * @summary      Register
      * @tags         Auth
      * @security     []
-     * @hint         Creates a new user account and sends an email verification code. Returns a pending JWT to use with /verify endpoints.
+     * @hint         Creates a new user account and emails a verification code. The response is the same whether or not the email already has an account, so registration can't be used to find which emails are registered. Verify with /verify using the same email and password.
      * @requestBody  ~auth/register/requestBody.json
-     * @response-200 { "description": "Registered successfully. Returns access_token. Check email for verification code." }
+     * @response-200 { "description": "Registration received. Check email for a verification code." }
      * @response-400 ~errors/400.json
      * @response-429 ~errors/429.json
      */
@@ -183,12 +190,9 @@ component extends="base" hint="Auth Endpoints" {
             monthlyTakeHome = rc.monthlyTakeHome
         );
 
-        // Send the user the pending JWT
-        var token = jwtService.fromUser(user = userService.retrieveUserByUsername(rc.email));
         event
             .getResponse()
-            .setData({access_token: token.access_token})
-            .addMessage('Successfully registered. Please check your email for a verification code.')
+            .addMessage('Check your email for a verification code.')
             .setStatusCode(200);
     }
 
@@ -197,20 +201,22 @@ component extends="base" hint="Auth Endpoints" {
      *
      * @summary      Verify Email
      * @tags         Auth
-     * @security     ApiKeyAuth
-     * @hint         Verifies the code sent to the user's email. Returns a full JWT and sets a refresh token cookie on success.
+     * @security     []
+     * @hint         Verifies the code sent to the user's email, using the account's email and password. Returns a full JWT and sets a refresh token cookie on success.
      * @requestBody  ~auth/verify/requestBody.json
      * @response-200 { "description": "Email verified successfully. Returns full access_token." }
      * @response-400 { "description": "Invalid or expired verification code, or account already verified." }
-     * @response-401 ~errors/401.json
      * @response-429 ~errors/429.json
      */
-    function verify(event, rc, prc) secured="Unverified" {
+    function verify(event, rc, prc) {
         try {
-            // Check if this is a valid code for this user
-            userService.findByVerificationCode(userid = prc.userid, code = rc.verificationCode);
+            var userid = userService.verifyEmail(
+                email    = rc.email,
+                password = rc.password,
+                code     = rc.verificationCode
+            );
         }
-        catch(UserNotFound e) {
+        catch(InvalidVerification e) {
             event
                 .getResponse()
                 .setStatusCode(400)
@@ -218,22 +224,18 @@ component extends="base" hint="Auth Endpoints" {
             return;
         }
         catch(UserAlreadyVerified e) {
+            // Only reachable with the right password, so this reveals nothing to a stranger
             event
                 .getResponse()
                 .setStatusCode(400)
-                .setErrorMessage('Account already verified.');
+                .setErrorMessage('Account already verified. Please log in.');
             return;
         }
 
         /**
-         * Mark verified
-         */
-        userService.markVerified(userid = prc.userid);
-
-        /**
          * Create new JWT and refresh token
          */
-        var token = jwtService.fromUser(user = userService.retrieveUserById(id = prc.userid, checkPending = false));
+        var token = jwtService.fromUser(user = userService.retrieveUserById(id = userid, checkPending = false));
         securityService.setRefreshTokenCookie(token = token.refresh_token);
         event
             .getResponse()
@@ -247,25 +249,18 @@ component extends="base" hint="Auth Endpoints" {
      *
      * @summary      Resend Verification Code
      * @tags         Auth
-     * @security     ApiKeyAuth
-     * @hint         Resends the verification code to the user's email. Subject to a cooldown period between requests.
-     * @response-200 { "description": "Verification code resent successfully." }
-     * @response-401 ~errors/401.json
+     * @security     []
+     * @hint         Resends the verification code to an unverified account, using the account's email and password. Always returns the same response unless the credentials are right and the cooldown hasn't passed.
+     * @requestBody  ~auth/resendVerificationCode/requestBody.json
+     * @response-200 { "description": "If the account needs verifying, a new code has been sent." }
+     * @response-400 ~errors/400.json
      * @response-429 ~errors/429.json
      */
-    function resendVerificationCode(event, rc, prc) secured="Unverified" {
-        /**
-         * Check the cooldown and only send once cooldown has passed
-         */
-        if(
-            !isNull(prc.authUser.getVerificationSentDate()) &&
-            dateDiff(
-                'n',
-                prc.authUser.getVerificationSentDate(),
-                now()
-            ) <= verificationCooldown
-        ) {
-            // Let user know they need to wait for cooldown
+    function resendVerificationCode(event, rc, prc) {
+        var result = userService.resendVerificationCode(email = rc.email, password = rc.password);
+
+        // Cooldown is only reported to someone who knows the password
+        if(result == 'cooldown') {
             event
                 .getResponse()
                 .setErrorMessage('Please wait before requesting another verification email.')
@@ -273,14 +268,9 @@ component extends="base" hint="Auth Endpoints" {
             return;
         }
 
-        /**
-         * Send new email
-         */
-        userService.sendVerificationCode(userid = prc.userid);
-
         event
             .getResponse()
-            .addMessage('Verification code resent!')
+            .addMessage('If your account needs verifying, a new code has been sent.')
             .setStatusCode(200);
     }
 

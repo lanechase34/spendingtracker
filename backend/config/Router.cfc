@@ -49,7 +49,7 @@ component {
             route('/verify2fa').withAction({POST: 'verify2fa'}).toHandler('auth');
             route('/register').withAction({POST: 'register'}).toHandler('auth');
             route('/verify').withAction({POST: 'verify'}).toHandler('auth');
-            route('/resendverificationcode').withAction({GET: 'resendVerificationCode'}).toHandler('auth');
+            route('/resendverificationcode').withAction({POST: 'resendVerificationCode'}).toHandler('auth');
 
             // Get CSRF Token
             route('/csrf').withAction({GET: 'generateCSRF'}).toHandler('auth');

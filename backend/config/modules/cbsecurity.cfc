@@ -43,6 +43,8 @@ component {
                 verifyExcludes    : [
                     'auth.login',
                     'auth.register',
+                    'auth.verify',
+                    'auth.resendVerificationCode',
                     'auth.logout',
                     'auth.verify2fa',
                     'echo.*',
@@ -181,7 +183,7 @@ component {
                 customAuthHeader          : 'x-auth-token', // by default it uses the authorization bearer header, but you can also pass a custom one as well.
                 expiration                : 30, // The expiration in minutes for the jwt tokens
                 enableRefreshTokens       : true, // If true, enables refresh tokens, longer lived tokens (not implemented yet)
-                refreshExpiration         : 10080, // The default expiration for refresh tokens, defaults to 30 days
+                refreshExpiration         : 43200, // 30 days in minutes, matches settings.refreshTokenTTL (cookie)
                 customRefreshHeader       : 'x-refresh-token', // The Custom header to inspect for refresh tokens
                 // If enabled, the JWT validator will inspect the request for refresh tokens and expired access tokens
                 // It will then automatically refresh them for you and return them back as

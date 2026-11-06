@@ -22,12 +22,12 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useAuthFetch from 'hooks/useAuthFetch';
 import useCategorySelect from 'hooks/useCategorySelect';
-import useExpenseContext from 'hooks/useExpenseContext';
+import useExpenseSummary from 'hooks/useExpenseSummary';
 import useFileUpload from 'hooks/useFileUpload';
 import useFormField from 'hooks/useFormField';
 import { useInvalidateWidgets } from 'hooks/useInvalidateWidgets';
-import useSubscriptionContext from 'hooks/useSubscriptionContext';
 import useSubscriptionInterval from 'hooks/useSubscriptionInterval';
+import useSubscriptionSummary from 'hooks/useSubscriptionSummary';
 import { type SubmitEvent } from 'react';
 import { useMemo, useState } from 'react';
 import { clearCategoryCache } from 'utils/categoryCache';
@@ -46,8 +46,8 @@ export default function ExpenseForm() {
     const [serverError, setServerError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const authFetch = useAuthFetch();
-    const { refetch: refetchExpenses } = useExpenseContext();
-    const { refetch: refetchSubscriptions } = useSubscriptionContext();
+    const { refetch: refetchExpenses } = useExpenseSummary();
+    const { refetch: refetchSubscriptions } = useSubscriptionSummary();
     const invalidateWidgets = useInvalidateWidgets();
 
     const handleClickOpen = () => {
@@ -63,6 +63,8 @@ export default function ExpenseForm() {
     const handleExited = () => {
         // Reset fields when modal finishes closing
         setSelectedDate(dayjs());
+        setDateErrorCode(null);
+        setServerError(null);
         descriptionField.reset();
         amountField.reset();
         categorySelect.reset();

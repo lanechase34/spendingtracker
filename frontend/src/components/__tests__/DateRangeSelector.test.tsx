@@ -1,5 +1,5 @@
 import { at, defined, render } from '@test-utils';
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DateRangeSelector from 'components/DateRangeSelector';
 import type { Dayjs } from 'dayjs';
@@ -464,6 +464,27 @@ describe('DateRangeSelector Component', () => {
             expect(screen.getByRole('button', { name: 'This Week' })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: 'Year-to-date' })).toBeInTheDocument();
         });
+
+        it('Has a titled dialog with a close button', async () => {
+            render(<DateRangeSelector />);
+            await openPicker();
+
+            const dialog = screen.getByRole('dialog', { name: 'Select Date Range' });
+            expect(within(dialog).getByRole('button', { name: 'close' })).toBeInTheDocument();
+        });
+
+        it('Closes without applying the staged range when the close button is clicked', async () => {
+            render(<DateRangeSelector />);
+            const user = await openPicker();
+
+            await user.click(screen.getByRole('button', { name: 'close' }));
+
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
+            expect(mockSetCustomRange).not.toHaveBeenCalled();
+            expect(mockSetPresetRange).not.toHaveBeenCalled();
+        });
     });
 
     describe('Disabled days (365-day window in calendar)', () => {
@@ -547,6 +568,13 @@ describe('DateRangeSelector Component', () => {
 
             const popover = screen.getByRole('dialog');
             expect(popover).toHaveAttribute('aria-modal', 'true');
+        });
+
+        it('Popover has an accessible name on desktop', async () => {
+            render(<DateRangeSelector />);
+            await openPicker();
+
+            expect(screen.getByRole('dialog', { name: 'Select date range' })).toBeInTheDocument();
         });
     });
 });

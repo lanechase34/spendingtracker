@@ -1,8 +1,17 @@
 import { renderHook } from '@test-utils';
 import { act, waitFor } from '@testing-library/react';
+import * as authFetchModule from 'hooks/useAuthFetch';
 import useFetchImage from 'hooks/useFetchImage';
 
+const OriginalAbortController = global.AbortController;
+
 describe('useFetchImage', () => {
+    afterEach(() => {
+        // The abort test swaps in a mock AbortController
+        global.AbortController = OriginalAbortController;
+        jest.restoreAllMocks();
+    });
+
     it('Should start with empty state', () => {
         const { result } = renderHook(() => useFetchImage({ url: '/test.jpg' }));
 
@@ -180,5 +189,61 @@ describe('useFetchImage', () => {
         // Should revoke the object URL
         expect(revokeObjectURLMock).toHaveBeenCalledTimes(1);
         expect(revokeObjectURLMock).toHaveBeenCalledWith(mockObjectUrl);
+    });
+
+    it('Should stop loading when there is no response (no session)', async () => {
+        // authFetch resolves null when there is no auth token
+        const authFetchSpy = jest.fn().mockResolvedValue(null);
+        jest.spyOn(authFetchModule, 'default').mockReturnValue(authFetchSpy);
+        global.fetch = jest.fn();
+
+        const { result } = renderHook(() => useFetchImage({ url: '/test.jpg' }));
+
+        await act(async () => {
+            await result.current.fetchImage();
+        });
+
+        expect(result.current.loading).toBe(false);
+        expect(result.current.error).toBeNull();
+        expect(result.current.imageSrc).toBe('');
+        expect(authFetchSpy).toHaveBeenCalledTimes(1);
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    it('Should abort the request on unmount and not create a URL once unmounted', async () => {
+        let resolveBlob: (blob: Blob) => void = () => undefined;
+        let signal: AbortSignal | undefined;
+        global.fetch = jest.fn((_url: string, init: RequestInit) => {
+            signal = init.signal ?? undefined;
+            return Promise.resolve({
+                ok: true,
+                blob: () =>
+                    new Promise<Blob>((resolve) => {
+                        resolveBlob = resolve;
+                    }),
+            } as Response);
+        }) as jest.Mock;
+        global.URL.createObjectURL = jest.fn(() => 'blob:http://localhost/late-url');
+        global.URL.revokeObjectURL = jest.fn();
+
+        const { result, unmount } = renderHook(() => useFetchImage({ url: '/test.jpg' }));
+
+        act(() => {
+            void result.current.fetchImage();
+        });
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledTimes(1);
+        });
+
+        unmount();
+        expect(signal?.aborted).toBe(true);
+
+        // Blob finishes reading after unmount
+        await act(async () => {
+            resolveBlob(new Blob(['late']));
+            await Promise.resolve();
+        });
+
+        expect(global.URL.createObjectURL).not.toHaveBeenCalled();
     });
 });

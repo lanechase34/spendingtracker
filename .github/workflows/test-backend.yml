@@ -35,7 +35,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test_spendingtracker
         ports:
-          - 5436:5432
+          - 5437:5432
         options: >-
           --health-cmd pg_isready  
           --health-interval 10s  
@@ -71,13 +71,13 @@ jobs:
         run: |
           cat > .env << 'EOL'
           ENVIRONMENT=test
-          OTHER_EXTENSIONS=,CED6227E-0F49-6367-A68D21AACA6B07E8;version=1.0.0.7,37C61C0A-5D7E-4256-8572639BE0CF5838;version=3.0.0.14,B737ABC4-D43F-4D91-8E8E973E37C40D1B;version=3.0.1.1
+          OTHER_EXTENSIONS=,37C61C0A-5D7E-4256-8572639BE0CF5838;version=3.1.0.7,B737ABC4-D43F-4D91-8E8E973E37C40D1B;version=3.1.0.11
           CFCONFIG_ADMINPASSWORD=commandbox
           LUCEE_ADMIN_ENABLED=false
           INSPECTTEMPLATE=never
           IMAGEMAGICKPATH=/usr/bin
           HTTP_HOST=0.0.0.0
-          HTTP_PORT=8082
+          HTTP_PORT=8182
           REQUESTTIMEOUT=60
           OS=linux
           JAVAHEAP=2048
@@ -85,11 +85,11 @@ jobs:
           DB_SCHEMA=public
           DB_DATABASE=test_spendingtracker
           DB_BUNDLENAME=org.postgresql.jdbc
-          DB_BUNDLEVERSION=42.7.9
+          DB_BUNDLEVERSION=42.7.11
           DB_CLASS=org.postgresql.Driver
           DB_DRIVER=postgresql
           DB_HOST=localhost
-          DB_PORT=5436
+          DB_PORT=5437
           DB_USERNAME=runner
           DB_PASSWORD=postgres
           EMAIL_SERVER=localhost
@@ -112,7 +112,7 @@ jobs:
         run: |
           echo "Waiting for server to start..."
           for i in {1..60}; do
-            if curl -sf http://localhost:8082 > /dev/null 2>&1; then
+            if curl -sf http://localhost:8182 > /dev/null 2>&1; then
               echo "Server is ready!"
               exit 0
             fi

@@ -1,5 +1,4 @@
 import type useAuthFetch from 'hooks/useAuthFetch';
-import type usePendingFetch from 'hooks/usePendingFetch';
 import type { usePending2FAFetch } from 'hooks/usePendingFetch';
 import { APIError } from 'utils/apiError';
 import { API_BASE_URL } from 'utils/constants';
@@ -10,7 +9,6 @@ import { z } from 'zod';
 /**
  * API return formats for:
  * /verify2fa (Actual JWT on success)
- * /register (Pending JWT)
  * /verify (Actual JWT on success)
  */
 const AuthAPIResponseSchema = validateAPIResponse(
@@ -55,6 +53,12 @@ const Confirm2FAResponseSchema = validateAPIResponse(
 
 const Disable2FAResponseSchema = validateAPIResponse(z.undefined().optional());
 
+/**
+ * API return format for /register
+ * No token is issued, the data key is an empty struct
+ */
+const EmptyAPIResponseSchema = validateAPIResponse(z.object({}).nullish());
+
 interface LoginResult {
     access_token: string;
     mfa_required?: boolean | undefined;
@@ -62,7 +66,6 @@ interface LoginResult {
 
 interface UserServiceParams {
     authFetch?: ReturnType<typeof useAuthFetch>;
-    pendingFetch?: ReturnType<typeof usePendingFetch>;
     pending2FAFetch?: ReturnType<typeof usePending2FAFetch>;
 }
 
@@ -72,7 +75,7 @@ type Confirm2FAResult = Extract<z.infer<typeof Confirm2FAResponseSchema>, { erro
 /**
  * Service layer for the user API endpoints
  */
-export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserServiceParams) {
+export function userService({ authFetch, pending2FAFetch }: UserServiceParams) {
     return {
         /**
          * POST /login
@@ -92,6 +95,11 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
                 throw new APIError('Too many requests. Please wait.', 429);
             }
 
+            // Correct credentials but the account is unverified - no token is issued
+            if (response.status === 403) {
+                throw new APIError('Please verify your email.', 403);
+            }
+
             // Validate the response data
             const json = await safeJson(response);
             const parsed = LoginAPIResponseSchema.safeParse(json);
@@ -101,11 +109,6 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
             }
 
             const result = parsed.data;
-
-            // If 403, throw error with pending token as data
-            if (response.status === 403 && !result.error) {
-                throw new APIError('Please verify your email.', 403, result.data.access_token);
-            }
 
             if (result.error || !response.ok) {
                 throw new APIError('Invalid Login.', response.status);
@@ -139,8 +142,10 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
         /**
          * POST /register
          * Registers a new user
+         * Always succeeds on valid input (does not reveal whether the email already exists),
+         * a verification code is emailed to the user
          *
-         * @rc.email           unique email
+         * @rc.email           email
          * @rc.password        user password
          * @rc.salary          salary
          * @rc.monthlyTakehome monthly take home
@@ -150,7 +155,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
             password: string;
             salary: string;
             monthlyTakeHome: string;
-        }): Promise<string> {
+        }): Promise<void> {
             const response = await fetch(`${API_BASE_URL}/register`, {
                 method: 'POST',
                 body: JSON.stringify(body),
@@ -165,7 +170,7 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
 
             // Validate the response data
             const json = await safeJson(response);
-            const parsed = AuthAPIResponseSchema.safeParse(json);
+            const parsed = EmptyAPIResponseSchema.safeParse(json);
 
             if (!parsed.success) {
                 throw new APIError('Invalid Response Format. Please try again.', response.status);
@@ -173,23 +178,28 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
 
             const result = parsed.data;
 
-            if (result.error) {
-                throw new APIError(result.messages[0] ?? 'Please try again.', response.status);
+            if (result.error || !response.ok) {
+                throw new APIError(result.messages?.[0] ?? 'Please try again.', response.status);
             }
-
-            // Return pending JWT
-            return result.data.access_token;
+            return;
         },
 
         /**
          * PATCH /me
          * Save a user's profile settings
+         * When the password is changed, the server revokes all of the user's tokens - the caller must log out locally
          *
-         * @rc.password (optional) new password
-         * @rc.salary   (optional) salary
+         * @rc.password        (optional) new password
+         * @rc.currentPassword (required if password is sent) current password
+         * @rc.salary          (optional) salary
          * @rc.monthlyTakehome (optional) monthly take home
          */
-        async updateProfile(body: { password: string; salary: string; monthlyTakeHome: string }) {
+        async updateProfile(body: {
+            password: string;
+            currentPassword: string;
+            salary: string;
+            monthlyTakeHome: string;
+        }) {
             if (!authFetch) {
                 throw new Error('Invalid state');
             }
@@ -200,31 +210,39 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
                 body: body,
             });
 
-            if (response?.ok !== true) {
+            if (!response) {
                 throw new Error('Invalid network response');
+            }
+
+            if (!response.ok) {
+                // Surface the API message (ie. incorrect current password) when available
+                const json = await safeJson(response);
+                const parsed = NoDataAPIResponseSchema.safeParse(json);
+                const message = parsed.success && parsed.data.error ? parsed.data.messages[0] : undefined;
+                throw new APIError(message ?? 'Invalid network response', response.status);
             }
             return;
         },
 
         /**
-         * GET /resendVerificationCode
+         * POST /resendVerificationCode
+         * Unauthenticated - identifies the user by their email and password
          *
          * If previous code has expired, resends the verification code via email to the user
+         * Always succeeds (does not reveal account state) unless rate limited
          * Returns 429 if limit has not passed or user reached the rate limit
+         *
+         * @rc.email    email
+         * @rc.password user password
          */
-        async resendVerificationCode() {
-            if (!pendingFetch) {
-                throw new Error('Invalid state');
-            }
-
-            const response = await pendingFetch({
-                url: `${API_BASE_URL}/resendVerificationCode`,
-                method: 'GET',
+        async resendVerificationCode(body: { email: string; password: string }) {
+            const response = await fetch(`${API_BASE_URL}/resendVerificationCode`, {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
-
-            if (!response) {
-                throw new Error('Invalid network response');
-            }
 
             const json = await safeJson(response);
             const parsed = NoDataAPIResponseSchema.safeParse(json);
@@ -290,25 +308,23 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
 
         /**
          * POST /verify
+         * Unauthenticated - identifies the user by their email and password
          *
-         * Attempts to verify the current user using the code supplied
+         * Attempts to verify the user using the code supplied
+         * On success returns the full user JWT and sets the refresh token cookie
          *
-         * @params formData {verificationCode}
+         * @rc.email            email
+         * @rc.password         user password
+         * @rc.verificationCode the emailed verification code
          */
-        async verify(formData: FormData) {
-            if (!pendingFetch) {
-                throw new Error('Invalid state');
-            }
-
-            const response = await pendingFetch({
-                url: `${API_BASE_URL}/verify`,
+        async verify(body: { email: string; password: string; verificationCode: string }) {
+            const response = await fetch(`${API_BASE_URL}/verify`, {
                 method: 'POST',
-                body: formData,
+                body: JSON.stringify(body),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
             });
-
-            if (!response) {
-                throw new APIError('Invalid state', 401);
-            }
 
             if (response.status === 429) {
                 throw new APIError('Too many requests. Please wait.', 429);
@@ -324,8 +340,8 @@ export function userService({ authFetch, pendingFetch, pending2FAFetch }: UserSe
 
             const result = parsed.data;
 
-            if (result.error) {
-                throw new APIError(result.messages[0] ?? 'Invalid or expired verification code.', 400);
+            if (result.error || !response.ok) {
+                throw new APIError(result.messages?.[0] ?? 'Invalid or expired verification code.', 400);
             }
 
             // Return access token

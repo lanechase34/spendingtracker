@@ -12,7 +12,7 @@ import { APIError } from 'utils/apiError';
 configure({ asyncUtilTimeout: 200 });
 
 //Mocks
-const mockSetPendingToken = jest.fn();
+const mockSetPendingVerification = jest.fn();
 const mockCloseRegisterDialog = jest.fn();
 const mockOpenVerifyDialog = jest.fn();
 const mockShowToast = jest.fn();
@@ -56,7 +56,7 @@ const mockUseToastContext = useToastContext as jest.Mock;
 
 function buildAuthContext(overrides: Partial<AuthContextType> = {}): Partial<AuthContextType> {
     return {
-        setPendingToken: mockSetPendingToken,
+        setPendingVerification: mockSetPendingVerification,
         ...overrides,
     };
 }
@@ -111,7 +111,7 @@ async function fillAndSubmit(
 describe('RegisterDialog', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        mockUserAPIRegister.mockResolvedValue('pending-token');
+        mockUserAPIRegister.mockResolvedValue(undefined);
     });
 
     describe('Rendering', () => {
@@ -242,10 +242,7 @@ describe('RegisterDialog', () => {
 
             await fillAndSubmit();
 
-            expect(mockShowToast).toHaveBeenCalledWith(
-                'Successfully registered! Please check your email for verification',
-                'success'
-            );
+            expect(mockShowToast).toHaveBeenCalledWith('Check your email for a verification code.', 'success');
         });
 
         it('Opens verify dialog after successful registration', async () => {
@@ -254,10 +251,14 @@ describe('RegisterDialog', () => {
             expect(mockOpenVerifyDialog).toHaveBeenCalledTimes(1);
         });
 
-        it('Sets pending token after successful registration', async () => {
+        it('Stores the entered credentials for verification after successful registration', async () => {
             renderComponent();
-            await fillAndSubmit();
-            expect(mockSetPendingToken).toHaveBeenCalledWith('pending-token');
+            await fillAndSubmit('new@example.com', 'MyPassword123!');
+            expect(mockSetPendingVerification).toHaveBeenCalledWith({
+                email: 'new@example.com',
+                password: 'MyPassword123!',
+                codeSent: true,
+            });
         });
 
         it('Closes register dialog after successful registration', async () => {
@@ -324,12 +325,12 @@ describe('RegisterDialog', () => {
 
     describe('Error handling', () => {
         it('Shows error alert on APIError', async () => {
-            mockUserAPIRegister.mockRejectedValue(new APIError('Email already registered.', 400));
+            mockUserAPIRegister.mockRejectedValue(new APIError('Invalid salary.', 400));
             renderComponent();
 
             await fillAndSubmit();
 
-            expect(await screen.findByText('Email already registered.')).toBeInTheDocument();
+            expect(await screen.findByText('Invalid salary.')).toBeInTheDocument();
         });
 
         it('Shows generic error for non-APIError exceptions', async () => {
@@ -342,7 +343,7 @@ describe('RegisterDialog', () => {
         });
 
         it('Re-enables the submit button after an error', async () => {
-            mockUserAPIRegister.mockRejectedValue(new APIError('Email already registered.', 400));
+            mockUserAPIRegister.mockRejectedValue(new APIError('Invalid salary.', 400));
             renderComponent();
 
             await fillAndSubmit();
@@ -353,21 +354,21 @@ describe('RegisterDialog', () => {
         });
 
         it('Does not open verify dialog on error', async () => {
-            mockUserAPIRegister.mockRejectedValue(new APIError('Email already registered.', 400));
+            mockUserAPIRegister.mockRejectedValue(new APIError('Invalid salary.', 400));
             renderComponent();
             await fillAndSubmit();
             expect(mockOpenVerifyDialog).not.toHaveBeenCalled();
         });
 
-        it('Does not set pending token on error', async () => {
-            mockUserAPIRegister.mockRejectedValue(new APIError('Email already registered.', 400));
+        it('Does not store pending credentials on error', async () => {
+            mockUserAPIRegister.mockRejectedValue(new APIError('Invalid salary.', 400));
             renderComponent();
             await fillAndSubmit();
-            expect(mockSetPendingToken).not.toHaveBeenCalled();
+            expect(mockSetPendingVerification).not.toHaveBeenCalled();
         });
 
         it('Does not close register dialog on error', async () => {
-            mockUserAPIRegister.mockRejectedValue(new APIError('Email already registered.', 400));
+            mockUserAPIRegister.mockRejectedValue(new APIError('Invalid salary.', 400));
             renderComponent();
             await fillAndSubmit();
             expect(mockCloseRegisterDialog).not.toHaveBeenCalled();
@@ -375,13 +376,13 @@ describe('RegisterDialog', () => {
 
         it('Allows retry after an error', async () => {
             mockUserAPIRegister
-                .mockRejectedValueOnce(new APIError('Email already registered.', 400))
-                .mockResolvedValueOnce('pending-token');
+                .mockRejectedValueOnce(new APIError('Invalid salary.', 400))
+                .mockResolvedValueOnce(undefined);
 
             renderComponent();
 
             await fillAndSubmit();
-            await screen.findByText('Email already registered.');
+            await screen.findByText('Invalid salary.');
 
             await user.click(screen.getByRole('button', { name: /register/i }));
 
@@ -391,15 +392,15 @@ describe('RegisterDialog', () => {
         });
 
         it('Dismisses error alert when close is clicked', async () => {
-            mockUserAPIRegister.mockRejectedValue(new APIError('Email already registered.', 400));
+            mockUserAPIRegister.mockRejectedValue(new APIError('Invalid salary.', 400));
             renderComponent();
 
             await fillAndSubmit();
-            await screen.findByText('Email already registered.');
+            await screen.findByText('Invalid salary.');
 
             await user.click(within(screen.getByRole('alert')).getByRole('button', { name: /close/i }));
 
-            expect(screen.queryByText('Email already registered.')).not.toBeInTheDocument();
+            expect(screen.queryByText('Invalid salary.')).not.toBeInTheDocument();
         });
     });
 

@@ -26,11 +26,29 @@ export interface SubscriptionContextType extends Omit<UsePaginatedFetchReturn<Su
 export const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 /**
+ * Narrow slice of the subscription context for components that only need the total or to trigger a refetch
+ * Only changes when the total changes, so these consumers don't re-render on every grid interaction
+ */
+export interface SubscriptionSummaryContextType {
+    totalSum: number | null;
+    refetch: () => Promise<void>;
+}
+
+export const SubscriptionSummaryContext = createContext<SubscriptionSummaryContextType | undefined>(undefined);
+
+/**
  * Subscription Context stores all information pertianing to the SubscriptionList widget
  *
  * Returns UsePaginatedFetchReturn structure and results from this
+ * @enabled only fetch while true - the provider stays mounted so its consumers (navbar expense form) always have a context
  */
-export const SubscriptionContextProvider = ({ children }: { children: ReactNode }) => {
+export const SubscriptionContextProvider = ({
+    children,
+    enabled = true,
+}: {
+    children: ReactNode;
+    enabled?: boolean;
+}) => {
     const { formattedStartDate, formattedEndDate } = useDateRangeContext();
     const authFetch = useAuthFetch();
     const { authToken } = useAuthContext();
@@ -87,6 +105,7 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
         endpoint: `${API_BASE_URL}/subscriptions`,
         initialPageSize: 10,
         additionalParams,
+        enabled,
         validator: SubscriptionListSchema,
         defaultSort: [{ field: 'nextChargeDate', sort: 'asc' }],
     });
@@ -109,8 +128,8 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
                 const abortController = new AbortController();
                 await subscriptionAPI.toggleSubscription(row, abortController.signal);
 
-                // Refetch the current page and abort any inflight refetches
-                await refetch(abortController.signal);
+                // Refetch the current page (aborts any inflight fetch)
+                await refetch();
             } catch (err: unknown) {
                 console.error('Error toggling subscription', err);
                 showToast('Server Error. Please try again.', 'error');
@@ -139,7 +158,7 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
                         page: paginationModel.page - 1,
                     });
                 } else {
-                    await refetch(abortController.signal);
+                    await refetch();
                 }
             } catch (err: unknown) {
                 console.error('Error deleting subscription', err);
@@ -199,5 +218,12 @@ export const SubscriptionContextProvider = ({ children }: { children: ReactNode 
         ]
     );
 
-    return <SubscriptionContext value={value}>{children}</SubscriptionContext>;
+    const totalSum = data?.totalSum ?? null;
+    const summaryValue = useMemo<SubscriptionSummaryContextType>(() => ({ totalSum, refetch }), [totalSum, refetch]);
+
+    return (
+        <SubscriptionSummaryContext value={summaryValue}>
+            <SubscriptionContext value={value}>{children}</SubscriptionContext>
+        </SubscriptionSummaryContext>
+    );
 };

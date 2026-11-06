@@ -1,12 +1,15 @@
 import 'react-day-picker/dist/style.css';
 
+import CloseIcon from '@mui/icons-material/Close';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
@@ -247,7 +250,21 @@ export default function DateRangeSelector() {
                 </Button>
             </Box>
             {isMobile ? (
-                <Dialog open={open} onClose={handleClose} fullScreen>
+                <Dialog open={open} onClose={handleClose} fullScreen aria-labelledby="date-range-dialog-title">
+                    <DialogTitle
+                        id="date-range-dialog-title"
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        Select Date Range
+                        <IconButton aria-label="close" onClick={handleClose}>
+                            <CloseIcon />
+                        </IconButton>
+                    </DialogTitle>
+                    <Divider />
                     <DialogContent>
                         <Box
                             sx={{
@@ -293,6 +310,7 @@ export default function DateRangeSelector() {
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                     role="dialog"
                     aria-modal="true"
+                    aria-label="Select date range"
                 >
                     <Paper sx={{ p: 2, minWidth: 800 }}>
                         <Box

@@ -1,7 +1,9 @@
+import type { DateValidationError } from '@mui/x-date-pickers/models';
 import { at, createExpenseContext, defined, render } from '@test-utils';
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import BulkImport from 'expense/BulkImport';
 import useAuthFetch from 'hooks/useAuthFetch';
 import { useInvalidateWidgets } from 'hooks/useInvalidateWidgets';
@@ -40,11 +42,48 @@ jest.mock('expense/CategorySelect', () => ({
     ),
 }));
 
-jest.mock('@mui/x-date-pickers/DatePicker', () => ({
-    DatePicker: ({ value }: { value: Dayjs | null }) => (
-        <input aria-label="Date" readOnly value={value?.format('MM/DD/YYYY') ?? ''} />
-    ),
-}));
+/**
+ * Plain text input standing in for the DatePicker, reports range / invalid errors like the real picker
+ */
+jest.mock('@mui/x-date-pickers/DatePicker', () => {
+    const mockDayjs = jest.requireActual<typeof dayjs>('dayjs');
+    return {
+        DatePicker: ({
+            value,
+            onChange,
+            onError,
+            minDate,
+            maxDate,
+            slotProps,
+        }: {
+            value: Dayjs | null;
+            onChange: (value: Dayjs | null) => void;
+            onError?: (error: DateValidationError | null) => void;
+            minDate?: Dayjs;
+            maxDate?: Dayjs;
+            slotProps?: { textField?: { helperText?: string } };
+        }) => (
+            <>
+                <input
+                    aria-label="Date"
+                    value={value?.isValid() === true ? value.format('MM/DD/YYYY') : ''}
+                    onChange={(e) => {
+                        const next = e.target.value ? mockDayjs(e.target.value) : null;
+                        let code: DateValidationError | null = null;
+                        if (next && !next.isValid()) code = 'invalidDate';
+                        else if (next && minDate && next.isBefore(minDate, 'day')) code = 'minDate';
+                        else if (next && maxDate && next.isAfter(maxDate, 'day')) code = 'maxDate';
+                        onError?.(code);
+                        onChange(next);
+                    }}
+                />
+                {slotProps?.textField?.helperText != null && slotProps.textField.helperText !== '' ? (
+                    <span>{slotProps.textField.helperText}</span>
+                ) : null}
+            </>
+        ),
+    };
+});
 
 const mockAuthFetch = jest.fn();
 const mockInvalidateWidgets = jest.fn();
@@ -63,8 +102,9 @@ const importResponse = mockResponse(true, {
     error: false,
     data: {
         imported: [
-            { date: '01/10/2026', amount: 12.5, description: 'Coffee beans' },
-            { date: '01/11/2026', amount: 40, description: 'Gas station' },
+            // Relative to today so the rows stay within the 1-year date range
+            { date: dayjs().subtract(2, 'day').format('MM/DD/YYYY'), amount: 12.5, description: 'Coffee beans' },
+            { date: dayjs().subtract(1, 'day').format('MM/DD/YYYY'), amount: 40, description: 'Gas station' },
         ],
         errored: [{ row: 4, message: 'Invalid amount' }],
     },
@@ -172,6 +212,32 @@ describe('<BulkImport />', () => {
             });
         });
 
+        it('Should close the dialog when there is no response (no session)', async () => {
+            const user = userEvent.setup();
+            mockAuthFetch.mockResolvedValueOnce(null);
+            render(<BulkImport />, { expenseContextValue, toastContextValue: { showToast } });
+
+            await user.upload(screen.getByTestId('uploadCsvFile'), new File(['x'], 'a.csv', { type: 'text/csv' }));
+            await user.click(screen.getByRole('button', { name: /process: a\.csv/i }));
+
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
+            expect(showToast).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            ['application/vnd.ms-excel', 'application/vnd.ms-excel'],
+            ['no type', ''],
+        ])('Should accept a .csv file reported as %s', async (_label, type) => {
+            const user = userEvent.setup();
+            render(<BulkImport />, { expenseContextValue, toastContextValue: { showToast } });
+
+            await user.upload(screen.getByTestId('uploadCsvFile'), new File(['x'], 'excel.csv', { type }));
+
+            expect(screen.getByRole('button', { name: /process: excel\.csv/i })).toBeInTheDocument();
+        });
+
         it('Should toast the thrown error message when the request fails', async () => {
             const user = userEvent.setup();
             mockAuthFetch.mockRejectedValueOnce(new Error('Network down'));
@@ -232,8 +298,75 @@ describe('<BulkImport />', () => {
                 expect(showToast).toHaveBeenCalledWith('1 invalid rows. Please correct issues.', 'error');
             });
             expect(within(firstRow).getByText(message)).toBeInTheDocument();
-            // Unparseable input is stored as null, which shows as an empty field
-            expect(amount).toHaveValue(typed === 'abc' ? '' : typed);
+            // The field keeps the raw text, unparseable input is stored as null
+            expect(amount).toHaveValue(typed);
+        });
+
+        it('Should keep the decimal point while typing an amount', async () => {
+            mockAuthFetch.mockResolvedValue(mockResponse(true, { error: false }));
+            const user = await setupWithRows();
+            const amount = within(at(dataRows(), 0)).getByDisplayValue('12.5');
+
+            await pickCategoryForAllRows(user);
+            await user.clear(amount);
+            await user.type(amount, '1.25');
+            expect(amount).toHaveValue('1.25');
+            await user.click(screen.getByRole('button', { name: /import 2 rows/i }));
+
+            await waitFor(() => {
+                expect(showToast).toHaveBeenCalledWith('Expenses imported successfully!', 'success');
+            });
+            expect(bulkRequest().expenses.map((e) => e.amount)).toEqual([1.25, 40]);
+        });
+
+        it.each([
+            ['a cleared date as missing', '', 'Date is required'],
+            ['an unparseable date as invalid', 'not a date', 'Your date is not valid'],
+            [
+                'a date beyond the range',
+                dayjs().add(2, 'year').format('MM/DD/YYYY'),
+                'Please select a date within a 1-year range',
+            ],
+        ])('Should report %s', async (_label, typed, message) => {
+            const user = await setupWithRows();
+            const firstRow = at(dataRows(), 0);
+
+            await pickCategoryForAllRows(user);
+            fireEvent.change(within(firstRow).getByRole('textbox', { name: 'Date' }), { target: { value: typed } });
+            await user.click(screen.getByRole('button', { name: /import 2 rows/i }));
+
+            await waitFor(() => {
+                expect(showToast).toHaveBeenCalledWith('1 invalid rows. Please correct issues.', 'error');
+            });
+            expect(within(firstRow).getByText(message)).toBeInTheDocument();
+            expect(mockAuthFetch).toHaveBeenCalledTimes(1); // only the import call
+        });
+
+        it('Should show the picker error as soon as the date is out of range', async () => {
+            await setupWithRows();
+            const firstRow = at(dataRows(), 0);
+
+            fireEvent.change(within(firstRow).getByRole('textbox', { name: 'Date' }), {
+                target: { value: dayjs().subtract(2, 'year').format('MM/DD/YYYY') },
+            });
+
+            expect(within(firstRow).getByText('Please select a date within a 1-year range')).toBeInTheDocument();
+        });
+
+        it('Should release saving when there is no response (no session)', async () => {
+            const user = await setupWithRows();
+            mockAuthFetch.mockResolvedValueOnce(null);
+
+            await pickCategoryForAllRows(user);
+            await user.click(screen.getByRole('button', { name: /import 2 rows/i }));
+
+            await waitFor(() => {
+                expect(mockAuthFetch).toHaveBeenCalledTimes(2);
+            });
+            await waitFor(() => {
+                expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+            });
+            expect(screen.getByRole('button', { name: /import 2 rows/i })).toBeEnabled();
         });
 
         it('Should send the edited rows as JSON without receipt fields', async () => {

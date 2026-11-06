@@ -1,10 +1,12 @@
 import { defined, getById } from '@test-utils';
 import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import useAuthContext_ from 'hooks/useAuthContext';
 import useAuthFetch_ from 'hooks/useAuthFetch';
 import useToastContext_ from 'hooks/useToastContext';
 import useUserContext_ from 'hooks/useUserContext';
 import UserSettings from 'user/UserSettings';
+import { APIError } from 'utils/apiError';
 
 configure({ asyncUtilTimeout: 200 });
 
@@ -13,6 +15,12 @@ const mockOnClose = jest.fn();
 const mockShowToast = jest.fn();
 const mockUpdateUser = jest.fn();
 const mockUpdateProfile = jest.fn();
+const mockLogout = jest.fn();
+
+jest.mock('hooks/useAuthContext', () => ({
+    __esModule: true,
+    default: jest.fn(),
+}));
 
 jest.mock('hooks/useAuthFetch', () => ({
     __esModule: true,
@@ -77,6 +85,7 @@ afterAll(() => {
     (console.error as jest.Mock).mockRestore();
 });
 
+const mockUseAuthContext = useAuthContext_ as jest.Mock;
 const mockUseAuthFetch = useAuthFetch_ as jest.Mock;
 const mockUseToastContext = useToastContext_ as jest.Mock;
 const mockUseUserContext = useUserContext_ as jest.Mock;
@@ -107,6 +116,7 @@ function renderComponent(
     } = {}
 ) {
     mockUseAuthFetch.mockReturnValue(jest.fn());
+    mockUseAuthContext.mockReturnValue({ logout: mockLogout });
     mockUseToastContext.mockReturnValue({ showToast: mockShowToast });
     mockUseUserContext.mockReturnValue({
         user: buildUser({ totpEnabled: props.totpEnabled ?? false, ...props.userOverrides }),
@@ -350,8 +360,38 @@ describe('UserSettings', () => {
 
             await user.type(screen.getByLabelText(/change password/i), 'validpassword1');
             await user.type(screen.getByLabelText(/confirm new password/i), 'validpassword1');
+            await user.type(screen.getByLabelText(/current password/i), 'oldpassword1');
 
             expect(screen.getByRole('button', { name: /save/i })).not.toBeDisabled();
+        });
+
+        it('Shows current password field when user starts typing a new password', async () => {
+            renderComponent();
+
+            expect(screen.queryByLabelText(/current password/i)).not.toBeInTheDocument();
+            await user.type(screen.getByLabelText(/change password/i), 'a');
+
+            expect(screen.getByLabelText(/current password/i)).toBeInTheDocument();
+        });
+
+        it('Save button stays disabled until the current password is entered', async () => {
+            renderComponent();
+
+            await user.type(screen.getByLabelText(/change password/i), 'validpassword1');
+            await user.type(screen.getByLabelText(/confirm new password/i), 'validpassword1');
+            expect(screen.getByRole('button', { name: /save/i })).toBeDisabled();
+
+            await user.type(screen.getByLabelText(/current password/i), 'oldpassword1');
+            expect(screen.getByRole('button', { name: /save/i })).not.toBeDisabled();
+        });
+
+        it('Shows current password error on blur when left empty', async () => {
+            renderComponent();
+
+            await user.type(screen.getByLabelText(/change password/i), 'validpassword1');
+            fireEvent.blur(screen.getByLabelText(/current password/i));
+
+            expect(await screen.findByText(/please enter your current password/i)).toBeInTheDocument();
         });
 
         it('Shows confirm password error on blur when passwords do not match', async () => {
@@ -425,6 +465,7 @@ describe('UserSettings', () => {
             await waitFor(() => {
                 expect(mockUpdateProfile).toHaveBeenCalledWith({
                     password: '',
+                    currentPassword: '',
                     salary: '90000',
                     monthlyTakeHome: '5000',
                 });
@@ -459,17 +500,51 @@ describe('UserSettings', () => {
             });
         });
 
-        it('Saves with password when both password fields are filled and match', async () => {
+        it('Saves with password and current password when the password fields are filled and match', async () => {
             renderComponent();
 
             await user.type(screen.getByLabelText(/change password/i), 'newpassword1');
             await user.type(screen.getByLabelText(/confirm new password/i), 'newpassword1');
+            await user.type(screen.getByLabelText(/current password/i), 'oldpassword1');
 
             await user.click(screen.getByRole('button', { name: /save/i }));
 
             await waitFor(() => {
-                expect(mockUpdateProfile).toHaveBeenCalledWith(expect.objectContaining({ password: 'newpassword1' }));
+                expect(mockUpdateProfile).toHaveBeenCalledWith(
+                    expect.objectContaining({ password: 'newpassword1', currentPassword: 'oldpassword1' })
+                );
             });
+        });
+
+        it('Logs out and asks the user to log in again after a password change', async () => {
+            renderComponent();
+
+            await user.type(screen.getByLabelText(/change password/i), 'newpassword1');
+            await user.type(screen.getByLabelText(/confirm new password/i), 'newpassword1');
+            await user.type(screen.getByLabelText(/current password/i), 'oldpassword1');
+
+            await user.click(screen.getByRole('button', { name: /save/i }));
+
+            await waitFor(() => {
+                expect(mockLogout).toHaveBeenCalledTimes(1);
+            });
+            expect(mockShowToast).toHaveBeenCalledWith('Password updated. Please log in again.', 'success');
+            expect(mockOnClose).toHaveBeenCalledWith({}, 'doneLoading');
+        });
+
+        it('Does not log out when only salary is changed', async () => {
+            renderComponent();
+
+            fireEvent.change(getById('outlined-adornment-salary'), {
+                target: { value: '90000' },
+            });
+
+            await user.click(screen.getByRole('button', { name: /save/i }));
+
+            await waitFor(() => {
+                expect(mockShowToast).toHaveBeenCalledWith('Successfully saved!', 'success');
+            });
+            expect(mockLogout).not.toHaveBeenCalled();
         });
 
         it('Disables Save button after successful save when no further changes are made', async () => {
@@ -527,6 +602,23 @@ describe('UserSettings', () => {
     });
 
     describe('Error handling', () => {
+        it('Shows the API message and does not log out when the current password is incorrect', async () => {
+            mockUpdateProfile.mockRejectedValue(new APIError('Current password is incorrect.', 400));
+            renderComponent();
+
+            await user.type(screen.getByLabelText(/change password/i), 'newpassword1');
+            await user.type(screen.getByLabelText(/confirm new password/i), 'newpassword1');
+            await user.type(screen.getByLabelText(/current password/i), 'wrongpassword');
+
+            await user.click(screen.getByRole('button', { name: /save/i }));
+
+            await waitFor(() => {
+                expect(mockShowToast).toHaveBeenCalledWith('Current password is incorrect.', 'error');
+            });
+            expect(mockLogout).not.toHaveBeenCalled();
+            expect(mockOnClose).not.toHaveBeenCalled();
+        });
+
         it('Shows error toast when updateProfile fails', async () => {
             mockUpdateProfile.mockRejectedValue(new Error('Network error'));
             renderComponent();

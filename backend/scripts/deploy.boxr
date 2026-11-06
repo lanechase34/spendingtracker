@@ -1,5 +1,4 @@
 server stop
-update --force
 install --production
 migrate up
 server start

@@ -322,6 +322,100 @@ describe('useCooldownAction', () => {
                 expect(result.current.loading).toBe(false);
             });
         });
+
+        it('Should run the action once on a double click before re-render', async () => {
+            const { result } = renderHook(() =>
+                useCooldownAction({
+                    cooldownMs: 60000,
+                    storageKey: 'test-cooldown',
+                })
+            );
+
+            const mockAction = jest.fn().mockResolvedValue(undefined);
+
+            // Both calls use the same (stale) execute, as two clicks in the same render would
+            const { execute } = result.current;
+            await act(async () => {
+                await Promise.all([execute(mockAction), execute(mockAction)]);
+            });
+
+            expect(mockAction).toHaveBeenCalledTimes(1);
+        });
+
+        it('Should allow running again once a failed action settles', async () => {
+            const { result } = renderHook(() =>
+                useCooldownAction({
+                    cooldownMs: 60000,
+                    storageKey: 'test-cooldown',
+                })
+            );
+
+            const failing = jest.fn().mockRejectedValue(new Error('nope'));
+            await act(async () => {
+                await expect(result.current.execute(failing)).rejects.toThrow('nope');
+            });
+
+            const succeeding = jest.fn().mockResolvedValue(undefined);
+            await act(async () => {
+                await result.current.execute(succeeding);
+            });
+
+            expect(succeeding).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('startCooldown', () => {
+        it('Should not start a cooldown on mount', () => {
+            const { result } = renderHook(() =>
+                useCooldownAction({
+                    cooldownMs: 60000,
+                    storageKey: 'test-cooldown',
+                })
+            );
+
+            expect(result.current.isCooldownActive).toBe(false);
+        });
+
+        it('Should start the cooldown without running an action', () => {
+            const { result } = renderHook(() =>
+                useCooldownAction({
+                    cooldownMs: 60000,
+                    storageKey: 'test-cooldown',
+                })
+            );
+
+            act(() => {
+                result.current.startCooldown();
+            });
+
+            expect(result.current.isCooldownActive).toBe(true);
+            expect(result.current.remainingSeconds).toBe(60);
+        });
+
+        it('Should keep an already active cooldown rather than restart it', async () => {
+            const { result } = renderHook(() =>
+                useCooldownAction({
+                    cooldownMs: 60000,
+                    storageKey: 'test-cooldown',
+                })
+            );
+
+            act(() => {
+                result.current.startCooldown();
+            });
+            act(() => {
+                jest.advanceTimersByTime(10000);
+            });
+            await waitFor(() => {
+                expect(result.current.remainingSeconds).toBe(50);
+            });
+
+            act(() => {
+                result.current.startCooldown();
+            });
+
+            expect(result.current.remainingSeconds).toBe(50);
+        });
     });
 
     describe('Different Cooldown Durations', () => {

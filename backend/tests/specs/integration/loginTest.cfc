@@ -104,7 +104,7 @@ component extends="tests.resources.baseTest" {
                 var response = event.getResponse();
                 expect(response.getStatusCode()).toBe(403);
                 expect(response.getMessages()[1]).toInclude('Please verify your email. Email is not verified.');
-                expect(response.getData()).toHaveKey('access_token'); // pending JWT
+                expect(response.getHasData()).toBeFalse(); // no token of any kind for unverified users
                 mockUser.delete(user);
             });
 

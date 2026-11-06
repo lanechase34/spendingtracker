@@ -31,6 +31,18 @@ function getSecurityLevelColor(security_level: string) {
 }
 
 /**
+ * Data grid slots
+ * Defined at module level so the grid doesn't remount them (and drop search focus) on every render
+ */
+function ToolbarSlot() {
+    return <SearchToolbar title="Users" />;
+}
+
+function NoRowsSlot() {
+    return <Typography sx={{ p: 2, textAlign: 'center' }}>No Users Found</Typography>;
+}
+
+/**
  * Users Page viewer
  */
 export default function UsersPage() {
@@ -170,8 +182,8 @@ export default function UsersPage() {
                     showToolbar
                     getRowId={(row) => row.id}
                     slots={{
-                        toolbar: () => <SearchToolbar title="Users" />,
-                        noRowsOverlay: () => <Typography sx={{ p: 2, textAlign: 'center' }}>No Users Found</Typography>,
+                        toolbar: ToolbarSlot,
+                        noRowsOverlay: NoRowsSlot,
                     }}
                     slotProps={{
                         basePagination: {

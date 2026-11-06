@@ -1,11 +1,10 @@
 import useLocalStorage from 'hooks/useLocalStorage';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 interface UseCooldownActionOptions {
     cooldownMs: number;
     storageKey: string;
-    setInitialCooldown?: boolean; // if true, starts cooldown on mount
 }
 
 interface UseCooldownActionReturn<T> {
@@ -13,6 +12,7 @@ interface UseCooldownActionReturn<T> {
     loading: boolean;
     isCooldownActive: boolean;
     remainingSeconds: number;
+    startCooldown: () => void;
 }
 
 /**
@@ -28,11 +28,12 @@ interface UseCooldownActionReturn<T> {
  * @returns {boolean} returns.loading - t/f request is currently loading
  * @returns {boolean} returns.isCooldownActive - t/f if the current cooldown is active
  * @returns {number} returns.remainingSeconds - number of seconds until cooldown is over
+ * @returns {Function} returns.startCooldown - start the cooldown without running an action (e.g. the action happened elsewhere),
+ *                                            an already active longer cooldown is kept
  */
 export default function useCooldownAction<T = void>({
     cooldownMs,
     storageKey,
-    setInitialCooldown = false,
 }: UseCooldownActionOptions): UseCooldownActionReturn<T> {
     const [loading, setLoading] = useState<boolean>(false);
     const [cooldownUntil, setCooldownUntil] = useLocalStorage<number | null>({
@@ -41,18 +42,17 @@ export default function useCooldownAction<T = void>({
         schema: z.number().nullable(),
     });
 
-    // Set initial cooldown on mount if requested
-    useEffect(() => {
-        if (setInitialCooldown) {
-            setCooldownUntil((prev) => {
-                if (prev === null || prev < Date.now()) {
-                    return Date.now() + cooldownMs;
-                }
-                return prev;
-            });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- applies the initial cooldown once on mount only
-    }, []);
+    // Synchronous guard so a double click before the loading re-render can't run the action twice
+    const inFlightRef = useRef<boolean>(false);
+
+    const startCooldown = useCallback(() => {
+        setCooldownUntil((prev) => {
+            if (prev === null || prev < Date.now()) {
+                return Date.now() + cooldownMs;
+            }
+            return prev;
+        });
+    }, [cooldownMs, setCooldownUntil]);
 
     // Tick now every second while cooldown is active
     const [now, setNow] = useState(Date.now);
@@ -87,8 +87,9 @@ export default function useCooldownAction<T = void>({
 
     const execute = useCallback(
         async (action: () => Promise<T>): Promise<T | undefined> => {
-            if (loading || isCooldownActive) return;
+            if (inFlightRef.current || loading || isCooldownActive) return;
 
+            inFlightRef.current = true;
             setLoading(true);
 
             try {
@@ -96,11 +97,12 @@ export default function useCooldownAction<T = void>({
                 setCooldownUntil(Date.now() + cooldownMs);
                 return result;
             } finally {
+                inFlightRef.current = false;
                 setLoading(false);
             }
         },
         [loading, isCooldownActive, cooldownMs, setCooldownUntil]
     );
 
-    return { execute, loading, isCooldownActive, remainingSeconds };
+    return { execute, loading, isCooldownActive, remainingSeconds, startCooldown };
 }

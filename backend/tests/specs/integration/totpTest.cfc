@@ -471,6 +471,46 @@ component extends="tests.resources.baseTest" {
                     expect(event.getResponse().getData()).toHaveKey('access_token');
                 });
 
+                it('Only updates lastlogin once the 2FA code is verified', () => {
+                    var lastLoginIsNull = () => {
+                        return queryExecute(
+                            'SELECT lastlogin IS NULL AS isnull FROM users WHERE id = :id',
+                            {id: {value: user.getId(), cfsqltype: 'integer'}},
+                            {returnType: 'array'}
+                        )[1].isnull;
+                    };
+
+                    // Let the (async) lastlogin update from the setup login land, then clear it
+                    waitFor(condition = () => !lastLoginIsNull(), message = 'Setup login never set lastlogin');
+                    queryExecute(
+                        'UPDATE users SET lastlogin = NULL WHERE id = :id',
+                        {id: {value: user.getId(), cfsqltype: 'integer'}}
+                    );
+
+                    // Password step of a 2FA login does not count as a login
+                    var loginEvent = post(
+                        route  = '/api/v1/login',
+                        params = {
+                            email     : user.getEmail(),
+                            password  : createUUID(),
+                            rememberMe: false
+                        }
+                    );
+                    expect(loginEvent.getResponse().getData()).toHaveKey('mfa_required');
+                    sleep(500);
+                    expect(lastLoginIsNull()).toBeTrue();
+
+                    // Completing 2FA does
+                    setup();
+                    var event = post(
+                        route   = '/api/v1/verify2fa',
+                        params  = {code: getInstance('@totp').generateCode(secret = totpSecret)},
+                        headers = {'x-auth-token': pendingToken}
+                    );
+                    expect(event.getResponse().getStatusCode()).toBe(200);
+                    waitFor(condition = () => !lastLoginIsNull(), message = 'verify2fa never set lastlogin');
+                });
+
                 it('Cannot access User secured routes with a pending2FA token', () => {
                     var event = get(route = '/api/v1/me', headers = {'x-auth-token': pendingToken});
 

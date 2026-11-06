@@ -21,7 +21,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import LogLine from 'admin/components/LogLine';
 import useAuthFetch from 'hooks/useAuthFetch';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { APIError } from 'utils/apiError';
 import { API_BASE_URL } from 'utils/constants';
 import { formatBytes } from 'utils/fileReader';
@@ -79,9 +79,18 @@ export default function ServerLogs() {
     const [searchInput, setSearchInput] = useState('');
     const [appliedSearch, setAppliedSearch] = useState('');
 
+    // Only one content request in flight - a newer one (another file, search, refresh) aborts the older
+    // so a slow response can't show one file's lines under another file's header
+    const contentControllerRef = useRef<AbortController | null>(null);
+
     // Fetch log content
     const fetchContent = useCallback(
-        async (filename: string, linesToLoad: LineOption, search: string, signal?: AbortSignal) => {
+        async (filename: string, linesToLoad: LineOption, search: string) => {
+            contentControllerRef.current?.abort();
+            const controller = new AbortController();
+            contentControllerRef.current = controller;
+            const { signal } = controller;
+
             setContentLoading(true);
             setContentError(null);
 
@@ -102,6 +111,7 @@ export default function ServerLogs() {
 
                 // Validate the response data
                 const json = await safeJson(response);
+                if (signal.aborted) return;
                 const parsed = LogContentResponseSchema.safeParse(json);
 
                 if (!parsed.success) {
@@ -119,10 +129,10 @@ export default function ServerLogs() {
                 setTotal(total);
                 setTruncated(truncated);
             } catch (e: unknown) {
-                if (signal?.aborted === true) return;
+                if (signal.aborted) return;
                 setContentError(e instanceof APIError ? e.message : 'Failed to load log content');
             } finally {
-                if (signal?.aborted !== true) setContentLoading(false);
+                if (!signal.aborted) setContentLoading(false);
             }
         },
         [authFetch]
@@ -164,6 +174,7 @@ export default function ServerLogs() {
         // Cleanup state on unmount
         return () => {
             controller.abort();
+            contentControllerRef.current?.abort();
             setActiveFile(null);
             setLines([]);
             setFiltered(false);

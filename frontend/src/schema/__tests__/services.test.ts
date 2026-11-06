@@ -1,5 +1,5 @@
 import type useAuthFetch from 'hooks/useAuthFetch';
-import type usePendingFetch from 'hooks/usePendingFetch';
+import type { usePending2FAFetch } from 'hooks/usePendingFetch';
 import { incomeService } from 'schema/income';
 import { subscriptionService } from 'schema/subscription';
 import { userService } from 'schema/user';
@@ -7,7 +7,7 @@ import type { Subscription } from 'types/Subscription.type';
 import { API_BASE_URL } from 'utils/constants';
 
 type AuthFetch = ReturnType<typeof useAuthFetch>;
-type PendingFetch = ReturnType<typeof usePendingFetch>;
+type Pending2FAFetch = ReturnType<typeof usePending2FAFetch>;
 
 global.fetch = jest.fn();
 const mockFetch = global.fetch as jest.Mock;
@@ -361,14 +361,12 @@ describe('subscriptionService', () => {
 
 describe('userService', () => {
     const authFetch = jest.fn<ReturnType<AuthFetch>, Parameters<AuthFetch>>();
-    const pendingFetch = jest.fn<ReturnType<PendingFetch>, Parameters<PendingFetch>>();
-    const pending2FAFetch = jest.fn<ReturnType<PendingFetch>, Parameters<PendingFetch>>();
-    const service = userService({ authFetch, pendingFetch, pending2FAFetch });
+    const pending2FAFetch = jest.fn<ReturnType<Pending2FAFetch>, Parameters<Pending2FAFetch>>();
+    const service = userService({ authFetch, pending2FAFetch });
     const noFetchService = userService({});
 
     beforeEach(() => {
         authFetch.mockReset();
-        pendingFetch.mockReset();
         pending2FAFetch.mockReset();
     });
 
@@ -399,11 +397,14 @@ describe('userService', () => {
             );
         });
 
-        it('Should throw with the pending token when the email is unverified', async () => {
-            mockFetch.mockResolvedValue(mockResponse(403, { error: false, data: { access_token: 'pending' } }));
-            await expect(service.login(formData)).rejects.toEqual(
-                apiErrorWith('Please verify your email.', 403, 'pending')
-            );
+        it('Should throw a 403 without any token when the email is unverified', async () => {
+            mockFetch.mockResolvedValue(mockResponse(403, { error: true, messages: ['Please verify your email.'] }));
+            await expect(service.login(formData)).rejects.toEqual(apiErrorWith('Please verify your email.', 403, ''));
+        });
+
+        it('Should throw a 403 even when the unverified response has no body', async () => {
+            mockFetch.mockResolvedValue(mockResponse(403));
+            await expect(service.login(formData)).rejects.toEqual(apiErrorWith('Please verify your email.', 403));
         });
 
         it('Should throw Invalid Login when the API reports an error', async () => {
@@ -442,10 +443,12 @@ describe('userService', () => {
     describe('register', () => {
         const body = { email: 'a@b.co', password: 'pw', salary: '1', monthlyTakeHome: '1' };
 
-        it('Should POST JSON and return the pending token', async () => {
-            mockFetch.mockResolvedValue(ok({ access_token: 'pending' }));
+        it('Should POST JSON and resolve without a token', async () => {
+            mockFetch.mockResolvedValue(
+                mockResponse(200, { error: false, data: {}, messages: ['Check your email for a verification code.'] })
+            );
 
-            await expect(service.register(body)).resolves.toBe('pending');
+            await expect(service.register(body)).resolves.toBeUndefined();
             expect(mockFetch).toHaveBeenCalledWith(`${API_BASE_URL}/register`, {
                 method: 'POST',
                 body: JSON.stringify(body),
@@ -459,25 +462,30 @@ describe('userService', () => {
         });
 
         it('Should throw for a malformed body', async () => {
-            mockFetch.mockResolvedValue(mockResponse(200, { error: false, data: { access_token: 'x' } }));
+            mockFetch.mockResolvedValue(mockResponse(200, { error: false, data: 'x' }));
             await expect(service.register(body)).rejects.toEqual(
                 apiErrorWith('Invalid Response Format. Please try again.', 200)
             );
         });
 
         it('Should throw the first API message', async () => {
-            mockFetch.mockResolvedValue(apiError(400, ['Email already registered', 'second']));
-            await expect(service.register(body)).rejects.toEqual(apiErrorWith('Email already registered', 400));
+            mockFetch.mockResolvedValue(apiError(400, ['Invalid email', 'second']));
+            await expect(service.register(body)).rejects.toEqual(apiErrorWith('Invalid email', 400));
         });
 
         it('Should fall back to a default message when the API sends no messages', async () => {
             mockFetch.mockResolvedValue(apiError(400, []));
             await expect(service.register(body)).rejects.toEqual(apiErrorWith('Please try again.', 400));
         });
+
+        it('Should throw for a non-ok success body', async () => {
+            mockFetch.mockResolvedValue(mockResponse(500, { error: false, data: {} }));
+            await expect(service.register(body)).rejects.toEqual(apiErrorWith('Please try again.', 500));
+        });
     });
 
     describe('updateProfile', () => {
-        const body = { password: '', salary: '1', monthlyTakeHome: '1' };
+        const body = { password: '', currentPassword: '', salary: '1', monthlyTakeHome: '1' };
 
         it('Should throw without an authFetch', async () => {
             await expect(noFetchService.updateProfile(body)).rejects.toThrow('Invalid state');
@@ -490,6 +498,21 @@ describe('userService', () => {
             expect(authFetch).toHaveBeenCalledWith({ url: `${API_BASE_URL}/me`, method: 'PATCH', body });
         });
 
+        it('Should send the current password with a password change', async () => {
+            const passwordBody = { ...body, password: 'newpassword1', currentPassword: 'oldpassword1' };
+            authFetch.mockResolvedValue(ok());
+
+            await expect(service.updateProfile(passwordBody)).resolves.toBeUndefined();
+            expect(authFetch).toHaveBeenCalledWith({ url: `${API_BASE_URL}/me`, method: 'PATCH', body: passwordBody });
+        });
+
+        it('Should throw the API message when the current password is incorrect', async () => {
+            authFetch.mockResolvedValue(apiError(400, ['Current password is incorrect.']));
+            await expect(service.updateProfile(body)).rejects.toEqual(
+                apiErrorWith('Current password is incorrect.', 400)
+            );
+        });
+
         it.each([
             ['null', null],
             ['a non-ok response', mockResponse(400, {})],
@@ -500,45 +523,41 @@ describe('userService', () => {
     });
 
     describe('resendVerificationCode', () => {
-        it('Should throw without a pendingFetch', async () => {
-            await expect(noFetchService.resendVerificationCode()).rejects.toThrow('Invalid state');
-        });
+        const body = { email: 'a@b.co', password: 'pw' };
 
-        it('Should GET the resend endpoint and resolve on success', async () => {
-            pendingFetch.mockResolvedValue(ok());
+        it('Should POST the credentials as JSON without an auth token and resolve on success', async () => {
+            mockFetch.mockResolvedValue(ok());
 
-            await expect(service.resendVerificationCode()).resolves.toBeUndefined();
-            expect(pendingFetch).toHaveBeenCalledWith({
-                url: `${API_BASE_URL}/resendVerificationCode`,
-                method: 'GET',
+            await expect(noFetchService.resendVerificationCode(body)).resolves.toBeUndefined();
+            expect(mockFetch).toHaveBeenCalledWith(`${API_BASE_URL}/resendVerificationCode`, {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers: { 'Content-Type': 'application/json' },
             });
         });
 
-        it('Should throw when there is no response', async () => {
-            pendingFetch.mockResolvedValue(null);
-            await expect(service.resendVerificationCode()).rejects.toThrow('Invalid network response');
-        });
-
         it('Should throw for a malformed body', async () => {
-            pendingFetch.mockResolvedValue(mockResponse(200));
-            await expect(service.resendVerificationCode()).rejects.toThrow('Please try again.');
+            mockFetch.mockResolvedValue(mockResponse(200));
+            await expect(service.resendVerificationCode(body)).rejects.toThrow('Please try again.');
         });
 
         it('Should throw the API message on 429', async () => {
-            pendingFetch.mockResolvedValue(apiError(429, ['Wait 60 seconds']));
-            await expect(service.resendVerificationCode()).rejects.toEqual(apiErrorWith('Wait 60 seconds', 429));
+            mockFetch.mockResolvedValue(apiError(429, ['Please wait before requesting another verification email.']));
+            await expect(service.resendVerificationCode(body)).rejects.toEqual(
+                apiErrorWith('Please wait before requesting another verification email.', 429)
+            );
         });
 
         it('Should fall back to a default message on 429 without messages', async () => {
-            pendingFetch.mockResolvedValue(mockResponse(429, { error: false }));
-            await expect(service.resendVerificationCode()).rejects.toEqual(
+            mockFetch.mockResolvedValue(mockResponse(429, { error: false }));
+            await expect(service.resendVerificationCode(body)).rejects.toEqual(
                 apiErrorWith('Too many requests. Please wait.', 429)
             );
         });
 
         it('Should throw on other non-ok responses', async () => {
-            pendingFetch.mockResolvedValue(apiError(500));
-            await expect(service.resendVerificationCode()).rejects.toThrow('Invalid network response');
+            mockFetch.mockResolvedValue(apiError(500));
+            await expect(service.resendVerificationCode(body)).rejects.toThrow('Invalid network response');
         });
     });
 
@@ -594,50 +613,48 @@ describe('userService', () => {
     });
 
     describe('verify', () => {
-        const formData = new FormData();
+        const body = { email: 'a@b.co', password: 'pw', verificationCode: 'ABCD1234' };
 
-        it('Should throw without a pendingFetch', async () => {
-            await expect(noFetchService.verify(formData)).rejects.toThrow('Invalid state');
-        });
+        it('Should POST the credentials and code as JSON without an auth token and return the access token', async () => {
+            mockFetch.mockResolvedValue(ok({ access_token: 'jwt' }));
 
-        it('Should return the access token', async () => {
-            pendingFetch.mockResolvedValue(ok({ access_token: 'jwt' }));
-
-            await expect(service.verify(formData)).resolves.toBe('jwt');
-            expect(pendingFetch).toHaveBeenCalledWith({
-                url: `${API_BASE_URL}/verify`,
+            await expect(noFetchService.verify(body)).resolves.toBe('jwt');
+            expect(mockFetch).toHaveBeenCalledWith(`${API_BASE_URL}/verify`, {
                 method: 'POST',
-                body: formData,
+                body: JSON.stringify(body),
+                headers: { 'Content-Type': 'application/json' },
             });
         });
 
-        it('Should throw a 401 when there is no response', async () => {
-            pendingFetch.mockResolvedValue(null);
-            await expect(service.verify(formData)).rejects.toEqual(apiErrorWith('Invalid state', 401));
-        });
-
         it('Should throw a rate limit error on 429', async () => {
-            pendingFetch.mockResolvedValue(mockResponse(429));
-            await expect(service.verify(formData)).rejects.toEqual(
-                apiErrorWith('Too many requests. Please wait.', 429)
-            );
+            mockFetch.mockResolvedValue(mockResponse(429));
+            await expect(service.verify(body)).rejects.toEqual(apiErrorWith('Too many requests. Please wait.', 429));
         });
 
         it('Should throw for a malformed body', async () => {
-            pendingFetch.mockResolvedValue(mockResponse(200, { error: false, data: {} }));
-            await expect(service.verify(formData)).rejects.toEqual(
+            mockFetch.mockResolvedValue(mockResponse(200, { error: false, data: {} }));
+            await expect(service.verify(body)).rejects.toEqual(
                 apiErrorWith('Verify Validation failed: Invalid response format', 200)
             );
         });
 
         it('Should throw the first API message as a 400', async () => {
-            pendingFetch.mockResolvedValue(apiError(422, ['Wrong code']));
-            await expect(service.verify(formData)).rejects.toEqual(apiErrorWith('Wrong code', 400));
+            mockFetch.mockResolvedValue(apiError(400, ['Invalid or expired verification code.']));
+            await expect(service.verify(body)).rejects.toEqual(
+                apiErrorWith('Invalid or expired verification code.', 400)
+            );
+        });
+
+        it('Should surface the already verified message', async () => {
+            mockFetch.mockResolvedValue(apiError(400, ['Account already verified. Please log in.']));
+            await expect(service.verify(body)).rejects.toEqual(
+                apiErrorWith('Account already verified. Please log in.', 400)
+            );
         });
 
         it('Should fall back to a default message when the API sends no messages', async () => {
-            pendingFetch.mockResolvedValue(apiError(400, []));
-            await expect(service.verify(formData)).rejects.toEqual(
+            mockFetch.mockResolvedValue(apiError(400, []));
+            await expect(service.verify(body)).rejects.toEqual(
                 apiErrorWith('Invalid or expired verification code.', 400)
             );
         });

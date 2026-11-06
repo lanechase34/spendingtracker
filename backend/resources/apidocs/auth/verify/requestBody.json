@@ -4,9 +4,11 @@
         "application/x-www-form-urlencoded": {
             "schema": {
                 "type": "object",
-                "required": ["verificationCode"],
+                "required": ["email", "password", "verificationCode"],
                 "properties": {
-                    "verificationCode": { "type": "string", "example": "ABC123" }
+                    "email": { "type": "string", "format": "email", "example": "test1@gmail.com" },
+                    "password": { "type": "string", "format": "password", "example": "secretpassword" },
+                    "verificationCode": { "type": "string", "minLength": 8, "maxLength": 8, "example": "AB3CD4EF" }
                 }
             }
         }

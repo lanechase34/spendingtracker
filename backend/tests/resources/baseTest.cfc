@@ -83,7 +83,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
          */
         cfhttp(
             url    = imgUrl,
-            result = "imgResult",
+            result = "local.imgResult",
             method = "GET"
         );
 

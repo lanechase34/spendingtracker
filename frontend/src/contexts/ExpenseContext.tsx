@@ -24,11 +24,23 @@ export interface ExpenseContextType extends Omit<UsePaginatedFetchReturn<Expense
 export const ExpenseContext = createContext<ExpenseContextType | undefined>(undefined);
 
 /**
+ * Narrow slice of the expense context for components that only need the total or to trigger a refetch
+ * Only changes when the total changes, so these consumers don't re-render on every grid interaction
+ */
+export interface ExpenseSummaryContextType {
+    totalSum: number | null;
+    refetch: () => Promise<void>;
+}
+
+export const ExpenseSummaryContext = createContext<ExpenseSummaryContextType | undefined>(undefined);
+
+/**
  * Expense Context stores all information pertaining to the ExpenseList widget
  *
  * Returns UsePaginatedFetchReturn structure and results from this
+ * @enabled only fetch while true - the provider stays mounted so its consumers (navbar expense form) always have a context
  */
-export const ExpenseContextProvider = ({ children }: { children: ReactNode }) => {
+export const ExpenseContextProvider = ({ children, enabled = true }: { children: ReactNode; enabled?: boolean }) => {
     const { formattedStartDate, formattedEndDate } = useDateRangeContext();
     const authFetch = useAuthFetch();
     const { authToken } = useAuthContext();
@@ -69,6 +81,7 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
         endpoint: `${API_BASE_URL}/expenses`,
         initialPageSize: 10,
         additionalParams,
+        enabled,
         validator: ExpenseListSchema,
         defaultSort: [{ field: 'date', sort: 'desc' }],
     });
@@ -168,5 +181,12 @@ export const ExpenseContextProvider = ({ children }: { children: ReactNode }) =>
         ]
     );
 
-    return <ExpenseContext value={value}>{children}</ExpenseContext>;
+    const totalSum = data?.totalSum ?? null;
+    const summaryValue = useMemo<ExpenseSummaryContextType>(() => ({ totalSum, refetch }), [totalSum, refetch]);
+
+    return (
+        <ExpenseSummaryContext value={summaryValue}>
+            <ExpenseContext value={value}>{children}</ExpenseContext>
+        </ExpenseSummaryContext>
+    );
 };

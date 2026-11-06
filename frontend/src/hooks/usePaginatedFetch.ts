@@ -18,6 +18,7 @@ interface PaginatedFetch<TValidator extends z.ZodType> {
     additionalParams?: Record<string, string>;
     validator: TValidator; // Zod schema for validation against raw api response - the type is also inferred from this schema
     defaultSort?: GridSortModel;
+    enabled?: boolean; // When false, no fetches are made (e.g. the widget's page isn't mounted)
 }
 
 // State for the Data Grid
@@ -34,6 +35,7 @@ interface GridState {
  * @initialPageSize data grid initial page size
  * @additionalParams key-value pairs of additional params to add to fetch call
  * @validator validator for type T passed in
+ * @enabled only fetch while true
  * @returns
  */
 export default function usePaginatedFetch<TValidator extends z.ZodType>({
@@ -42,6 +44,7 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     additionalParams = {},
     validator,
     defaultSort = [],
+    enabled = true,
 }: PaginatedFetch<TValidator>): UsePaginatedFetchReturn<z.infer<TValidator>> {
     type TData = z.infer<TValidator>; // Infer the type of the data from the validator
 
@@ -77,6 +80,32 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
     const additionalParamsString = useMemo(() => new URLSearchParams(additionalParams).toString(), [additionalParams]);
 
     /**
+     * Reset to the first page when the additional params (date range, interval, etc.) change
+     * Adjusted during render so the fetch effect only runs once, with the reset page
+     */
+    const [prevAdditionalParamsString, setPrevAdditionalParamsString] = useState(additionalParamsString);
+    if (prevAdditionalParamsString !== additionalParamsString) {
+        setPrevAdditionalParamsString(additionalParamsString);
+        if (gridState.paginationModel.page !== 0) {
+            setGridState((prev) => ({ ...prev, paginationModel: { ...prev.paginationModel, page: 0 } }));
+        }
+    }
+
+    /**
+     * Only one request is in flight at a time - starting a new one (effect or refetch) aborts the previous
+     * so a slower, older response can never overwrite newer data
+     */
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    /**
+     * Latest grid state and params, so refetch can keep a stable reference
+     */
+    const latestRef = useRef({ gridState, additionalParamsString, enabled });
+    useEffect(() => {
+        latestRef.current = { gridState, additionalParamsString, enabled };
+    }, [gridState, additionalParamsString, enabled]);
+
+    /**
      * Helper to get the full filter from the filter modal, returns '' if no filter present
      */
     const getFilter = useCallback((state: GridState) => {
@@ -108,7 +137,13 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
      * Fetch handler. Will call endpoint and aggregate mui data grid params + additional params passed in
      */
     const fetchData = useCallback(
-        async (state: GridState, additionalParamsString: string, signal: AbortSignal) => {
+        async (state: GridState, additionalParamsString: string) => {
+            abortControllerRef.current?.abort();
+            const controller = new AbortController();
+            abortControllerRef.current = controller;
+            const { signal } = controller;
+            const isCurrent = () => abortControllerRef.current === controller && !signal.aborted;
+
             setLoading(true);
             setError(false);
 
@@ -120,7 +155,11 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
                     signal,
                 });
 
-                if (!response) return;
+                if (!isCurrent()) return;
+                if (!response) {
+                    setLoading(false);
+                    return;
+                }
                 if (!response.ok) throw new Error('Invalid network response');
 
                 // Validate the response
@@ -134,15 +173,15 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
 
                 const dataParsed = validator.safeParse(result.data);
                 if (!dataParsed.success) throw new Error('Invalid response');
+                if (!isCurrent()) return;
                 setData(dataParsed.data);
 
-                const filtered = result.pagination?.filteredRecords ?? 0;
-                const total = result.pagination?.totalRecords ?? 0;
-                setTotalRowCount(filtered !== total ? filtered : total);
+                // Filtered count when searching, otherwise the total
+                setTotalRowCount(result.pagination?.filteredRecords ?? result.pagination?.totalRecords ?? 0);
                 setLoading(false);
             } catch (err: unknown) {
                 const errorInfo = getErrorInfo(err);
-                if (errorInfo.name !== 'AbortError') {
+                if (errorInfo.name !== 'AbortError' && isCurrent()) {
                     console.error(`Error fetching data from ${endpoint}:`, err);
                     setError(true);
                     setLoading(false);
@@ -157,29 +196,32 @@ export default function usePaginatedFetch<TValidator extends z.ZodType>({
      * Aborts the previous fetch if re-triggered
      */
     useEffect(() => {
-        if (!authReady) return;
+        if (!authReady || !enabled) return;
 
-        const controller = new AbortController();
         // eslint-disable-next-line react-hooks/set-state-in-effect -- fetching is the external sync this effect exists for
-        void fetchData(gridState, additionalParamsString, controller.signal);
+        void fetchData(gridState, additionalParamsString);
 
         return () => {
-            controller.abort();
+            abortControllerRef.current?.abort();
+            abortControllerRef.current = null;
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- serialized grid state controls WHEN the effect runs
-    }, [serializedGridState, additionalParamsString, authReady, fetchData]);
+    }, [serializedGridState, additionalParamsString, authReady, enabled, fetchData]);
 
     /**
      * Expose same effect as a function
+     * Stable reference - reads the latest grid state from a ref
+     * No-op while disabled - the fetch effect loads fresh data once enabled again
      */
-    const refetch = useCallback(
-        async (signal?: AbortSignal) => {
-            const controller = new AbortController();
-            await fetchData(gridState, additionalParamsString, signal ?? controller.signal);
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- serialized grid state controls WHEN the function updates
-        [serializedGridState, additionalParamsString, fetchData]
-    );
+    const refetch = useCallback(async () => {
+        const {
+            gridState: latestGridState,
+            additionalParamsString: latestParams,
+            enabled: isEnabled,
+        } = latestRef.current;
+        if (!isEnabled) return;
+        await fetchData(latestGridState, latestParams);
+    }, [fetchData]);
 
     /**
      * Expose function to reset state to default values

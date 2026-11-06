@@ -22,6 +22,7 @@ component
     property name="verified"             type="boolean";
     property name="verificationSentDate" type="date";
     property name="totp_enabled"         type="boolean";
+    property name="password_changed_at" type="any"; // null until the password is first changed
 
     /**
      * Dervied

@@ -11,7 +11,7 @@ export interface UsePaginatedFetchReturn<T> {
     filterModel: GridFilterModel; // Array of filter options
     setFilterModel: (model: GridFilterModel) => void;
     totalRowCount: number;
-    refetch: (signal?: AbortSignal) => Promise<void>;
+    refetch: () => Promise<void>;
     resetState: () => void;
     handlePaginationModelChange: (newModel: GridPaginationModel) => void;
     handleSortModelChange: (newModel: GridSortModel) => void;

@@ -175,6 +175,22 @@ describe('<EditIncome />', () => {
             fireEvent.click(screen.getByLabelText('edit'));
             expect(await screen.findByLabelText('Month')).toHaveValue('01-01-2025');
         });
+
+        it('Shows the saved pay, not an abandoned edit, when reopening', async () => {
+            await openDialog();
+
+            fireEvent.change(payInput(), { target: { value: '5000' } });
+            fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+            await waitFor(() => {
+                expect(screen.queryByText('Edit Income')).not.toBeInTheDocument();
+            });
+
+            fireEvent.click(screen.getByLabelText('edit'));
+            await screen.findByText('Edit Income');
+
+            expect(payInput()).toHaveValue('1100');
+            expect(updateButton()).toBeDisabled();
+        });
     });
 
     describe('Populating from fetched data', () => {
@@ -319,7 +335,7 @@ describe('<EditIncome />', () => {
         });
 
         it('Sends only extra changes when pay is untouched, without validating pay', async () => {
-            // Months without a pay record pre-fill 0, which the money validator rejects
+            // Months without a pay record pre-fill 0, pay is left untouched so it isn't sent
             mockUseFetchIncome.mockReturnValue({ data: { pay: 0, extra: 300.5 }, isLoading: false, isError: false });
             await openDialog();
 
@@ -348,6 +364,28 @@ describe('<EditIncome />', () => {
                     expect.objectContaining({ pay: { date: '02-01-2025', pay: '999' } })
                 );
             });
+        });
+
+        it('Allows saving a pay of $0', async () => {
+            await openDialog();
+
+            fireEvent.change(payInput(), { target: { value: '0' } });
+            fireEvent.click(updateButton());
+
+            await waitFor(() => {
+                expect(mockMutateAsync).toHaveBeenCalledWith(
+                    expect.objectContaining({ pay: { date: '01-01-2025', pay: '0' } })
+                );
+            });
+            expect(screen.queryByText('Enter a positive amount greater than zero')).not.toBeInTheDocument();
+        });
+
+        it('Still requires a positive extra income amount', async () => {
+            await openDialog();
+
+            addEntry('0', 'Nothing');
+
+            expect(await screen.findByText('Enter a positive amount greater than zero')).toBeInTheDocument();
         });
 
         it('Does not submit an invalid pay', async () => {

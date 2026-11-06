@@ -7,6 +7,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import TextField from '@mui/material/TextField';
+import type { DateValidationError } from '@mui/x-date-pickers/models';
 import DeleteButton from 'components/DeleteButton';
 import LazyDatePicker from 'components/LazyDatePicker';
 import type { Dayjs } from 'dayjs';
@@ -17,7 +18,7 @@ import type { ExpenseDataRow } from 'types/Expense.type';
 import type { SelectOptionType } from 'types/SelectOption.type';
 import { maxFileSize, validExtensions, validMimeTypes } from 'utils/receiptDefaults';
 import type { ErrorField } from 'validators/validateExpenseRow';
-import { getErrorFor } from 'validators/validateExpenseRow';
+import { getErrorFor, getExpenseDateRange } from 'validators/validateExpenseRow';
 import { validateFile } from 'validators/validateFile';
 
 import CategorySelect from './CategorySelect';
@@ -37,6 +38,30 @@ interface BulkImportRowProps {
 function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportRowProps) {
     // Local state to prevent re-renders
     const [localRow, setLocalRow] = useState<ExpenseDataRow>(row);
+
+    /**
+     * Raw text of the amount field, so partial input like "1." isn't lost to parseFloat on every keystroke
+     * Resync when the row's amount changes from outside this component
+     */
+    const [amountInput, setAmountInput] = useState<string>(row.amount?.toString() ?? '');
+    const [syncedAmount, setSyncedAmount] = useState<number | null>(row.amount);
+    if (row.amount !== syncedAmount) {
+        setSyncedAmount(row.amount);
+        setAmountInput(row.amount?.toString() ?? '');
+    }
+
+    /**
+     * Picker value kept as given (including invalid partial input) so typing isn't reset by a null value
+     */
+    const [dateValue, setDateValue] = useState<Dayjs | null>(() =>
+        dayjs(row.date).isValid() ? dayjs(row.date) : null
+    );
+
+    /**
+     * Date picker's own validation error (invalid / out of range while typing)
+     */
+    const [dateErrorCode, setDateErrorCode] = useState<DateValidationError | null>(null);
+    const { minDate, maxDate } = getExpenseDateRange();
 
     /**
      * Update local state and parent's ref
@@ -83,18 +108,34 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
     const amountError = getErrorFor('amount', error);
     const descriptionError = getErrorFor('description', error);
     const categoryError = getErrorFor('category', error);
+    const pickerDateError =
+        dateErrorCode === 'minDate' || dateErrorCode === 'maxDate'
+            ? 'Please select a date within a 1-year range'
+            : dateErrorCode === 'invalidDate'
+              ? 'Your date is not valid'
+              : '';
+    const dateError = pickerDateError || getErrorFor('date', error);
     return (
         <TableRow key={`expense_${rowId}`} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
             <TableCell>
                 <LazyDatePicker
                     label=""
-                    value={dayjs(localRow.date).isValid() ? dayjs(localRow.date) : null}
+                    value={dateValue}
                     onChange={(newValue: Dayjs | null) => {
-                        if (!newValue) return;
-                        updateCell('date', newValue.format('MM/DD/YYYY'));
+                        setDateValue(newValue);
+                        // Store cleared / invalid input too (invalid formats as 'Invalid Date') so it fails validation
+                        updateCell('date', newValue ? newValue.format('MM/DD/YYYY') : '');
                     }}
-                    minDate={dayjs().subtract(1, 'year')}
-                    maxDate={dayjs().add(1, 'year')}
+                    minDate={minDate}
+                    maxDate={maxDate}
+                    onError={setDateErrorCode}
+                    slotProps={{
+                        textField: {
+                            id: `expense_${rowId}_date`,
+                            error: Boolean(dateError),
+                            helperText: dateError,
+                        },
+                    }}
                 />
             </TableCell>
             <TableCell>
@@ -104,8 +145,9 @@ function BulkImportRow({ row, rowId, onRowChange, onDelete, error }: BulkImportR
                         startAdornment={<InputAdornment position="start">$</InputAdornment>}
                         fullWidth
                         required
-                        value={localRow.amount ?? ''}
+                        value={amountInput}
                         onChange={(e) => {
+                            setAmountInput(e.target.value);
                             // Keep 0 so it fails as non-positive rather than as missing
                             const amount = parseFloat(e.target.value);
                             updateCell('amount', Number.isNaN(amount) ? null : amount);

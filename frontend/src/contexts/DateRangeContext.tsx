@@ -2,22 +2,25 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useLocalStorage, { dayjsTransform } from 'hooks/useLocalStorage';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useMemo } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import type { DateRangeType } from 'types/DateRange.type';
 import { DateRangeTypeSchema } from 'types/DateRange.type';
 import type { DateRangeContextType } from 'types/DateRangeContext.type';
 
 export const DateRangeContext = createContext<DateRangeContextType | undefined>(undefined);
 
+const DAY_FORMAT = 'YYYY-MM-DD';
+
 /**
- * Helper to compute the date range based on the range type
+ * Helper to compute the date range based on the range type, relative to now
  */
-function computeDatesForRangeType(rangeType: DateRangeType): {
+function computeDatesForRangeType(
+    rangeType: DateRangeType,
+    now: Dayjs
+): {
     start: Dayjs;
     end: Dayjs;
 } {
-    const now = dayjs();
-
     switch (rangeType) {
         case 'this-week':
             return { start: now.startOf('week'), end: now.endOf('week') };
@@ -78,20 +81,54 @@ export const DateRangeContextProvider = ({ children }: { children: ReactNode }) 
     });
 
     /**
+     * The current day - preset ranges are relative to it
+     * Kept in state so a tab left open across midnight (or a month/year boundary) moves 'This Month' etc. forward
+     * Re-checked at midnight and whenever the tab becomes visible again (background timers are throttled)
+     */
+    const [today, setToday] = useState<string>(() => dayjs().format(DAY_FORMAT));
+
+    useEffect(() => {
+        const syncToday = () => {
+            setToday(dayjs().format(DAY_FORMAT)); // same string is a no-op render
+        };
+
+        let timer: ReturnType<typeof setTimeout>;
+        const scheduleMidnight = () => {
+            const msUntilTomorrow = dayjs().endOf('day').diff(dayjs()) + 1000;
+            timer = setTimeout(() => {
+                syncToday();
+                scheduleMidnight();
+            }, msUntilTomorrow);
+        };
+        scheduleMidnight();
+
+        document.addEventListener('visibilitychange', syncToday);
+        window.addEventListener('focus', syncToday);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('visibilitychange', syncToday);
+            window.removeEventListener('focus', syncToday);
+        };
+    }, []);
+
+    /**
      * Compute the start, end dates based on the rangeType
      */
     const { startDate, endDate } = useMemo(() => {
+        const now = dayjs(today);
+
         if (rangeType === 'custom') {
-            const { start: fallbackStart, end: fallbackEnd } = computeDatesForRangeType('this-month');
+            const { start: fallbackStart, end: fallbackEnd } = computeDatesForRangeType('this-month', now);
             return {
                 startDate: customStartDate ?? fallbackStart,
                 endDate: customEndDate ?? fallbackEnd,
             };
         }
 
-        const { start, end } = computeDatesForRangeType(rangeType);
+        const { start, end } = computeDatesForRangeType(rangeType, now);
         return { startDate: start, endDate: end };
-    }, [rangeType, customStartDate, customEndDate]);
+    }, [today, rangeType, customStartDate, customEndDate]);
 
     /**
      * useCallback for stable function reference

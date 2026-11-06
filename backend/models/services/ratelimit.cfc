@@ -80,6 +80,7 @@ component singleton hint="Service layer for rate limiting specific actions" {
      *
      * @currentEvent current event name
      * @by           ordered list of the fields the rule is scoped by
+     * @window       the rule's window in minutes - rules scoped by the same fields keep separate counters
      * @ip           the user's ip
      * @userid       the authenticated user's id, empty if not authenticated
      * @context      the rc scope, contains values
@@ -87,6 +88,7 @@ component singleton hint="Service layer for rate limiting specific actions" {
     public string function buildKey(
         required string currentEvent,
         required array by,
+        required numeric window,
         required string ip,
         required string userid,
         required struct context
@@ -114,7 +116,7 @@ component singleton hint="Service layer for rate limiting specific actions" {
             parts.append('#field#=#lCase(trim(value))#');
         }
 
-        return 'ratelimit:#currentEvent#:#by.toList('+')#:#hash(parts.toList('|'), 'SHA-256')#';
+        return 'ratelimit:#currentEvent#:#by.toList('+')#:#window#:#hash(parts.toList('|'), 'SHA-256')#';
     }
 
 }

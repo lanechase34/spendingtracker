@@ -31,6 +31,18 @@ interface AuditLogProps {
 }
 
 /**
+ * Data grid slots
+ * Defined at module level so the grid doesn't remount them (and drop search focus) on every render
+ */
+function ToolbarSlot() {
+    return <SearchToolbar title="Audit Log" />;
+}
+
+function NoRowsSlot() {
+    return <Typography sx={{ p: 2, textAlign: 'center' }}>No Audits Found</Typography>;
+}
+
+/**
  * Audit Log Data Grid Viewer
  */
 export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogProps) {
@@ -216,10 +228,8 @@ export default function AuditLog({ height = 'calc(100vh - 100px)' }: AuditLogPro
                     disableColumnFilter
                     showToolbar
                     slots={{
-                        toolbar: () => <SearchToolbar title="Audit Log" />,
-                        noRowsOverlay: () => (
-                            <Typography sx={{ p: 2, textAlign: 'center' }}>No Audits Found</Typography>
-                        ),
+                        toolbar: ToolbarSlot,
+                        noRowsOverlay: NoRowsSlot,
                     }}
                     slotProps={{
                         basePagination: {

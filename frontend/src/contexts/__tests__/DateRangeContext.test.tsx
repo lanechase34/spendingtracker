@@ -19,6 +19,12 @@ jest.mock('hooks/useLocalStorage', () => ({
 
 const mockUseLocalStorage = useLocalStorage as jest.Mock;
 
+function FormattedStartDate() {
+    const context = useContext(DateRangeContext);
+    if (!context) throw new Error('Context not found');
+    return <span data-testid="formattedStartDate">{context.formattedStartDate}</span>;
+}
+
 describe('DateRangeContext', () => {
     const currDate = dayjs();
 
@@ -33,6 +39,32 @@ describe('DateRangeContext', () => {
 
     afterAll(() => {
         jest.restoreAllMocks();
+    });
+
+    describe('Day rollover', () => {
+        afterEach(() => {
+            jest.useRealTimers();
+        });
+
+        it('Moves the preset range forward when the tab stays open past a month boundary', () => {
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date(2026, 0, 31, 23, 59, 0));
+
+            render(
+                <DateRangeContextProvider>
+                    <FormattedStartDate />
+                </DateRangeContextProvider>
+            );
+
+            expect(screen.getByTestId('formattedStartDate')).toHaveTextContent('01-01-2026');
+
+            // Cross midnight into February
+            act(() => {
+                jest.advanceTimersByTime(2 * 60 * 1000);
+            });
+
+            expect(screen.getByTestId('formattedStartDate')).toHaveTextContent('02-01-2026');
+        });
     });
 
     describe('Default behavior', () => {

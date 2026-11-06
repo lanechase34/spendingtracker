@@ -8,9 +8,13 @@ import type { ReactElement, ReactNode } from 'react';
 import { AuthContext, AuthContextProvider } from './contexts/AuthContext';
 import { DateRangeContextProvider } from './contexts/DateRangeContext';
 import type { ExpenseContextType } from './contexts/ExpenseContext';
-import { ExpenseContext, ExpenseContextProvider } from './contexts/ExpenseContext';
+import { ExpenseContext, ExpenseContextProvider, ExpenseSummaryContext } from './contexts/ExpenseContext';
 import type { SubscriptionContextType } from './contexts/SubscriptionContext';
-import { SubscriptionContext, SubscriptionContextProvider } from './contexts/SubscriptionContext';
+import {
+    SubscriptionContext,
+    SubscriptionContextProvider,
+    SubscriptionSummaryContext,
+} from './contexts/SubscriptionContext';
 import type { ToastContextType } from './contexts/ToastContext';
 import { ToastContext, ToastContextProvider } from './contexts/ToastContext';
 import { UserContext, UserContextProvider } from './contexts/UserContext';
@@ -68,7 +72,6 @@ const defaultAuthContextValue: AuthContextType = {
     refreshToken: async () => {
         return Promise.resolve('refresh_token');
     },
-    csrfToken: 'csrf_token',
     getCsrfToken: async () => {
         return Promise.resolve('csrf_token');
     },
@@ -76,8 +79,8 @@ const defaultAuthContextValue: AuthContextType = {
     clearUserJustLoggedIn: () => {
         /*empty*/
     },
-    pendingToken: '',
-    setPendingToken: () => {
+    pendingVerification: null,
+    setPendingVerification: () => {
         /*empty*/
     },
     pending2FAToken: '',
@@ -90,10 +93,6 @@ const defaultAuthContextValue: AuthContextType = {
     isInitializing: () => {
         return false;
     },
-    isAuthenticated: () => {
-        return false;
-    },
-    wasAuthenticated: false,
 };
 
 /**
@@ -247,14 +246,27 @@ function buildWrapper(opts: CustomRenderOptions | CustomRenderHookOptions<object
             },
         });
 
+    // Summary slices mirror the mocked full context values
+    const expenseSummaryValue = { totalSum: expenseContextValue.totalSum, refetch: expenseContextValue.refetch };
+    const subscriptionSummaryValue = {
+        totalSum: subscriptionContextValue.totalSum,
+        refetch: subscriptionContextValue.refetch,
+    };
+
     return ({ children }: { children: ReactNode }) => (
         <QueryClientProvider client={testQueryClient}>
             <ToastContext value={toastContextValue}>
                 <AuthContext value={authContextValue}>
                     <UserContext value={userContextValue}>
-                        <ExpenseContext value={expenseContextValue}>
-                            <SubscriptionContext value={subscriptionContextValue}>{children}</SubscriptionContext>
-                        </ExpenseContext>
+                        <ExpenseSummaryContext value={expenseSummaryValue}>
+                            <ExpenseContext value={expenseContextValue}>
+                                <SubscriptionSummaryContext value={subscriptionSummaryValue}>
+                                    <SubscriptionContext value={subscriptionContextValue}>
+                                        {children}
+                                    </SubscriptionContext>
+                                </SubscriptionSummaryContext>
+                            </ExpenseContext>
+                        </ExpenseSummaryContext>
                     </UserContext>
                 </AuthContext>
             </ToastContext>

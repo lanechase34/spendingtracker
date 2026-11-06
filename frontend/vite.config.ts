@@ -4,6 +4,14 @@ import { defineConfig } from 'vite';
 
 const analyze = process.env['npm_lifecycle_event'] === 'analyze';
 
+const proxy = {
+    '/spendingtracker/api/v1': {
+        target: process.env['VITE_API_TARGET'] ?? 'http://localhost:8082',
+        changeOrigin: true,
+        rewrite: (path: string) => path.replace(/^\/spendingtracker\/api\/v1/, '/api/v1'),
+    },
+};
+
 export default defineConfig({
     build: {
         outDir: 'build',
@@ -45,12 +53,9 @@ export default defineConfig({
             interval: 1000,
             ignored: ['**/test-results/**', '**/playwright-report/**', '**/blob-report/**', '**/coverage/**'],
         },
-        proxy: {
-            '/spendingtracker/api/v1': {
-                target: process.env['VITE_API_TARGET'] ?? 'http://localhost:8082',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/spendingtracker\/api\/v1/, '/api/v1'),
-            },
-        },
+        proxy,
+    },
+    preview: {
+        proxy,
     },
 });

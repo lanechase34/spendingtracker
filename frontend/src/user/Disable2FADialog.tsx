@@ -19,7 +19,7 @@ import type { SubmitEvent } from 'react';
 import { useCallback, useMemo, useState } from 'react';
 import { userService } from 'schema/user';
 import { APIError } from 'utils/apiError';
-import { validate2FACode } from 'validators/validateTOTP';
+import { normalize2FACode, validate2FACode } from 'validators/validateTOTP';
 
 interface Disable2FADialogProps {
     open: boolean;
@@ -84,7 +84,7 @@ export default function Disable2FADialog({ open, onClose, onDisabled }: Disable2
             setError(null);
 
             try {
-                await userAPI.disable2fa(codeField.value);
+                await userAPI.disable2fa(normalize2FACode(codeField.value));
                 onDisabled();
                 showToast('Two-factor authentication has been disabled.', 'success');
                 onClose();

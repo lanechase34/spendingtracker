@@ -9,8 +9,9 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
         disable2fa   : 'POST'
     };
 
-    property name="totpService" inject="services.totp";
-    property name="userService" inject="services.user";
+    property name="securityService" inject="services.security";
+    property name="totpService"     inject="services.totp";
+    property name="userService"     inject="services.user";
 
     /**
      * Get the user's profile
@@ -36,7 +37,7 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @summary      Update Profile
      * @tags         User
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Updates one or more profile fields for the authenticated user. All fields are optional - only provided fields will be updated. Password must be at least 10 characters. Salary and monthlyTakeHome must be positive numbers.
+     * @hint         Updates one or more profile fields for the authenticated user. All fields are optional - only provided fields will be updated. Password must be at least 10 characters and needs currentPassword; changing it revokes all of the user's tokens, so they must log in again. Salary and monthlyTakeHome must be positive numbers.
      * @requestBody  ~user/updateProfile/requestBody.json
      * @response-200 { "description": "Profile updated successfully." }
      * @response-400 ~errors/400.json
@@ -57,13 +58,36 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
             }
         }
 
+        // A new password needs the current one, so a stolen session can't take over the account
+        var newPassword = rc?.password ?: '';
+        if(
+            newPassword.len()
+            && !userService.checkCurrentPassword(id = prc.userid, password = rc?.currentPassword ?: '')
+        ) {
+            event
+                .getResponse()
+                .setErrorMessage('Current password is incorrect.')
+                .setStatusCode(400);
+            return;
+        }
+
         userService.updateProfile(
             id              = prc.userid,
-            password        = rc?.password ?: '',
+            password        = newPassword,
             salary          = rc?.salary ?: -1,
             monthlyTakeHome = rc?.monthlyTakeHome ?: -1,
             settings        = rc?.settings ?: {}
         );
+
+        // Changing the password revokes every token, this session's included
+        if(newPassword.len()) {
+            securityService.deleteTokenCookies();
+            event
+                .getResponse()
+                .addMessage('Password updated. Please log in again.')
+                .setStatusCode(200);
+            return;
+        }
 
         event
             .getResponse()

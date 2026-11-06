@@ -33,7 +33,7 @@ import { validatePassword } from 'validators/validatePassword';
  */
 export default function RegisterDialog() {
     const { registerDialogOpen, closeRegisterDialog, openVerifyDialog } = useAuthDialogContext();
-    const { setPendingToken } = useAuthContext();
+    const { setPendingVerification } = useAuthContext();
 
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string[] | null>(null);
@@ -101,16 +101,17 @@ export default function RegisterDialog() {
         }
 
         try {
-            const token = await userAPI.register({
+            await userAPI.register({
                 email: emailField.value,
                 password: passwordField.value,
                 salary: salaryField.value,
                 monthlyTakeHome: monthlyTakeHomeField.value,
             });
 
-            showToast('Successfully registered! Please check your email for verification', 'success');
+            showToast('Check your email for a verification code.', 'success');
+            // Keep the credentials in memory so the verify dialog can send them
+            setPendingVerification({ email: emailField.value, password: passwordField.value, codeSent: true });
             openVerifyDialog(); // Show the verify dialog
-            setPendingToken(token); // set the pending user JWT
             closeRegisterDialog();
         } catch (err: unknown) {
             console.error('Network error:', err);

@@ -357,13 +357,9 @@ component {
                 }
             },
             'auth.logout'  : {},
+            // No unique email check - that would reveal which emails have accounts, the user service handles it
             'auth.register': {
-                email: {
-                    required           : true,
-                    type               : 'email',
-                    size               : '5..255',
-                    uniqueDatabaseField: {table: 'users', column: 'email'}
-                },
+                email   : userBase.email,
                 password: userBase.password,
                 salary  : {
                     required: true,
@@ -378,13 +374,15 @@ component {
             },
             'auth.generateCSRF': {},
             'auth.verify'      : {
+                email           : userBase.email,
+                password        : userBase.password,
                 verificationCode: {
                     required: true,
                     type    : 'string',
                     size    : '8'
                 }
             },
-            'auth.resendVerificationCode': {}
+            'auth.resendVerificationCode': {email: userBase.email, password: userBase.password}
         };
 
         // User handler
@@ -395,6 +393,12 @@ component {
                     required: false,
                     type    : 'string',
                     size    : '10..256'
+                },
+                // Required by the handler whenever password is sent
+                currentPassword: {
+                    required: false,
+                    type    : 'string',
+                    size    : '1..256'
                 },
                 salary: {
                     required: false,

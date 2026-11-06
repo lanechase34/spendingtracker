@@ -89,6 +89,8 @@ component extends="coldbox.system.testing.BaseTestCase" {
             )
         );
 
+        setup();
+
         return token;
     }
 

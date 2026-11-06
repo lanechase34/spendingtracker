@@ -2,7 +2,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import useLocalStorage from 'hooks/useLocalStorage';
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AuthContextType } from 'types/AuthContext.type';
+import type { AuthContextType, PendingVerification } from 'types/AuthContext.type';
+import { clearCategoryCache } from 'utils/categoryCache';
 import { API_BASE_URL } from 'utils/constants';
 import { safeJson } from 'utils/safeJson';
 import { validateAPIResponse } from 'validators/validateAPIResponse';
@@ -27,6 +28,11 @@ const RefreshAPIResponseSchema = validateAPIResponse(
         access_token: z.string().min(2),
     })
 );
+
+/**
+ * Module level so useLocalStorage receives a stable schema reference
+ */
+const WasAuthenticatedSchema = z.boolean();
 
 /**
  * Context is managed inside provider, use hook when needed access
@@ -55,9 +61,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const authTokenRef = useRef<string | null>(null);
 
     /**
-     * Stores a pending token for an unverified user
+     * Stores the credentials of an unverified user so the verify dialog can send them
+     * Kept in memory only - never persisted to storage
      */
-    const [pendingToken, setPendingToken] = useState<string | null>(null);
+    const [pendingVerification, setPendingVerification] = useState<PendingVerification | null>(null);
 
     /**
      * Stores a pending 2fa token for a user who still needs to enter a 2fa code
@@ -65,16 +72,24 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const [pending2FAToken, setPending2FAToken] = useState<string | null>(null);
 
     /**
-     *  Store CSRF Token
+     * CSRF token and the JWT it was issued for. A CSRF token is only valid for its JWT,
+     * so a cached token is only reused when the JWT matches (refresh, 2FA, and verify logins all change the JWT)
+     * Kept in refs only - no component renders from it, so it shouldn't re-render context consumers
      */
-    const [csrfToken, setCsrfToken] = useState<string | null>(null);
+    const csrfTokenRef = useRef<string | null>(null);
+    const csrfTokenOwnerRef = useRef<string | null>(null);
 
     /**
-     * Ensures only one fetch is made for CSRF token
-     * And, the csrfTokenRef so it's not needed as a dependency
+     * Ensures only one fetch is made for CSRF token per JWT
      */
     const csrfPromiseRef = useRef<Promise<string | null> | null>(null);
-    const csrfTokenRef = useRef<string | null>(null);
+    const csrfPromiseOwnerRef = useRef<string | null>(null);
+    const csrfRequestIdRef = useRef<number>(0);
+
+    /**
+     * Incremented on logout so in-flight refreshes started before the logout are discarded
+     */
+    const authGenerationRef = useRef<number>(0);
 
     /**
      * Track whether this request was just 'logged in' - not logged in via refresh token
@@ -94,7 +109,7 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const [wasAuthenticated, setWasAuthenticated] = useLocalStorage<boolean>({
         key: 'wasAuthenticated',
         initialValue: false,
-        schema: z.boolean(),
+        schema: WasAuthenticatedSchema,
     });
 
     /**
@@ -118,24 +133,27 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         [setWasAuthenticated]
     );
 
-    const updateCsrfToken = useCallback((token: string | null) => {
-        csrfTokenRef.current = token; // Update ref first
-        setCsrfToken(token); // Then update state
+    const updateCsrfToken = useCallback((token: string | null, owner: string | null = null) => {
+        csrfTokenRef.current = token;
+        csrfTokenOwnerRef.current = token == null ? null : owner;
     }, []);
 
     /**
      * Reset the state on logout
      */
     const logout = useCallback(() => {
+        authGenerationRef.current++;
+        refreshPromiseRef.current = null;
         updateAuthToken(null);
         updateCsrfToken(null);
-        setPendingToken(null);
+        setPendingVerification(null);
         setPending2FAToken(null);
         setWasAuthenticated(false);
         setUserJustLoggedIn(false);
 
-        // Clear all queries
+        // Clear all queries and the per-user category cache
         queryClient.clear();
+        clearCategoryCache();
     }, [updateAuthToken, updateCsrfToken, queryClient, setWasAuthenticated]);
 
     /**
@@ -145,17 +163,18 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
      */
     const getCsrfToken = useCallback(
         async (token: string, forceNew = false): Promise<string | null> => {
-            // If token already exists, return it
-            if (!forceNew && csrfTokenRef.current != null) {
+            // If a token for this JWT already exists, return it
+            if (!forceNew && csrfTokenRef.current != null && csrfTokenOwnerRef.current === token) {
                 return csrfTokenRef.current;
             }
 
-            // If there's already a request in flight, return that promise
-            if (csrfPromiseRef.current) {
+            // If there's already a request in flight for this JWT, return that promise
+            if (csrfPromiseRef.current && csrfPromiseOwnerRef.current === token) {
                 return csrfPromiseRef.current;
             }
 
-            csrfPromiseRef.current = (async () => {
+            const requestId = ++csrfRequestIdRef.current;
+            const promise = (async () => {
                 try {
                     const response = await fetch(`${API_BASE_URL}/csrf`, {
                         method: 'GET',
@@ -185,18 +204,25 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                     }
 
                     const newCsrfToken = result.data.csrf_token;
-                    updateCsrfToken(newCsrfToken);
+                    updateCsrfToken(newCsrfToken, token);
                     return newCsrfToken;
                 } catch (error) {
-                    updateCsrfToken(null);
+                    if (csrfTokenOwnerRef.current === token) {
+                        updateCsrfToken(null);
+                    }
                     throw error;
                 } finally {
-                    // Always clear the promise when done (success or failure)
-                    csrfPromiseRef.current = null;
+                    // Always clear the promise when done (success or failure), unless a newer request replaced it
+                    if (csrfRequestIdRef.current === requestId) {
+                        csrfPromiseRef.current = null;
+                        csrfPromiseOwnerRef.current = null;
+                    }
                 }
             })();
 
-            return csrfPromiseRef.current;
+            csrfPromiseRef.current = promise;
+            csrfPromiseOwnerRef.current = token;
+            return promise;
         },
         [logout, updateCsrfToken]
     );
@@ -222,8 +248,10 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
      */
     const complete2FALogin = useCallback(
         async (token: string) => {
-            setPending2FAToken(null);
+            // Clear the pending token only once logged in - Verify2FADialog logs out if it sees
+            // no pending token while still open, which would happen during login's CSRF fetch
             await login(token);
+            setPending2FAToken(null);
         },
         [login]
     );
@@ -246,12 +274,18 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             return refreshPromiseRef.current;
         }
 
-        refreshPromiseRef.current = (async () => {
+        // A logout while this refresh is in flight invalidates its result
+        const generation = authGenerationRef.current;
+        const isStale = () => generation !== authGenerationRef.current;
+
+        const promise = (async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/security/refreshtoken`, {
                     method: 'POST',
                     credentials: 'include', // x-refresh-token added as cookie automatically (matches path)
                 });
+
+                if (isStale()) return null;
 
                 if (!response.ok) {
                     logout();
@@ -261,6 +295,8 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 // Validate the response data
                 const json = await safeJson(response);
                 const parsed = RefreshAPIResponseSchema.safeParse(json);
+
+                if (isStale()) return null;
 
                 if (!parsed.success) {
                     setWasAuthenticated(false);
@@ -278,15 +314,19 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
                 const newToken = result.data.access_token;
                 updateAuthToken(newToken); // update context
 
-                // Get a new CSRF token
+                // Get a new CSRF token for the new JWT
                 await getCsrfToken(newToken);
-                return newToken;
+                return isStale() ? null : newToken;
             } finally {
-                refreshPromiseRef.current = null;
+                // After a logout the ref already belongs to a newer refresh (or was cleared)
+                if (!isStale()) {
+                    refreshPromiseRef.current = null;
+                }
             }
         })();
 
-        return refreshPromiseRef.current;
+        refreshPromiseRef.current = promise;
+        return promise;
     }, [logout, getCsrfToken, updateAuthToken, setWasAuthenticated]);
 
     // Getter for the latest ref value
@@ -300,13 +340,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
     const isInitializing = useCallback(() => {
         return !hasCompletedInitialCheck;
     }, [hasCompletedInitialCheck]);
-
-    /**
-     * Check if user is currently authenticated
-     */
-    const isAuthenticated = useCallback(() => {
-        return authToken !== null;
-    }, [authToken]);
 
     /**
      * Track if we've attempted the initial refresh to ensure it only happens once
@@ -349,14 +382,13 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             login: login,
             logout: logout,
             refreshToken: refreshToken,
-            csrfToken: csrfToken,
             getCsrfToken: getCsrfToken,
             userJustLoggedIn: userJustLoggedIn,
             clearUserJustLoggedIn: clearUserJustLoggedIn,
 
             // Pending verification
-            pendingToken: pendingToken,
-            setPendingToken: setPendingToken,
+            pendingVerification: pendingVerification,
+            setPendingVerification: setPendingVerification,
 
             // Pending 2FA verification
             pending2FAToken: pending2FAToken,
@@ -364,8 +396,6 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
             complete2FALogin: complete2FALogin,
 
             isInitializing: isInitializing,
-            isAuthenticated: isAuthenticated,
-            wasAuthenticated: wasAuthenticated,
         };
     }, [
         authToken,
@@ -373,18 +403,15 @@ export const AuthContextProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         refreshToken,
-        csrfToken,
         getCsrfToken,
         userJustLoggedIn,
         clearUserJustLoggedIn,
-        pendingToken,
-        setPendingToken,
+        pendingVerification,
+        setPendingVerification,
         pending2FAToken,
         setPending2FAToken,
         complete2FALogin,
         isInitializing,
-        isAuthenticated,
-        wasAuthenticated,
     ]);
 
     return <AuthContext value={value}>{children}</AuthContext>;

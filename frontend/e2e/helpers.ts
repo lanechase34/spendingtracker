@@ -1,4 +1,9 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import { createHmac, randomUUID } from 'node:crypto';
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
+import process from 'node:process';
+
+import { type Browser, type BrowserContext, expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * App is served under this basename
@@ -32,16 +37,16 @@ async function openLoginDialog(page: Page) {
 }
 
 /**
- * Fills out and submits the login dialog, checking "Remember me" so the
+ * Fills out and submits the login dialog, checking "Remember me" by default so the
  * refresh token cookie is set and the session survives a page reload/navigation
  */
-export async function submitLogin(page: Page, email: string, password: string) {
+export async function submitLogin(page: Page, email: string, password: string, { rememberMe = true } = {}) {
     await openLoginDialog(page);
 
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Email').fill(email);
     await dialog.getByLabel('Password').fill(password);
-    await dialog.getByRole('checkbox', { name: 'Remember me' }).check();
+    await dialog.getByRole('checkbox', { name: 'Remember me' }).setChecked(rememberMe);
     await dialog.getByRole('button', { name: 'Log In' }).click();
 }
 
@@ -52,6 +57,193 @@ export async function submitLogin(page: Page, email: string, password: string) {
 export async function login(page: Page, email: string, password: string) {
     await submitLogin(page, email, password);
     await expect(page).toHaveURL(`${BASE_PATH}/dashboard`);
+}
+
+/**
+ * The dev backend writes outgoing mail to files instead of sending it (see backend/interceptors/mail.cfc)
+ * Defaults to the backend's `testEmailPath` setting, override with E2E_TEST_EMAIL_PATH
+ */
+const TEST_EMAIL_PATH =
+    process.env['E2E_TEST_EMAIL_PATH'] ?? path.resolve(import.meta.dirname, '../../../stuploads/_testemails');
+
+/**
+ * Snapshot of the mail files already in the test email dir, so later lookups only read new mail
+ */
+export async function snapshotTestEmails(): Promise<Set<string>> {
+    return new Set(await readdir(TEST_EMAIL_PATH));
+}
+
+/**
+ * Reads the mail to the address that wasn't in the snapshot
+ * Files for other recipients are added to `skip` so later calls don't read them again
+ */
+async function readNewEmailsTo(email: string, skip: Set<string>): Promise<string[]> {
+    const toAttr = `data-to="${email}"`;
+    const emails: string[] = [];
+
+    for (const file of await readdir(TEST_EMAIL_PATH)) {
+        if (skip.has(file)) continue;
+
+        const contents = await readFile(path.join(TEST_EMAIL_PATH, file), 'utf8');
+        // Recipient not written yet - check again next time
+        if (!/data-to="[^"]*"/.test(contents)) continue;
+        // Mail for other tests/workers - never needs reading again
+        if (!contents.includes(toAttr)) {
+            skip.add(file);
+            continue;
+        }
+        emails.push(contents);
+    }
+    return emails;
+}
+
+/**
+ * Waits for a verification email to the address that wasn't in the snapshot, and returns its code
+ * The file holds an html-escaped dump of the mail followed by the raw body - the raw body is the
+ * only place the code appears between unescaped tags
+ */
+export async function readVerificationCode(email: string, before: Set<string>): Promise<string> {
+    const skip = new Set(before);
+    const found: { code?: string } = {};
+
+    await expect
+        .poll(
+            async () => {
+                // Ours may still be mid-write, so keep re-reading until the code is there
+                for (const contents of await readNewEmailsTo(email, skip)) {
+                    const match = />([A-Z0-9]{8})<\/p>/.exec(contents);
+                    if (match?.[1] !== undefined) found.code = match[1];
+                }
+                return found.code;
+            },
+            { message: `Verification email to ${email} in ${TEST_EMAIL_PATH}`, timeout: 20000 }
+        )
+        .toBeDefined();
+
+    if (found.code === undefined) throw new Error(`No verification code found for ${email}`);
+    return found.code;
+}
+
+/**
+ * Asserts no mail to the address arrives for a few seconds after the snapshot
+ * Mail is written during the request, so once the UI has responded any mail would already exist -
+ * the wait only covers a slow file write
+ */
+export async function expectNoEmailTo(email: string, before: Set<string>) {
+    const skip = new Set(before);
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline) {
+        expect(await readNewEmailsTo(email, skip), `Unexpected email to ${email}`).toHaveLength(0);
+        await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+}
+
+/**
+ * Logs out from the account menu and waits for the redirect home
+ */
+export async function logout(page: Page) {
+    await page.getByRole('button', { name: 'Account menu' }).click();
+    await page.getByRole('menuitem', { name: 'Logout' }).click();
+    await expect(page).toHaveURL(HOME_URL);
+}
+
+/**
+ * A unique, never registered email so tests that create accounts never collide
+ */
+export function uniqueEmail(): string {
+    return `e2e_${randomUUID().slice(0, 12)}@example.com`;
+}
+
+/**
+ * Password for accounts the tests register
+ */
+export const E2E_PASSWORD = 'e2epassword123';
+
+/**
+ * The account verification dialog, shown after registering or logging in unverified
+ */
+export function verifyDialog(page: Page): Locator {
+    return page.getByRole('dialog').filter({ hasText: 'Check your email for a verification code' });
+}
+
+/**
+ * Fills out and submits the registration dialog from the navbar, and waits for the verify dialog it swaps to
+ */
+export async function submitRegistration(page: Page, email: string, password: string): Promise<Locator> {
+    await page.goto(`${BASE_PATH}/`);
+    await page.getByRole('banner').getByRole('button', { name: 'Register', exact: true }).click();
+
+    const registerDialog = page.getByRole('dialog');
+    await expect(registerDialog).toBeVisible();
+    await registerDialog.getByLabel('Email').fill(email);
+    await registerDialog.getByLabel('Password').fill(password);
+    await registerDialog.getByLabel('Salary').fill('85000');
+    await registerDialog.getByLabel('Monthly Take Home').fill('5000');
+    await registerDialog.getByRole('button', { name: 'Register' }).click();
+
+    const dialog = verifyDialog(page);
+    await expect(dialog).toBeVisible();
+    return dialog;
+}
+
+/**
+ * Registers a new account through the UI and verifies it with the emailed code,
+ * leaving the page logged in on the dashboard
+ * For tests that need an account they can change (e.g. 2FA) without touching the seeded users
+ */
+export async function registerVerifiedUser(page: Page): Promise<{ email: string; password: string }> {
+    const email = uniqueEmail();
+    const password = E2E_PASSWORD;
+    const inbox = await snapshotTestEmails();
+
+    const dialog = await submitRegistration(page, email, password);
+    await dialog.getByLabel('Verification Code').fill(await readVerificationCode(email, inbox));
+    await dialog.getByRole('button', { name: 'Verify', exact: true }).click();
+    await expect(page).toHaveURL(`${BASE_PATH}/dashboard`);
+
+    return { email, password };
+}
+
+/**
+ * Opens the dashboard in a new browser context carrying another context's cookies and storage - the same
+ * session opened again later, or stolen. Resolves to whether that session still gets onto the dashboard
+ * A remembered session restores itself from its refresh token cookie on load, a dead one is sent home
+ */
+export async function sessionRestores(browser: Browser, from: BrowserContext): Promise<boolean> {
+    const context = await browser.newContext({ storageState: await from.storageState() });
+    try {
+        const page = await context.newPage();
+        await page.goto(`${BASE_PATH}/dashboard`);
+        // Restoring is async - wait until it settles one way or the other
+        const loggedIn = page.getByRole('button', { name: 'Account menu' });
+        const loggedOut = page.getByRole('banner').getByRole('button', { name: 'Log In', exact: true });
+        await expect(loggedIn.or(loggedOut)).toBeVisible();
+        return await loggedIn.isVisible();
+    } finally {
+        await context.close();
+    }
+}
+
+/**
+ * Generates the current RFC 6238 TOTP code for a base32 secret - what an authenticator app shows
+ * Matches the backend's totp module: SHA1, 6 digits, 30 second period
+ */
+export function generateTOTP(secret: string, time: number = Date.now()): string {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    let bits = '';
+    for (const char of secret.replace(/=+$/, '').toUpperCase()) {
+        const value = alphabet.indexOf(char);
+        if (value === -1) throw new Error(`Invalid base32 character "${char}" in TOTP secret`);
+        bits += value.toString(2).padStart(5, '0');
+    }
+    const key = Buffer.from(bits.match(/.{8}/g)?.map((byte) => parseInt(byte, 2)) ?? []);
+
+    const counter = Buffer.alloc(8);
+    counter.writeBigUInt64BE(BigInt(Math.floor(time / 1000 / 30)));
+
+    const hmac = createHmac('sha1', key).update(counter).digest();
+    const offset = (hmac[hmac.length - 1] ?? 0) & 0xf;
+    return String((hmac.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, '0');
 }
 
 /**

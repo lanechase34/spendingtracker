@@ -244,6 +244,49 @@ describe('CategorySelect', () => {
 
             expect(mockSetCachedCategories).toHaveBeenCalledWith('', 1, [{ value: 1, label: 'Fruits' }]);
         });
+
+        it('Aborts the in-flight request on a cache hit so its stale response cannot overwrite', async () => {
+            // Only the search is cached, the initial (unfiltered) load goes to the API
+            mockGetCachedCategories.mockImplementation((search: string) =>
+                search === 'Boo' ? [{ value: 3, label: 'Books' }] : null
+            );
+
+            // Slow initial load that honours abort like a real fetch
+            let signal: AbortSignal | undefined;
+            mockFetch.mockImplementationOnce(
+                (_url: string, init: RequestInit) =>
+                    new Promise((resolve, reject) => {
+                        signal = init.signal ?? undefined;
+                        const timer = setTimeout(() => {
+                            resolve(mockSuccessResponse([CATEGORIES.fruits]));
+                        }, 5000);
+                        signal?.addEventListener('abort', () => {
+                            clearTimeout(timer);
+                            reject(new DOMException('Aborted', 'AbortError'));
+                        });
+                    })
+            );
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} debounceDelay={0} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.click(screen.getByLabelText('Category'));
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalledTimes(1);
+            });
+
+            // Whole search at once, so only the cached 'Boo' search runs
+            fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Boo' } });
+            act(() => {
+                jest.advanceTimersByTime(5000);
+            });
+
+            expect(await screen.findByText('Books')).toBeInTheDocument();
+            expect(signal?.aborted).toBe(true);
+            expect(screen.queryByText('Fruits')).not.toBeInTheDocument();
+            expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+            expect(mockFetch).toHaveBeenCalledTimes(1);
+        });
     });
 
     describe('Search input', () => {
@@ -569,6 +612,43 @@ describe('CategorySelect', () => {
                 expect.anything(),
                 expect.anything()
             );
+        });
+    });
+
+    describe('filterOptions - trimming', () => {
+        it('Trims surrounding whitespace from the Add option and its value', async () => {
+            mockFetch.mockResolvedValue(mockSuccessResponse([]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} debounceDelay={0} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.type(screen.getByRole('combobox'), '  NewCat  ');
+            jest.runAllTimers();
+
+            const addOption = await screen.findByText('Add "NewCat"');
+            await user.click(addOption);
+
+            expect(mockHandleChange).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({ value: 'NewCat' }),
+                expect.anything(),
+                expect.anything()
+            );
+        });
+
+        it('Does not offer Add for input that is only long enough because of whitespace', async () => {
+            mockFetch.mockResolvedValue(mockSuccessResponse([]));
+
+            render(<CategorySelect handleCategorySelectChange={mockHandleChange} debounceDelay={0} />);
+
+            const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+            await user.type(screen.getByRole('combobox'), ' ab ');
+            jest.runAllTimers();
+
+            await waitFor(() => {
+                expect(mockFetch).toHaveBeenCalled();
+            });
+            expect(screen.queryByText(/Add "/)).not.toBeInTheDocument();
         });
     });
 

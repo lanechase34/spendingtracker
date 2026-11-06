@@ -297,5 +297,27 @@ describe('<ExpenseForm />', () => {
             });
             expect(screen.getByRole('dialog')).toBeInTheDocument();
         });
+
+        it('Should clear the server and date errors when the dialog is closed and reopened', async () => {
+            mockAuthFetch.mockResolvedValue(mockResponse(false));
+            const user = await setup();
+
+            await fillValidForm(user);
+            await submit(user);
+            expect(await screen.findByRole('alert')).toBeInTheDocument();
+            await user.click(screen.getByRole('button', { name: 'Raise date error' }));
+            expect(screen.getByText('Please select a date within a 1-year range')).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'close' }));
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
+
+            await user.click(screen.getByRole('button', { name: /track expense/i }));
+            await screen.findByRole('textbox', { name: 'Date' });
+
+            expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+            expect(screen.queryByText('Please select a date within a 1-year range')).not.toBeInTheDocument();
+        });
     });
 });
