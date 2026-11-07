@@ -6,7 +6,12 @@
                 "type": "object",
                 "required": ["date", "amount", "description", "interval"],
                 "properties": {
-                    "date": { "type": "string", "format": "date", "example": "2025-04-15" },
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-04-15",
+                        "description": "The next charge date. Cannot be more than 1 year in the past."
+                    },
                     "amount": { "type": "number", "minimum": 0, "maximum": 999999, "example": 14.99 },
                     "description": { "type": "string", "minLength": 1, "maxLength": 500, "example": "Netflix" },
                     "interval": { "type": "string", "enum": ["Y", "M"], "example": "M" },
@@ -23,7 +28,7 @@
                         "example": "Streaming",
                         "description": "New category name. Required if categoryid not provided."
                     },
-                    "receipt": { "type": "string", "format": "binary", "description": "Optional receipt image upload." }
+                    "receipt": { "type": "string", "format": "binary", "description": "Optional receipt image upload. An invalid image returns 415." }
                 }
             }
         }

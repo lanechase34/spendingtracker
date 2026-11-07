@@ -21,10 +21,10 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * @param-page     { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
      * @param-records  { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
      * @param-search   { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
-     * @param-orderCol { "in": "query", "required": false, "schema": { "type": "string", "enum": ["nextchargedate","amount","description","category"] } }
-     * @param-orderDir { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @param-orderCol { "name": "orderCol", "in": "query", "required": false, "schema": { "type": "string", "enum": ["nextchargedate","amount","description","category"] } }
+     * @param-orderDir { "name": "orderDir", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
      * @param-interval { "in": "query", "required": false, "schema": { "type": "string", "enum": ["Y","M",""] }, "description": "Filter by billing interval. Y = Yearly, M = Monthly, blank = all." }
-     * @response-200   { "description": "Paginated subscription results." }
+     * @response-200   ~subscription/view/response.json
      * @response-400   ~errors/400.json
      * @response-401   ~errors/401.json
      */
@@ -55,11 +55,12 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * @summary      Save Subscription
      * @tags         Subscription
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Creates a new subscription record. Interval must be Y (Yearly) or M (Monthly). Provide either categoryid for an existing category or category name to create a new one. Optionally attach a receipt image.
+     * @hint         Creates a new subscription record. Interval must be Y (Yearly) or M (Monthly). Provide either categoryid for an existing category or category name to create a new one. Optionally attach a receipt image. If date is today or in the past, an expense is created right away for every interval since then, and nextChargeDate moves forward to the next one.
      * @requestBody  ~subscription/save/requestBody.json
-     * @response-200 { "description": "Subscription saved successfully." }
+     * @response-200 ~subscription/save/response.json
      * @response-400 ~errors/400.json
      * @response-401 ~errors/401.json
+     * @response-415 { "description": "Invalid receipt upload." }
      */
     function save(event, rc, prc) {
         // Create category if needed
@@ -91,7 +92,7 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Permanently deletes a subscription record by its ID.
      * @param-id     { "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1, "example": 7 } }
-     * @response-200 { "description": "Subscription deleted successfully." }
+     * @response-200 ~subscription/remove/response.json
      * @response-401 ~errors/401.json
      * @response-404 { "description": "Subscription not found." }
      */
@@ -117,9 +118,10 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * @summary      Toggle Subscription
      * @tags         Subscription
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Activates or deactivates a subscription. Returns the next scheduled charge date when activating.
+     * @hint         Activates or deactivates a subscription. Returns the subscription's next charge date either way. active can also be passed as a trailing path pair (/subscriptions/{id}/active/{true|false}), which is what the frontend does.
+     * @param-id     { "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1, "example": 7 } }
      * @requestBody  ~subscription/toggle/requestBody.json
-     * @response-200 { "description": "Subscription toggled successfully. Returns nextDate when activating." }
+     * @response-200 ~subscription/toggle/response.json
      * @response-400 ~errors/400.json
      * @response-401 ~errors/401.json
      * @response-404 { "description": "Subscription not found." }

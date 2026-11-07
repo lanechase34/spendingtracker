@@ -1,0 +1,18 @@
+{
+    "description": "Registration received. Check email for a verification code.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Check your email for a verification code."]
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "description": "2FA disabled.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Two-factor authentication has been disabled."]
+                    }
+                }
+            }
+        }
+    }
+}

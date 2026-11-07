@@ -1,0 +1,33 @@
+{
+    "description": "Paginated categories - the shared defaults plus the user's own.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "integer", "example": 3 },
+                                "name": { "type": "string", "example": "Groceries" }
+                            }
+                        }
+                    },
+                    "pagination": {
+                        "type": "object",
+                        "properties": {
+                            "page": { "type": "integer", "example": 1 },
+                            "offset": { "type": "integer", "example": 0 },
+                            "maxRows": { "type": "integer", "example": 10 },
+                            "totalRecords": { "type": "integer", "example": 77 },
+                            "totalPages": { "type": "integer", "example": 8 }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

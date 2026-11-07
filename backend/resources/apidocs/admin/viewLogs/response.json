@@ -1,0 +1,25 @@
+{
+    "description": "Available log files.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string", "example": "app.log" },
+                                "size": { "type": "integer", "description": "Bytes." },
+                                "type": { "type": "string", "example": "File" },
+                                "dateLastModified": { "type": "string" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

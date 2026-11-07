@@ -1,0 +1,18 @@
+{
+    "description": "If the account needs verifying, a new code has been sent.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["If your account needs verifying, a new code has been sent."]
+                    }
+                }
+            }
+        }
+    }
+}

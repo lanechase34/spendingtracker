@@ -1,0 +1,22 @@
+{
+    "description": "Extra income saved.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Successfully saved extra income."]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": { "id": {"type": "integer", "description": "The new entry's id.", "example": 12} }
+                    }
+                }
+            }
+        }
+    }
+}

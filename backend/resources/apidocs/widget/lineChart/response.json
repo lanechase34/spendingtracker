@@ -1,0 +1,35 @@
+{
+    "description": "Spending per month.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "labels": {
+                                "type": "array",
+                                "items": { "type": "string" },
+                                "description": "Month abbreviations.",
+                                "example": ["Jan", "Feb"]
+                            },
+                            "dataset": {
+                                "type": "object",
+                                "properties": {
+                                    "label": { "type": "string", "example": "Monthly Expense Line Chart" },
+                                    "data": {
+                                        "type": "array",
+                                        "items": { "type": "number", "nullable": true },
+                                        "description": "Total per month. null when nothing was spent."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

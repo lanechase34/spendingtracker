@@ -1,0 +1,24 @@
+{
+    "description": "2FA verified. Returns the full JWT.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Bearer token created and it expires in 30 minutes"]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "access_token": { "type": "string", "description": "JWT. Send it in the x-auth-token header." }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

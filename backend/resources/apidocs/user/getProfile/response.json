@@ -1,0 +1,28 @@
+{
+    "description": "Profile for the authenticated user.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "salary": { "type": "number", "example": 75000 },
+                            "monthlytakehome": { "type": "number", "example": 4500 },
+                            "role": { "type": "string", "enum": ["USER", "ADMIN"] },
+                            "totp_enabled": { "type": "integer", "enum": [0, 1], "description": "1 when 2FA is enabled." },
+                            "settings": {
+                                "type": "object",
+                                "properties": {},
+                                "description": "Saved UI settings.",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

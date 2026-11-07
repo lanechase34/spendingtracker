@@ -181,7 +181,7 @@ component {
             useRateLimiter      : true,
             verificationCooldown: 10, // only send a verification code every 10 minutes
             verificationLifespan: 60, // verification codes last 60 minutes
-            version             : "1.0.3",
+            version             : "1.0.4",
             warmedUp            : false
         };
 

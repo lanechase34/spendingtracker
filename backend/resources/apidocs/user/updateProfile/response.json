@@ -1,0 +1,14 @@
+{
+    "description": "Profile updated. When the password changed, the message is \"Password updated. Please log in again.\" and every token is revoked.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": { "type": "array", "items": {"type": "string"}, "example": ["Successfully updated"] }
+                }
+            }
+        }
+    }
+}

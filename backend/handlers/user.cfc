@@ -20,7 +20,7 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @tags         User
      * @security     ApiKeyAuth
      * @hint         Returns profile information for the currently authenticated user.
-     * @response-200 { "description": "User profile data." }
+     * @response-200 ~user/getProfile/response.json
      * @response-401 ~errors/401.json
      */
     function getProfile(event, rc, prc) {
@@ -39,9 +39,10 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Updates one or more profile fields for the authenticated user. All fields are optional - only provided fields will be updated. Password must be at least 10 characters and needs currentPassword; changing it revokes all of the user's tokens, so they must log in again. Salary and monthlyTakeHome must be positive numbers.
      * @requestBody  ~user/updateProfile/requestBody.json
-     * @response-200 { "description": "Profile updated successfully." }
-     * @response-400 ~errors/400.json
+     * @response-200 ~user/updateProfile/response.json
+     * @response-400 { "description": "Validation failed, settings is not valid JSON, or currentPassword is incorrect." }
      * @response-401 ~errors/401.json
+     * @response-429 ~errors/429.json
      */
     function updateProfile(event, rc, prc) {
         if(rc.keyExists("settings")) {
@@ -105,9 +106,9 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @param-page     { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
      * @param-records  { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
      * @param-search   { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
-     * @param-orderCol { "in": "query", "required": false, "schema": { "type": "string", "enum": ["email","security_level","verified","lastlogin"] } }
-     * @param-orderDir { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
-     * @response-200   { "description": "Paginated user results." }
+     * @param-orderCol { "name": "orderCol", "in": "query", "required": false, "schema": { "type": "string", "enum": ["email","security_level","verified","lastlogin"] } }
+     * @param-orderDir { "name": "orderDir", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @response-200   ~user/view/response.json
      * @response-400   ~errors/400.json
      * @response-401   ~errors/401.json
      */
@@ -139,8 +140,8 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @summary      Setup 2FA
      * @tags         User
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Begins the 2FA setup process for the authenticated user. Returns a QR code (base64 PNG) and plain text secret to register with an authenticator app.
-     * @response-200 { "description": "Returns qrCode (base64 PNG) and secret for the authenticator app." }
+     * @hint         Begins the 2FA setup process for the authenticated user. Returns a QR code and a plain text secret to register with an authenticator app. qrCode is a base64-encoded HTML <img> tag whose src is a JPEG data URI.
+     * @response-200 ~user/setup2fa/response.json
      * @response-400 { "description": "2FA is already enabled on this account." }
      * @response-401 ~errors/401.json
      * @response-429 ~errors/429.json
@@ -163,9 +164,9 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @summary      Confirm 2FA
      * @tags         User
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Verifies the 6-digit code from the authenticator app and activates 2FA on the account.  
+     * @hint         Verifies the 6-digit code from the authenticator app and activates 2FA on the account.
      * @requestBody  ~user/confirm2fa/requestBody.json
-     * @response-200 { "description": "2FA activated. Returns array of single-use recovery codes." }
+     * @response-200 ~user/confirm2fa/response.json
      * @response-400 { "description": "Invalid or expired code, 2FA not initiated, or 2FA already enabled." }
      * @response-401 ~errors/401.json
      * @response-429 ~errors/429.json
@@ -187,9 +188,9 @@ component extends="base" hint="User Endpoints" secured="User,Admin" {
      * @summary      Disable 2FA
      * @tags         User
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Disables 2FA on the account after verifying identity. Requires either a valid 6-digit TOTP code from the authenticator app or a recovery code in the format xxxx-xxxx-xxxx-xxxx.        
+     * @hint         Disables 2FA on the account after verifying identity. Requires either a valid 6-digit TOTP code from the authenticator app or a recovery code in the format xxxx-xxxx-xxxx-xxxx.
      * @requestBody  ~user/disable2fa/requestBody.json
-     * @response-200 { "description": "2FA disabled successfully." }
+     * @response-200 ~user/disable2fa/response.json
      * @response-400 { "description": "Invalid or expired code, or 2FA is not currently enabled." }
      * @response-401 ~errors/401.json
      * @response-429 ~errors/429.json

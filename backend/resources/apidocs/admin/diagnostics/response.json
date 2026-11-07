@@ -1,0 +1,107 @@
+{
+    "description": "App, disk, and database diagnostics.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "generatedAt": { "type": "string" },
+                            "app": {
+                                "type": "object",
+                                "properties": {
+                                    "name": { "type": "string" },
+                                    "version": { "type": "string", "description": "From box.json." },
+                                    "environment": { "type": "string" },
+                                    "startedAt": { "type": "integer", "description": "Epoch ms." },
+                                    "lucee": { "type": "string" },
+                                    "java": { "type": "string" },
+                                    "os": { "type": "string" },
+                                    "timezone": { "type": "string" }
+                                }
+                            },
+                            "disk": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": { "type": "string" },
+                                        "path": { "type": "string" },
+                                        "totalMB": { "type": "number" },
+                                        "freeMB": { "type": "number" },
+                                        "usedPercent": { "type": "number" }
+                                    }
+                                }
+                            },
+                            "database": {
+                                "type": "object",
+                                "properties": {
+                                    "available": { "type": "boolean" },
+                                    "version": { "type": "string" },
+                                    "sizeMB": { "type": "number" },
+                                    "stats": {
+                                        "type": "object",
+                                        "properties": {
+                                            "commits": { "type": "integer" },
+                                            "rollbacks": { "type": "integer" },
+                                            "cacheHitRatio": { "type": "number" },
+                                            "deadlocks": { "type": "integer" },
+                                            "tempFiles": { "type": "integer" },
+                                            "tempMB": { "type": "number" },
+                                            "conflicts": { "type": "integer" },
+                                            "statsReset": { "type": "string", "nullable": true }
+                                        },
+                                        "nullable": true
+                                    },
+                                    "tables": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": { "type": "string" },
+                                                "liveRows": { "type": "integer" },
+                                                "deadRows": { "type": "integer" },
+                                                "seqScan": { "type": "integer" },
+                                                "idxScan": { "type": "integer" },
+                                                "sizeMB": { "type": "number" },
+                                                "lastVacuum": { "type": "string", "nullable": true },
+                                                "lastAnalyze": { "type": "string", "nullable": true }
+                                            }
+                                        }
+                                    },
+                                    "statements": {
+                                        "type": "object",
+                                        "properties": {
+                                            "available": {
+                                                "type": "boolean",
+                                                "description": "false when pg_stat_statements is not installed."
+                                            },
+                                            "message": { "type": "string" },
+                                            "rows": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "query": { "type": "string" },
+                                                        "calls": { "type": "integer" },
+                                                        "totalMs": { "type": "number" },
+                                                        "meanMs": { "type": "number" },
+                                                        "maxMs": { "type": "number" },
+                                                        "rows": { "type": "integer" }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

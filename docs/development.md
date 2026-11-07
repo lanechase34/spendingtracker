@@ -4,6 +4,24 @@ This document covers developer workflows including dependency updates, formattin
 
 ## Updates
 
+### Lucee Extensions
+
+The backend runs on `lucee-light`, so every extension is installed explicitly through `LUCEE_EXTENSIONS` in
+`backend/server.json`. Extensions in `OTHER_EXTENSIONS` are appended from the active `.env`.
+
+| UUID                                  | Extension              | Version  | Source                                 |
+| ------------------------------------- | ---------------------- | -------- | -------------------------------------- |
+| `671B01B8-B3B3-42B9-AC055A356BED5281` | PostgreSQL JDBC Driver | 42.7.11  | `server.json` (`DB_BUNDLEVERSION` env) |
+| `8D7FB0DF-08BB-1589-FE3975678F07DB17` | Compress (zip/gzip)    | 2.1.0.7  | `server.json`                          |
+| `212BA548-F15A-4EBD-8B1EEDF8DD8A844D` | Mail                   | 1.1.0.24 | `server.json`                          |
+| `CED6227E-0F49-6367-A68D21AACA6B07E8` | Lucee Administrator    | 1.0.0.9  | `OTHER_EXTENSIONS` (local/test only)   |
+| `37C61C0A-5D7E-4256-8572639BE0CF5838` | Guard (formerly ESAPI) | 3.1.0.7  | `OTHER_EXTENSIONS`                     |
+| `B737ABC4-D43F-4D91-8E8E973E37C40D1B` | Image                  | 3.1.0.11 | `OTHER_EXTENSIONS`                     |
+
+> Compress is required for `cfzip` (receipt exports) and for LogBox to archive rotated log files.
+
+> Look up the latest versions at https://extension.lucee.org/rest/extension/provider/info?withLogo=false
+
 ### NPM Updates
 
 1. Check for updates

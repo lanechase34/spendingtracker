@@ -1,0 +1,131 @@
+{
+    "description": "Live server metrics.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "timestamp": { "type": "string" },
+                            "startedAt": { "type": "integer", "description": "Epoch ms." },
+                            "uptimeMs": { "type": "integer" },
+                            "cpu": {
+                                "type": "object",
+                                "properties": {
+                                    "cores": { "type": "integer" },
+                                    "processPercent": { "type": "number", "nullable": true },
+                                    "systemPercent": { "type": "number", "nullable": true }
+                                }
+                            },
+                            "memory": {
+                                "type": "object",
+                                "properties": {
+                                    "totalMB": { "type": "number" },
+                                    "usedMB": { "type": "number" },
+                                    "maxMB": { "type": "number" }
+                                }
+                            },
+                            "threads": {
+                                "type": "object",
+                                "properties": {
+                                    "live": { "type": "integer" },
+                                    "peak": { "type": "integer" },
+                                    "daemon": { "type": "integer" },
+                                    "deadlocked": { "type": "integer" }
+                                }
+                            },
+                            "gc": {
+                                "type": "object",
+                                "properties": {
+                                    "totalMs": { "type": "number" },
+                                    "deltaMs": { "type": "number" },
+                                    "percent": { "type": "number" }
+                                }
+                            },
+                            "concurrency": {
+                                "type": "object",
+                                "properties": {
+                                    "activeRequests": { "type": "integer" },
+                                    "maxRequests": { "type": "integer" },
+                                    "slowRequests": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "delta": { "type": "number" },
+                                                "method": { "type": "string" },
+                                                "urlpath": { "type": "string" },
+                                                "userid": { "type": "integer" },
+                                                "time": { "type": "string" },
+                                                "uuid": { "type": "string" }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "queries": {
+                                "type": "object",
+                                "properties": {
+                                    "count": { "type": "integer" },
+                                    "errors": { "type": "integer" },
+                                    "avgMs": { "type": "number" },
+                                    "maxMs": { "type": "number" },
+                                    "peak": { "type": "integer" },
+                                    "total": { "type": "integer" },
+                                    "slowQueries": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "sql": { "type": "string" },
+                                                "ms": { "type": "number" },
+                                                "time": { "type": "string" },
+                                                "uuid": { "type": "string" }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "database": {
+                                "type": "object",
+                                "properties": {
+                                    "up": { "type": "boolean" },
+                                    "pingMs": { "type": "number", "nullable": true },
+                                    "connections": {
+                                        "type": "object",
+                                        "properties": {
+                                            "total": { "type": "integer" },
+                                            "active": { "type": "integer" },
+                                            "idle": { "type": "integer" },
+                                            "idleInTransaction": { "type": "integer" },
+                                            "waitingOnLock": { "type": "integer" },
+                                            "max": { "type": "integer" }
+                                        },
+                                        "nullable": true
+                                    },
+                                    "longestQuerySeconds": { "type": "number" }
+                                }
+                            },
+                            "rateLimit": {
+                                "type": "object",
+                                "properties": {
+                                    "blocked": { "type": "integer" },
+                                    "total": { "type": "integer" },
+                                    "byEvent": {
+                                        "type": "object",
+                                        "properties": {},
+                                        "additionalProperties": { "type": "integer" },
+                                        "description": "Blocked hits per event."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

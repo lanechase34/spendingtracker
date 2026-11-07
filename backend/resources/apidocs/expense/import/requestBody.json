@@ -9,7 +9,7 @@
                     "expenseFile": {
                         "type": "string",
                         "format": "binary",
-                        "description": "CSV file in Date, Amount, Description format."
+                        "description": "Comma-delimited CSV. The header row must be exactly Date,Amount,Description, followed by at most 100 data rows."
                     }
                 }
             }

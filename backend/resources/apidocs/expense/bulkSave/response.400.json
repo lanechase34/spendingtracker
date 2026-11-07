@@ -1,0 +1,21 @@
+{
+    "description": "Validation failed (nothing saved), or one or more receipt uploads failed (the other rows were saved).",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": true },
+                    "messages": { "type": "array", "items": {"type": "string"}, "example": ["Error saving expenses"] },
+                    "data": {
+                        "type": "object",
+                        "properties": {},
+                        "description": "Receipt failures only: map of expense_{id} to the error.",
+                        "additionalProperties": { "type": "string" },
+                        "example": { "expense_row-1a2b3c": "Invalid receipt upload." }
+                    }
+                }
+            }
+        }
+    }
+}

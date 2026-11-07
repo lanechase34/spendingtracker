@@ -24,8 +24,9 @@ component extends="base" hint="Auth Endpoints" {
      * @security     []
      * @hint         Authenticates a user and returns a JWT. If 2FA is enabled a pending token is returned instead. If rememberMe is true a refresh token cookie is set.
      * @requestBody  ~auth/login/requestBody.json
-     * @response-200 { "description": "Authenticated successfully. Returns access_token. If 2FA required, also returns mfa_required: true." }
+     * @response-200 ~auth/login/response.json
      * @response-400 ~errors/400.json
+     * @response-401 { "description": "Invalid email or password." }
      * @response-403 { "description": "Email not verified. Verify with /verify using the same email and password." }
      * @response-429 ~errors/429.json
      */
@@ -96,8 +97,8 @@ component extends="base" hint="Auth Endpoints" {
      * @security     ApiKeyAuth
      * @hint         Verifies a 6-digit TOTP code or recovery code during login. Requires the pending JWT returned from /login. Returns a full JWT on success.
      * @requestBody  ~auth/verify2fa/requestBody.json
-     * @response-200 { "description": "2FA verified successfully. Returns full access_token." }
-     * @response-400 { "description": "Invalid or expired code." }
+     * @response-200 ~auth/verify2fa/response.json
+     * @response-400 { "description": "Invalid or expired code, or the code is not 6-19 characters." }
      * @response-401 ~errors/401.json
      * @response-429 ~errors/429.json
      */
@@ -134,10 +135,9 @@ component extends="base" hint="Auth Endpoints" {
      *
      * @summary      Logout
      * @tags         Auth
-     * @security     ApiKeyAuth
-     * @hint         Invalidates the user's JWT and refresh token, and clears the refresh token cookie.
-     * @response-200 { "description": "Successfully logged out." }
-     * @response-401 ~errors/401.json
+     * @security     [ {}, { "ApiKeyAuth": [] } ]
+     * @hint         Invalidates the user's JWT and refresh token, and clears the auth cookies. Authentication is optional - the request always succeeds, so a client can log out with an expired token.
+     * @response-200 ~auth/logout/response.json
      */
     function logout(event, rc, prc) {
         /**
@@ -178,7 +178,7 @@ component extends="base" hint="Auth Endpoints" {
      * @security     []
      * @hint         Creates a new user account and emails a verification code. The response is the same whether or not the email already has an account, so registration can't be used to find which emails are registered. Verify with /verify using the same email and password.
      * @requestBody  ~auth/register/requestBody.json
-     * @response-200 { "description": "Registration received. Check email for a verification code." }
+     * @response-200 ~auth/register/response.json
      * @response-400 ~errors/400.json
      * @response-429 ~errors/429.json
      */
@@ -204,8 +204,8 @@ component extends="base" hint="Auth Endpoints" {
      * @security     []
      * @hint         Verifies the code sent to the user's email, using the account's email and password. Returns a full JWT and sets a refresh token cookie on success.
      * @requestBody  ~auth/verify/requestBody.json
-     * @response-200 { "description": "Email verified successfully. Returns full access_token." }
-     * @response-400 { "description": "Invalid or expired verification code, or account already verified." }
+     * @response-200 ~auth/verify/response.json
+     * @response-400 { "description": "Validation failed, invalid or expired verification code, account already verified, or the request already carries a valid JWT." }
      * @response-429 ~errors/429.json
      */
     function verify(event, rc, prc) {
@@ -252,9 +252,9 @@ component extends="base" hint="Auth Endpoints" {
      * @security     []
      * @hint         Resends the verification code to an unverified account, using the account's email and password. Always returns the same response unless the credentials are right and the cooldown hasn't passed.
      * @requestBody  ~auth/resendVerificationCode/requestBody.json
-     * @response-200 { "description": "If the account needs verifying, a new code has been sent." }
+     * @response-200 ~auth/resendVerificationCode/response.json
      * @response-400 ~errors/400.json
-     * @response-429 ~errors/429.json
+     * @response-429 { "description": "Rate limit exceeded, or the credentials are correct and the resend cooldown has not passed." }
      */
     function resendVerificationCode(event, rc, prc) {
         var result = userService.resendVerificationCode(email = rc.email, password = rc.password);
@@ -281,7 +281,7 @@ component extends="base" hint="Auth Endpoints" {
      * @tags         Auth
      * @security     ApiKeyAuth
      * @hint         Generates and returns a CSRF token. Required before any state-changing requests (POST, PUT, PATCH, DELETE).
-     * @response-200 { "description": "CSRF token generated successfully. Returns csrf_token." }
+     * @response-200 ~auth/generateCSRF/response.json
      * @response-401 ~errors/401.json
      */
     function generateCSRF(event, rc, prc) secured="Unverified,Pending2FA,User,Admin" {

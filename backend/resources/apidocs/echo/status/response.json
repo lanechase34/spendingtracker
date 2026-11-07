@@ -1,0 +1,21 @@
+{
+    "description": "Environment, version, and status.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "environment": { "type": "string", "example": "production" },
+                            "version": { "type": "string", "example": "1.0.4" },
+                            "status": { "type": "string", "example": "ok" }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

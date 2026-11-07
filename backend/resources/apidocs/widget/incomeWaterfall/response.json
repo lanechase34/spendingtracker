@@ -1,0 +1,34 @@
+{
+    "description": "Net income per month.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "labels": { "type": "array", "items": {"type": "string"}, "example": ["Jan 2025"] },
+                            "segments": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "net": {
+                                            "type": "number",
+                                            "description": "Income minus spending for the month."
+                                        },
+                                        "savings": { "type": "number" },
+                                        "runningTotal": { "type": "number" }
+                                    }
+                                },
+                                "description": "One segment per label."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

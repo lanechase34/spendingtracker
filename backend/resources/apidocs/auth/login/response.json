@@ -1,0 +1,31 @@
+{
+    "description": "Authenticated. If 2FA is enabled, complete login with /verify2fa.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Bearer token created and it expires in 30 minutes"]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "access_token": {
+                                "type": "string",
+                                "description": "Full JWT, or a 5 minute pending token that only reaches /verify2fa when mfa_required is true."
+                            },
+                            "mfa_required": {
+                                "type": "boolean",
+                                "description": "Only present, and true, when the account has 2FA enabled."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

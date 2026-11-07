@@ -1,5 +1,7 @@
 import 'react-day-picker/dist/style.css';
 
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import Box from '@mui/material/Box';
@@ -14,16 +16,20 @@ import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import { alpha, styled } from '@mui/material/styles';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import useBreakpoint from 'hooks/useBreakpoint';
 import useDateRangeContext from 'hooks/useDateRangeContext';
+import useLocalStorage from 'hooks/useLocalStorage';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { DayPicker } from 'react-day-picker';
 import type { DateRangeType } from 'types/DateRange.type';
+import { z } from 'zod';
 
 // Styled wrapper around DayPicker
 const StyledDayPickerWrapper = styled(Box)(({ theme }) => ({
@@ -96,6 +102,14 @@ const PRESETS: { label: string; type: Exclude<DateRangeType, 'custom'> }[] = [
     { label: 'Year-to-date', type: 'year-to-date' },
 ];
 
+const MAX_RANGE_DAYS = 365;
+
+// Month indexes for the month grid, 0 = January
+const MONTHS = Array.from({ length: 12 }, (_, i) => i);
+
+const ViewModeSchema = z.enum(['days', 'months']);
+type ViewMode = z.infer<typeof ViewModeSchema>;
+
 /**
  * DateRange selector with start and end matching MUI style.
  *
@@ -109,6 +123,10 @@ const PRESETS: { label: string; type: Exclude<DateRangeType, 'custom'> }[] = [
  *   user cannot accidentally confirm a stale range.
  * - The Done button is disabled until both a start and end date are
  *   selected, and shows a tooltip if the range exceeds 365 days.
+ * - A Days / Months toggle swaps the calendar for a month grid. Clicking a
+ *   month stages that whole month; there is no range selection in this view.
+ * - Both views stay mounted and stacked in the same cell so the card keeps
+ *   a constant size when toggling. The chosen view persists in localStorage.
  */
 export default function DateRangeSelector() {
     const { isMobile } = useBreakpoint();
@@ -130,6 +148,38 @@ export default function DateRangeSelector() {
         setTempEndDate(range?.to ? dayjs(range.to) : null);
     };
 
+    // Calendar (days) or month grid (months) view, persisted so the picker
+    // reopens on the last view the user chose
+    const [viewMode, setViewMode] = useLocalStorage<ViewMode>({
+        key: 'dateRangeViewMode',
+        initialValue: 'days',
+        schema: ViewModeSchema,
+    });
+    // First month shown in the calendar. Controlled because the calendar stays
+    // mounted while hidden, so it would otherwise ignore month grid selections
+    const [calendarMonth, setCalendarMonth] = useState(() => startDate.toDate());
+    // Year shown in the month grid
+    const [monthGridYear, setMonthGridYear] = useState(() => startDate.year());
+
+    const handleViewModeChange = (_event: React.MouseEvent<HTMLElement>, mode: ViewMode | null) => {
+        // Exclusive toggle reports null when the active button is clicked again, ignore that
+        if (!mode) return;
+        setViewMode(mode);
+        // Bring the newly shown view to the staged start date
+        const focusDate = tempStartDate ?? dayjs();
+        if (mode === 'months') {
+            setMonthGridYear(focusDate.year());
+        } else {
+            setCalendarMonth(focusDate.toDate());
+        }
+    };
+
+    // Stage the whole clicked month
+    const handleMonthClick = (month: Dayjs) => {
+        setTempStartDate(month.startOf('month'));
+        setTempEndDate(month.endOf('month').startOf('day'));
+    };
+
     // Anchors where the picker should be
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
@@ -138,6 +188,8 @@ export default function DateRangeSelector() {
         // Reset temp dates to current context values when opening
         setTempStartDate(startDate);
         setTempEndDate(endDate);
+        setMonthGridYear(startDate.year());
+        setCalendarMonth(startDate.toDate());
     };
 
     const handleClose = () => {
@@ -167,9 +219,7 @@ export default function DateRangeSelector() {
         </Stack>
     );
 
-    const [today] = useState(() => new Date());
-
-    const pickerContent = (
+    const dayPicker = (
         <StyledDayPickerWrapper>
             <DayPicker
                 mode="range"
@@ -179,18 +229,138 @@ export default function DateRangeSelector() {
                     to: tempEndDate?.toDate(),
                 }}
                 onSelect={handleSelect}
-                defaultMonth={tempStartDate?.toDate() ?? today}
-                max={365}
+                month={calendarMonth}
+                onMonthChange={setCalendarMonth}
+                // Always render 6 weeks so the height doesn't jump between months
+                fixedWeeks
+                max={MAX_RANGE_DAYS}
                 disabled={
                     tempStartDate
                         ? [
-                              { before: tempStartDate.subtract(365, 'day').toDate() },
-                              { after: tempStartDate.add(365, 'day').toDate() },
+                              { before: tempStartDate.subtract(MAX_RANGE_DAYS, 'day').toDate() },
+                              { after: tempStartDate.add(MAX_RANGE_DAYS, 'day').toDate() },
                           ]
                         : undefined
                 }
             />
         </StyledDayPickerWrapper>
+    );
+
+    // A month is highlighted only when the staged range is exactly that whole month,
+    // so an arbitrary custom range from the calendar doesn't light up a month
+    const isMonthSelected = (month: Dayjs) =>
+        tempStartDate !== null &&
+        tempEndDate !== null &&
+        tempStartDate.isSame(month.startOf('month'), 'day') &&
+        tempEndDate.isSame(month.endOf('month'), 'day');
+
+    const monthGrid = (
+        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, py: 1 }}>
+            {/* Narrow, centered header so the arrows sit next to the year on wide screens */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    alignSelf: 'center',
+                    width: '100%',
+                    maxWidth: 220,
+                    mb: 1,
+                }}
+            >
+                <IconButton
+                    size="small"
+                    aria-label="Previous year"
+                    onClick={() => {
+                        setMonthGridYear((year) => year - 1);
+                    }}
+                >
+                    <ChevronLeftIcon />
+                </IconButton>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'medium' }}>
+                    {monthGridYear}
+                </Typography>
+                <IconButton
+                    size="small"
+                    aria-label="Next year"
+                    onClick={() => {
+                        setMonthGridYear((year) => year + 1);
+                    }}
+                >
+                    <ChevronRightIcon />
+                </IconButton>
+            </Box>
+            <Box
+                sx={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)',
+                    // Fixed-height rows packed at the top under the year header
+                    gridAutoRows: 48,
+                    alignContent: 'start',
+                    gap: 1.5,
+                }}
+            >
+                {MONTHS.map((monthIndex) => {
+                    // Build from the 1st directly. Setting year/month on today's date
+                    // overflows on the 29th-31st (e.g. Jan 31 -> "Feb" becomes Mar 3)
+                    const month = dayjs(new Date(monthGridYear, monthIndex, 1));
+                    const selected = isMonthSelected(month);
+                    return (
+                        <Button
+                            key={monthIndex}
+                            variant={selected ? 'contained' : 'outlined'}
+                            aria-label={month.format('MMMM YYYY')}
+                            aria-pressed={selected}
+                            onClick={() => {
+                                handleMonthClick(month);
+                            }}
+                        >
+                            {month.format('MMM')}
+                        </Button>
+                    );
+                })}
+            </Box>
+        </Box>
+    );
+
+    const pickerContent = (
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1,
+                width: isMobile ? '100%' : 'auto',
+            }}
+        >
+            <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={viewMode}
+                onChange={handleViewModeChange}
+                aria-label="Picker view"
+            >
+                <ToggleButton value="days">Days</ToggleButton>
+                <ToggleButton value="months">Months</ToggleButton>
+            </ToggleButtonGroup>
+            {/* Both views share one grid cell so the cell is sized by the larger
+                and toggling never resizes the card. The inactive view is hidden
+                with visibility, which also removes it from tab order and the a11y tree */}
+            <Box sx={{ display: 'grid', width: isMobile ? '100%' : 'auto' }}>
+                <Box
+                    sx={{ gridArea: '1 / 1', justifySelf: 'center' }}
+                    style={{ visibility: viewMode === 'days' ? 'visible' : 'hidden' }}
+                >
+                    {dayPicker}
+                </Box>
+                <Box
+                    sx={{ gridArea: '1 / 1', display: 'flex', flexDirection: 'column' }}
+                    style={{ visibility: viewMode === 'months' ? 'visible' : 'hidden' }}
+                >
+                    {monthGrid}
+                </Box>
+            </Box>
+        </Box>
     );
 
     const selectedRangeLabel = (
@@ -216,7 +386,7 @@ export default function DateRangeSelector() {
     );
 
     // Disable the done btn if the range exceeds the limit, 365 days
-    const rangeExceedsMax = !!(tempStartDate && tempEndDate && tempEndDate.diff(tempStartDate, 'day') > 365);
+    const rangeExceedsMax = !!(tempStartDate && tempEndDate && tempEndDate.diff(tempStartDate, 'day') > MAX_RANGE_DAYS);
     const doneBtn = (
         <Tooltip title={rangeExceedsMax ? 'Range cannot exceed 365 days' : ''}>
             <span>

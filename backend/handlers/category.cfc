@@ -10,11 +10,11 @@ component extends="base" hint="Category Endpoints" secured="User,Admin" {
      * @summary       List Categories
      * @tags          Category
      * @security      ApiKeyAuth
-     * @hint          Returns a paginated list of categories, optionally filtered by search.
+     * @hint          Returns a paginated list of categories - the shared default categories plus the ones the user created - optionally filtered by search.
      * @param-page    { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1,   "example": 1  } }
      * @param-records { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10,  "maximum": 100, "example": 25 } }
      * @param-search  { "in": "query", "required": false, "schema": { "type": "string",  "maxLength": 50, "example": "electronics" } }
-     * @response-200  { "description": "Paginated category results" }
+     * @response-200  ~category/view/response.json
      * @response-400  ~errors/400.json
      * @response-401  ~errors/401.json
      */

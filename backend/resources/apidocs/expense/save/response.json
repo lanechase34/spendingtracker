@@ -1,0 +1,18 @@
+{
+    "description": "Expense saved.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Successfully saved expense."]
+                    }
+                }
+            }
+        }
+    }
+}

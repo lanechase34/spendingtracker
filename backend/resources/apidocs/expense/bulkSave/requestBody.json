@@ -8,8 +8,14 @@
                 "properties": {
                     "expenses": {
                         "type": "string",
-                        "description": "JSON string of expense array. Each item: { date, amount, description, categoryid|category, receipt? }"
+                        "description": "JSON string of an expense array. Each item: { id, date, amount, description, categoryid | category }. id is a client-generated string (5-100 chars) that names the item's receipt field and keys its errors. The other fields follow the same rules as Save Expense.",
+                        "example": "[{\"id\":\"row-1a2b3c\",\"date\":\"2025-04-15\",\"amount\":49.99,\"description\":\"Grocery run\",\"categoryid\":3}]"
                     }
+                },
+                "additionalProperties": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Optional receipt image for an item, sent as a field named receipt_{id}."
                 }
             }
         }

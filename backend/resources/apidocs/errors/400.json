@@ -12,10 +12,9 @@
                     "messages": {
                         "type": "array",
                         "items": { "type": "string" },
+                        "description": "A single message listing every failed constraint, separated by semicolons.",
                         "example": [
-                            "Invalid Parameters. The 'email' value is required",
-                            "Invalid Parameters. The 'password' value must be at least 8 characters",
-                            "Invalid Parameters. The 'page' value must be between 1 and 100"
+                            "Invalid Parameters. The 'email' value is required; The 'password' value is not in the required size range (10..256)"
                         ]
                     }
                 }

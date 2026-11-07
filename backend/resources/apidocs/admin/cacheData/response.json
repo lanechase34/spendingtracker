@@ -1,0 +1,41 @@
+{
+    "description": "Application cache state.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "lastReapDateTime": { "type": "string" },
+                            "hits": { "type": "integer" },
+                            "misses": { "type": "integer" },
+                            "evictionCount": { "type": "integer" },
+                            "garbageCollections": { "type": "integer" },
+                            "maxObjects": { "type": "integer" },
+                            "data": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": { "type": "string" },
+                                        "key": { "type": "string" },
+                                        "created": { "type": "string" },
+                                        "lastaccessed": { "type": "string" },
+                                        "expired": { "type": "boolean" },
+                                        "hits": { "type": "integer" },
+                                        "timeout": { "type": "integer", "description": "Minutes." },
+                                        "lastaccesstimeout": { "type": "integer", "description": "Minutes." },
+                                        "storage": { "type": "string" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,7 @@
 {
     "required": true,
     "content": {
-        "application/x-www-form-urlencoded": {
+        "application/json": {
             "schema": {
                 "type": "object",
                 "required": ["date", "amount", "description"],
@@ -9,8 +9,8 @@
                     "date": {
                         "type": "string",
                         "format": "date",
-                        "example": "04-15-2025",
-                        "description": "The date the extra income was received in MM-DD-YYYY format."
+                        "example": "2025-04-15",
+                        "description": "The date the extra income was received. Must be after 2024-01-01 and before 2075-01-01."
                     },
                     "amount": { "type": "number", "minimum": 0.01, "maximum": 99999, "example": 250 },
                     "description": {

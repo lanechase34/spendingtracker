@@ -1,0 +1,20 @@
+{
+    "description": "Email verified. Returns the full JWT and sets a refresh token cookie.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": { "type": "array", "items": {"type": "string"}, "example": ["Successfully verified!"] },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "access_token": { "type": "string", "description": "JWT. Send it in the x-auth-token header." }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

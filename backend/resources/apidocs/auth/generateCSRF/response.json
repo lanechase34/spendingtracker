@@ -1,0 +1,24 @@
+{
+    "description": "CSRF token generated.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["CSRF token created and it expires in 30 minutes"]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "csrf_token": { "type": "string", "description": "Send it in the x-csrf-token header." }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

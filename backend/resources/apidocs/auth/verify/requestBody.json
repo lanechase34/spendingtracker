@@ -1,13 +1,13 @@
 {
     "required": true,
     "content": {
-        "application/x-www-form-urlencoded": {
+        "application/json": {
             "schema": {
                 "type": "object",
                 "required": ["email", "password", "verificationCode"],
                 "properties": {
-                    "email": { "type": "string", "format": "email", "example": "test1@gmail.com" },
-                    "password": { "type": "string", "format": "password", "example": "secretpassword" },
+                    "email": { "type": "string", "format": "email", "minLength": 5, "maxLength": 255, "example": "test1@gmail.com" },
+                    "password": { "type": "string", "format": "password", "minLength": 10, "maxLength": 256, "example": "secretpassword" },
                     "verificationCode": { "type": "string", "minLength": 8, "maxLength": 8, "example": "AB3CD4EF" }
                 }
             }

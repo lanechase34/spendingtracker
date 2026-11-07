@@ -1,0 +1,73 @@
+{
+    "description": "Paginated expenses.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "expenses": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": { "type": "integer", "example": 42 },
+                                        "date": { "type": "string", "format": "date", "example": "2025-04-15" },
+                                        "amount": { "type": "number", "example": 49.99 },
+                                        "description": { "type": "string", "example": "Grocery run" },
+                                        "category": {
+                                            "type": "string",
+                                            "description": "Category name.",
+                                            "example": "Groceries"
+                                        },
+                                        "receipt": {
+                                            "type": "integer",
+                                            "enum": [0, 1],
+                                            "description": "1 when a receipt is attached."
+                                        }
+                                    }
+                                }
+                            },
+                            "filteredSum": {
+                                "type": "number",
+                                "description": "Sum of amounts matching the search.",
+                                "example": 120.5
+                            },
+                            "totalSum": {
+                                "type": "number",
+                                "description": "Sum of all amounts in the date range.",
+                                "example": 980.25
+                            }
+                        }
+                    },
+                    "pagination": {
+                        "type": "object",
+                        "properties": {
+                            "page": { "type": "integer", "example": 1 },
+                            "offset": { "type": "integer", "example": 0 },
+                            "totalRecords": {
+                                "type": "integer",
+                                "description": "Total records before search filtering.",
+                                "example": 42
+                            },
+                            "filteredRecords": {
+                                "type": "integer",
+                                "description": "Records matching the search.",
+                                "example": 42
+                            },
+                            "maxRows": { "type": "integer", "description": "Always 0 - not computed.", "example": 0 },
+                            "totalPages": {
+                                "type": "integer",
+                                "description": "Always 1 - not computed. Use filteredRecords / records instead.",
+                                "example": 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

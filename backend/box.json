@@ -1,6 +1,6 @@
 {
     "name":"spendingtracker",
-    "version":"1.0.0",
+    "version":"1.0.4",
     "author":"lanechase34",
     "installPaths":{
         "coldbox":"coldbox/",

@@ -6,7 +6,12 @@
                 "type": "object",
                 "required": ["date", "amount", "description"],
                 "properties": {
-                    "date": { "type": "string", "format": "date", "example": "2025-04-15" },
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-04-15",
+                        "description": "Cannot be more than 1 year in the past."
+                    },
                     "amount": { "type": "number", "minimum": 0, "maximum": 999999, "example": 49.99 },
                     "description": { "type": "string", "minLength": 3, "maxLength": 500, "example": "Grocery run" },
                     "categoryid": {
@@ -22,7 +27,7 @@
                         "example": "Groceries",
                         "description": "New category name. Required if categoryid not provided."
                     },
-                    "receipt": { "type": "string", "format": "binary", "description": "Optional receipt image upload." }
+                    "receipt": { "type": "string", "format": "binary", "description": "Optional receipt image upload. An invalid image returns 415." }
                 }
             }
         }

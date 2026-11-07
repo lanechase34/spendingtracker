@@ -17,9 +17,9 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
      * @tags            Income
      * @security        ApiKeyAuth
      * @hint            Returns pay and extra income totals for the authenticated user across the full months spanning the given start and end dates.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
-     * @response-200    { "description": "Income totals for the given date range. Returns { pay, extra }." }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
+     * @response-200    ~income/view/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -44,7 +44,7 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Creates or updates the monthly pay record for the given month.
      * @requestBody  ~income/save/requestBody.json
-     * @response-200 { "description": "Income saved successfully." }
+     * @response-200 ~income/save/response.json
      * @response-400 ~errors/400.json
      * @response-401 ~errors/401.json
      */
@@ -68,9 +68,9 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
      * @tags            Income
      * @security        ApiKeyAuth
      * @hint            Returns each extra income entry for the authenticated user across the full months spanning the given start and end dates, newest first.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-31" } }
-     * @response-200    { "description": "Extra income entries. Returns an array of { id, date, amount, description }." }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
+     * @response-200    ~income/viewExtra/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -95,7 +95,7 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Creates a new extra income entry on the given date. A month can have any number of entries.
      * @requestBody  ~income/saveExtra/requestBody.json
-     * @response-200 { "description": "Extra income saved successfully. Returns the new entry's id." }
+     * @response-200 ~income/saveExtra/response.json
      * @response-400 ~errors/400.json
      * @response-401 ~errors/401.json
      */
@@ -122,7 +122,7 @@ component extends="base" hint="Income Endpoints" secured="User,Admin" {
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Permanently deletes an extra income entry by its ID.
      * @param-id     { "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1, "example": 12 } }
-     * @response-200 { "description": "Extra income deleted successfully." }
+     * @response-200 ~income/removeExtra/response.json
      * @response-401 ~errors/401.json
      * @response-404 { "description": "Extra income not found." }
      */

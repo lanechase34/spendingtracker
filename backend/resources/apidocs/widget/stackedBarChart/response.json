@@ -1,0 +1,40 @@
+{
+    "description": "Spending per category per day or week.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "labels": {
+                                "type": "array",
+                                "items": { "type": "string" },
+                                "description": "One label per day (m/d/yy) for ranges of 7 days or less, otherwise one per week (m/d/yy - m/d/yy).",
+                                "example": ["4/13/25 - 4/19/25"]
+                            },
+                            "datasets": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": { "type": "string", "description": "Category name." },
+                                        "data": {
+                                            "type": "array",
+                                            "items": { "type": "number", "nullable": true },
+                                            "description": "One value per label. null when nothing was spent."
+                                        },
+                                        "backgroundColor": { "type": "string", "example": "#ce79f2" }
+                                    }
+                                },
+                                "description": "One dataset per category."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

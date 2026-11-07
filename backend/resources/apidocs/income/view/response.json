@@ -1,0 +1,20 @@
+{
+    "description": "Pay and extra income totals across the full months spanning the date range.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "pay": { "type": "number", "example": 4500 },
+                            "extra": { "type": "number", "example": 250 }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

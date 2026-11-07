@@ -4,7 +4,8 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
         stackedBarChart: "GET",
         donutChart     : "GET",
         lineChart      : "GET",
-        heatMap        : "GET"
+        heatMap        : "GET",
+        incomeWaterfall: "GET"
     };
 
     property name="chartService" inject="services.chart";
@@ -16,9 +17,9 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
      * @tags            Widget
      * @security        ApiKeyAuth
      * @hint            Returns spending data grouped by category across the given date range, suitable for rendering a stacked bar chart.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
-     * @response-200    { "description": "Stacked bar chart data." }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
+     * @response-200    ~widget/stackedBarChart/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -42,9 +43,9 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
      * @tags            Widget
      * @security        ApiKeyAuth
      * @hint            Returns spending totals grouped by category across the given date range, suitable for rendering a donut chart.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
-     * @response-200    { "description": "Donut chart data." }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
+     * @response-200    ~widget/donutChart/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -64,15 +65,13 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
     /**
      * Line chart widget
      *
-     *               startDate must be January 1st of the desired year. The range must be between 1 and 12 months.
-     *
      * @summary         Line Chart
      * @tags            Widget
      * @security        ApiKeyAuth
      * @hint            Returns total spending per month across the given date range, suitable for rendering a line chart.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" }, "description": "Must be January 1st of the desired year." }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be within 1-12 months of startDate." }
-     * @response-200    { "description": "Line chart data." }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" }, "description": "Must be in January of the desired year." }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be 1-12 months after startDate." }
+     * @response-200    ~widget/lineChart/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -96,9 +95,9 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
      * @tags            Widget
      * @security        ApiKeyAuth
      * @hint            Returns the number of expenses per day across the given date range, suitable for rendering a heatmap calendar.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
-     * @response-200    { "description": "Heatmap data." }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
+     * @response-200    ~widget/heatMap/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -122,9 +121,9 @@ component extends="base" hint="Widget Endpoints" secured="User,Admin" {
      * @tags            Widget
      * @security        ApiKeyAuth
      * @hint            Returns the net income per month across the given date range, suitable for rendering a waterfall +/- net income by month.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
-     * @response-200    { "description": "Income waterfall data." }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
+     * @response-200    ~widget/incomeWaterfall/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */

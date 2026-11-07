@@ -1,0 +1,61 @@
+{
+    "description": "Paginated users.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "users": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": { "type": "integer" },
+                                        "email": { "type": "string", "format": "email" },
+                                        "security_level": {
+                                            "type": "string",
+                                            "enum": ["UNVERIFIED", "PENDING2FA", "USER", "ADMIN"]
+                                        },
+                                        "verified": { "type": "boolean" },
+                                        "lastlogin": {
+                                            "type": "string",
+                                            "example": "2025-04-15 14:20:56",
+                                            "nullable": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "pagination": {
+                        "type": "object",
+                        "properties": {
+                            "page": { "type": "integer", "example": 1 },
+                            "offset": { "type": "integer", "example": 0 },
+                            "totalRecords": {
+                                "type": "integer",
+                                "description": "Total records before search filtering.",
+                                "example": 42
+                            },
+                            "filteredRecords": {
+                                "type": "integer",
+                                "description": "Records matching the search.",
+                                "example": 42
+                            },
+                            "maxRows": { "type": "integer", "description": "Always 0 - not computed.", "example": 0 },
+                            "totalPages": {
+                                "type": "integer",
+                                "description": "Always 1 - not computed. Use filteredRecords / records instead.",
+                                "example": 1
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

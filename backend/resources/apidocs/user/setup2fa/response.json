@@ -1,0 +1,33 @@
+{
+    "description": "2FA setup started.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Scan the QR code with your authenticator app then confirm with a valid code."]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "qrCode": {
+                                "type": "string",
+                                "format": "byte",
+                                "description": "Base64-encoded HTML <img> tag whose src is a JPEG data URI of the QR code."
+                            },
+                            "secret": {
+                                "type": "string",
+                                "description": "Plain text secret for manual entry.",
+                                "example": "D6LSCFOU4LRK3EFAWKMPPOMG476SPGDJ"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "description": "Subscription toggled. The message says \"activated\" or \"inactivated\".",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": ["Successfully activated subscription."]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "nextDate": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "The subscription's next charge date, returned on both activate and deactivate.",
+                                "example": "2025-05-15T00:00:00Z"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

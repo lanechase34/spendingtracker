@@ -21,14 +21,14 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @tags            Expense
      * @security        ApiKeyAuth
      * @hint            Returns a paginated list of expenses, optionally filtered by date range, search, and ordering.
-     * @param-startDate { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
      * @param-page      { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
      * @param-records   { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
      * @param-search    { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
-     * @param-orderCol  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["date","amount","description","category"] } }
-     * @param-orderDir  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
-     * @response-200    { "description": "Paginated expense results" }
+     * @param-orderCol  { "name": "orderCol", "in": "query", "required": false, "schema": { "type": "string", "enum": ["date","amount","description","category"] } }
+     * @param-orderDir  { "name": "orderDir", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @response-200    ~expense/view/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -62,9 +62,10 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Creates a new expense record. Provide either categoryid for an existing category or category name to create a new one. Optionally attach a receipt image.
      * @requestBody  ~expense/save/requestBody.json
-     * @response-200 { "description": "Expense saved successfully." }
+     * @response-200 ~expense/save/response.json
      * @response-400 ~errors/400.json
      * @response-401 ~errors/401.json
+     * @response-415 { "description": "Invalid receipt upload." }
      */
     function save(event, rc, prc) {
         // Create category if needed
@@ -95,7 +96,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
      * @hint         Deletes an expense record and its associated receipt if one exists.
      * @param-id     { "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1, "example": 42 } }
-     * @response-200 { "description": "Expense deleted successfully." }
+     * @response-200 ~expense/remove/response.json
      * @response-401 ~errors/401.json
      * @response-404 { "description": "Expense not found." }
      */
@@ -128,7 +129,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @security     ApiKeyAuth
      * @hint         Returns the receipt image attached to an expense as an inline webp image.
      * @param-id     { "in": "path", "required": true, "schema": { "type": "integer", "minimum": 1, "example": 42 } }
-     * @response-200 { "description": "Receipt image returned inline.", "content": { "image/webp": {} } }
+     * @response-200 { "description": "Receipt image returned inline.", "content": { "image/webp": { "schema": { "type": "string", "format": "binary" } } } }
      * @response-401 ~errors/401.json
      * @response-404 { "description": "Receipt not found." }
      */
@@ -149,15 +150,15 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
     }
 
     /**
-     * Import expenses from a CSV file
+     * Parse and validate expenses from a CSV file
      *
      * @summary      Import Expenses
      * @tags         Expense
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Accepts a CSV file in the format [Date, Amount, Description] and imports the rows as expenses.
+     * @hint         Parses and validates a CSV file of expenses. Nothing is saved - valid rows are returned for review, then saved with Bulk Save Expenses. The header row must be exactly Date,Amount,Description, with at most 100 data rows. Each row follows the Save Expense rules for date, amount, and description.
      * @requestBody  ~expense/import/requestBody.json
-     * @response-200 { "description": "Import processed. Returns counts of imported rows and any errored rows." }
-     * @response-400 { "description": "Invalid or malformed CSV file." }
+     * @response-200 ~expense/import/response.json
+     * @response-400 { "description": "File missing or not readable as CSV, header row does not match Date,Amount,Description exactly, or more than 100 data rows." }
      * @response-401 ~errors/401.json
      */
     function import(event, rc, prc) {
@@ -182,10 +183,10 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @summary      Bulk Save Expenses
      * @tags         Expense
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Saves multiple expenses in a single request. Each expense must include date, amount, description, and either categoryid or category. Optional per-expense receipt uploads supported via dynamic receipt_{id} form fields.
+     * @hint         Saves multiple expenses in a single request. Each expense must include id, date, amount, description, and either categoryid or category. Each expense can upload a receipt in a form field named receipt_{id}. Rows whose receipt is invalid are skipped and reported. The other rows are still saved.
      * @requestBody  ~expense/bulkSave/requestBody.json
-     * @response-200 { "description": "Expenses saved. Returns a map of any per-expense errors keyed by expense id." }
-     * @response-400 { "description": "Invalid expenses payload or per-row validation failure." }
+     * @response-200 ~expense/bulkSave/response.json
+     * @response-400 ~expense/bulkSave/response.400.json
      * @response-401 ~errors/401.json
      */
     function bulkSave(event, rc, prc) {
@@ -289,16 +290,15 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
     /**
      * Export expenses to a CSV file
      *
-     * @summary         Export Expenses
-     * @tags            Expense
-     * @security        [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint            Exports all expenses within the given date range as a downloadable CSV file.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
-     * @response-200    { "description": "CSV file download.", "content": { "text/csv": {} } }
-     * @response-401    ~errors/401.json
-     * @response-400    ~errors/400.json
-     * @response-429    ~errors/429.json
+     * @summary      Export Expenses
+     * @tags         Expense
+     * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
+     * @hint         Exports all expenses within the given date range as a downloadable CSV file with date, amount, description, and category columns. Limited to one export per minute.
+     * @requestBody  ~expense/export/requestBody.json
+     * @response-200 { "description": "CSV file download, sent as an attachment named expenses_{startDate}_to_{endDate}.csv.", "content": { "text/csv": { "schema": { "type": "string", "format": "binary" } } } }
+     * @response-400 ~errors/400.json
+     * @response-401 ~errors/401.json
+     * @response-429 ~errors/429.json
      */
     function export(event, rc, prc) {
         prc.csvString = expenseService.csvExport(
@@ -324,18 +324,16 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
     /**
      * Export receipts to a ZIP file
      *
-     * @summary         Export Receipts
-     * @tags            Expense
-     * @security        [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint            Exports all receipts attached to expenses within the given date range as a downloadable ZIP file.
-     * @param-startDate { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true, "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
-     * @response-200    { "description": "ZIP file download containing all receipts in the date range.", "content": { "application/zip": {} } }
-     * @response-400    { "description": "Too many receipts to export at once." }
-     * @response-401    ~errors/401.json
-     * @response-404    { "description": "No receipts found in the given date range." }
-     * @response-400    ~errors/400.json
-     * @response-429    ~errors/429.json
+     * @summary      Export Receipts
+     * @tags         Expense
+     * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
+     * @hint         Exports all receipts attached to expenses within the given date range as a downloadable ZIP file. Limited to one export every 3 minutes.
+     * @requestBody  ~expense/exportReceipts/requestBody.json
+     * @response-200 { "description": "ZIP file download containing all receipts in the date range, sent as an attachment named receipts_{startDate}_to_{endDate}.zip.", "content": { "application/zip": { "schema": { "type": "string", "format": "binary" } } } }
+     * @response-400 { "description": "Validation failed, or too many receipts to export at once." }
+     * @response-401 ~errors/401.json
+     * @response-404 { "description": "No receipts found in the given date range." }
+     * @response-429 ~errors/429.json
      */
     function exportReceipts(event, rc, prc) {
         try {

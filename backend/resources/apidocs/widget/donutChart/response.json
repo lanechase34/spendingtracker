@@ -1,0 +1,36 @@
+{
+    "description": "Spending totals per category.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "labels": {
+                                "type": "array",
+                                "items": { "type": "string" },
+                                "description": "Category names.",
+                                "example": ["Groceries"]
+                            },
+                            "dataset": {
+                                "type": "object",
+                                "properties": {
+                                    "label": { "type": "string", "example": "Amount" },
+                                    "data": {
+                                        "type": "array",
+                                        "items": { "type": "number" },
+                                        "description": "Total per category, same order as labels."
+                                    },
+                                    "backgroundColor": { "type": "array", "items": {"type": "string"}, "example": ["#ce79f2"] }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

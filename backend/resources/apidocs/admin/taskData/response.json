@@ -1,0 +1,34 @@
+{
+    "description": "Scheduled task state.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string" },
+                                "module": { "type": "string" },
+                                "executor": { "type": "string" },
+                                "created": { "type": "string" },
+                                "lastRun": { "type": "string" },
+                                "nextRun": { "type": "string" },
+                                "totalRuns": { "type": "integer" },
+                                "totalSuccess": { "type": "integer" },
+                                "totalFailures": { "type": "integer" },
+                                "lastExecutionTime": { "type": "number", "description": "ms." },
+                                "error": { "type": "boolean" },
+                                "errorMessage": { "type": "string" },
+                                "scheduled": { "type": "boolean" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

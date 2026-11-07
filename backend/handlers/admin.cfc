@@ -23,14 +23,14 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @tags            Admin
      * @security        ApiKeyAuth
      * @hint            Returns a paginated list of audit records, optionally filtered by date range, search, and ordering.
-     * @param-startDate { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
      * @param-page      { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
      * @param-records   { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
      * @param-search    { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
-     * @param-orderCol  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["created","ip","urlpath","method","agent","statuscode","delta","email"] } }
-     * @param-orderDir  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
-     * @response-200    { "description": "Paginated audit results" }
+     * @param-orderCol  { "name": "orderCol", "in": "query", "required": false, "schema": { "type": "string", "enum": ["created","ip","urlpath","method","agent","statuscode","delta","email"] } }
+     * @param-orderDir  { "name": "orderDir", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @response-200    ~admin/viewAudits/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -63,14 +63,14 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @tags            Admin
      * @security        ApiKeyAuth
      * @hint            Returns a paginated list of bug records, optionally filtered by date range, search, and ordering.
-     * @param-startDate { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
-     * @param-endDate   { "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" } }
+     * @param-startDate { "name": "startDate", "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-01-01" } }
+     * @param-endDate   { "name": "endDate", "in": "query", "required": true,  "schema": { "type": "string", "format": "date", "example": "2025-12-31" }, "description": "Must be on or after startDate and at most 365 days after it." }
      * @param-page      { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 1, "example": 1 } }
      * @param-records   { "in": "query", "required": true,  "schema": { "type": "integer", "minimum": 10, "maximum": 100, "example": 25 } }
      * @param-search    { "in": "query", "required": false, "schema": { "type": "string", "maxLength": 50 } }
-     * @param-orderCol  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["created","ip","urlpath","method","agent","detail","email"] } }
-     * @param-orderDir  { "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
-     * @response-200    { "description": "Paginated bug results" }
+     * @param-orderCol  { "name": "orderCol", "in": "query", "required": false, "schema": { "type": "string", "enum": ["created","ip","urlpath","method","agent","detail","email"] } }
+     * @param-orderDir  { "name": "orderDir", "in": "query", "required": false, "schema": { "type": "string", "enum": ["asc","desc"] } }
+     * @response-200    ~admin/viewBugs/response.json
      * @response-400    ~errors/400.json
      * @response-401    ~errors/401.json
      */
@@ -103,7 +103,7 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @tags         Admin
      * @security     ApiKeyAuth
      * @hint         Returns current server performance and resource metrics.
-     * @response-200 { "description": "Server metrics data" }
+     * @response-200 ~admin/metrics/response.json
      * @response-401 ~errors/401.json
      */
     function metrics(event, rc, prc) {
@@ -122,7 +122,7 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @tags         Admin
      * @security     ApiKeyAuth
      * @hint         Returns static app info, disk space, and database diagnostics. Cached briefly server side.
-     * @response-200 { "description": "Server diagnostics data" }
+     * @response-200 ~admin/diagnostics/response.json
      * @response-401 ~errors/401.json
      */
     function diagnostics(event, rc, prc) {
@@ -141,7 +141,7 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @tags         Admin
      * @security     ApiKeyAuth
      * @hint         Returns the current state of the application cache.
-     * @response-200 { "description": "Cache state data" }
+     * @response-200 ~admin/cacheData/response.json
      * @response-401 ~errors/401.json
      */
     function cacheData(event, rc, prc) {
@@ -160,7 +160,7 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @tags         Admin
      * @security     ApiKeyAuth
      * @hint         Returns the current state of scheduled and running tasks.
-     * @response-200 { "description": "Task state data" }
+     * @response-200 ~admin/taskData/response.json
      * @response-401 ~errors/401.json
      */
     function taskData(event, rc, prc) {
@@ -179,7 +179,7 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @tags         Admin
      * @security     ApiKeyAuth
      * @hint         Returns a list of all available log files with their metadata.
-     * @response-200 { "description": "List of log files" }
+     * @response-200 ~admin/viewLogs/response.json
      * @response-401 ~errors/401.json
      */
     function viewLogs(event, rc, prc) {
@@ -202,17 +202,27 @@ component extends="base" hint="Admin Endpoints" secured="Admin" {
      * @param-lines    { "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 2000, "example": 200 } }
      * @param-search   { "in": "query", "required": false, "schema": { "type": "string", "example": "ERROR" } }
      * @param-all      { "in": "query", "required": false, "schema": { "type": "boolean", "example": false }, "description": "Read the entire file (capped server-side); overrides lines" }
-     * @response-200   { "description": "Log file tail content" }
+     * @response-200   ~admin/readLog/response.json
      * @response-400   ~errors/400.json
      * @response-401   ~errors/401.json
+     * @response-404   { "description": "Log file not found." }
      */
     function readLog(event, rc, prc) {
-        prc.data = adminService.readLog(
-            filename = rc.filename,
-            lines    = val(rc?.lines ?: 200),
-            search   = rc?.search ?: "",
-            all      = rc?.all ?: false
-        );
+        try {
+            prc.data = adminService.readLog(
+                filename = rc.filename,
+                lines    = val(rc?.lines ?: 200),
+                search   = rc?.search ?: "",
+                all      = rc?.all ?: false
+            );
+        }
+        catch(LogViewer.FileNotFound e) {
+            event
+                .getResponse()
+                .setErrorMessage("Log file not found.")
+                .setStatusCode(404);
+            return;
+        }
 
         event
             .getResponse()

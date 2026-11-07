@@ -32,7 +32,7 @@ component {
                 // A url to the License of your API
                 license: {name: "Apache 2.0", url: "https://www.apache.org/licenses/LICENSE-2.0.html"},
                 // The version of your API
-                version: "1.0.0"
+                version: controller.getSetting("version")
             },
             // Tags
             tags: [
@@ -61,13 +61,13 @@ component {
                 securitySchemes: {
                     ApiKeyAuth: {
                         type       : "apiKey",
-                        description: "JWT token passed in the x-auth-token header",
+                        description: "JWT passed in the x-auth-token header (or x-auth-token cookie). Missing, invalid, or insufficient-role tokens return 401.",
                         name       : "x-auth-token",
                         in         : "header"
                     },
                     CSRFToken: {
                         type       : "apiKey",
-                        description: "CSRF token passed in the x-csrf-token header",
+                        description: "CSRF token from GET /api/v1/csrf, passed in the x-csrf-token header. Required on state-changing requests; a missing or invalid token returns 403.",
                         name       : "x-csrf-token",
                         in         : "header"
                     }

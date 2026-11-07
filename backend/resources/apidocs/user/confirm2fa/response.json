@@ -1,0 +1,30 @@
+{
+    "description": "2FA enabled.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "messages": {
+                        "type": "array",
+                        "items": { "type": "string" },
+                        "example": [
+                            "Two-factor authentication has been enabled. Store your recovery codes somewhere safe - they will not be shown again."
+                        ]
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "recoveryCodes": {
+                                "type": "array",
+                                "items": { "type": "string", "example": "a1b2-c3d4-e5f6-a7b8" },
+                                "description": "8 single-use recovery codes, xxxx-xxxx-xxxx-xxxx. Shown once."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

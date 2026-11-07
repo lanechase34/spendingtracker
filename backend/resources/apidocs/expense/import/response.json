@@ -1,0 +1,49 @@
+{
+    "description": "File parsed. Nothing is saved - review the rows, then save them with Bulk Save Expenses.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "imported": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "date": {
+                                            "type": "string",
+                                            "description": "As written in the file.",
+                                            "example": "2025-04-15"
+                                        },
+                                        "amount": { "type": "number", "example": 49.99 },
+                                        "description": { "type": "string", "example": "Grocery run" }
+                                    }
+                                },
+                                "description": "Valid rows."
+                            },
+                            "errored": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "row": {
+                                            "type": "integer",
+                                            "description": "Line number in the file. The header is line 1.",
+                                            "example": 3
+                                        },
+                                        "message": { "type": "string" }
+                                    }
+                                },
+                                "description": "Invalid rows."
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

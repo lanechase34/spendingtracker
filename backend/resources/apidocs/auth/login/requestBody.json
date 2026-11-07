@@ -1,14 +1,18 @@
 {
     "required": true,
     "content": {
-        "application/x-www-form-urlencoded": {
+        "multipart/form-data": {
             "schema": {
                 "type": "object",
-                "required": ["email", "password"],
+                "required": ["email", "password", "rememberMe"],
                 "properties": {
-                    "email": { "type": "string", "format": "email", "example": "test1@gmail.com" },
-                    "password": { "type": "string", "format": "password", "example": "secretpassword" },
-                    "rememberMe": { "type": "boolean", "example": true }
+                    "email": { "type": "string", "format": "email", "minLength": 5, "maxLength": 255, "example": "test1@gmail.com" },
+                    "password": { "type": "string", "format": "password", "minLength": 10, "maxLength": 256, "example": "secretpassword" },
+                    "rememberMe": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "When true, a refresh token cookie is set on successful login."
+                    }
                 }
             }
         }

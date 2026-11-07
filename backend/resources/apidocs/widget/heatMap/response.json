@@ -1,0 +1,20 @@
+{
+    "description": "Expense counts per day.",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "error": { "type": "boolean", "example": false },
+                    "data": {
+                        "type": "object",
+                        "properties": {},
+                        "description": "Map of yyyy-mm-dd to the number of expenses that day. Days with none are left out.",
+                        "additionalProperties": { "type": "integer" },
+                        "example": { "2025-04-15": 2 }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -56,7 +56,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
      * @tags         System
      * @security     []
      * @hint         Returns a simple Ok response. Used to verify the API is reachable.
-     * @response-200 { "description": "Ok!" }
+     * @response-200 ~echo/healthCheck/response.json
      */
     function healthCheck(event, rc, prc) {
         if(!getSetting("healthCheck")) {
@@ -76,7 +76,7 @@ component extends="base" hint="Not Resource Specific Endpoints" {
      * @tags         System
      * @security     []
      * @hint         Returns the current environment, version, and status of the API.
-     * @response-200 { "description": "Returns environment, version, and status." }
+     * @response-200 ~echo/status/response.json
      */
     function status(event, rc, prc) {
         event
