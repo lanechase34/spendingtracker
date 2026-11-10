@@ -398,9 +398,8 @@ component singleton accessors="true" {
         if(!result.valid) return result;
 
         // Check column headers
-        var columns =    import.columns;
         for(var i = 1; i <= getHeaders().len(); i++) {
-            if(arrayLen(columns) < getHeaders().len() || getHeaders()[i] != columns[i]) {
+            if(arrayLen(import.columns) < getHeaders().len() || getHeaders()[i] !=   import.columns[i]) {
                 result.valid   = false;
                 result.message = "Please verify columns match exactly: #getHeaders().toList(", ")#";
                 break;
@@ -416,7 +415,7 @@ component singleton accessors="true" {
         }
 
         // Import the data and verify the types for each
-                                import.data.each((row, index) => {
+                        import.data.each((row, index) => {
             try {
                 var rowData = {
                     date       : row[1],
