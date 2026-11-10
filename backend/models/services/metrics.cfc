@@ -374,14 +374,14 @@ component singleton accessors="true" hint="Collects live metrics and diagnostics
         ];
 
         return paths.map((item) => {
-            var file    = createObject("java", "java.io.File").init(item.path);
-            var mb      = 1024 * 1024;
-            var totalMB = round(file.getTotalSpace() / mb);
-            var freeMB  = round(file.getUsableSpace() / mb);
+            var javaFile = createObject("java", "java.io.File").init(item.path);
+            var mb       = 1024 * 1024;
+            var totalMB  = round(javaFile.getTotalSpace() / mb);
+            var freeMB   = round(javaFile.getUsableSpace() / mb);
 
             return {
                 name       : item.name,
-                path       : file.getCanonicalPath(),
+                path       : javaFile.getCanonicalPath(),
                 totalMB    : totalMB,
                 freeMB     : freeMB,
                 usedPercent: totalMB ? round((totalMB - freeMB) / totalMB * 1000) / 10 : 0

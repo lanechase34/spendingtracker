@@ -382,7 +382,7 @@ component singleton accessors="true" {
 
         // Attempt to import the file
         try {
-            var import = spreadsheetService
+            var csvData = spreadsheetService
                 .readCsv(expenseFile)
                 .intoAnArray()
                 .withFirstRowIsHeader()
@@ -399,7 +399,10 @@ component singleton accessors="true" {
 
         // Check column headers
         for(var i = 1; i <= getHeaders().len(); i++) {
-            if(arrayLen(import.columns) < getHeaders().len() || getHeaders()[i] !=   import.columns[i]) {
+            if(
+                arrayLen(csvData.columns) < getHeaders().len()
+                || getHeaders()[i] != csvData.columns[i]
+            ) {
                 result.valid   = false;
                 result.message = "Please verify columns match exactly: #getHeaders().toList(", ")#";
                 break;
@@ -408,14 +411,14 @@ component singleton accessors="true" {
 
         if(!result.valid) return result;
 
-        if(import.data.len() > getMaxRows()) {
+        if(csvData.data.len() > getMaxRows()) {
             result.valid   = false;
             result.message = "Error file contains too many rows. Please limit to a maximum of #getMaxRows()# rows";
             return result;
         }
 
         // Import the data and verify the types for each
-                        import.data.each((row, index) => {
+        csvData.data.each((row, index) => {
             try {
                 var rowData = {
                     date       : row[1],

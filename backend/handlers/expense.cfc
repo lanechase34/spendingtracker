@@ -5,7 +5,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
         save          : "POST",
         remove        : "DELETE",
         receipt       : "GET",
-        import        : "POST",
+        importCsv     : "POST",
         bulkSave      : "POST",
         export        : "POST",
         exportReceipts: "POST"
@@ -161,7 +161,7 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @response-400 { "description": "File missing or not readable as CSV, header row does not match Date,Amount,Description exactly, or more than 100 data rows." }
      * @response-401 ~errors/401.json
      */
-    function import(event, rc, prc) {
+    function importCsv(event, rc, prc) {
         prc.result = expenseService.processExpenseData(rc?.expenseFile ?: "");
         if(!prc.result.valid) {
             event

@@ -15,7 +15,7 @@ component {
         // API V1
         group({pattern: "/api/v1"}, () => {
             // Expense
-            route("/expenses/import").withAction({POST: "import"}).toHandler("expense");
+            route("/expenses/import").withAction({POST: "importCsv"}).toHandler("expense");
             route("/expenses/export").withAction({POST: "export"}).toHandler("expense");
             route("/expenses/bulk").withAction({POST: "bulkSave"}).toHandler("expense");
             route("/expenses/:id-numeric/receipt").withAction({GET: "receipt"}).toHandler("expense");

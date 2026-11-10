@@ -28,7 +28,7 @@ component extends="tests.resources.baseTest" {
     private string function makeRandDate() {
         var y = year(now());
         var m = max(1, min(12, month(now()) + randRange(-3, 3)));
-        var d = max(28, min(1, day(now()) + randRange(-10, 10)));
+        var d = min(28, max(1, day(now()) + randRange(-10, 10)));
 
         return dateFormat(createDate(y, m, d), "yyyy-mm-dd");
     }

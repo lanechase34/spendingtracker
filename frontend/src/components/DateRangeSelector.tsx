@@ -124,7 +124,8 @@ type ViewMode = z.infer<typeof ViewModeSchema>;
  * - The Done button is disabled until both a start and end date are
  *   selected, and shows a tooltip if the range exceeds 365 days.
  * - A Days / Months toggle swaps the calendar for a month grid. Clicking a
- *   month stages that whole month; there is no range selection in this view.
+ *   month applies that whole month immediately and closes the picker, like
+ *   the presets; there is no range selection in this view.
  * - Both views stay mounted and stacked in the same cell so the card keeps
  *   a constant size when toggling. The chosen view persists in localStorage.
  */
@@ -174,10 +175,10 @@ export default function DateRangeSelector() {
         }
     };
 
-    // Stage the whole clicked month
+    // Commit the whole clicked month immediately and close, like the presets
     const handleMonthClick = (month: Dayjs) => {
-        setTempStartDate(month.startOf('month'));
-        setTempEndDate(month.endOf('month').startOf('day'));
+        setCustomRange(month.startOf('month'), month.endOf('month').startOf('day'));
+        handleClose();
     };
 
     // Anchors where the picker should be

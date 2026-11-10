@@ -46,10 +46,13 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to enforce rate
                     }
                 });
 
-                for(var setting in ["limit", "window"]) {
-                    var value = rule[setting] ?: "";
+                for(var settingName in ["limit", "window"]) {
+                    var value = rule[settingName] ?: "";
                     if(!isValid("integer", value) || value < 1) {
-                        throw(type = "RateLimitConfigError", message = "#prefix#: #setting# must be a positive integer");
+                        throw(
+                            type    = "RateLimitConfigError",
+                            message = "#prefix#: #settingName# must be a positive integer"
+                        );
                     }
                 }
 

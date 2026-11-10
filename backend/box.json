@@ -30,7 +30,7 @@
         "testbox":"7.2.2+23",
         "testbox-cli":"1.10.0+27",
         "route-visualizer":"2.2.0+2",
-        "commandbox-cfformat":"0.22.2",
+        "commandbox-cfformat":"0.22.3",
         "cfml-compiler":"1.0.6",
         "lucee-password-util":"1.2.1",
         "cbdebugger":"4.4.0+6",

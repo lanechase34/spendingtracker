@@ -603,29 +603,24 @@ describe('DateRangeSelector Component', () => {
             expect(screen.getByRole('button', { name: 'February 2025' })).toHaveAttribute('aria-pressed', 'false');
         });
 
-        it('Selects a whole month with a single click', async () => {
+        it('Commits a whole month with a single click and closes the picker', async () => {
             render(<DateRangeSelector />);
             const user = await openMonthView();
 
             await user.click(screen.getByRole('button', { name: 'March 2025' }));
-            await user.click(screen.getByRole('button', { name: /done/i }));
 
+            expect(mockSetCustomRange).toHaveBeenCalledTimes(1);
             expect(lastCommittedRange()).toEqual(['2025-03-01', '2025-03-31']);
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         });
 
-        it('Replaces the selection when another month is clicked (no range selection)', async () => {
+        it('Does not call setPresetRange when a month is clicked', async () => {
             render(<DateRangeSelector />);
             const user = await openMonthView();
 
-            await user.click(screen.getByRole('button', { name: 'March 2025' }));
             await user.click(screen.getByRole('button', { name: 'June 2025' }));
 
-            expect(screen.getByRole('button', { name: 'March 2025' })).toHaveAttribute('aria-pressed', 'false');
-            expect(screen.getByRole('button', { name: 'June 2025' })).toHaveAttribute('aria-pressed', 'true');
-
-            await user.click(screen.getByRole('button', { name: /done/i }));
-
-            expect(lastCommittedRange()).toEqual(['2025-06-01', '2025-06-30']);
+            expect(mockSetPresetRange).not.toHaveBeenCalled();
         });
 
         it('Selects a month in another year using the year arrows', async () => {
@@ -634,13 +629,11 @@ describe('DateRangeSelector Component', () => {
 
             await user.click(screen.getByRole('button', { name: 'Next year' }));
             expect(screen.getByText('2026')).toBeVisible();
-            await user.click(screen.getByRole('button', { name: 'February 2026' }));
             await user.click(screen.getByRole('button', { name: 'Previous year' }));
             await user.click(screen.getByRole('button', { name: 'Previous year' }));
             expect(screen.getByText('2024')).toBeVisible();
             // Leap year
             await user.click(screen.getByRole('button', { name: 'February 2024' }));
-            await user.click(screen.getByRole('button', { name: /done/i }));
 
             expect(lastCommittedRange()).toEqual(['2024-02-01', '2024-02-29']);
         });
@@ -668,37 +661,11 @@ describe('DateRangeSelector Component', () => {
                 const user = await openMonthView();
 
                 await user.click(screen.getByRole('button', { name: 'February 2025' }));
-                await user.click(screen.getByRole('button', { name: /done/i }));
 
                 expect(lastCommittedRange()).toEqual(['2025-02-01', '2025-02-28']);
             } finally {
                 jest.useRealTimers();
             }
-        });
-
-        it('Does not commit anything until Done is clicked', async () => {
-            render(<DateRangeSelector />);
-            const user = await openMonthView();
-
-            await user.click(screen.getByRole('button', { name: 'March 2025' }));
-
-            expect(mockSetCustomRange).not.toHaveBeenCalled();
-            const dialog = screen.getByRole('dialog');
-            expect(within(dialog).getByText(/03\/01\/2025 - 03\/31\/2025/)).toBeInTheDocument();
-        });
-
-        it('Keeps the month selection when switching back to days', async () => {
-            render(<DateRangeSelector />);
-            const user = await openMonthView();
-
-            await user.click(screen.getByRole('button', { name: 'March 2025' }));
-            await user.click(screen.getByRole('button', { name: 'Days' }));
-
-            const selected = mockDayPicker.lastProps?.['selected'] as { from: Date; to: Date };
-            expect(dayjs(selected.from).format('YYYY-MM-DD')).toBe('2025-03-01');
-            expect(dayjs(selected.to).format('YYYY-MM-DD')).toBe('2025-03-31');
-            // Calendar navigates to the selection rather than staying on the old month
-            expect(dayjs(mockDayPicker.lastProps?.['month'] as Date).format('YYYY-MM')).toBe('2025-03');
         });
 
         it('Persists the chosen view in localStorage', async () => {
@@ -731,9 +698,12 @@ describe('DateRangeSelector Component', () => {
             const user = await openMonthView();
 
             await user.click(screen.getByRole('button', { name: 'April 2025' }));
-            await user.click(screen.getByRole('button', { name: /done/i }));
 
             expect(lastCommittedRange()).toEqual(['2025-04-01', '2025-04-30']);
+            // The fullscreen Dialog unmounts after its exit transition
+            await waitFor(() => {
+                expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            });
         });
     });
 

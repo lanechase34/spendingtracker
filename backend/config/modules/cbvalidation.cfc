@@ -114,8 +114,8 @@ component {
                     min     : 1
                 }
             },
-            "expense.import": {},
-            expenseDataRow  : {
+            "expense.importCsv": {},
+            expenseDataRow     : {
                 date: {
                     required           : true,
                     type               : "date",
