@@ -55,7 +55,8 @@ component extends="tests.resources.baseTest" {
                 testMethods.each((method) => {
                     expect(() => {
                         this[method](
-                            route = "/api/v1/expenses", headers = {"x-auth-token": jwt, "x-csrf-token": createUUID()}
+                            route   = "/api/v1/expenses",
+                            headers = {"x-auth-token": jwt, "x-csrf-token": createUUID()}
                         );
                     }).toThrow(type = "TokenMismatchException", message = "The CSRF token is invalid.");
                 });

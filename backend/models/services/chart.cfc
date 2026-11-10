@@ -332,38 +332,40 @@ component singleton accessors="true" {
 
         // Get the total expenses and income per month
         var asyncData = async
-            .all(() => getWidgetData(
-                startDate = startDate,
-                endDate   = endDate,
-                userid    = userid
-            ).reduce((acc, row) => {
-                    // Group expenses by month
-                    var bucket = dateFormat(row.date, "yyyy-mm");
-                    if(!acc.keyExists(bucket)) {
-                        acc[bucket] = {expenses: 0, savings: 0}
-                    }
+            .all(
+                () => getWidgetData(
+                    startDate = startDate,
+                    endDate   = endDate,
+                    userid    = userid
+                ).reduce((acc, row) => {
+                        // Group expenses by month
+                        var bucket = dateFormat(row.date, "yyyy-mm");
+                        if(!acc.keyExists(bucket)) {
+                            acc[bucket] = {expenses: 0, savings: 0}
+                        }
 
-                    // Count savings separately
-                    if(row.category == "Savings") {
-                        acc[bucket].savings += securityService.decryptValue(row.amount, "numeric");
-                    }
-                    else {
-                        acc[bucket].expenses += securityService.decryptValue(row.amount, "numeric");
-                    }
+                        // Count savings separately
+                        if(row.category == "Savings") {
+                            acc[bucket].savings += securityService.decryptValue(row.amount, "numeric");
+                        }
+                        else {
+                            acc[bucket].expenses += securityService.decryptValue(row.amount, "numeric");
+                        }
 
-                    return acc;
-                }, {})
-                .map((date, expenseStruct) => {
-                    return {
-                        savings : securityService.intToFloat(expenseStruct.savings),
-                        expenses: securityService.intToFloat(expenseStruct.expenses)
-                    };
-                }),
-            () => incomeService.getMonthlyTotals(
-                startDate = startDate,
-                endDate   = endDate,
-                userid    = userid
-            ))
+                        return acc;
+                    }, {})
+                    .map((date, expenseStruct) => {
+                        return {
+                            savings : securityService.intToFloat(expenseStruct.savings),
+                            expenses: securityService.intToFloat(expenseStruct.expenses)
+                        };
+                    }),
+                () => incomeService.getMonthlyTotals(
+                    startDate = startDate,
+                    endDate   = endDate,
+                    userid    = userid
+                )
+            )
             .get();
 
         var expenseMonthlyTotals = asyncData[1];

@@ -262,7 +262,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
 
     // Create a subscriptionService component where the charge() function
     // will throw an error on the first charge attempt
-    component function createBrokenChargeMock() {
+    public component function createBrokenChargeMock() {
         // Create a real instance with a mocked broken expense service
         var subscriptionServiceObj  = new models.services.subscription();
         var mockSubscriptionService = prepareMock(object = subscriptionServiceObj);

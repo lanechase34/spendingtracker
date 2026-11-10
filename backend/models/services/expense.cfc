@@ -398,7 +398,7 @@ component singleton accessors="true" {
         if(!result.valid) return result;
 
         // Check column headers
-        var columns = import.columns;
+        var columns =    import.columns;
         for(var i = 1; i <= getHeaders().len(); i++) {
             if(arrayLen(columns) < getHeaders().len() || getHeaders()[i] != columns[i]) {
                 result.valid   = false;
@@ -416,7 +416,7 @@ component singleton accessors="true" {
         }
 
         // Import the data and verify the types for each
-        import.data.each((row, index) => {
+                                import.data.each((row, index) => {
             try {
                 var rowData = {
                     date       : row[1],
@@ -569,7 +569,7 @@ component singleton accessors="true" {
 
     /**
      * Upload a multi-part for containing a receipt image in the form field
-     * Validates the image, converts to webp, and resizes
+     * Validates the image, orients it upright, and converts to a resized webp in a single pass
      *
      * @formField The multipart form field
      * @userDir   The user's upload directory
@@ -577,16 +577,16 @@ component singleton accessors="true" {
      * @return The UUID of the converted image
      */
     public string function receiptUpload(required string formField, required string userDir) {
-        var receipt = imageService.validateUpload(formField = "receipt", outputs = [{uploadDir: userDir, type: "webp"}]);
-
-        imageService.convert(
-            path       = "#userDir#/#receipt#.webp",
-            outputPath = "#userDir#/#receipt#.webp",
-            quality    = 50,
-            resize     = 750
+        // Keep extensions and maxFileSize in sync with frontend
+        return imageService.validateUpload(
+            formField   = formField,
+            outputs     = [{uploadDir: userDir, type: "webp"}],
+            extensions  = "png,jpg,jpeg,webp,heic",
+            maxFileSize = 10 * 1024 * 1024, // 10mb
+            autoOrient  = true,
+            quality     = 50,
+            resize      = 750
         );
-
-        return receipt;
     }
 
 }

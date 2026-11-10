@@ -331,7 +331,10 @@ component {
 		 *
 		 * }
 		 */
-        moduleSettings = {};
+        moduleSettings = {
+            // Write imagemagickhelpers.log alongside the app's other logs so it shows in the admin log viewer
+            ImageMagickHelpers: {logDirectory: "#logPath#/../logs", expandLogDirectory: false}
+        };
 
         /**
 		 * --------------------------------------------------------------------------
@@ -385,7 +388,7 @@ component {
         settings.logRequests    = getSystemSetting("LOGREQUESTS", true);
 
         // Lower bcrypt workfactor for faster performance
-        moduleSettings = {bcrypt: {workFactor: 4}};
+        moduleSettings.bcrypt = {workFactor: 4};
 
         logBox.root.levelmax = "DEBUG";
     }
@@ -398,7 +401,7 @@ component {
         settings.useRateLimiter = false;
         settings.appName        = "SpendingTracker (TEST)";
 
-        moduleSettings = {bcrypt: {workFactor: 4}};
+        moduleSettings.bcrypt = {workFactor: 4};
     }
 
 }
