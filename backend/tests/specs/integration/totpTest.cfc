@@ -198,12 +198,13 @@ component extends="tests.resources.baseTest" {
 
                 it("Returns 400 if setup has not been initiated", () => {
                     // New user with no setup
-                    var freshEmail = "test_#createUUID()#@example.com";
-                    var freshEvent = post(
+                    var freshEmail    = "test_#createUUID()#@example.com";
+                    var freshPassword = createUUID();
+                    var freshEvent    = post(
                         route  = "/api/v1/register",
                         params = {
                             email          : freshEmail,
-                            password       : createUUID(),
+                            password       : freshPassword,
                             salary         : 1,
                             monthlyTakeHome: 2
                         }
@@ -220,7 +221,7 @@ component extends="tests.resources.baseTest" {
                         route  = "/api/v1/login",
                         params = {
                             email     : freshEmail,
-                            password  : createUUID(),
+                            password  : freshPassword,
                             rememberMe: false
                         }
                     );
@@ -404,7 +405,7 @@ component extends="tests.resources.baseTest" {
                         route  = "/api/v1/login",
                         params = {
                             email     : user.getEmail(),
-                            password  : createUUID(),
+                            password  : mockUser.passwordFor(user),
                             rememberMe: false
                         }
                     );
@@ -492,7 +493,7 @@ component extends="tests.resources.baseTest" {
                         route  = "/api/v1/login",
                         params = {
                             email     : user.getEmail(),
-                            password  : createUUID(),
+                            password  : mockUser.passwordFor(user),
                             rememberMe: false
                         }
                     );

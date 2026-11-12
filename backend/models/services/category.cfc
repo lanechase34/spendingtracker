@@ -38,26 +38,6 @@ component singleton accessors="true" {
     }
 
     /**
-     * Return category based on its name
-     */
-    public struct function getFromName(required string name) {
-        return q
-            .from("category")
-            .where("name", "=", ucFirst(name))
-            .first();
-    }
-
-    /**
-     * Return category based on its id (pk)
-     */
-    public struct function getFromId(required numeric id) {
-        return q
-            .from("category")
-            .where("id", "=", {value: id, cfsqltype: "numeric"})
-            .first();
-    }
-
-    /**
      * Returns pagination data struct and
      * records for the current page
      */

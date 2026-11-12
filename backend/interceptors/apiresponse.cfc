@@ -3,14 +3,10 @@ component extends="coldbox.system.Interceptor" hint="Interceptor to populate jwt
     property name="securityService" inject="services.security";
 
     /**
-     * Adds JWT auth, refresh tokens to rc scope
+     * Adds refresh token to rc scope
      * Setup and use custom apiResponseObj
 	 */
     function preProcess(event, data, buffer, rc, prc) {
-        if(cookie.keyExists("x-auth-token") && len(trim(cookie["x-auth-token"]))) {
-            rc["x-auth-token"] = trim(cookie["x-auth-token"]);
-        }
-
         if(cookie.keyExists("x-refresh-token") && len(trim(cookie["x-refresh-token"]))) {
             rc["x-refresh-token"] = trim(cookie["x-refresh-token"]);
         }

@@ -13,11 +13,13 @@ component singleton accessors="true" {
     /**
      * Expense Import CSV format
      */
-    property name="headers" type="array";
-    property name="maxRows" type="numeric";
+    property name="headers"           type="array";
+    property name="maxRows"           type="numeric";
+    property name="maxImportFileSize" type="numeric";
     function init() {
         setHeaders(["Date", "Amount", "Description"]);
-        setMaxRows(100); // limit to 100 rows for performance
+        setMaxRows(200); // limit to 200 rows for performance - bulk save uses the same limit
+        setMaxImportFileSize(5 * 1024 * 1024); // 5mb
     }
 
     /**
@@ -290,7 +292,7 @@ component singleton accessors="true" {
     ) {
         var qResult = q
             .from("expense")
-            .returning(["receipt", "subscriptionid"])
+            .returning(["receipt"])
             .where("id", "=", {value: id, cfsqltype: "numeric"})
             .andWhere(
                 "userid",
@@ -302,14 +304,12 @@ component singleton accessors="true" {
         var success = qResult.result.recordCount == 1;
 
         if(success) {
-            // If this expense had a receipt and was not charged by a subscription, delete it
-            if(
-                qResult.result.keyExists("receipt")
-                && qResult.result.receipt.len()
-                && isNull(qResult.result.subscriptionid)
-            ) {
-                fileDelete(getReceiptPath(receipt = qResult.result.receipt, userDir = userDir));
-            }
+            // A subscription's receipt is shared with every expense it charged - only delete the file once nothing uses it
+            deleteReceiptIfUnused(
+                receipt = qResult.result?.receipt ?: "",
+                userid  = userid,
+                userDir = userDir
+            );
 
             // Clear user expense cache
             cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|expense");
@@ -355,6 +355,53 @@ component singleton accessors="true" {
     }
 
     /**
+     * Delete a receipt file once no expense or subscription of the user references it
+     * A subscription and every expense it charged share one receipt file, so a delete can't assume it owns the file
+     * Also used to clean up a receipt that was uploaded for a save that then failed
+     *
+     * @receipt Receipt name (server generated) - empty is a no-op
+     * @userid  Owner of the receipt
+     * @userDir Owner's upload directory
+     *
+     * @return true if the file was deleted
+     */
+    public boolean function deleteReceiptIfUnused(
+        required string receipt,
+        required numeric userid,
+        required string userDir
+    ) {
+        // Receipt names are generated server side - refuse anything that could leave the user's directory
+        if(!receipt.len() || !userDir.len() || !reFind("^[A-Za-z0-9-]+$", receipt)) {
+            return false;
+        }
+
+        var references = 0;
+        for(var table in ["expense", "subscription"]) {
+            references += q
+                .from(table)
+                .where(
+                    "userid",
+                    "=",
+                    {value: userid, cfsqltype: "numeric"}
+                )
+                .andWhere(
+                    "receipt",
+                    "=",
+                    {value: receipt, cfsqltype: "varchar"}
+                )
+                .count();
+        }
+
+        var path = getReceiptPath(receipt = receipt, userDir = userDir);
+        if(references || !fileExists(path)) {
+            return false;
+        }
+
+        fileDelete(path);
+        return true;
+    }
+
+    /**
      * Gets the absolute path of receipt supplied in the userdir
      */
     private string function getReceiptPath(required string receipt, required string userDir) {
@@ -362,7 +409,64 @@ component singleton accessors="true" {
     }
 
     /**
+     * Import an expense CSV uploaded in a multipart form field
+     * The file must come from a real upload
+     *
+     * @formField The multipart form field holding the .csv
+     *
+     * @return same struct as processExpenseData
+     */
+    public struct function importUpload(required string formField) {
+        var invalid = {
+            valid  : false,
+            message: "Error loading file. Please use the template provided",
+            data   : [],
+            errors : []
+        };
+
+        // Each import gets its own temp directory, so concurrent imports never see each other's files
+        var tempDir = "#getTempDirectory()#/expense-import-#lCase(createUUID())#";
+        directoryCreate(tempDir);
+
+        try {
+            // cffile only accepts an actual uploaded file part - it throws for any other kind of value
+            // Result must be local - this service is a singleton
+            var upload = {};
+            try {
+                cffile(
+                    action       = "upload",
+                    fileField    = formField,
+                    destination  = tempDir,
+                    nameConflict = "makeUnique",
+                    result       = "local.upload"
+                );
+            }
+            catch(any e) {
+                return invalid;
+            }
+
+            // Browsers report .csv with several mime types (text/csv, application/vnd.ms-excel, none) - check the extension instead
+            if(lCase(upload.serverFileExt) != "csv") {
+                return invalid;
+            }
+
+            if(upload.fileSize > getMaxImportFileSize()) {
+                invalid.message = "Error file is too large. Please limit to a maximum of #getMaxImportFileSize() / 1024 / 1024#mb";
+                return invalid;
+            }
+
+            return processExpenseData("#upload.serverDirectory#/#upload.serverFile#");
+        }
+        finally {
+            if(directoryExists(tempDir)) {
+                directoryDelete(tempDir, true);
+            }
+        }
+    }
+
+    /**
      * Process an expense file imported by user
+     * Only ever call this with a path the server chose (see importUpload) - never a path from the request
      * Validate the headers and columns
      *
      * Headers should be [Date, Amount, Description]
@@ -544,7 +648,17 @@ component singleton accessors="true" {
             );
         }
 
-        var filePath = getTempDirectory() & "receipts_#userid#_#dateFormat(startDate, "yyyy-mm-dd")#_to_#dateFormat(endDate, "yyyy-mm-dd")#.zip";
+        // Only receipts whose file is still on disk - a missing file would fail the whole zip
+        var receipts = expensesWithReceipt.filter((expense) => {
+            return fileExists(getReceiptPath(receipt = expense.receipt, userDir = userDir));
+        });
+
+        if(!receipts.len()) {
+            throw(message = "No Receipts found within date range.", type = "NoReceiptsFound");
+        }
+
+        // Unique per export, so two exports of the same range never write the same file
+        var filePath = getTempDirectory() & "receipts_#userid#_#lCase(createUUID())#.zip";
 
         // Attempt to create zip file
         try {
@@ -553,12 +667,15 @@ component singleton accessors="true" {
                 file      = filePath,
                 overwrite = true
             ) {
-                expensesWithReceipt.each((expense) => {
-                    var receiptPath = "#userdir#/#expense.receipt#.webp";
-
+                receipts.each((expense) => {
                     var safeDesc = reReplace(expense.description, "[\\/:*?""<>|]", "_", "all");
-                    var fileName = "#dateFormat(expense.date, "yyyy-mm-dd")#_#left(safeDesc, 50)#.webp";
-                    cfzipparam(source = receiptPath, entryPath = fileName);
+
+                    // The expense id keeps names unique - subscription charges share a date and description
+                    var fileName = "#dateFormat(expense.date, "yyyy-mm-dd")#_#left(safeDesc, 50)#_#expense.id#.webp";
+                    cfzipparam(
+                        source    = getReceiptPath(receipt = expense.receipt, userDir = userDir),
+                        entryPath = fileName
+                    );
                 });
             }
         }

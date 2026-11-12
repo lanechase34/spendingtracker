@@ -3,6 +3,7 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
         categoryService = getInstance("services.category");
+        categoryHelper  = getInstance("tests.resources.categoryHelper");
         expenseHelper   = getInstance("tests.resources.expenseHelper");
         mockUser        = getInstance("tests.resources.mockuser");
         securityService = getInstance("services.security");
@@ -46,8 +47,8 @@ component extends="tests.resources.baseTest" {
                     name   = "ChartCatB_#left(createUUID().replace("-", "", "all"), 8)#",
                     userid = user.getId()
                 );
-                categoryA = categoryService.getFromId(categoryAId);
-                categoryB = categoryService.getFromId(categoryBId);
+                categoryA = categoryHelper.getFromId(categoryAId);
+                categoryB = categoryHelper.getFromId(categoryBId);
             });
 
             afterEach(() => {

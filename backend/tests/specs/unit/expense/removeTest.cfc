@@ -6,6 +6,7 @@ component extends="tests.resources.baseTest" {
         super.beforeAll();
 
         categoryService = getInstance("services.category");
+        categoryHelper  = getInstance("tests.resources.categoryHelper");
         mockUser        = getInstance("tests.resources.mockuser");
 
         /**
@@ -83,7 +84,7 @@ component extends="tests.resources.baseTest" {
                     expect(expenseHelper.count(user.getId())).toBe(beforeCount - 1);
 
                     // Verify category still exists
-                    var category = categoryService.getFromName(newCategory);
+                    var category = categoryHelper.getFromName(newCategory);
                     expect(category).toBeStruct();
                     expect(category).toHaveKey("id");
                     expect(category.id).toBeGTE(1);

@@ -73,15 +73,13 @@ component {
                 slowRequestThreshold: 1000, // ms
                 maxSlowRequests     : 25
             },
-            authTokenTTL: 1800, // 30 minutes in seconds (for cookie), matches jwt.expiration
-            basePath    : replace(expandPath("/"), "\", "/", "all"),
-            concurrency : {
+            basePath   : replace(expandPath("/"), "\", "/", "all"),
+            concurrency: {
                 activeRequests: 0,
                 maxRequests   : 0,
                 slowRequests  : []
             },
             contactEmail   : "spendingtracker@chaselane.dev",
-            dateMask       : "mm-dd-yyyy",
             debugging      : false,
             encryptionKey  : getSystemSetting("ENCRYPTIONKEY"),
             fromEmail      : "spendingtracker@chaselane.dev",
@@ -91,16 +89,13 @@ component {
                 "auth.verify",
                 "auth.resendverificationcode"
             ],
-            healthCheck    : true,
-            imageExtension : ".webp",
-            imageMagickPath: getSystemSetting("IMAGEMAGICKPATH"),
-            impersonation  : false,
-            jwt_secret     : getSystemSetting("JWT_SECRET"),
-            logPath        : logPath,
-            logQueries     : false,
-            logRequests    : true,
-            maxThreads     : createObject("java", "java.lang.Runtime").getRuntime().availableProcessors(),
-            metrics        : {
+            healthCheck  : true,
+            impersonation: false,
+            logPath      : logPath,
+            logQueries   : false,
+            logRequests  : true,
+            maxThreads   : createObject("java", "java.lang.Runtime").getRuntime().availableProcessors(),
+            metrics      : {
                 slowQueryThreshold: 250, // ms
                 maxSlowQueries    : 25,
                 sqlLength         : 1000,
@@ -397,7 +392,6 @@ component {
      * Test environment
      */
     function test() {
-        settings.impersonation  = true;
         settings.useRateLimiter = false;
         settings.appName        = "SpendingTracker (TEST)";
 

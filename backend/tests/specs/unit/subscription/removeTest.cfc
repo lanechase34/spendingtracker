@@ -95,7 +95,7 @@ component extends="tests.resources.baseTest" {
             });
 
             describe("Receipt integration", () => {
-                it("Can delete a subscription with a receipt, but the receipt won't delete", () => {
+                it("Deletes the receipt with the subscription when no expense uses it", () => {
                     /**
                      * Mock subscription with receipt
                      */
@@ -119,8 +119,51 @@ component extends="tests.resources.baseTest" {
                     expect(subscriptionHelper.count(userid = user.getId())).toBe(before - 1);
                     expect(subscriptionHelper.load(id)).toBeEmpty();
 
-                    // Verify receipt did not delete
+                    // Nothing charged by it uses the receipt - it shouldn't be left orphaned on disk
+                    expect(subscriptionHelper.getExpenses(id).len()).toBe(0);
+                    expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeFalse();
+                });
+
+                it("Keeps a deleted subscription's receipt until the last expense it charged is deleted", () => {
+                    var description = createUUID();
+                    var receipt     = createUUID();
+                    var path        = fetchAndWriteImg("https://picsum.photos/seed/test/200/200", "jpeg");
+                    fileCopy(source = path, destination = "#user.getDir()#/#receipt#.webp");
+                    var id = subscriptionHelper.insert(
+                        data = subscriptionHelper.mock(
+                            date        = dateAdd("d", randRange(-31, -2), dateAdd("m", -3, now())),
+                            interval    = "M",
+                            userid      = user.getId(),
+                            receipt     = receipt,
+                            description = description
+                        ),
+                        active = true
+                    );
+
+                    // Each charge() run charges one interval - it's ~3 months overdue, so run it a few times for several expenses
+                    for(var run = 1; run <= 3; run++) {
+                        getInstance("services.subscription").charge(id);
+                    }
+
+                    var expenses = subscriptionHelper.getExpenses(id);
+                    expect(expenses.len()).toBeGTE(2);
+
+                    // Delete the subscription - its expenses still use the receipt
+                    delete(route = "/api/v1/subscriptions/#id#", headers = {"x-auth-token": jwt});
+                    expect(subscriptionHelper.load(id)).toBeEmpty();
                     expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeTrue();
+
+                    // Every expense but the last keeps the file
+                    for(var i = 1; i < expenses.len(); i++) {
+                        setup();
+                        delete(route = "/api/v1/expenses/#expenses[i].id#", headers = {"x-auth-token": jwt});
+                        expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeTrue("Deleted after expense #i# of #expenses.len()#");
+                    }
+
+                    // The last one deletes it
+                    setup();
+                    delete(route = "/api/v1/expenses/#expenses[expenses.len()].id#", headers = {"x-auth-token": jwt});
+                    expect(fileExists("#user.getDir()#/#receipt#.webp")).toBeFalse();
                 });
 
                 it("Can delete an expense charged by subscription, but this will not delete the subscription's receipt", () => {

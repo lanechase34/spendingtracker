@@ -79,20 +79,4 @@ component singleton accessors="true" hint="Service layer for sending email" {
             .queue();
     }
 
-    /**
-     * Send a test email
-     */
-    public void function sendTestEmail() {
-        mailService
-            .newMail(
-                to     : contactEmail,
-                from   : fromEmail,
-                subject: "Sending a test email!"
-            )
-            .setBody("
-                Sending an email from the testing server! #now()# #createUUID()#
-            ")
-            .send();
-    }
-
 }

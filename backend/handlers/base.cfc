@@ -152,6 +152,25 @@ component extends="coldbox.system.RestHandler" hint="Base handler. All handlers 
             this.onAnyOtherException(argumentCollection = arguments);
         }
 
+        // A receipt uploaded for a save that then failed is never referenced - don't leave it on disk
+        // Checks the database first, so a save that did go through keeps its receipt
+        if(
+            len(arguments.prc?.receipt ?: "")
+            && arguments.prc.response.getStatusCode() >= 400
+            && receiptUploads.contains(arguments.prc?.currEvent ?: "")
+        ) {
+            try {
+                variables.expenseService.deleteReceiptIfUnused(
+                    receipt = arguments.prc.receipt,
+                    userid  = arguments.prc.userid,
+                    userDir = arguments.prc.userDir
+                );
+            }
+            catch(any e) {
+                log.error("Could not clean up receipt #arguments.prc.receipt# after a failed #arguments.prc.currEvent#: #e.message#");
+            }
+        }
+
         // Development additions
         if(inDebugMode()) {
             arguments.prc.response

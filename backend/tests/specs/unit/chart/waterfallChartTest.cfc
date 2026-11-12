@@ -2,12 +2,12 @@ component extends="tests.resources.baseTest" {
 
     function beforeAll() {
         super.beforeAll();
-        categoryService = getInstance("services.category");
-        expenseHelper   = getInstance("tests.resources.expenseHelper");
-        incomeHelper    = getInstance("tests.resources.incomeHelper");
-        mockUser        = getInstance("tests.resources.mockuser");
+        categoryHelper = getInstance("tests.resources.categoryHelper");
+        expenseHelper  = getInstance("tests.resources.expenseHelper");
+        incomeHelper   = getInstance("tests.resources.incomeHelper");
+        mockUser       = getInstance("tests.resources.mockuser");
 
-        savingsId = categoryService.getFromName("Savings").id;
+        savingsId = categoryHelper.getFromName("Savings").id;
     }
 
     function afterAll() {

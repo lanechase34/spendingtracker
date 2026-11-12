@@ -102,36 +102,6 @@ component {
     }
 
     /**
-	 * Called before the scheduler is going to be shutdown
-	 */
-    function onShutdown() {
-    }
-
-    /**
-	 * Called after the scheduler has registered all schedules
-	 */
-    function onStartup() {
-    }
-
-    /**
-	 * Called whenever ANY task fails
-	 *
-	 * @task      The task that got executed
-	 * @exception The ColdFusion exception object
-	 */
-    function onAnyTaskError(required task, required exception) {
-    }
-
-    /**
-	 * Called whenever ANY task succeeds
-	 *
-	 * @task   The task that got executed
-	 * @result The result (if any) that the task produced
-	 */
-    function onAnyTaskSuccess(required task, result) {
-    }
-
-    /**
 	 * Called before ANY task runs
      * Set up struct for audit/bug logging
 	 *
@@ -145,15 +115,6 @@ component {
             agent    : "Scheduled Task User",
             startTick: getTickCount()
         };
-    }
-
-    /**
-	 * Called after ANY task runs
-	 *
-	 * @task   The task that got executed
-	 * @result The result (if any) that the task produced
-	 */
-    function afterAnyTask(required task, result) {
     }
 
 }

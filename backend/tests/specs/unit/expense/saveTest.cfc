@@ -4,6 +4,7 @@ component extends="tests.resources.baseTest" {
         super.beforeAll();
 
         categoryService = getInstance("services.category");
+        categoryHelper  = getInstance("tests.resources.categoryHelper");
         mockUser        = getInstance("tests.resources.mockuser");
 
         /**
@@ -54,10 +55,50 @@ component extends="tests.resources.baseTest" {
                 expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
             });
 
+            describe("Date window (within 1 year of today)", () => {
+                var saveOn = (required date date) => {
+                    setup();
+                    return post(
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
+                        params  = {
+                            date       : dateFormat(date, "yyyy-mm-dd"),
+                            amount     : 10,
+                            description: "Date window #createUUID()#",
+                            categoryid : 1,
+                            receipt    : ""
+                        }
+                    ).getResponse();
+                };
+
+                it("Accepts the first and last day of the window", () => {
+                    expect(saveOn(dateAdd("yyyy", -1, now())).getStatusCode()).toBe(200);
+                    expect(saveOn(dateAdd("yyyy", 1, now())).getStatusCode()).toBe(200);
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount + 2);
+                });
+
+                it("Rejects a date more than a year ago", () => {
+                    var response = saveOn(dateAdd("d", -1, dateAdd("yyyy", -1, now())));
+
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getMessages().toList()).toInclude("Date must be within 1 year of today");
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount);
+                });
+
+                it("Rejects a date more than a year ahead", () => {
+                    // There used to be no upper bound at all
+                    var response = saveOn(createDate(9999, 1, 1));
+
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getMessages().toList()).toInclude("Date must be within 1 year of today");
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount);
+                });
+            });
+
             describe("Category integration", () => {
                 it("Save expense with a new category", () => {
                     var newCategory = left(createUUID(), 30);
-                    var beforeCheck = categoryService.getFromName(newCategory);
+                    var beforeCheck = categoryHelper.getFromName(newCategory);
                     expect(beforeCheck).toBeStruct();
                     expect(beforeCheck).toBeEmpty();
 
@@ -84,7 +125,7 @@ component extends="tests.resources.baseTest" {
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
 
                     // Verify new category made
-                    var afterCheck = categoryService.getFromName(newCategory);
+                    var afterCheck = categoryHelper.getFromName(newCategory);
                     expect(afterCheck).toBeStruct();
                     expect(afterCheck).toHaveKey("id");
                     expect(afterCheck.id).toBeGT(1);
@@ -92,7 +133,7 @@ component extends="tests.resources.baseTest" {
 
                 it("Prevents saving expense with an invalid new category (too long)", () => {
                     var newCategory = left(createUUID(), 31);
-                    var beforeCheck = categoryService.getFromName(newCategory);
+                    var beforeCheck = categoryHelper.getFromName(newCategory);
                     expect(beforeCheck).toBeStruct();
                     expect(beforeCheck).toBeEmpty();
 
@@ -117,7 +158,7 @@ component extends="tests.resources.baseTest" {
 
                     // Verify no expense nor category was made
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount);
-                    var afterCheck = categoryService.getFromName(newCategory);
+                    var afterCheck = categoryHelper.getFromName(newCategory);
                     expect(afterCheck).toBeStruct();
                     expect(afterCheck).toBeEmpty();
                 });

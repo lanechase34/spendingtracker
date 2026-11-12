@@ -1,17 +1,34 @@
 component {
 
     function configure() {
+        /**
+         * Dates must be within a year either side of today
+         */
+        var withinAYearOfToday = (value, target) => {
+            if(!isSimpleValue(value) || !isDate(value)) {
+                return true;
+            }
+
+            var parsed   = parseDateTime(value);
+            var valueDay = createDate(year(parsed), month(parsed), day(parsed));
+            var today    = createDate(year(now()), month(now()), day(now()));
+
+            return dateCompare(valueDay, dateAdd("yyyy", -1, today), "d") >= 0
+            && dateCompare(valueDay, dateAdd("yyyy", 1, today), "d") <= 0;
+        };
+
         // Category Handler
         var categoryHandler = {
             "category.view": {
                 page: {
                     required: true,
-                    type    : "numeric",
-                    min     : 1
+                    type    : "integer",
+                    min     : 1,
+                    max     : 100000
                 },
                 records: {
                     required: true,
-                    type    : "numeric",
+                    type    : "integer",
                     min     : 10,
                     max     : 100
                 },
@@ -34,12 +51,13 @@ component {
                 },
                 page: {
                     required: true,
-                    type    : "numeric",
-                    min     : 1
+                    type    : "integer",
+                    min     : 1,
+                    max     : 100000
                 },
                 records: {
                     required: true,
-                    type    : "numeric",
+                    type    : "integer",
                     min     : 10,
                     max     : 100
                 },
@@ -70,10 +88,10 @@ component {
             },
             "expense.save": {
                 date: {
-                    required           : true,
-                    type               : "date",
-                    afterOrEqual       : dateFormat(dateAdd("yyyy", -1, now()), "short"),
-                    afterOrEqualMessage: "Date cannot be older than 1 year ago ({afterOrEqual})"
+                    required  : true,
+                    type      : "date",
+                    udf       : withinAYearOfToday,
+                    udfMessage: "Date must be within 1 year of today"
                 },
                 amount: {
                     required    : true,
@@ -117,10 +135,10 @@ component {
             "expense.importCsv": {},
             expenseDataRow     : {
                 date: {
-                    required           : true,
-                    type               : "date",
-                    afterOrEqual       : dateFormat(dateAdd("yyyy", -1, now()), "short"),
-                    afterOrEqualMessage: "Date cannot be older than 1 year ago ({afterOrEqual})"
+                    required  : true,
+                    type      : "date",
+                    udf       : withinAYearOfToday,
+                    udfMessage: "Date must be within 1 year of today"
                 },
                 amount: {
                     required    : true,
@@ -223,12 +241,13 @@ component {
             "subscription.view": {
                 page: {
                     required: true,
-                    type    : "numeric",
-                    min     : 1
+                    type    : "integer",
+                    min     : 1,
+                    max     : 100000
                 },
                 records: {
                     required: true,
-                    type    : "numeric",
+                    type    : "integer",
                     min     : 10,
                     max     : 100
                 },
@@ -273,10 +292,10 @@ component {
             },
             "subscription.save": {
                 date: {
-                    required           : true,
-                    type               : "date",
-                    afterOrEqual       : dateFormat(dateAdd("yyyy", -1, now()), "short"),
-                    afterOrEqualMessage: "Date cannot be older than 1 year ago ({afterOrEqual})"
+                    required  : true,
+                    type      : "date",
+                    udf       : withinAYearOfToday,
+                    udfMessage: "Date must be within 1 year of today"
                 },
                 amount: {
                     required    : true,
@@ -414,12 +433,13 @@ component {
             "user.view": {
                 page: {
                     required: true,
-                    type    : "numeric",
-                    min     : 1
+                    type    : "integer",
+                    min     : 1,
+                    max     : 100000
                 },
                 records: {
                     required: true,
-                    type    : "numeric",
+                    type    : "integer",
                     min     : 10,
                     max     : 100
                 },
@@ -518,12 +538,13 @@ component {
                 },
                 page: {
                     required: true,
-                    type    : "numeric",
-                    min     : 1
+                    type    : "integer",
+                    min     : 1,
+                    max     : 100000
                 },
                 records: {
                     required: true,
-                    type    : "numeric",
+                    type    : "integer",
                     min     : 10,
                     max     : 100
                 },
@@ -570,12 +591,13 @@ component {
                 },
                 page: {
                     required: true,
-                    type    : "numeric",
-                    min     : 1
+                    type    : "integer",
+                    min     : 1,
+                    max     : 100000
                 },
                 records: {
                     required: true,
-                    type    : "numeric",
+                    type    : "integer",
                     min     : 10,
                     max     : 100
                 },

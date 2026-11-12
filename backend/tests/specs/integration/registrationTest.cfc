@@ -20,7 +20,7 @@ component extends="tests.resources.baseTest" {
                 cbauth.logout();
                 jwtService.getTokenStorage().clearAll();
 
-                // Real password checks - impersonation (on in the test env) skips them
+                // Real password checks - impersonation only works in development, this guards against it anyway
                 var userService     = getInstance("services.user");
                 storedImpersonation = userService.getImpersonation();
                 userService.setImpersonation(false);

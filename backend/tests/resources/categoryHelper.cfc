@@ -32,6 +32,26 @@ component extends="coldbox.system.testing.BaseTestCase" {
     }
 
     /**
+     * Return category based on its name
+     */
+    struct function getFromName(required string name) {
+        return q
+            .from("category")
+            .where("name", "=", ucFirst(name))
+            .first();
+    }
+
+    /**
+     * Return category based on its id (pk)
+     */
+    struct function getFromId(required numeric id) {
+        return q
+            .from("category")
+            .where("id", "=", {value: id, cfsqltype: "numeric"})
+            .first();
+    }
+
+    /**
      * Count categories where userid IS NULL (system-level categories)
      */
     numeric function countSystem() {

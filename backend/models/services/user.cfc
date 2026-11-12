@@ -1,7 +1,6 @@
 component singleton accessors="true" {
 
     property name="async"           inject="asyncManager@coldbox";
-    property name="auditService"    inject="services.audit";
     property name="cacheStorage"    inject="cachebox:coldboxStorage";
     property name="q"               inject="provider:QueryBuilder@qb";
     property name="populator"       inject="wirebox:populator";
@@ -11,6 +10,7 @@ component singleton accessors="true" {
     property name="requestService"  inject="coldbox:requestService";
     property name="securityService" inject="services.security";
 
+    property name="environment"          inject="coldbox:setting:environment";
     property name="impersonation"        inject="coldbox:setting:impersonation";
     property name="maxThreads"           inject="coldbox:setting:maxThreads";
     property name="uploadPath"           inject="coldbox:setting:uploadPath";
@@ -67,7 +67,7 @@ component singleton accessors="true" {
         // Unknown accounts still pay for a bcrypt check so response time does not reveal which emails exist
         var user       = retrieveUserByUserName(username);
         var passwordOk = checkHash(password, user.isLoaded() ? user.getPassword() : "");
-        if(!user.isLoaded() || !(impersonation || passwordOk)) {
+        if(!user.isLoaded() || !(isImpersonating() || passwordOk)) {
             return false;
         }
 
@@ -82,6 +82,14 @@ component singleton accessors="true" {
             updateLastLogin(userid = user.getId());
         }
         return true;
+    }
+
+    /**
+     * True if password checks should be skipped (impersonation)
+     * Only ever honoured in the development environment - whatever the impersonation setting says
+     */
+    public boolean function isImpersonating() {
+        return impersonation && environment == "development";
     }
 
     /**
@@ -565,7 +573,7 @@ component singleton accessors="true" {
         // Always run both checks - codes are generated uppercase so normalize what the user typed
         var passwordOk = checkHash(password, found ? base.password : "");
         var codeOk     = checkHash(code.trim().uCase(), found ? (base.verificationcode ?: "") : "");
-        passwordOk     = found && (impersonation || passwordOk);
+        passwordOk     = found && (isImpersonating() || passwordOk);
 
         if(passwordOk && base.verified) {
             throw(message = "User already verified", type = "UserAlreadyVerified");
@@ -598,7 +606,7 @@ component singleton accessors="true" {
         var found      = base.keyExists("id");
         var passwordOk = checkHash(password, found ? base.password : "");
 
-        if(!found || !(impersonation || passwordOk) || base.verified) {
+        if(!found || !(isImpersonating() || passwordOk) || base.verified) {
             return "ignored";
         }
 

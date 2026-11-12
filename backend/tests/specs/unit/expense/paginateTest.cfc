@@ -2,9 +2,9 @@ component extends="tests.resources.baseTest" {
 
     function beforeAll() {
         super.beforeAll();
-        categoryService = getInstance("services.category");
-        expenseService  = getInstance("services.expense");
-        mockUser        = getInstance("tests.resources.mockuser");
+        categoryHelper = getInstance("tests.resources.categoryHelper");
+        expenseService = getInstance("services.expense");
+        mockUser       = getInstance("tests.resources.mockuser");
 
         /**
          * Setup user to be shared throughout the test suite
@@ -221,7 +221,7 @@ component extends="tests.resources.baseTest" {
             });
 
             it("Can filter results by category", () => {
-                var category        = categoryService.getFromId(4);
+                var category        = categoryHelper.getFromId(4);
                 var categoryRecords = randRange(4, 9);
                 totalRecords += categoryRecords;
 
@@ -474,6 +474,34 @@ component extends="tests.resources.baseTest" {
                     pageSize        = pageSize,
                     page            = 100
                 );
+            });
+
+            it("Rejects a page or records that is not a whole number, or a page that is too large", () => {
+                // These used to reach the query as a fractional or overflowing OFFSET and return a 500
+                var cases = [
+                    {page: 1.5, records: 10},
+                    {page: 1, records: 10.5},
+                    {page: 1e20, records: 10}
+                ];
+
+                for(var params in cases) {
+                    setup();
+                    var event = get(
+                        route   = "/api/v1/expenses",
+                        headers = {"x-auth-token": jwt},
+                        params  = {
+                            startDate: dateAdd("d", -30, now()),
+                            endDate  : now(),
+                            page     : params.page,
+                            records  : params.records
+                        }
+                    );
+
+                    expect(event.getResponse().getStatusCode()).toBe(
+                        400,
+                        "page=#params.page#, records=#params.records#"
+                    );
+                }
             });
         });
     }

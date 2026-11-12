@@ -82,26 +82,37 @@ component extends="coldbox.system.testing.BaseTestCase" {
          * Fetch image blob
          */
         cfhttp(
-            url    = imgUrl,
-            result = "local.imgResult",
-            method = "GET"
+            url     = imgUrl,
+            result  = "local.imgResult",
+            method  = "GET",
+            timeout = 15
         );
 
-        var path = "#tempDir#/#createUUID()#.#extension#";
+        var path    = "#tempDir#/#createUUID()#.#extension#";
+        var fetched = left(imgResult?.statusCode ?: "", 3) == "200"
+        && findNoCase("image/", imgResult?.mimeType ?: "") == 1;
 
         /**
          * HEIC is not supported by CF's imageNew(), so write raw bytes
          * directly to disk and let ImageMagick handle decoding later.
+         * There is no local fallback for HEIC - it needs the real file
          */
         if(lCase(extension) == "heic") {
+            if(!fetched) {
+                throw(
+                    message = "Could not fetch HEIC test image from #imgUrl# (#imgResult?.statusCode ?: "no response"#)",
+                    type    = "TestSetup.ImageFetchFailed"
+                );
+            }
             fileWrite(path, imgResult.filecontent);
             return path;
         }
 
         /**
          * CF make image object and write to disk
+         * If the image host is down, generate one locally so the suite doesn't depend on a third party site
          */
-        var img = imageNew(imgResult.filecontent);
+        var img = fetched ? imageNew(imgResult.filecontent) : imageNew("", 200, 200, "rgb", "##3366cc");
         img.write(path);
         return path;
     }

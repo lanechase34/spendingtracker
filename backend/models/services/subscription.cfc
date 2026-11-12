@@ -149,8 +149,8 @@ component singleton accessors="true" {
                      : b.amountDecrypted - a.amountDecrypted;
                 });
 
-                // Slice the correct page from the fully sorted result
-                rows = rows.slice(offset + 1, min(rows.len() - offset, records));
+                // Slice the correct page from the fully sorted result - a page past the end is empty, not an error
+                rows = offset < rows.len() ? rows.slice(offset + 1, min(rows.len() - offset, records)) : [];
 
                 // Clean up the temp field
                 rows = rows.map((value) => {
@@ -288,10 +288,16 @@ component singleton accessors="true" {
 
     /**
      * Delete subscription by the supplied id (pk)
+     * Its receipt file is kept while any expense it charged still uses it
      */
-    public boolean function delete(required numeric id, required numeric userid) {
+    public boolean function delete(
+        required numeric id,
+        required numeric userid,
+        required string userDir
+    ) {
         var qResult = q
             .from("subscription")
+            .returning(["receipt"])
             .where("id", "=", {value: id, cfsqltype: "numeric"})
             .andWhere(
                 "userid",
@@ -303,6 +309,12 @@ component singleton accessors="true" {
         var success = qResult.result.recordCount == 1;
 
         if(success) {
+            expenseService.deleteReceiptIfUnused(
+                receipt = qResult.result?.receipt ?: "",
+                userid  = userid,
+                userDir = userDir
+            );
+
             // Clear user subscription cache
             cacheStorage.clearByKeySnippet(keySnippet = "userid=#userid#|subscription");
         }

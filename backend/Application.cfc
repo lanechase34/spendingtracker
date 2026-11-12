@@ -12,7 +12,6 @@ component extends="coldbox.system.Bootstrap" hint="SpendingTracker" {
 
     this.mappings["/"]             = COLDBOX_APP_ROOT_PATH;
     this.mappings["/coldbox"]      = COLDBOX_APP_ROOT_PATH & "coldbox";
-    this.mappings["/includes"]     = COLDBOX_APP_ROOT_PATH & "includes";
     this.mappings["/interceptors"] = COLDBOX_APP_ROOT_PATH & "interceptors";
     this.mappings["/models"]       = COLDBOX_APP_ROOT_PATH & "models";
     this.mappings["/services"]     = this.mappings["/models"] & "/services";

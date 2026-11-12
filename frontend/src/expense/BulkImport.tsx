@@ -20,7 +20,8 @@ import BulkImportDialog from './BulkImportDialog';
 
 // validateFile also accepts a .csv reported as application/vnd.ms-excel or with no type
 const CSV_MIME_TYPES = ['text/csv'];
-const CSV_MAX_FILE_SIZE = 50 * 1024 * 1024;
+// Keep in sync with the backend's maxImportFileSize (services.expense)
+const CSV_MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 /**
  * Bulk Import widget to process CSV file upload

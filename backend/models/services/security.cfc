@@ -1,6 +1,5 @@
 component singleton accessors="true" {
 
-    property name="authTokenTTL"    inject="coldbox:setting:authTokenTTL";
     property name="bcrypt"          inject="provider:@BCrypt";
     property name="encryptionKey"   inject="coldbox:setting:encryptionKey";
     property name="environment"     inject="coldbox:setting:environment";
@@ -54,13 +53,6 @@ component singleton accessors="true" {
                 return acc.listAppend(item);
             }, "")
             .trim();
-    }
-
-    /**
-     *Sets a cookie for the JWT
-     */
-    public void function setAuthTokenCookie(required string token, numeric maxAge = getAuthTokenTTL()) {
-        cfheader(name = "Set-Cookie", value = "x-auth-token=#token#; Path=/; Max-Age=#maxAge#; Secure; HttpOnly");
     }
 
     /**

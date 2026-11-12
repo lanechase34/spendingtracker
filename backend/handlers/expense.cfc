@@ -155,14 +155,14 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
      * @summary      Import Expenses
      * @tags         Expense
      * @security     [ { "ApiKeyAuth": [], "CSRFToken": [] } ]
-     * @hint         Parses and validates a CSV file of expenses. Nothing is saved - valid rows are returned for review, then saved with Bulk Save Expenses. The header row must be exactly Date,Amount,Description, with at most 100 data rows. Each row follows the Save Expense rules for date, amount, and description.
+     * @hint         Parses and validates a CSV file of expenses. Nothing is saved - valid rows are returned for review, then saved with Bulk Save Expenses. The header row must be exactly Date,Amount,Description, with at most 200 data rows. Each row follows the Save Expense rules for date, amount, and description.
      * @requestBody  ~expense/import/requestBody.json
      * @response-200 ~expense/import/response.json
-     * @response-400 { "description": "File missing or not readable as CSV, header row does not match Date,Amount,Description exactly, or more than 100 data rows." }
+     * @response-400 { "description": "No .csv file uploaded in the expenseFile multipart field, file larger than 5 MB or not readable as CSV, header row does not match Date,Amount,Description exactly, or more than 200 data rows." }
      * @response-401 ~errors/401.json
      */
     function importCsv(event, rc, prc) {
-        prc.result = expenseService.processExpenseData(rc?.expenseFile ?: "");
+        prc.result = expenseService.importUpload(formField = "expenseFile");
         if(!prc.result.valid) {
             event
                 .getResponse()
@@ -199,7 +199,24 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
             return;
         }
 
-        rc.expenses    = deserializeJSON(rc.expenses);
+        rc.expenses = deserializeJSON(rc.expenses);
+
+        // Rows come from an import, so bulk save takes no more rows than an import can return
+        if(!isArray(rc.expenses) || !rc.expenses.len()) {
+            event
+                .getResponse()
+                .setErrorMessage("Invalid Parameters.")
+                .setStatusCode(400);
+            return;
+        }
+        if(rc.expenses.len() > expenseService.getMaxRows()) {
+            event
+                .getResponse()
+                .setErrorMessage("Too many expenses. Please limit to a maximum of #expenseService.getMaxRows()# rows")
+                .setStatusCode(400);
+            return;
+        }
+
         prc.validation = validate(target = rc, constraints = "expense.bulksavehandler");
         if(prc.validation.hasErrors()) {
             event
@@ -241,38 +258,50 @@ component extends="base" hint="Expense Endpoints" secured="User,Admin" {
                         }
                     }
 
-                    // Category ID
-                    if(expense.keyExists("categoryid") && isNumeric(expense.categoryid)) {
-                        currCategoryId = parseNumber(expense.categoryid);
-                    }
-                    // New Category
-                    else {
-                        // Lock so we don't double create the category
-                        var safeCategory = ucFirst(lCase(expense.category));
+                    // From here on a failure leaves the uploaded receipt unreferenced
+                    try {
+                        // Category ID
+                        if(expense.keyExists("categoryid") && isNumeric(expense.categoryid)) {
+                            currCategoryId = parseNumber(expense.categoryid);
+                        }
+                        // New Category
+                        else {
+                            // Lock so we don't double create the category
+                            var safeCategory = ucFirst(lCase(expense.category));
 
-                        lock name="categoryMap_#safeCategory#_#prc.userid#" type="exclusive" timeout="10" {
-                            // Not yet created
-                            if(!categoryMap.keyExists(safeCategory)) {
-                                // Create the new category
-                                currCategoryId            = categoryService.save(name = safeCategory, userid = prc.userid);
-                                categoryMap[safeCategory] = currCategoryId;
-                            }
-                            // Already created
-                            else {
-                                currCategoryId = categoryMap[safeCategory];
+                            lock name="categoryMap_#safeCategory#_#prc.userid#" type="exclusive" timeout="10" {
+                                // Not yet created
+                                if(!categoryMap.keyExists(safeCategory)) {
+                                    // Create the new category
+                                    currCategoryId            = categoryService.save(name = safeCategory, userid = prc.userid);
+                                    categoryMap[safeCategory] = currCategoryId;
+                                }
+                                // Already created
+                                else {
+                                    currCategoryId = categoryMap[safeCategory];
+                                }
                             }
                         }
-                    }
 
-                    // Save
-                    expenseService.save(
-                        date        = expense.date,
-                        amount      = expense.amount,
-                        description = expense.description,
-                        categoryid  = currCategoryId,
-                        receipt     = currReceipt,
-                        userid      = prc.userid
-                    );
+                        // Save
+                        expenseService.save(
+                            date        = expense.date,
+                            amount      = expense.amount,
+                            description = expense.description,
+                            categoryid  = currCategoryId,
+                            receipt     = currReceipt,
+                            userid      = prc.userid
+                        );
+                    }
+                    catch(any e) {
+                        // The row never saved, so nothing references its receipt - don't leave it on disk
+                        expenseService.deleteReceiptIfUnused(
+                            receipt = currReceipt,
+                            userid  = prc.userid,
+                            userDir = prc.userDir
+                        );
+                        rethrow;
+                    }
                 },
                 true,
                 getSetting("maxThreads")

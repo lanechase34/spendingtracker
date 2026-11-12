@@ -30,11 +30,6 @@ component
     property name="initializedDate" type="date";
 
     /**
-     * Injected
-     */
-    property name="q" inject="provider:QueryBuilder@qb";
-
-    /**
      * Mementifier
      */
     this.memento = {defaultIncludes: ["email", "permissions"], neverInclude: ["id", "password"]};

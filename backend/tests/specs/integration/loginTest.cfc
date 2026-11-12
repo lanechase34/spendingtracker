@@ -96,7 +96,7 @@ component extends="tests.resources.baseTest" {
                     route  = "/api/v1/login",
                     params = {
                         email     : user.getEmail(),
-                        password  : createUUID(),
+                        password  : mockUser.passwordFor(user),
                         rememberMe: false
                     }
                 );

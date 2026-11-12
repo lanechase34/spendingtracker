@@ -42,7 +42,6 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 prc        = {};
 
                 // Clear cookie scope values modified
-                cookie.delete("x-auth-token");
                 cookie.delete("x-refresh-token");
 
                 // Clear request scope values modified
@@ -50,76 +49,6 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
             });
 
             describe("preProcess()", () => {
-                it("Should copy x-auth-token from cookie to rc when cookie exists and has length", () => {
-                    cookie["x-auth-token"] = "  test-auth-token-12345  ";
-
-                    interceptor.preProcess(
-                        event  = mockRequestContext,
-                        data   = mockData,
-                        buffer = mockBuffer,
-                        rc     = rc,
-                        prc    = prc
-                    );
-
-                    expect(rc).toHaveKey("x-auth-token");
-                    expect(rc["x-auth-token"]).toBe("test-auth-token-12345");
-                });
-
-                it("Should trim whitespace from x-auth-token", () => {
-                    cookie["x-auth-token"] = "   token-with-spaces   ";
-
-                    interceptor.preProcess(
-                        event  = mockRequestContext,
-                        data   = mockData,
-                        buffer = mockBuffer,
-                        rc     = rc,
-                        prc    = prc
-                    );
-
-                    expect(rc["x-auth-token"]).toBe("token-with-spaces");
-                    expect(rc["x-auth-token"]).notToBe("   token-with-spaces   ");
-                });
-
-                it("Should not add x-auth-token to rc when cookie does not exist", () => {
-                    interceptor.preProcess(
-                        event  = mockRequestContext,
-                        data   = mockData,
-                        buffer = mockBuffer,
-                        rc     = rc,
-                        prc    = prc
-                    );
-
-                    expect(rc).notToHaveKey("x-auth-token");
-                });
-
-                it("Should not add x-auth-token to rc when cookie is empty string", () => {
-                    cookie["x-auth-token"] = "";
-
-                    interceptor.preProcess(
-                        event  = mockRequestContext,
-                        data   = mockData,
-                        buffer = mockBuffer,
-                        rc     = rc,
-                        prc    = prc
-                    );
-
-                    expect(rc).notToHaveKey("x-auth-token");
-                });
-
-                it("Should not add x-auth-token to rc when cookie is only whitespace", () => {
-                    cookie["x-auth-token"] = "   ";
-
-                    interceptor.preProcess(
-                        event  = mockRequestContext,
-                        data   = mockData,
-                        buffer = mockBuffer,
-                        rc     = rc,
-                        prc    = prc
-                    );
-
-                    expect(rc).notToHaveKey("x-auth-token");
-                });
-
                 it("Should copy x-refresh-token from cookie to rcwhen cookie exists and has length", () => {
                     cookie["x-refresh-token"] = "  test-refresh-token-67890  ";
 
@@ -165,8 +94,6 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                 });
 
                 it("Should not add x-refresh-token to rc when x-refresh-token cookie does not exist", () => {
-                    cookie["x-auth-token"] = "test-auth-token";
-
                     interceptor.preProcess(
                         event  = mockRequestContext,
                         data   = mockData,
@@ -202,25 +129,6 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                     );
 
                     expect(prc).toHaveKey("response");
-                    expect(prc.response).toBe(mockApiResponse);
-                });
-
-                it("Should handle both tokens being present and valid", () => {
-                    cookie["x-auth-token"]    = "valid-auth-token";
-                    cookie["x-refresh-token"] = "valid-refresh-token";
-
-                    interceptor.preProcess(
-                        event  = mockRequestContext,
-                        data   = mockData,
-                        buffer = mockBuffer,
-                        rc     = rc,
-                        prc    = prc
-                    );
-
-                    expect(rc).toHaveKey("x-auth-token");
-                    expect(rc).toHaveKey("x-refresh-token");
-                    expect(rc["x-auth-token"]).toBe("valid-auth-token");
-                    expect(rc["x-refresh-token"]).toBe("valid-refresh-token");
                     expect(prc.response).toBe(mockApiResponse);
                 });
             });
@@ -620,7 +528,6 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
             describe("Integration Tests", () => {
                 it("Should handle complete request lifecycle with authenticated user", () => {
                     // Mock cookies and user
-                    cookie["x-auth-token"]    = "valid-auth-token";
                     cookie["x-refresh-token"] = "valid-refresh-token";
 
                     var mockAuthUser = createStub();
@@ -657,7 +564,6 @@ component extends="coldbox.system.testing.BaseInterceptorTest" interceptor="inte
                         prc    = prc
                     );
 
-                    expect(rc["x-auth-token"]).toBe("valid-auth-token");
                     expect(rc["x-refresh-token"]).toBe("valid-refresh-token");
                     expect(prc.response).toBe(mockApiResponse);
                     expect(request.userid).toBe(555);

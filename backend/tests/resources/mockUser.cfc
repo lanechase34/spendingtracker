@@ -5,6 +5,9 @@ component extends="coldbox.system.testing.BaseTestCase" {
     property name="q"           inject="provider:QueryBuilder@qb";
     property name="userService" inject="services.user";
 
+    // Plaintext password of every user this instance made, keyed by lowercased email
+    variables.passwords = {};
+
     /**
      * Make a mock user for testing
      * Returns the mock userObj
@@ -19,6 +22,9 @@ component extends="coldbox.system.testing.BaseTestCase" {
     ) {
         var uEmail    = email.len() ? email : "TEST_#left(createUUID().replace("-", "", "all"), 10)#@gmail.com";
         var uPassword = password.len() ? password : createUUID();
+
+        // Impersonation is off outside development - remember the real password so login() can use it
+        variables.passwords[lCase(uEmail)] = uPassword;
 
         userService.register(
             email           = uEmail,
@@ -51,6 +57,20 @@ component extends="coldbox.system.testing.BaseTestCase" {
     }
 
     /**
+     * The plaintext password a user was made with
+     */
+    public string function passwordFor(required component userObj) {
+        var key = lCase(userObj.getEmail());
+        if(!variables.passwords.keyExists(key)) {
+            throw(
+                message = "No password recorded for #userObj.getEmail()# - was it made by this mockUser?",
+                type    = "MockUser.UnknownUser"
+            );
+        }
+        return variables.passwords[key];
+    }
+
+    /**
      * Login the user and return a valid JWT
      */
     public string function login(required component userObj) {
@@ -61,7 +81,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
             route  = "/api/v1/login",
             params = {
                 email     : userObj.getEmail(),
-                password  : createUUID(),
+                password  : passwordFor(userObj),
                 rememberMe: false
             }
         );

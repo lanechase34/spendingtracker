@@ -3,9 +3,9 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        categoryService = getInstance("services.category");
-        q               = getInstance("provider:QueryBuilder@qb");
-        mockUser        = getInstance("tests.resources.mockuser");
+        categoryHelper = getInstance("tests.resources.categoryHelper");
+        q              = getInstance("provider:QueryBuilder@qb");
+        mockUser       = getInstance("tests.resources.mockuser");
 
         /**
          * Setup user to be shared throughout the test suite
@@ -70,6 +70,57 @@ component extends="tests.resources.baseTest" {
                     expect(response.getStatusCode()).toBe(400);
                     expect(response.getError()).toBeTrue();
                     expect(response.getMessages()[1]).toBe("Invalid Parameters.");
+                });
+
+                it("Returns 400 when expenses is valid JSON but not an array", () => {
+                    var event = post(
+                        route   = "/api/v1/expenses/bulk",
+                        headers = {"x-auth-token": jwt},
+                        params  = {expenses: serializeJSON({a: {id: createUUID(), amount: 1}})}
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getMessages()[1]).toBe("Invalid Parameters.");
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount);
+                });
+
+                it("Returns 400 when expenses is an empty array", () => {
+                    var event = post(
+                        route   = "/api/v1/expenses/bulk",
+                        headers = {"x-auth-token": jwt},
+                        params  = {expenses: serializeJSON([])}
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getMessages()[1]).toBe("Invalid Parameters.");
+                });
+
+                it("Rejects more rows than an import allows and saves none of them", () => {
+                    var maxRows = getInstance("services.expense").getMaxRows();
+                    var rows    = [];
+                    for(var i = 1; i <= maxRows + 1; i++) {
+                        rows.append({
+                            id         : createUUID(),
+                            date       : createDate(year(now()), month(now()), day(now())),
+                            amount     : 1.00,
+                            description: "Expense #i#",
+                            categoryid : 1
+                        });
+                    }
+
+                    var event = post(
+                        route   = "/api/v1/expenses/bulk",
+                        headers = {"x-auth-token": jwt},
+                        params  = {expenses: serializeJSON(rows)}
+                    );
+
+                    var response = event.getResponse();
+                    expect(response.getStatusCode()).toBe(400);
+                    expect(response.getError()).toBeTrue();
+                    expect(response.getMessages()[1]).toBe("Too many expenses. Please limit to a maximum of #maxRows# rows");
+                    expect(expenseHelper.count(user.getId())).toBe(expenseCount);
                 });
             });
 
@@ -199,7 +250,7 @@ component extends="tests.resources.baseTest" {
                     expect(event.getResponse().getStatusCode()).toBe(200);
                     expect(expenseHelper.count(user.getId())).toBe(expenseCount + 1);
 
-                    var created = categoryService.getFromName(ucFirst(lCase(newCategory)));
+                    var created = categoryHelper.getFromName(ucFirst(lCase(newCategory)));
                     expect(created).toHaveKey("id");
                 });
 

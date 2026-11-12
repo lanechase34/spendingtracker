@@ -61,7 +61,7 @@ component {
                 securitySchemes: {
                     ApiKeyAuth: {
                         type       : "apiKey",
-                        description: "JWT passed in the x-auth-token header (or x-auth-token cookie). Missing, invalid, or insufficient-role tokens return 401.",
+                        description: "JWT passed in the x-auth-token header. Missing, invalid, or insufficient-role tokens return 401.",
                         name       : "x-auth-token",
                         in         : "header"
                     },

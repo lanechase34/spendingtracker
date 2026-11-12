@@ -97,7 +97,11 @@ component extends="base" hint="Subscription Endpoints" secured="User,Admin" {
      * @response-404 { "description": "Subscription not found." }
      */
     function remove(event, rc, prc) {
-        prc.success = subscriptionService.delete(id = rc.id, userid = prc.userid);
+        prc.success = subscriptionService.delete(
+            id      = rc.id,
+            userid  = prc.userid,
+            userDir = prc.userDir
+        );
         if(prc.success) {
             event
                 .getResponse()

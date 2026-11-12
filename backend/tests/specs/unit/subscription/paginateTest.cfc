@@ -3,7 +3,7 @@ component extends="tests.resources.baseTest" {
     function beforeAll() {
         super.beforeAll();
 
-        categoryService     = getInstance("services.category");
+        categoryHelper      = getInstance("tests.resources.categoryHelper");
         expenseService      = getInstance("services.expense");
         subscriptionService = getInstance("services.subscription");
         mockUser            = getInstance("tests.resources.mockuser");
@@ -142,7 +142,7 @@ component extends="tests.resources.baseTest" {
             });
 
             it("Can filter results by category", () => {
-                var category        = categoryService.getFromId(4);
+                var category        = categoryHelper.getFromId(4);
                 var categoryRecords = randRange(4, 9);
                 totalRecords += categoryRecords;
 
@@ -416,6 +416,23 @@ component extends="tests.resources.baseTest" {
                 for(var i = 1; i < descSubscriptions2.len(); i++) {
                     expect(descSubscriptions2[i].amount).toBeGTE(descSubscriptions2[i + 1].amount);
                 }
+
+                // A page past the end is empty - the amount sort used to throw slicing past the array
+                setup();
+                var pastEnd = get(
+                    route   = "/api/v1/subscriptions",
+                    headers = {"x-auth-token": jwt},
+                    params  = {
+                        page    : 100,
+                        records : 10,
+                        search  : "Sort Test",
+                        orderCol: "amount",
+                        orderDir: "desc"
+                    }
+                ).getResponse();
+
+                expect(pastEnd.getStatusCode()).toBe(200);
+                expect(pastEnd.getData().subscriptions).toBeEmpty();
             });
         });
     }

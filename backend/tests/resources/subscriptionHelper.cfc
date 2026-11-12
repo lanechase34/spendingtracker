@@ -121,17 +121,6 @@ component extends="coldbox.system.testing.BaseTestCase" {
     }
 
     /**
-     * Makes fresh slate of the subscriptions table
-     */
-    void function fresh() {
-        q.from("expense")
-            .whereNotNull("subscriptionid")
-            .delete();
-        q.from("subscription").delete();
-        return;
-    }
-
-    /**
      * Verify an expense was made/not made
      */
     void function verifyExpense(required struct data, required boolean exists = true) {
