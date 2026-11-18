@@ -564,7 +564,14 @@ component extends="tests.resources.baseTest" {
                     expect(oldLogin.getResponse().getStatusCode()).toBe(401);
 
                     // Tokens issued in the same second as the change are revoked too (iat <= password_changed_at)
-                    sleep(1100);
+                    // so move the change into the past rather than waiting out the second
+                    queryExecute(
+                        "UPDATE users SET password_changed_at = :changedAt WHERE id = :id",
+                        {
+                            changedAt: {value: dateAdd("s", -2, now()), cfsqltype: "timestamp"},
+                            id       : {value: user.getId(), cfsqltype: "integer"}
+                        }
+                    );
 
                     setup();
                     var newLogin = post(

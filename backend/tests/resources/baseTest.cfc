@@ -11,6 +11,7 @@ component extends="coldbox.system.testing.BaseTestCase" {
          * Re-wire everything
          */
         super.beforeAll();
+        stubRoutingCgi();
         application.wirebox.autowire(this);
 
         /**
@@ -70,6 +71,43 @@ component extends="coldbox.system.testing.BaseTestCase" {
          * Restore the upload dir
          */
         application.cbController.setSetting("uploadPath", "#uploadPath#");
+    }
+
+    /**
+     * Stand in for MockBox on the routing service's getCGIElement - the CGI values every test request is routed by
+     *
+     * - BaseTestCase.execute() mocks getCGIElement afresh on every get()/post()/..., through MockBox: each $() writes,
+     *   includes and deletes a generated stub file, and each call hashes its arguments - the request context's whole
+     *   metadata serialized. Together that was about two thirds of a test request's time
+     * - execute() only uses the $("getCGIElement").$args(element, event).$results(value) chain, and the routing service
+     *   only asks for path_info, script_name and server_name - so the stand-in keeps the last value set for each
+     * - Marking the service as already mocked (its mockbox key) makes prepareMock() hand it back as it is
+     * - Re-check execute() and RoutingService's getCGIElement calls on every ColdBox / TestBox upgrade
+     */
+    private void function stubRoutingCgi() {
+        var routingService = getController().getRoutingService();
+        var state          = {values: {}, element: ""};
+
+        new coldbox.system.core.dynamic.MixerUtil().start(routingService);
+        routingService.mockbox = true;
+        routingService.injectMixin("$", (method) => {
+            if(method != "getCGIElement") {
+                throw(
+                    type    = "baseTest.UnsupportedMock",
+                    message = "stubRoutingCgi() only stands in for getCGIElement, not #method#"
+                );
+            }
+            return routingService;
+        });
+        routingService.injectMixin("$args", (element) => {
+            state.element = element;
+            return routingService;
+        });
+        routingService.injectMixin("$results", (value) => {
+            state.values[state.element] = value;
+            return routingService;
+        });
+        routingService.injectMixin("getCGIElement", (cgiElement, event) => state.values[cgiElement] ?: "");
     }
 
     /**

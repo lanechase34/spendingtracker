@@ -498,7 +498,10 @@ component extends="tests.resources.baseTest" {
                         }
                     );
                     expect(loginEvent.getResponse().getData()).toHaveKey("mfa_required");
-                    sleep(500);
+                    // updateLastLogin() runs on the ForkJoin common pool - let anything the login queued finish
+                    createObject("java", "java.util.concurrent.ForkJoinPool")
+                        .commonPool()
+                        .awaitQuiescence(5, createObject("java", "java.util.concurrent.TimeUnit").SECONDS);
                     expect(lastLoginIsNull()).toBeTrue();
 
                     // Completing 2FA does
