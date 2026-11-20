@@ -16,7 +16,7 @@
     "jvm":{
         "heapSize":"${JAVAHEAP}",
         "minHeapSize":"${JAVAHEAP}",
-        "javaVersion":"openjdk21_jre_jdk-21.0.13+9",
+        "javaVersion":"openjdk21_jre_jdk-21.0.13.1+2",
         "args":"-Duser.timezone=UTC"
     },
     "name":"SpendingTracker",
